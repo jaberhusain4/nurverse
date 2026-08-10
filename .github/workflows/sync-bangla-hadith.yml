@@ -1,0 +1,62 @@
+name: Sync Bengali Hadith Data
+
+on:
+  push:
+    paths:
+      - '.github/workflows/sync-bangla-hadith.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout NurVerse
+        uses: actions/checkout@v4
+
+      - name: Download Bengali hadith editions
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions'
+          books=(bukhari muslim abudawud tirmidhi nasai ibnmajah malik)
+
+          for book in "${books[@]}"; do
+            url="$base/ben-$book.json"
+            out="assets/hadith/ben-$book.json"
+            echo "Downloading $url"
+            curl --fail --location --retry 3 --silent --show-error "$url" -o "$out"
+            python - "$out" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+p = Path(sys.argv[1])
+raw = p.read_text(encoding='utf-8')
+data = json.loads(raw)
+
+if not isinstance(data, dict) or not data.get('metadata') or not data.get('hadiths'):
+    raise SystemExit(f'Invalid or empty hadith edition: {p}')
+
+print(f'{p}: {p.stat().st_size} bytes, {len(data["hadiths"])} hadiths')
+PY
+          done
+
+      - name: Commit Bengali hadith data
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          git add assets/hadith/ben-*.json
+
+          if git diff --cached --quiet; then
+            echo 'No Bengali hadith changes detected.'
+            exit 0
+          fi
+
+          git commit -m 'data: add Bengali hadith editions'
+          git push
