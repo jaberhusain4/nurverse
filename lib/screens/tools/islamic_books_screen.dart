@@ -9,14 +9,14 @@ class IslamicBooksScreen extends StatelessWidget {
   static const _books = <_BookResource>[
     _BookResource(
       title: 'কুরআন মাজীদ — বাংলা',
-      description: 'বাংলা অনুবাদসহ কুরআনের অনলাইন সংস্করণ।',
-      source: 'Open Library / Internet Archive',
+      description: 'বাংলাদেশ সরকারের আল কুরআনঃ ডিজিটাল থেকে বাংলা অনুবাদসহ ই-বুক।',
+      source: 'Al Quran: Digital — ধর্ম বিষয়ক মন্ত্রণালয়',
       icon: Icons.menu_book_rounded,
-      url: 'https://openlibrary.org/works/OL16816466W/Holy_Quran_in_Bengali',
+      url: 'https://www.quran.gov.bd/home/ebook_download.html',
     ),
     _BookResource(
       title: 'কুরআন ও বাংলা তাফসীর',
-      description: 'বাংলা অনুবাদ ও তাফসীরের ডিজিটাল রিসোর্স।',
+      description: 'বাংলা অনুবাদ ও তাফসীরের ডিজিটাল রিসোর্স খুঁজে পড়ুন।',
       source: 'Waqfeya',
       icon: Icons.auto_stories_rounded,
       url: 'https://waqfeya.net/',
@@ -97,7 +97,7 @@ class IslamicBooksScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'NurVerse আপাতত বিশ্বস্ত অনলাইন লাইব্রেরি ও ডিজিটাল আর্কাইভে থাকা রিসোর্সে নিয়ে যাবে। ভবিষ্যতে অনুমতি/লাইসেন্স যাচাই করে নির্বাচিত বই offline download ও reader-এ আনা যাবে।',
+              'NurVerse বিশ্বস্ত অনলাইন লাইব্রেরি ও ডিজিটাল আর্কাইভের রিসোর্স ব্যবহার করে। বর্তমানে বইগুলো অনলাইনে পড়ার জন্য খোলা হয়। ভবিষ্যতে অনুমতি ও লাইসেন্স যাচাই করে নির্বাচিত বই offline reader-এ আনা যাবে।',
               style: TextStyle(
                 color: context.secondaryTextColor,
                 fontSize: 13,
