@@ -3,10 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../models/saved_hadith.dart';
 import '../../services/hadith_bookmark_service.dart';
 import '../../services/hadith_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
+import 'saved_hadith_screen.dart';
 
 class HadithListScreen extends StatefulWidget {
   final HadithBook book;
@@ -70,6 +72,22 @@ class _HadithListScreenState extends State<HadithListScreen> {
     );
   }
 
+  SavedHadith _toSavedHadith(HadithItem hadith) {
+    return SavedHadith(
+      key: _bookmarkKey(hadith),
+      bookKey: widget.book.key,
+      bookNameBn: widget.book.nameBn,
+      chapterNameBn: _chapterTitle,
+      hadithNo: hadith.hadithNo,
+      arabic: hadith.arabic,
+      bangla: hadith.bangla,
+      narrator: hadith.narrator,
+      reference: hadith.reference,
+      grade: hadith.grade,
+      savedAt: DateTime.now(),
+    );
+  }
+
   Future<void> _load() async {
     if (mounted) {
       setState(() {
@@ -116,7 +134,9 @@ class _HadithListScreenState extends State<HadithListScreen> {
 
   Future<void> _toggleBookmark(HadithItem hadith) async {
     final key = _bookmarkKey(hadith);
-    final saved = await HadithBookmarkService.instance.toggle(key);
+    final saved = await HadithBookmarkService.instance.toggle(
+      _toSavedHadith(hadith),
+    );
     if (!mounted) return;
 
     setState(() {
@@ -131,7 +151,11 @@ class _HadithListScreenState extends State<HadithListScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(saved ? 'হাদিসটি সংরক্ষণ করা হয়েছে' : 'হাদিসটি সংরক্ষণ থেকে সরানো হয়েছে'),
+          content: Text(
+            saved
+                ? 'হাদিসটি সংরক্ষণ করা হয়েছে'
+                : 'হাদিসটি সংরক্ষণ থেকে সরানো হয়েছে',
+          ),
           duration: const Duration(milliseconds: 1200),
           behavior: SnackBarBehavior.floating,
         ),
@@ -179,6 +203,15 @@ class _HadithListScreenState extends State<HadithListScreen> {
     await SharePlus.instance.share(ShareParams(text: text));
   }
 
+  Future<void> _openSavedHadiths() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SavedHadithScreen()),
+    );
+    if (mounted) {
+      await _load();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -191,6 +224,13 @@ class _HadithListScreenState extends State<HadithListScreen> {
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: 'সংরক্ষিত হাদিস',
+            onPressed: _openSavedHadiths,
+            icon: const Icon(Icons.bookmarks_rounded),
+          ),
+        ],
       ),
       body: SafeArea(child: _buildBody()),
     );
