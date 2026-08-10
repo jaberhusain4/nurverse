@@ -14,7 +14,7 @@ class ToolsScreen extends StatelessWidget {
   const ToolsScreen({super.key});
 
   static const List<Map<String, dynamic>> tools = [
-    {'icon': Icons.favorite_outline, 'title': 'দু’আ'},
+    {'icon': Icons.favorite_outline, 'title': "দু'আ"},
     {'icon': Icons.explore_outlined, 'title': 'কিবলা'},
     {'icon': Icons.fingerprint, 'title': 'তাসবিহ'},
     {'icon': Icons.star_outline, 'title': 'আল্লাহর ৯৯ নাম'},
@@ -110,7 +110,7 @@ class ToolsScreen extends StatelessWidget {
 
   void _openTool(BuildContext context, String title) {
     switch (title) {
-      case 'দু’আ':
+      case "দু'আ":
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const DuaScreen()),
