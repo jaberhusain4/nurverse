@@ -24,6 +24,10 @@ class HadithChapterStatsService {
 
   final Map<String, Map<int, HadithChapterStats>> _cache = {};
 
+  Future<Map<int, HadithChapterStats>> getAllStats(String bookKey) {
+    return _loadBook(bookKey);
+  }
+
   Future<HadithChapterStats?> getStats(
     String bookKey,
     int chapterId,
