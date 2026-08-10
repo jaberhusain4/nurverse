@@ -1,14 +1,20 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:pdfx/pdfx.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class IslamicBookReaderScreen extends StatefulWidget {
   final String title;
   final String url;
+  final bool isPdf;
 
   const IslamicBookReaderScreen({
     super.key,
     required this.title,
     required this.url,
+    this.isPdf = false,
   });
 
   @override
@@ -16,11 +22,12 @@ class IslamicBookReaderScreen extends StatefulWidget {
 }
 
 class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
-  late final WebViewController _controller;
-  int _progress = 0;
+  WebViewController? _webController;
+  PdfControllerPinch? _pdfController;
   bool _loading = true;
   bool _hasError = false;
   String _errorMessage = 'বইটি এখন লোড করা যাচ্ছে না।';
+  int _progress = 0;
 
   static const _userAgent =
       'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 '
@@ -29,7 +36,44 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
+    widget.isPdf ? _loadPdf() : _loadWebPage();
+  }
+
+  Future<void> _loadPdf() async {
+    try {
+      final response = await http.get(
+        Uri.parse(widget.url),
+        headers: {'User-Agent': _userAgent},
+      );
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception('HTTP ${response.statusCode}');
+      }
+
+      final bytes = Uint8List.fromList(response.bodyBytes);
+      final controller = PdfControllerPinch(document: PdfDocument.openData(bytes));
+
+      if (!mounted) {
+        controller.dispose();
+        return;
+      }
+      setState(() {
+        _pdfController = controller;
+        _loading = false;
+        _hasError = false;
+        _progress = 100;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _hasError = true;
+        _errorMessage = 'বইটির PDF ডাউনলোড করা যাচ্ছে না। ইন্টারনেট সংযোগ পরীক্ষা করুন।';
+      });
+    }
+  }
+
+  void _loadWebPage() {
+    final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setUserAgent(_userAgent)
       ..setBackgroundColor(Colors.white)
@@ -45,8 +89,7 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
             });
           },
           onProgress: (progress) {
-            if (!mounted) return;
-            setState(() => _progress = progress);
+            if (mounted) setState(() => _progress = progress);
           },
           onPageFinished: (_) {
             if (!mounted) return;
@@ -75,6 +118,7 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
         ),
       )
       ..loadRequest(Uri.parse(widget.url));
+    _webController = controller;
   }
 
   String _friendlyError(int code) {
@@ -90,71 +134,77 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
       _hasError = false;
       _progress = 0;
     });
-    await _controller.reload();
-  }
-
-  Future<bool> _handleBack() async {
-    if (await _controller.canGoBack()) {
-      await _controller.goBack();
-      return false;
+    if (widget.isPdf) {
+      _pdfController?.dispose();
+      _pdfController = null;
+      await _loadPdf();
+    } else {
+      await _webController?.reload();
     }
-    return true;
   }
 
-  Future<void> _closeReader() async {
-    if (!mounted) return;
-    Navigator.of(context).pop();
+  @override
+  void dispose() {
+    _pdfController?.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        final shouldClose = await _handleBack();
-        if (shouldClose) await _closeReader();
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            tooltip: 'ফিরে যান',
-            icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () async {
-              final shouldClose = await _handleBack();
-              if (shouldClose) await _closeReader();
-            },
-          ),
-          title: Text(
-            widget.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          actions: [
-            IconButton(
-              tooltip: 'রিফ্রেশ',
-              onPressed: _reload,
-              icon: const Icon(Icons.refresh_rounded),
-            ),
-          ],
-          bottom: _loading && _progress < 100
-              ? PreferredSize(
-                  preferredSize: const Size.fromHeight(2),
-                  child: LinearProgressIndicator(
-                    value: _progress == 0 ? null : _progress / 100,
-                  ),
-                )
-              : null,
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'ফিরে যান',
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        body: Stack(
-          children: [
-            WebViewWidget(controller: _controller),
-            if (_hasError)
-              _ReaderError(message: _errorMessage, onRetry: _reload),
-          ],
-        ),
+        title: Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        actions: [
+          IconButton(
+            tooltip: 'রিফ্রেশ',
+            onPressed: _reload,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+        bottom: _loading && _progress < 100
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(2),
+                child: LinearProgressIndicator(
+                  value: _progress == 0 ? null : _progress / 100,
+                ),
+              )
+            : null,
       ),
+      body: _hasError ? _ReaderError(message: _errorMessage, onRetry: _reload) : _buildBody(),
     );
+  }
+
+  Widget _buildBody() {
+    if (widget.isPdf && _pdfController != null) {
+      return PdfViewPinch(
+        controller: _pdfController!,
+        scrollDirection: Axis.vertical,
+        builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
+          options: const DefaultBuilderOptions(),
+          documentLoaderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+          pageLoaderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+          errorBuilder: (_, __) => _ReaderError(
+            message: 'PDF পড়া যাচ্ছে না। আবার চেষ্টা করুন।',
+            onRetry: _reload,
+          ),
+        ),
+      );
+    }
+    if (_webController != null) {
+      return Stack(
+        children: [
+          WebViewWidget(controller: _webController!),
+          if (_loading && _progress == 0)
+            const Center(child: CircularProgressIndicator()),
+        ],
+      );
+    }
+    return const Center(child: CircularProgressIndicator());
   }
 }
 
@@ -178,10 +228,7 @@ class _ReaderError extends StatelessWidget {
               children: [
                 const Icon(Icons.menu_book_rounded, size: 44),
                 const SizedBox(height: 14),
-                const Text(
-                  'বইটি খোলা যাচ্ছে না',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                ),
+                const Text('বইটি খোলা যাচ্ছে না', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 8),
                 Text(message, textAlign: TextAlign.center),
                 const SizedBox(height: 18),
