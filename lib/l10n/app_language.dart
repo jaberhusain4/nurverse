@@ -1,0 +1,1 @@
+enum AppLanguage { bangla, english }

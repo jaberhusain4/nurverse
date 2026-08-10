@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Single-color mask for Android 13+ themed / Google icons (dark mode friendly) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M62,20C40,25 28,43 28,60C28,80 43,96 62,100C48,89 42,75 42,60C42,45 48,31 62,20Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M70,40L74.5,50.5L86,54.5L74.5,58.5L70,69L65.5,58.5L54,54.5L65.5,50.5Z" />
+</vector>

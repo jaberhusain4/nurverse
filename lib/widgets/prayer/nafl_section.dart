@@ -1,0 +1,123 @@
+// lib/widgets/prayer/nafl_section.dart
+
+import 'package:flutter/material.dart';
+import '../../controllers/prayer_controller.dart';
+import '../../theme/app_theme.dart';
+
+class NaflSection extends StatelessWidget {
+  final PrayerController controller;
+
+  const NaflSection({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        NaflTile(
+          title: 'ইশরাক',
+          description: 'সূর্যোদয়ের কিছুক্ষণ পর',
+          time: controller.sunriseTime,
+          icon: Icons.wb_sunny_outlined,
+        ),
+        NaflTile(
+          title: 'চাশত / দুহা',
+          description: 'সকাল থেকে দুপুরের পূর্ব পর্যন্ত',
+          time: 'সূর্যোদয়ের পর',
+          icon: Icons.wb_sunny_rounded,
+        ),
+        NaflTile(
+          title: 'আউওয়াবীন',
+          description: 'মাগরিবের পর',
+          time: controller.sunsetTime,
+          icon: Icons.nightlight_outlined,
+        ),
+        NaflTile(
+          title: 'তাহাজ্জুদ',
+          description: 'রাতের শেষাংশ',
+          time: 'শেষ তৃতীয়াংশ',
+          icon: Icons.nights_stay_rounded,
+        ),
+      ],
+    );
+  }
+}
+
+class NaflTile extends StatelessWidget {
+  final String title;
+  final String description;
+  final String time;
+  final IconData icon;
+
+  const NaflTile({
+    super.key,
+    required this.title,
+    required this.description,
+    required this.time,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: primary.withValues(alpha: .06)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(icon, color: primary, size: 20),
+          ),
+
+          const SizedBox(width: 11),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: context.secondaryTextColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          Flexible(
+            child: Text(
+              time,
+              textAlign: TextAlign.end,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "surahs": [
+    {
+      "number": 1,
+      "name": "الفاتحة",
+      "englishName": "Al-Fatihah",
+      "revelationType": "Meccan",
+      "numberOfAyahs": 7,
+      "ayahs": [
+        {
+          "number": 1,
+          "text": "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ"
+        },
+        {
+          "number": 2,
+          "text": "اَلْحَمْدُ لِلّٰهِ رَبِّ الْعٰلَمِيْنَ"
+        }
+      ]
+    }
+  ]
+}
