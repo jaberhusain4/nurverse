@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../theme/app_theme.dart';
+import 'islamic_book_reader_screen.dart';
 
 class IslamicBooksScreen extends StatelessWidget {
   const IslamicBooksScreen({super.key});
@@ -37,46 +37,12 @@ class IslamicBooksScreen extends StatelessWidget {
     ),
   ];
 
-  Future<void> _open(BuildContext context, String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri == null || !uri.hasScheme) {
-      _showError(context);
-      return;
-    }
-
-    bool opened = false;
-
-    try {
-      opened = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-    } catch (_) {
-      opened = false;
-    }
-
-    if (!opened) {
-      try {
-        opened = await launchUrl(
-          uri,
-          mode: LaunchMode.platformDefault,
-        );
-      } catch (_) {
-        opened = false;
-      }
-    }
-
-    if (!opened && context.mounted) {
-      _showError(context);
-    }
-  }
-
-  void _showError(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        behavior: SnackBarBehavior.floating,
-        content: Text(
-          'অনলাইন বইটি খোলা যাচ্ছে না। ফোনে Chrome বা অন্য কোনো ব্রাউজার ইনস্টল আছে কি না দেখুন।',
+  void _openReader(BuildContext context, _BookResource book) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => IslamicBookReaderScreen(
+          title: book.title,
+          url: book.url,
         ),
       ),
     );
@@ -104,7 +70,7 @@ class IslamicBooksScreen extends StatelessWidget {
           final book = _books[index - 1];
           return _BookCard(
             book: book,
-            onTap: () => _open(context, book.url),
+            onTap: () => _openReader(context, book),
           );
         },
       ),
@@ -282,7 +248,7 @@ class _BookCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.open_in_new_rounded, size: 19),
+              const Icon(Icons.menu_book_rounded, size: 19),
             ],
           ),
         ),
