@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../services/hadith_chapter_stats_service.dart';
 import '../../services/hadith_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
@@ -18,13 +19,13 @@ class HadithChaptersScreen extends StatefulWidget {
 
 class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
   List<HadithChapter>? _chapters;
+  Map<int, HadithChapterStats> _stats = const {};
   String? _error;
   bool _isLoading = true;
   bool _didLoad = false;
 
   String get _loadingText => 'অধ্যায় লোড হচ্ছে...';
-  String get _errorText =>
-      'অধ্যায় লোড করা যায়নি। আবার চেষ্টা করুন।';
+  String get _errorText => 'অধ্যায় লোড করা যায়নি। আবার চেষ্টা করুন।';
   String get _retryText => 'আবার চেষ্টা করুন';
   String get _emptyText => 'এই গ্রন্থের কোনো অধ্যায় পাওয়া যায়নি।';
   String get _chapterLabel => 'অধ্যায়';
@@ -52,10 +53,15 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
         languageCode: 'bn',
       );
 
+      final stats = await HadithChapterStatsService.instance.getAllStats(
+        widget.book.key,
+      );
+
       if (!mounted) return;
 
       setState(() {
         _chapters = chapters;
+        _stats = stats;
         _isLoading = false;
         _error = null;
       });
@@ -64,6 +70,7 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
 
       setState(() {
         _chapters = null;
+        _stats = const {};
         _error = _errorText;
         _isLoading = false;
       });
@@ -106,7 +113,10 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
             const SizedBox(height: 14),
             Text(
               _loadingText,
-              style: TextStyle(fontSize: 13, color: context.secondaryTextColor),
+              style: TextStyle(
+                fontSize: 13,
+                color: context.secondaryTextColor,
+              ),
             ),
           ],
         ),
@@ -133,6 +143,7 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
               index: index,
               title: _chapterTitle(chapter),
               fallbackTitle: '$_chapterLabel ${index + 1}',
+              stats: _stats[chapter.id],
               onTap: () => _openChapter(chapter),
             ),
           );
@@ -148,12 +159,20 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline_rounded, size: 46, color: context.secondaryTextColor),
+            Icon(
+              Icons.error_outline_rounded,
+              size: 46,
+              color: context.secondaryTextColor,
+            ),
             const SizedBox(height: 14),
             Text(
               _error!,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, height: 1.55, color: context.primaryTextColor),
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.55,
+                color: context.primaryTextColor,
+              ),
             ),
             const SizedBox(height: 18),
             FilledButton.icon(
@@ -181,7 +200,11 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
                 child: Text(
                   _emptyText,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, height: 1.55, color: context.secondaryTextColor),
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.55,
+                    color: context.secondaryTextColor,
+                  ),
                 ),
               ),
             ),
@@ -204,6 +227,7 @@ class _ChapterCard extends StatelessWidget {
   final int index;
   final String title;
   final String fallbackTitle;
+  final HadithChapterStats? stats;
   final VoidCallback onTap;
 
   const _ChapterCard({
@@ -211,6 +235,7 @@ class _ChapterCard extends StatelessWidget {
     required this.index,
     required this.title,
     required this.fallbackTitle,
+    required this.stats,
     required this.onTap,
   });
 
@@ -218,11 +243,18 @@ class _ChapterCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final displayTitle = title.trim().isNotEmpty ? title.trim() : fallbackTitle;
 
+    final statsText = stats == null
+        ? 'হাদিসের সংখ্যা পাওয়া যায়নি'
+        : '${_bnDigits(stats!.count)}টি হাদিস • ${_bnDigits(stats!.firstHadith)}–${_bnDigits(stats!.lastHadith)}';
+
     return NvCard(
       padding: EdgeInsets.zero,
       onTap: onTap,
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 7,
+        ),
         leading: Container(
           width: 44,
           height: 44,
@@ -242,12 +274,41 @@ class _ChapterCard extends StatelessWidget {
         ),
         title: Text(
           displayTitle,
-          textDirection: TextDirection.ltr,
           textAlign: TextAlign.left,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, height: 1.45),
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            height: 1.45,
+          ),
         ),
-        trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.seaBlue),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 5),
+          child: Text(
+            statsText,
+            style: TextStyle(
+              fontSize: 11.5,
+              height: 1.4,
+              color: context.secondaryTextColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        trailing: const Icon(
+          Icons.chevron_right_rounded,
+          color: AppColors.seaBlue,
+        ),
       ),
     );
+  }
+
+  static String _bnDigits(int value) {
+    const western = '0123456789';
+    const bengali = '০১২৩৪৫৬৭৮৯';
+
+    return value
+        .toString()
+        .split('')
+        .map((digit) => bengali[western.indexOf(digit)])
+        .join();
   }
 }
