@@ -236,26 +236,21 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
       return chapter.nameAr.trim();
     }
 
-    // Never expose an English chapter title in the Bangla UI.
     return '$_chapterLabel ${_bnDigits(index + 1)}';
   }
 
   bool _looksEnglish(String value) {
     if (value.isEmpty) return false;
-
-    final latin = RegExp(r'[A-Za-z]');
-    return latin.hasMatch(value);
+    return RegExp(r'[A-Za-z]').hasMatch(value);
   }
 
   String _translateChapterTitle(String value) {
     final key = value.trim().toLowerCase();
     if (key.isEmpty) return '';
-
     return _chapterTranslations[key] ?? '';
   }
 
   static const Map<String, String> _chapterTranslations = {
-    // Sahih al-Bukhari
     'revelation': 'ওহীর সূচনা',
     'belief': 'ঈমান',
     'knowledge': 'ইলম ও জ্ঞান',
@@ -278,7 +273,7 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     'virtues of prayer at masjid makkah and madinah': 'মক্কা ও মদিনার মসজিদে সালাতের ফযীলত',
     'actions while praying': 'সালাতের সময়ের আমল',
     'forgetfulness in prayer': 'সালাতে ভুল-ত্রুটি',
-    'funerals (al-janaa\'iz)': 'জানাযা',
+    "funerals (al-janaa'iz)": 'জানাযা',
     'obligatory charity tax (zakat)': 'যাকাত',
     'hajj (pilgrimage)': 'হজ্জ',
     '`umrah (minor pilgrimage)': 'উমরাহ',
@@ -295,7 +290,7 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     'hiring': 'ভাড়া ও শ্রমিক নিয়োগ',
     'transferance of a debt from one person to another (al-hawaala)': 'ঋণ এক ব্যক্তি থেকে অন্য ব্যক্তির কাছে হস্তান্তর (হাওয়ালা)',
     'kafalah': 'জামিন ও কাফালাহ',
-    'representation, authorization, business by proxy': 'প্রতিনিধিত্ব, অনুমোদন ও代理 ব্যবসা',
+    'representation, authorization, business by proxy': 'প্রতিনিধিত্ব, অনুমোদন ও প্রতিনিধির মাধ্যমে ব্যবসা',
     'agriculture': 'কৃষি',
     'distribution of water': 'পানি বণ্টন ও সেচ',
     'loans, payment of loans, freezing of property, bankruptcy': 'ঋণ, ঋণ পরিশোধ, সম্পত্তি জব্দ ও দেউলিয়াত্ব',
@@ -310,8 +305,8 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     'witnesses': 'সাক্ষ্য',
     'peacemaking': 'মীমাংসা ও সন্ধি',
     'conditions': 'শর্তাবলি',
-    'wills and testaments (wasaayaa)': 'অছিয়ত ও উইল',
-    'fighting for the cause of allah (jihaad)': 'আল্লাহর পথে জিহাদ',
+    "wills and testaments (wasaayaa)": 'অছিয়ত ও উইল',
+    "fighting for the cause of allah (jihaad)": 'আল্লাহর পথে জিহাদ',
     'one-fifth of booty to the cause of allah (khumus)': 'গনীমতের এক-পঞ্চমাংশ',
     "jizyah and mawaada'ah": 'জিযিয়া ও সন্ধিচুক্তি',
     'beginning of creation': 'সৃষ্টির সূচনা',
@@ -320,8 +315,8 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     'companions of the prophet': 'রাসূল ﷺ-এর সাহাবীগণ',
     'merits of the helpers in madinah (ansaar)': 'মদিনার আনসারদের ফযীলত',
     'military expeditions led by the prophet (pbuh) (al-maghaazi)': 'নবী ﷺ-এর নেতৃত্বে সামরিক অভিযান (মাগাযী)',
-    'prophetic commentary on the qur\'an (tafseer of the prophet (pbuh))': 'কুরআনের নববী তাফসীর',
-    'virtues of the qur\'an': 'কুরআনের ফযীলত',
+    "prophetic commentary on the qur'an (tafseer of the prophet (pbuh))": 'কুরআনের নববী তাফসীর',
+    "virtues of the qur'an": 'কুরআনের ফযীলত',
     'wedlock, marriage (nikaah)': 'বিবাহ ও নিকাহ',
     'divorce': 'তালাক',
     'supporting the family': 'পরিবারের ভরণ-পোষণ',
@@ -339,8 +334,8 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     'to make the heart tender (ar-riqaq)': 'হৃদয় কোমলকারী বিষয়সমূহ (রীকাক)',
     'divine will (al-qadar)': 'তাকদীর',
     'oaths and vows': 'শপথ ও মানত',
-    'expiation for unfulfilled oaths': 'শপথ ভঙ্গের কাফফারা',
-    'laws of inheritance (al-faraa\'id)': 'উত্তরাধিকার আইন (ফারায়েয)',
+    "expiation for unfulfilled oaths": 'শপথ ভঙ্গের কাফফারা',
+    "laws of inheritance (al-faraa'id)": 'উত্তরাধিকার আইন (ফারায়েয)',
     'limits and punishments set by allah (hudood)': 'আল্লাহ নির্ধারিত দণ্ডবিধি (হুদূদ)',
     'blood money (ad-diyat)': 'রক্তপণ (দিয়াত)',
     'apostates': 'ধর্মত্যাগী',
@@ -354,14 +349,10 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     'holding fast to the qur\'an and sunnah': 'কুরআন ও সুন্নাহকে দৃঢ়ভাবে ধারণ',
     'oneness, uniqueness of allah (tawheed)': 'আল্লাহর একত্ব ও তাওহীদ',
 
-    // Common chapter names used by the other collections.
     'purification': 'পবিত্রতা',
     'prayer': 'সালাত',
     'charity': 'যাকাত',
-    'fasting': 'সিয়াম',
-    'pilgrimage': 'হজ্জ',
     'marriage': 'বিবাহ',
-    'divorce': 'তালাক',
     'judgements': 'বিচার ও বিধান',
     'judgments': 'বিচার ও বিধান',
     'manners': 'শিষ্টাচার',
@@ -376,12 +367,9 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     'business': 'ব্যবসা ও লেনদেন',
     'transactions': 'লেনদেন',
     'foods': 'খাদ্য',
-    'drinks': 'পানীয়',
-    'medicine': 'চিকিৎসা',
     'clothing': 'পোশাক',
     'funerals': 'জানাযা',
     'zakat': 'যাকাত',
-    'hajj': 'হজ্জ',
     'umrah': 'উমরাহ',
     'jihad': 'জিহাদ',
     'tafsir': 'তাফসীর',
