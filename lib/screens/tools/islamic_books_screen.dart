@@ -16,13 +16,13 @@ class IslamicBooksScreen extends StatelessWidget {
     ),
     _BookResource(
       title: 'কুরআন ও বাংলা তাফসীর',
-      description: 'বাংলা অনুবাদ ও সংক্ষিপ্ত তাফসীরের ডিজিটাল সংস্করণ।',
+      description: 'বাংলা অনুবাদ ও তাফসীরের ডিজিটাল সংস্করণ।',
       source: 'Waqfeya',
       icon: Icons.auto_stories_rounded,
-      url: 'https://waqfeya.net/books/%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86-%D8%A7%D9%84%D9%83%D8%B1%D9%8A%D9%85-%D9%88%D8%AA%D8%B1%D8%AC%D9%85%D8%A9-%D9%85%D8%B9%D8%A7%D9%86%D9%8A%D9%87-%D9%88%D8%AA%D9%81%D8%B3%D9%8A%D8%B1%D9%87-%D8%A5%D9%84%D9%89-%D8%A7%D9%84%D9%84%D8%BA%D8%A9-%D8%A7%D9%84%D8%A8%D9%86%D8%BA%D8%A7%D9%84%D9%8A%D8%A9-Bengali/3ab87ac29e094d07bd0ab00b0ac09e4d',
+      url: 'https://waqfeya.net/',
     ),
     _BookResource(
-      title: 'বাংলা ইসলামিক বই — Commons',
+      title: 'বাংলা ইসলামিক বই',
       description: 'বাংলা ভাষার ইসলামিক বই ও স্ক্যানকৃত রিসোর্সের সংগ্রহ।',
       source: 'Wikimedia Commons',
       icon: Icons.library_books_rounded,
@@ -38,16 +38,36 @@ class IslamicBooksScreen extends StatelessWidget {
   ];
 
   Future<void> _open(BuildContext context, String url) async {
-    final uri = Uri.parse(url);
-    final opened = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('বইয়ের লিংকটি খোলা যায়নি।')),
-      );
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.hasScheme) {
+      _showError(context);
+      return;
     }
+
+    try {
+      final opened = await launchUrl(
+        uri,
+        mode: LaunchMode.platformDefault,
+        webOnlyWindowName: '_blank',
+      );
+
+      if (!opened && context.mounted) {
+        _showError(context);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        _showError(context);
+      }
+    }
+  }
+
+  void _showError(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        behavior: SnackBarBehavior.floating,
+        content: Text('অনলাইন বইটি খোলা যাচ্ছে না। ইন্টারনেট সংযোগ ও ব্রাউজার পরীক্ষা করুন।'),
+      ),
+    );
   }
 
   @override
