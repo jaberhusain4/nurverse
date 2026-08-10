@@ -22,105 +22,21 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
   bool _isLoading = true;
   bool _didLoad = false;
 
-  // ---------------------------------------------------------------------------
-  // LANGUAGE
-  // ---------------------------------------------------------------------------
-
-  String get _languageCode {
-    final locale = Localizations.localeOf(context);
-
-    if (locale.languageCode == 'ar') {
-      return 'ar';
-    }
-
-    if (locale.languageCode == 'en') {
-      return 'en';
-    }
-
-    return 'bn';
-  }
-
-  bool get _isArabic => _languageCode == 'ar';
-
-  bool get _isEnglish => _languageCode == 'en';
-
-  String get _loadingText {
-    if (_isArabic) {
-      return 'جارٍ تحميل الفصول...';
-    }
-
-    if (_isEnglish) {
-      return 'Loading chapters...';
-    }
-
-    return 'অধ্যায় লোড হচ্ছে...';
-  }
-
-  String get _errorText {
-    if (_isArabic) {
-      return 'تعذر تحميل الفصول. تحقق من اتصال الإنترنت أو حاول مرة أخرى.';
-    }
-
-    if (_isEnglish) {
-      return 'Unable to load chapters. Check your internet connection or try again.';
-    }
-
-    return 'অধ্যায় লোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।';
-  }
-
-  String get _retryText {
-    if (_isArabic) {
-      return 'حاول مرة أخرى';
-    }
-
-    if (_isEnglish) {
-      return 'Try again';
-    }
-
-    return 'আবার চেষ্টা করুন';
-  }
-
-  String get _emptyText {
-    if (_isArabic) {
-      return 'لا توجد فصول في هذه المجموعة.';
-    }
-
-    if (_isEnglish) {
-      return 'No chapters are available in this collection.';
-    }
-
-    return 'এই গ্রন্থের কোনো অধ্যায় পাওয়া যায়নি।';
-  }
-
-  String get _chapterLabel {
-    if (_isArabic) {
-      return 'الفصل';
-    }
-
-    if (_isEnglish) {
-      return 'Chapter';
-    }
-
-    return 'অধ্যায়';
-  }
-
-  // ---------------------------------------------------------------------------
-  // LIFECYCLE
-  // ---------------------------------------------------------------------------
+  String get _loadingText => 'অধ্যায় লোড হচ্ছে...';
+  String get _errorText =>
+      'অধ্যায় লোড করা যায়নি। আবার চেষ্টা করুন।';
+  String get _retryText => 'আবার চেষ্টা করুন';
+  String get _emptyText => 'এই গ্রন্থের কোনো অধ্যায় পাওয়া যায়নি।';
+  String get _chapterLabel => 'অধ্যায়';
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
     if (!_didLoad) {
       _didLoad = true;
       _load();
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // LOAD
-  // ---------------------------------------------------------------------------
 
   Future<void> _load() async {
     if (mounted) {
@@ -133,12 +49,10 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     try {
       final chapters = await HadithService.instance.getChapters(
         widget.book.key,
-        languageCode: _languageCode,
+        languageCode: 'bn',
       );
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         _chapters = chapters;
@@ -146,9 +60,7 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
         _error = null;
       });
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         _chapters = null;
@@ -158,10 +70,6 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // OPEN CHAPTER
-  // ---------------------------------------------------------------------------
-
   void _openChapter(HadithChapter chapter) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -170,26 +78,19 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // BUILD
-  // ---------------------------------------------------------------------------
-
   @override
   Widget build(BuildContext context) {
-    final title = _bookTitle();
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(
+          widget.book.nameBn,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
         centerTitle: true,
       ),
       body: SafeArea(child: _buildBody()),
     );
   }
-
-  // ---------------------------------------------------------------------------
-  // BODY
-  // ---------------------------------------------------------------------------
 
   Widget _buildBody() {
     if (_isLoading) {
@@ -212,15 +113,10 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
       );
     }
 
-    if (_error != null) {
-      return _buildErrorState();
-    }
+    if (_error != null) return _buildErrorState();
 
     final chapters = _chapters ?? const <HadithChapter>[];
-
-    if (chapters.isEmpty) {
-      return _buildEmptyState();
-    }
+    if (chapters.isEmpty) return _buildEmptyState();
 
     return RefreshIndicator(
       onRefresh: _load,
@@ -230,16 +126,13 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
         itemCount: chapters.length,
         itemBuilder: (context, index) {
           final chapter = chapters[index];
-
           return Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: _ChapterCard(
               chapter: chapter,
               index: index,
               title: _chapterTitle(chapter),
-              subtitle: _chapterSubtitle(chapter),
               fallbackTitle: '$_chapterLabel ${index + 1}',
-              isArabic: _isArabic,
               onTap: () => _openChapter(chapter),
             ),
           );
@@ -248,10 +141,6 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // ERROR STATE
-  // ---------------------------------------------------------------------------
-
   Widget _buildErrorState() {
     return Center(
       child: Padding(
@@ -259,20 +148,12 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.wifi_off_rounded,
-              size: 46,
-              color: context.secondaryTextColor,
-            ),
+            Icon(Icons.error_outline_rounded, size: 46, color: context.secondaryTextColor),
             const SizedBox(height: 14),
             Text(
               _error!,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.55,
-                color: context.primaryTextColor,
-              ),
+              style: TextStyle(fontSize: 14, height: 1.55, color: context.primaryTextColor),
             ),
             const SizedBox(height: 18),
             FilledButton.icon(
@@ -285,10 +166,6 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
       ),
     );
   }
-
-  // ---------------------------------------------------------------------------
-  // EMPTY STATE
-  // ---------------------------------------------------------------------------
 
   Widget _buildEmptyState() {
     return RefreshIndicator(
@@ -304,11 +181,7 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
                 child: Text(
                   _emptyText,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 1.55,
-                    color: context.secondaryTextColor,
-                  ),
+                  style: TextStyle(fontSize: 14, height: 1.55, color: context.secondaryTextColor),
                 ),
               ),
             ),
@@ -318,112 +191,26 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // BOOK TITLE
-  // ---------------------------------------------------------------------------
-
-  String _bookTitle() {
-    if (_isArabic) {
-      return widget.book.nameEn;
-    }
-
-    if (_isEnglish) {
-      return widget.book.nameEn;
-    }
-
-    return widget.book.nameBn;
-  }
-
-  // ---------------------------------------------------------------------------
-  // CHAPTER TITLE
-  // ---------------------------------------------------------------------------
-
   String _chapterTitle(HadithChapter chapter) {
-    if (_isArabic) {
-      if (chapter.nameAr.trim().isNotEmpty) {
-        return chapter.nameAr.trim();
-      }
-
-      if (chapter.nameEn.trim().isNotEmpty) {
-        return chapter.nameEn.trim();
-      }
-
-      return chapter.nameBn.trim();
-    }
-
-    if (_isEnglish) {
-      if (chapter.nameEn.trim().isNotEmpty) {
-        return chapter.nameEn.trim();
-      }
-
-      if (chapter.nameBn.trim().isNotEmpty) {
-        return chapter.nameBn.trim();
-      }
-
-      return chapter.nameAr.trim();
-    }
-
-    if (chapter.nameBn.trim().isNotEmpty) {
-      return chapter.nameBn.trim();
-    }
-
-    if (chapter.nameEn.trim().isNotEmpty) {
-      return chapter.nameEn.trim();
-    }
-
-    return chapter.nameAr.trim();
-  }
-
-  // ---------------------------------------------------------------------------
-  // CHAPTER SUBTITLE
-  // ---------------------------------------------------------------------------
-
-  String _chapterSubtitle(HadithChapter chapter) {
-    if (_isArabic) {
-      if (chapter.nameEn.trim().isNotEmpty &&
-          chapter.nameEn.trim() != chapter.nameAr.trim()) {
-        return chapter.nameEn.trim();
-      }
-
-      return '';
-    }
-
-    if (_isEnglish) {
-      if (chapter.nameAr.trim().isNotEmpty) {
-        return chapter.nameAr.trim();
-      }
-
-      return '';
-    }
-
-    if (chapter.nameEn.trim().isNotEmpty) {
-      return chapter.nameEn.trim();
-    }
-
+    if (chapter.nameBn.trim().isNotEmpty) return chapter.nameBn.trim();
+    if (chapter.nameAr.trim().isNotEmpty) return chapter.nameAr.trim();
+    if (chapter.nameEn.trim().isNotEmpty) return chapter.nameEn.trim();
     return '';
   }
 }
-
-// =============================================================================
-// CHAPTER CARD
-// =============================================================================
 
 class _ChapterCard extends StatelessWidget {
   final HadithChapter chapter;
   final int index;
   final String title;
-  final String subtitle;
   final String fallbackTitle;
-  final bool isArabic;
   final VoidCallback onTap;
 
   const _ChapterCard({
     required this.chapter,
     required this.index,
     required this.title,
-    required this.subtitle,
     required this.fallbackTitle,
-    required this.isArabic,
     required this.onTap,
   });
 
@@ -455,35 +242,11 @@ class _ChapterCard extends StatelessWidget {
         ),
         title: Text(
           displayTitle,
-          textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-          textAlign: isArabic ? TextAlign.right : TextAlign.left,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            height: 1.45,
-          ),
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.left,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, height: 1.45),
         ),
-        subtitle:
-            subtitle.trim().isEmpty
-                ? null
-                : Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    subtitle.trim(),
-                    textDirection:
-                        isArabic ? TextDirection.rtl : TextDirection.ltr,
-                    textAlign: isArabic ? TextAlign.right : TextAlign.left,
-                    style: TextStyle(
-                      fontSize: 11,
-                      height: 1.4,
-                      color: context.secondaryTextColor,
-                    ),
-                  ),
-                ),
-        trailing: const Icon(
-          Icons.chevron_right_rounded,
-          color: AppColors.seaBlue,
-        ),
+        trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.seaBlue),
       ),
     );
   }
