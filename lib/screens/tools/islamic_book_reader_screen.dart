@@ -29,7 +29,6 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
   @override
   void initState() {
     super.initState();
-
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setUserAgent(_userAgent)
@@ -57,8 +56,7 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
             });
           },
           onWebResourceError: (error) {
-            if (!(error.isForMainFrame ?? true)) return;
-            if (!mounted) return;
+            if (!(error.isForMainFrame ?? true) || !mounted) return;
             setState(() {
               _loading = false;
               _hasError = true;
@@ -80,12 +78,8 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
   }
 
   String _friendlyError(int code) {
-    if (code == -2) {
-      return 'ইন্টারনেট সংযোগ বা ওয়েবসাইটে পৌঁছাতে সমস্যা হচ্ছে।';
-    }
-    if (code == -6) {
-      return 'এই অনলাইন বইটি বর্তমানে পাওয়া যাচ্ছে না।';
-    }
+    if (code == -2) return 'ইন্টারনেট সংযোগ বা ওয়েবসাইটে পৌঁছাতে সমস্যা হচ্ছে।';
+    if (code == -6) return 'এই অনলাইন বইটি বর্তমানে পাওয়া যাচ্ছে না।';
     return 'বইটি এখন লোড করা যাচ্ছে না। আবার চেষ্টা করুন।';
   }
 
@@ -107,17 +101,30 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
     return true;
   }
 
+  Future<void> _closeReader() async {
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (_, __) async {
-        if (await _handleBack() && context.mounted) {
-          Navigator.of(context).pop();
-        }
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final shouldClose = await _handleBack();
+        if (shouldClose) await _closeReader();
       },
       child: Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            tooltip: 'ফিরে যান',
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () async {
+              final shouldClose = await _handleBack();
+              if (shouldClose) await _closeReader();
+            },
+          ),
           title: Text(
             widget.title,
             maxLines: 1,
@@ -143,10 +150,7 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
           children: [
             WebViewWidget(controller: _controller),
             if (_hasError)
-              _ReaderError(
-                message: _errorMessage,
-                onRetry: _reload,
-              ),
+              _ReaderError(message: _errorMessage, onRetry: _reload),
           ],
         ),
       ),
@@ -158,10 +162,7 @@ class _ReaderError extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
 
-  const _ReaderError({
-    required this.message,
-    required this.onRetry,
-  });
+  const _ReaderError({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
