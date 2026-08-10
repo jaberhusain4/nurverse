@@ -4,6 +4,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/saved_hadith.dart';
+
 class HadithBookmarkService {
   HadithBookmarkService._();
 
@@ -11,37 +13,62 @@ class HadithBookmarkService {
 
   static const String _storageKey = 'nurverse_saved_hadiths';
 
-  Future<Set<String>> _loadKeys() async {
+  Future<List<SavedHadith>> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getStringList(_storageKey) ?? const <String>[];
-    return raw.toSet();
-  }
+    final result = <SavedHadith>[];
 
-  Future<bool> isSaved(String key) async {
-    final keys = await _loadKeys();
-    return keys.contains(key);
-  }
-
-  Future<bool> toggle(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    final keys = await _loadKeys();
-
-    final saved = keys.contains(key);
-    if (saved) {
-      keys.remove(key);
-    } else {
-      keys.add(key);
+    for (final item in raw) {
+      try {
+        final decoded = jsonDecode(item);
+        if (decoded is Map<String, dynamic>) {
+          result.add(SavedHadith.fromJson(decoded));
+        }
+      } catch (_) {
+        // Ignore malformed legacy entries safely.
+      }
     }
 
-    await prefs.setStringList(_storageKey, keys.toList());
-    return !saved;
+    result.sort((a, b) => b.savedAt.compareTo(a.savedAt));
+    return result;
+  }
+
+  Future<List<SavedHadith>> getAll() => _load();
+
+  Future<bool> isSaved(String key) async {
+    final items = await _load();
+    return items.any((item) => item.key == key);
+  }
+
+  Future<void> save(SavedHadith hadith) async {
+    final prefs = await SharedPreferences.getInstance();
+    final items = await _load();
+    items.removeWhere((item) => item.key == hadith.key);
+    items.insert(0, hadith);
+    await prefs.setStringList(
+      _storageKey,
+      items.map((item) => jsonEncode(item.toJson())).toList(),
+    );
   }
 
   Future<void> remove(String key) async {
     final prefs = await SharedPreferences.getInstance();
-    final keys = await _loadKeys();
-    keys.remove(key);
-    await prefs.setStringList(_storageKey, keys.toList());
+    final items = await _load();
+    items.removeWhere((item) => item.key == key);
+    await prefs.setStringList(
+      _storageKey,
+      items.map((item) => jsonEncode(item.toJson())).toList(),
+    );
+  }
+
+  Future<bool> toggle(SavedHadith hadith) async {
+    final saved = await isSaved(hadith.key);
+    if (saved) {
+      await remove(hadith.key);
+      return false;
+    }
+    await save(hadith);
+    return true;
   }
 
   String buildKey({
