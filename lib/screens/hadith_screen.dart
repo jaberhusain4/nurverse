@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/daily_hadith_service.dart';
 import '../services/hadith_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common_widgets.dart';
@@ -13,20 +14,12 @@ class HadithScreen extends StatefulWidget {
 }
 
 class _HadithScreenState extends State<HadithScreen> {
-  final TextEditingController _searchController = TextEditingController();
-
   List<HadithBook> get _collections => kHadithBooks;
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
   void _openBook(HadithBook book) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => HadithChaptersScreen(book: book)));
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => HadithChaptersScreen(book: book)),
+    );
   }
 
   void _showSearch() {
@@ -34,12 +27,14 @@ class _HadithScreenState extends State<HadithScreen> {
       context: context,
       delegate: _HadithSearchDelegate(_collections),
     ).then((book) {
-      if (!mounted || book == null) {
-        return;
-      }
-
+      if (!mounted || book == null) return;
       _openBook(book);
     });
+  }
+
+  Future<void> _refresh() async {
+    HadithService.instance.clearCache();
+    if (mounted) setState(() {});
   }
 
   @override
@@ -56,7 +51,7 @@ class _HadithScreenState extends State<HadithScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            tooltip: 'হাদিস খুঁজুন',
+            tooltip: 'হাদিস গ্রন্থ খুঁজুন',
             onPressed: _showSearch,
             icon: const Icon(Icons.search_rounded),
           ),
@@ -64,27 +59,22 @@ class _HadithScreenState extends State<HadithScreen> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: () async {
-            HadithService.instance.clearCache();
-
-            if (mounted) {
-              setState(() {});
-            }
-          },
+          onRefresh: _refresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md,
               8,
               AppSpacing.md,
-              28,
+              30,
             ),
             children: [
               const _HadithHeroCard(),
-              const SizedBox(height: 18),
-              _TodayHadithCard(secondary: secondary),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              const _TodayHadithCard(),
+              const SizedBox(height: 25),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
                     width: 4,
@@ -95,22 +85,62 @@ class _HadithScreenState extends State<HadithScreen> {
                     ),
                   ),
                   const SizedBox(width: 9),
-                  Text(
-                    'হাদিস গ্রন্থসমূহ',
-                    style: TextStyle(
-                      color: primary,
-                      fontSize: 19,
-                      fontWeight: FontWeight.w800,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'হাদিস গ্রন্থসমূহ',
+                          style: TextStyle(
+                            color: primary,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${_collections.length}টি প্রামাণ্য সংকলন',
+                          style: TextStyle(
+                            color: secondary,
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.seaBlue.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.cloud_off_rounded,
+                          size: 13,
+                          color: AppColors.seaBlue,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'অফলাইন',
+                          style: TextStyle(
+                            color: AppColors.seaBlue,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 5),
-              Text(
-                'প্রামাণ্য হাদিসের বিভিন্ন সংকলন থেকে পড়ুন',
-                style: TextStyle(color: secondary, fontSize: 13, height: 1.5),
-              ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 13),
               ...List.generate(_collections.length, (index) {
                 final book = _collections[index];
 
@@ -132,7 +162,7 @@ class _HadithScreenState extends State<HadithScreen> {
 }
 
 // =============================================================================
-// HERO CARD
+// HERO
 // =============================================================================
 
 class _HadithHeroCard extends StatelessWidget {
@@ -144,36 +174,38 @@ class _HadithHeroCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 21, 20, 20),
+      padding: const EdgeInsets.fromLTRB(20, 19, 20, 18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.seaBlue.withValues(alpha: 0.16),
-            AppColors.seaBlue.withValues(alpha: 0.05),
+            AppColors.seaBlue.withValues(alpha: 0.17),
+            AppColors.seaBlue.withValues(alpha: 0.045),
           ],
         ),
-        border: Border.all(color: AppColors.seaBlue.withValues(alpha: 0.12)),
+        border: Border.all(
+          color: AppColors.seaBlue.withValues(alpha: 0.12),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 54,
-            height: 54,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
               color: AppColors.seaBlue.withValues(alpha: 0.13),
-              borderRadius: BorderRadius.circular(17),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(
               Icons.menu_book_rounded,
               color: AppColors.seaBlue,
-              size: 28,
+              size: 27,
             ),
           ),
-          const SizedBox(width: 15),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,13 +218,34 @@ class _HadithHeroCard extends StatelessWidget {
                     height: 1.25,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 5),
                 Text(
                   'রাসূলুল্লাহ ﷺ-এর বাণী, কর্ম ও আদর্শ থেকে জ্ঞান অর্জন করুন।',
                   style: TextStyle(
                     color: secondary,
-                    fontSize: 13,
-                    height: 1.55,
+                    fontSize: 12.5,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor.withValues(
+                      alpha: 0.55,
+                    ),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: const Text(
+                    'জ্ঞান • আমল • আখলাক',
+                    style: TextStyle(
+                      color: AppColors.seaBlue,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -209,9 +262,7 @@ class _HadithHeroCard extends StatelessWidget {
 // =============================================================================
 
 class _TodayHadithCard extends StatefulWidget {
-  final Color secondary;
-
-  const _TodayHadithCard({required this.secondary});
+  const _TodayHadithCard();
 
   @override
   State<_TodayHadithCard> createState() => _TodayHadithCardState();
@@ -237,20 +288,16 @@ class _TodayHadithCardState extends State<_TodayHadithCard> {
     }
 
     try {
-      final hadith = await HadithService.instance.getTodayHadith();
+      final hadith = await DailyHadithService.instance.getTodayHadith();
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         _hadith = hadith;
         _isLoading = false;
       });
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         _hadith = null;
@@ -262,8 +309,10 @@ class _TodayHadithCardState extends State<_TodayHadithCard> {
 
   @override
   Widget build(BuildContext context) {
+    final secondary = context.secondaryTextColor;
+
     return NvCard(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.fromLTRB(17, 16, 17, 17),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -297,9 +346,9 @@ class _TodayHadithCardState extends State<_TodayHadithCard> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'প্রতিদিন একটি হাদিস পড়ুন',
+                      'প্রতিদিন একটি ছোট হাদিস পড়ুন',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 10.8,
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -309,18 +358,19 @@ class _TodayHadithCardState extends State<_TodayHadithCard> {
               IconButton(
                 tooltip: 'আবার লোড করুন',
                 onPressed: _isLoading ? null : _load,
-                icon: const Icon(Icons.refresh_rounded, size: 20),
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.refresh_rounded, size: 19),
               ),
             ],
           ),
-          const SizedBox(height: 15),
-          _buildContent(),
+          const SizedBox(height: 12),
+          _buildContent(secondary),
         ],
       ),
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(Color secondary) {
     if (_isLoading) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 18),
@@ -329,14 +379,14 @@ class _TodayHadithCardState extends State<_TodayHadithCard> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(
-                width: 23,
-                height: 23,
-                child: CircularProgressIndicator(strokeWidth: 2.2),
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.1),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 9),
               Text(
                 'হাদিস লোড হচ্ছে...',
-                style: TextStyle(fontSize: 12, color: widget.secondary),
+                style: TextStyle(fontSize: 12, color: secondary),
               ),
             ],
           ),
@@ -349,23 +399,19 @@ class _TodayHadithCardState extends State<_TodayHadithCard> {
         children: [
           Icon(
             Icons.menu_book_outlined,
-            size: 32,
-            color: widget.secondary.withValues(alpha: 0.55),
+            size: 31,
+            color: secondary.withValues(alpha: 0.55),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 7),
           Text(
             _error ?? 'আজকের হাদিস পাওয়া যায়নি।',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.5,
-              color: widget.secondary,
-            ),
+            style: TextStyle(fontSize: 13, height: 1.5, color: secondary),
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: 8),
           TextButton.icon(
             onPressed: _load,
-            icon: const Icon(Icons.refresh_rounded, size: 18),
+            icon: const Icon(Icons.refresh_rounded, size: 17),
             label: const Text('আবার চেষ্টা করুন'),
           ),
         ],
@@ -373,69 +419,76 @@ class _TodayHadithCardState extends State<_TodayHadithCard> {
     }
 
     final hadith = _hadith!;
+    final text = hadith.bangla.trim();
 
-    if (hadith.arabic.isEmpty && hadith.bangla.isEmpty) {
+    if (text.isEmpty) {
       return Text(
-        'এই হাদিসের তথ্য পাওয়া যায়নি।',
+        'আজকের হাদিস পাওয়া যায়নি।',
         textAlign: TextAlign.center,
-        style: TextStyle(color: widget.secondary, fontSize: 13),
+        style: TextStyle(color: secondary, fontSize: 13),
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (hadith.arabic.isNotEmpty) ...[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(15, 14, 15, 15),
-            decoration: BoxDecoration(
-              color: AppColors.seaBlue.withValues(alpha: 0.045),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Text(
-              hadith.arabic,
-              textAlign: TextAlign.right,
-              textDirection: TextDirection.rtl,
-              style: const TextStyle(
-                fontSize: 19,
-                height: 2,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(15, 15, 15, 13),
+      decoration: BoxDecoration(
+        color: AppColors.seaBlue.withValues(alpha: 0.045),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.seaBlue.withValues(alpha: 0.075),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.format_quote_rounded,
+            color: AppColors.seaBlue,
+            size: 23,
           ),
-          const SizedBox(height: 14),
-        ],
-        if (hadith.bangla.isNotEmpty)
+          const SizedBox(height: 4),
           Text(
-            hadith.bangla,
-            textAlign: TextAlign.left,
-            textDirection: TextDirection.ltr,
+            text,
+            textAlign: TextAlign.start,
             style: const TextStyle(
               fontSize: 15,
-              height: 1.8,
+              height: 1.75,
               fontWeight: FontWeight.w500,
             ),
           ),
-        if (hadith.narrator.isNotEmpty) ...[
           const SizedBox(height: 12),
-          Text(
-            'বর্ণনাকারী: ${hadith.narrator}',
-            style: TextStyle(
-              color: widget.secondary,
-              fontSize: 11.5,
-              height: 1.5,
-            ),
+          Container(
+            height: 1,
+            color: AppColors.seaBlue.withValues(alpha: 0.09),
+          ),
+          const SizedBox(height: 9),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.menu_book_rounded,
+                size: 14,
+                color: AppColors.seaBlue,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  hadith.reference.isNotEmpty
+                      ? 'রেফারেন্স: ${hadith.reference}'
+                      : 'হাদিস: ${hadith.hadithNo}',
+                  style: TextStyle(
+                    color: secondary,
+                    fontSize: 10.8,
+                    height: 1.45,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
-        if (hadith.reference.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Text(
-            'রেফারেন্স: ${hadith.reference}',
-            style: TextStyle(color: widget.secondary, fontSize: 11),
-          ),
-        ],
-      ],
+      ),
     );
   }
 }
@@ -463,27 +516,24 @@ class _HadithCollectionCard extends StatelessWidget {
       padding: EdgeInsets.zero,
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 13, 12, 13),
+        padding: const EdgeInsets.fromLTRB(13, 12, 11, 12),
         child: Row(
           children: [
             Container(
-              width: 49,
-              height: 49,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: AppColors.seaBlue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(15),
               ),
               alignment: Alignment.center,
-              child: Text(
-                _toBanglaNumber(index + 1),
-                style: const TextStyle(
-                  color: AppColors.seaBlue,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                ),
+              child: const Icon(
+                Icons.menu_book_rounded,
+                color: AppColors.seaBlue,
+                size: 22,
               ),
             ),
-            const SizedBox(width: 13),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -496,12 +546,12 @@ class _HadithCollectionCard extends StatelessWidget {
                       height: 1.35,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     book.nameEn,
                     style: TextStyle(
                       color: secondary,
-                      fontSize: 11.5,
+                      fontSize: 11.2,
                       height: 1.4,
                     ),
                   ),
@@ -509,15 +559,15 @@ class _HadithCollectionCard extends StatelessWidget {
               ),
             ),
             Container(
-              width: 34,
-              height: 34,
+              width: 33,
+              height: 33,
               decoration: BoxDecoration(
                 color: AppColors.seaBlue.withValues(alpha: 0.07),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.arrow_forward_ios_rounded,
-                size: 14,
+                size: 13,
                 color: AppColors.seaBlue,
               ),
             ),
@@ -525,16 +575,6 @@ class _HadithCollectionCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _toBanglaNumber(int number) {
-    const english = '0123456789';
-    const bangla = '০১২৩৪৫৬৭৮৯';
-
-    return number.toString().split('').map((char) {
-      final index = english.indexOf(char);
-      return index == -1 ? char : bangla[index];
-    }).join();
   }
 }
 
@@ -551,16 +591,14 @@ class _HadithSearchDelegate extends SearchDelegate<HadithBook?> {
   String get searchFieldLabel => 'হাদিস গ্রন্থ খুঁজুন';
 
   @override
-  TextStyle? get searchFieldStyle {
-    return const TextStyle(fontSize: 15, fontWeight: FontWeight.w500);
-  }
+  TextStyle? get searchFieldStyle => const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+      );
 
   List<HadithBook> _results(String query) {
     final q = query.trim().toLowerCase();
-
-    if (q.isEmpty) {
-      return books;
-    }
+    if (q.isEmpty) return books;
 
     return books.where((book) {
       return book.nameBn.toLowerCase().contains(q) ||
@@ -591,14 +629,10 @@ class _HadithSearchDelegate extends SearchDelegate<HadithBook?> {
   }
 
   @override
-  Widget buildResults(BuildContext context) {
-    return _buildList(context);
-  }
+  Widget buildResults(BuildContext context) => _buildList(context);
 
   @override
-  Widget buildSuggestions(BuildContext context) {
-    return _buildList(context);
-  }
+  Widget buildSuggestions(BuildContext context) => _buildList(context);
 
   Widget _buildList(BuildContext context) {
     final results = _results(query);
