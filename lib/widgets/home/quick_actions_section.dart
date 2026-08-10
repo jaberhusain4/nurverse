@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../screens/dua/dua_screen.dart';
 import '../../screens/tools/asma_ul_husna.dart';
 import '../../screens/hadith_screen.dart';
 import '../../screens/more_screen.dart';
 import '../../screens/prayer_screen.dart';
+import '../../screens/tools/calendar_screen.dart';
 import '../../screens/tools/qibla_screen.dart';
 import '../../screens/quran_screen.dart';
 import '../../screens/tools/tasbih_screen.dart';
@@ -63,6 +65,22 @@ class QuickActionsSection extends StatelessWidget {
         () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const AsmaUlHusnaScreen()),
+        ),
+      ),
+      (
+        "Dua",
+        Icons.favorite_rounded,
+        () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const DuaScreen()),
+        ),
+      ),
+      (
+        'Calendar',
+        Icons.calendar_month_rounded,
+        () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CalendarScreen()),
         ),
       ),
       (
