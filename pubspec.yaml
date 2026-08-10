@@ -32,6 +32,9 @@ dependencies:
   # share plus
   share_plus: ^12.0.1
 
+  # External links
+  url_launcher: ^6.3.2
+
   # Network
   http: ^1.5.0
 
@@ -43,11 +46,10 @@ dependencies:
   hijri: ^3.0.0
 
   timezone: ^0.10.1
-
   flutter_timezone: ^4.1.1
 
   # Compass (Qibla)
-  flutter_compass: ^0.8.0 # এই লাইনটি যোগ করুন
+  flutter_compass: ^0.8.0
 
   # Notifications
   flutter_local_notifications: ^19.1.0
@@ -61,6 +63,9 @@ dependencies:
   path_provider: ^2.1.5
   path: ^1.9.0
   geocoding: ^3.0.0
+
+  # Additional
+  # Keep dependencies above sorted by functional group.
 
 dev_dependencies:
   flutter_test:
