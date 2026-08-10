@@ -16,7 +16,7 @@ class IslamicBooksScreen extends StatelessWidget {
     ),
     _BookResource(
       title: 'কুরআন ও বাংলা তাফসীর',
-      description: 'বাংলা অনুবাদ ও তাফসীরের ডিজিটাল সংস্করণ।',
+      description: 'বাংলা অনুবাদ ও তাফসীরের ডিজিটাল রিসোর্স।',
       source: 'Waqfeya',
       icon: Icons.auto_stories_rounded,
       url: 'https://waqfeya.net/',
@@ -44,20 +44,30 @@ class IslamicBooksScreen extends StatelessWidget {
       return;
     }
 
-    try {
-      final opened = await launchUrl(
-        uri,
-        mode: LaunchMode.platformDefault,
-        webOnlyWindowName: '_blank',
-      );
+    bool opened = false;
 
-      if (!opened && context.mounted) {
-        _showError(context);
-      }
+    try {
+      opened = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
     } catch (_) {
-      if (context.mounted) {
-        _showError(context);
+      opened = false;
+    }
+
+    if (!opened) {
+      try {
+        opened = await launchUrl(
+          uri,
+          mode: LaunchMode.platformDefault,
+        );
+      } catch (_) {
+        opened = false;
       }
+    }
+
+    if (!opened && context.mounted) {
+      _showError(context);
     }
   }
 
@@ -65,7 +75,9 @@ class IslamicBooksScreen extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         behavior: SnackBarBehavior.floating,
-        content: Text('অনলাইন বইটি খোলা যাচ্ছে না। ইন্টারনেট সংযোগ ও ব্রাউজার পরীক্ষা করুন।'),
+        content: Text(
+          'অনলাইন বইটি খোলা যাচ্ছে না। ফোনে Chrome বা অন্য কোনো ব্রাউজার ইনস্টল আছে কি না দেখুন।',
+        ),
       ),
     );
   }
