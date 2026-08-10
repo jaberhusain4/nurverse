@@ -148,7 +148,7 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
             child: _ChapterCard(
               index: index,
               title: _chapterTitle(chapter, index),
-              hadithCount: stats?.total ?? 0,
+              hadithCount: stats?.count ?? 0,
               onTap: () => _openChapter(chapter),
             ),
           );
@@ -267,7 +267,11 @@ class _ChapterCard extends StatelessWidget {
 
   String _bnDigits(int value) {
     const digits = '০১২৩৪৫৬৭৮৯';
-    return value.toString().split('').map((d) => digits[int.parse(d)]).join();
+    return value
+        .toString()
+        .split('')
+        .map((d) => digits[int.parse(d)])
+        .join();
   }
 }
 
@@ -318,19 +322,27 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Text(
-          'এই গ্রন্থের কোনো অধ্যায় পাওয়া যায়নি।',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            height: 1.55,
-            color: context.secondaryTextColor,
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.35,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'এই গ্রন্থের কোনো অধ্যায় পাওয়া যায়নি।',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.55,
+                  color: context.secondaryTextColor,
+                ),
+              ),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
