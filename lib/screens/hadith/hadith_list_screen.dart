@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../services/hadith_bookmark_service.dart';
 import '../../services/hadith_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
@@ -26,6 +27,7 @@ class _HadithListScreenState extends State<HadithListScreen> {
   String? _error;
   bool _isLoading = true;
   bool _didLoad = false;
+  final Set<String> _savedKeys = <String>{};
 
   String get _loadingText => 'হাদিস লোড হচ্ছে...';
   String get _errorText => 'হাদিস লোড করা যায়নি। আবার চেষ্টা করুন।';
@@ -37,12 +39,17 @@ class _HadithListScreenState extends State<HadithListScreen> {
   String get _narratorLabel => 'বর্ণনাকারী';
   String get _referenceLabel => 'রেফারেন্স';
   String get _gradeLabel => 'মান';
-  String get _bookmarkLabel => 'বুকমার্ক';
+  String get _bookmarkLabel => 'সংরক্ষণ';
+  String get _savedLabel => 'সংরক্ষিত';
   String get _shareLabel => 'শেয়ার';
 
   String get _chapterTitle {
-    if (widget.chapter.nameBn.trim().isNotEmpty) return widget.chapter.nameBn.trim();
-    if (widget.chapter.nameAr.trim().isNotEmpty) return widget.chapter.nameAr.trim();
+    if (widget.chapter.nameBn.trim().isNotEmpty) {
+      return widget.chapter.nameBn.trim();
+    }
+    if (widget.chapter.nameAr.trim().isNotEmpty) {
+      return widget.chapter.nameAr.trim();
+    }
     return widget.book.nameBn;
   }
 
@@ -53,6 +60,14 @@ class _HadithListScreenState extends State<HadithListScreen> {
       _didLoad = true;
       _load();
     }
+  }
+
+  String _bookmarkKey(HadithItem hadith) {
+    return HadithBookmarkService.instance.buildKey(
+      bookKey: widget.book.key,
+      hadithNo: hadith.hadithNo,
+      arabic: hadith.arabic,
+    );
   }
 
   Future<void> _load() async {
@@ -71,10 +86,20 @@ class _HadithListScreenState extends State<HadithListScreen> {
         languageCode: 'bn',
       );
 
+      final saved = <String>{};
+      for (final hadith in list) {
+        if (await HadithBookmarkService.instance.isSaved(_bookmarkKey(hadith))) {
+          saved.add(_bookmarkKey(hadith));
+        }
+      }
+
       if (!mounted) return;
 
       setState(() {
         _hadiths = list;
+        _savedKeys
+          ..clear()
+          ..addAll(saved);
         _isLoading = false;
         _error = null;
       });
@@ -87,6 +112,30 @@ class _HadithListScreenState extends State<HadithListScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _toggleBookmark(HadithItem hadith) async {
+    final key = _bookmarkKey(hadith);
+    final saved = await HadithBookmarkService.instance.toggle(key);
+    if (!mounted) return;
+
+    setState(() {
+      if (saved) {
+        _savedKeys.add(key);
+      } else {
+        _savedKeys.remove(key);
+      }
+    });
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(saved ? 'হাদিসটি সংরক্ষণ করা হয়েছে' : 'হাদিসটি সংরক্ষণ থেকে সরানো হয়েছে'),
+          duration: const Duration(milliseconds: 1200),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
   Future<void> _shareHadith(HadithItem hadith) async {
@@ -117,12 +166,11 @@ class _HadithListScreenState extends State<HadithListScreen> {
     }
 
     final number = hadith.hadithNo.trim();
-    if (number.isNotEmpty) {
-      buffer.writeln('${widget.book.nameBn} • $_hadithNumberLabel $number');
-    } else {
-      buffer.writeln(widget.book.nameBn);
-    }
-
+    buffer.writeln(
+      number.isNotEmpty
+          ? '${widget.book.nameBn} • $_hadithNumberLabel $number'
+          : widget.book.nameBn,
+    );
     buffer.writeln('\nNurVerse');
 
     final text = buffer.toString().trim();
@@ -182,10 +230,12 @@ class _HadithListScreenState extends State<HadithListScreen> {
         itemCount: hadiths.length,
         itemBuilder: (context, index) {
           final hadith = hadiths[index];
+          final key = _bookmarkKey(hadith);
           return Padding(
             padding: const EdgeInsets.only(bottom: 14),
             child: _HadithCard(
               hadith: hadith,
+              isSaved: _savedKeys.contains(key),
               hadithNumberLabel: _hadithNumberLabel,
               arabicLabel: _arabicLabel,
               banglaLabel: _banglaLabel,
@@ -193,7 +243,9 @@ class _HadithListScreenState extends State<HadithListScreen> {
               referenceLabel: _referenceLabel,
               gradeLabel: _gradeLabel,
               bookmarkLabel: _bookmarkLabel,
+              savedLabel: _savedLabel,
               shareLabel: _shareLabel,
+              onBookmark: () => _toggleBookmark(hadith),
               onShare: () => _shareHadith(hadith),
             ),
           );
@@ -255,6 +307,7 @@ class _HadithListScreenState extends State<HadithListScreen> {
 
 class _HadithCard extends StatelessWidget {
   final HadithItem hadith;
+  final bool isSaved;
   final String hadithNumberLabel;
   final String arabicLabel;
   final String banglaLabel;
@@ -262,11 +315,14 @@ class _HadithCard extends StatelessWidget {
   final String referenceLabel;
   final String gradeLabel;
   final String bookmarkLabel;
+  final String savedLabel;
   final String shareLabel;
+  final VoidCallback onBookmark;
   final VoidCallback onShare;
 
   const _HadithCard({
     required this.hadith,
+    required this.isSaved,
     required this.hadithNumberLabel,
     required this.arabicLabel,
     required this.banglaLabel,
@@ -274,7 +330,9 @@ class _HadithCard extends StatelessWidget {
     required this.referenceLabel,
     required this.gradeLabel,
     required this.bookmarkLabel,
+    required this.savedLabel,
     required this.shareLabel,
+    required this.onBookmark,
     required this.onShare,
   });
 
@@ -292,10 +350,7 @@ class _HadithCard extends StatelessWidget {
           ],
           if (hadith.bangla.trim().isNotEmpty) ...[
             const SizedBox(height: 16),
-            _buildTranslation(
-              label: banglaLabel,
-              text: hadith.bangla,
-            ),
+            _buildTranslation(label: banglaLabel, text: hadith.bangla),
           ],
           if (hadith.narrator.trim().isNotEmpty) ...[
             const SizedBox(height: 14),
@@ -346,9 +401,13 @@ class _HadithCard extends StatelessWidget {
           ),
         const Spacer(),
         IconButton(
-          tooltip: bookmarkLabel,
-          onPressed: () {},
-          icon: const Icon(Icons.bookmark_border_rounded, size: 21),
+          tooltip: isSaved ? savedLabel : bookmarkLabel,
+          onPressed: onBookmark,
+          icon: Icon(
+            isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+            size: 21,
+            color: isSaved ? AppColors.seaBlue : null,
+          ),
         ),
         IconButton(
           tooltip: shareLabel,
@@ -374,11 +433,7 @@ class _HadithCard extends StatelessWidget {
             arabicLabel,
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.right,
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppColors.seaBlue,
-              fontWeight: FontWeight.w800,
-            ),
+            style: const TextStyle(fontSize: 11, color: AppColors.seaBlue, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
           Text(
@@ -402,11 +457,7 @@ class _HadithCard extends StatelessWidget {
             label,
             textDirection: TextDirection.ltr,
             textAlign: TextAlign.left,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.seaBlue,
-              fontWeight: FontWeight.w800,
-            ),
+            style: const TextStyle(fontSize: 12, color: AppColors.seaBlue, fontWeight: FontWeight.w800),
           ),
         ),
         const SizedBox(height: 7),
