@@ -3,8 +3,8 @@
 /// Offline Bengali chapter-title localization for Hadith collections.
 ///
 /// The bundled Bengali editions do not consistently contain Bengali section
-/// metadata. This layer keeps the UI Bengali-first without changing the
-/// underlying hadith IDs, book numbers, or bundled JSON assets.
+/// metadata. This layer keeps the UI Bengali-first without changing hadith
+/// IDs, book numbers, or the bundled JSON assets.
 class HadithChapterLocalization {
   const HadithChapterLocalization._();
 
@@ -17,16 +17,13 @@ class HadithChapterLocalization {
     final bn = bengali.trim();
     if (bn.isNotEmpty && !_containsLatin(bn)) return bn;
 
-    final direct = _map[_normalize(bn)] ?? _map[_normalize(english)];
+    final direct = _subjects[_normalize(bn)] ?? _subjects[_normalize(english)];
     if (direct != null) return direct;
 
     final generated = _generateFromEnglish(english);
     if (generated != null) return generated;
 
-    // Do not leak English metadata into the Bengali UI.
-    final ar = arabic.trim();
-    if (ar.isNotEmpty) return ar;
-
+    // Never leak English or Arabic metadata into the Bengali chapter list.
     return 'অধ্যায় ${_bnDigits(chapterIndex)}';
   }
 
@@ -45,108 +42,121 @@ class HadithChapterLocalization {
     final normalized = _normalize(value);
     if (normalized.isEmpty) return null;
 
-    const exactPrefixes = <String, String>{
-      'the book of ': 'কিতাবুল ',
-      'book of ': 'কিতাবুল ',
-    };
-
-    for (final entry in exactPrefixes.entries) {
-      if (normalized.startsWith(entry.key)) {
-        final subject = normalized.substring(entry.key.length).trim();
+    const prefixes = ['the book of ', 'book of '];
+    for (final prefix in prefixes) {
+      if (normalized.startsWith(prefix)) {
+        final subject = normalized.substring(prefix.length).trim();
         final translated = _subjects[subject];
-        if (translated != null) return '${translated}-এর কিতাব';
+        if (translated != null) return '$translated-এর কিতাব';
       }
     }
 
-    final exact = _subjects[normalized];
-    if (exact != null) return exact;
-
-    return null;
+    return _subjects[normalized];
   }
 
   static const Map<String, String> _subjects = {
+    'revelation': 'ওহীর সূচনা',
     'faith': 'ঈমান',
     'belief': 'ঈমান',
     'iman': 'ঈমান',
+    'knowledge': 'ইলম ও জ্ঞান',
     'purification': 'পবিত্রতা',
     'ablution': 'উযূ',
     'ablutions': 'উযূ',
+    "ablutions (wudu')": 'উযূ',
+    'bathing': 'গোসল',
+    'bathing (ghusl)': 'গোসল',
+    'menstrual periods': 'হায়েয',
+    'tayammum': 'তায়াম্মুম',
     'prayer': 'সালাত',
     'prayers': 'সালাত',
+    'prayers (salat)': 'সালাত',
+    'times of the prayers': 'সালাতের ওয়াক্ত',
+    'call to prayers': 'আযান',
+    'call to prayers (adhaan)': 'আযান',
+    'friday prayer': 'জুমুআর সালাত',
+    'fear prayer': 'ভয়ের সময়ের সালাত',
+    'the two festivals (eids)': 'দুই ঈদের সালাত',
+    'witr prayer': 'বিতর সালাত',
+    'night prayer': 'রাতের সালাত',
+    'prayer at night (tahajjud)': 'রাতের সালাত (তাহাজ্জুদ)',
+    'eclipses': 'সূর্য ও চন্দ্রগ্রহণ',
+    'prostration': 'সিজদা',
+    "prostration during recital of qur'an": 'কুরআন তিলাওয়াতের সময় সিজদা',
+    'shortening the prayers': 'সালাত কসর করা',
+    'shortening the prayers (at-taqseer)': 'সালাত কসর করা',
     'fasting': 'সিয়াম ও রোযা',
     'zakat': 'যাকাত',
+    'obligatory charity tax (zakat)': 'যাকাত',
     'hajj': 'হজ্জ',
+    'hajj (pilgrimage)': 'হজ্জ',
     'umrah': 'উমরাহ',
-    'marriage': 'বিবাহ',
-    'divorce': 'তালাক',
-    'inheritance': 'উত্তরাধিকার',
+    '`umrah (minor pilgrimage)': 'উমরাহ',
+    'virtues of madinah': 'মদিনার ফযীলত',
+    'night of qadr': 'লাইলাতুল কদর',
+    'virtues of the night of qadr': 'লাইলাতুল কদরের ফযীলত',
+    "i'tikaf": 'ইতিকাফ',
+    "retiring to a mosque for remembrance of allah (i'tikaf)": 'আল্লাহর স্মরণের জন্য মসজিদে ইতিকাফ',
+    'sales and trade': 'ক্রয়-বিক্রয় ও ব্যবসা',
+    'sales': 'ক্রয়-বিক্রয়',
+    'transactions': 'লেনদেন',
+    'agriculture': 'কৃষি',
+    'distribution of water': 'পানি বণ্টন ও সেচ',
+    'loans': 'ঋণ',
+    'partnership': 'অংশীদারিত্ব',
+    'mortgaging': 'বন্ধক রাখা',
+    'hiring': 'ভাড়া ও শ্রমিক নিয়োগ',
+    'gifts': 'উপহার',
+    'witnesses': 'সাক্ষ্য',
+    'testimonies': 'সাক্ষ্যসমূহ',
+    'peacemaking': 'মীমাংসা ও সন্ধি',
+    'conditions': 'শর্তাবলি',
+    'oppressions': 'জুলুম ও নির্যাতন',
+    'funerals': 'জানাযা',
     'wills': 'অছিয়ত',
+    'wills and testaments': 'অছিয়ত ও উইল',
+    'inheritance': 'উত্তরাধিকার',
     'oaths': 'শপথ',
     'vows': 'মানত',
-    'business': 'ব্যবসা-বাণিজ্য',
-    'transactions': 'লেনদেন',
-    'sales': 'ক্রয়-বিক্রয়',
-    'gifts': 'উপহার',
+    'divorce': 'তালাক',
+    'marriage': 'বিবাহ',
     'food': 'খাদ্য',
     'drinks': 'পানীয়',
     'clothing': 'পোশাক',
     'greetings': 'সালাম ও অভিবাদন',
     'manners': 'আদব ও শিষ্টাচার',
-    'knowledge': 'ইলম',
-    'remembrance': 'যিকির',
+    'medicine': 'চিকিৎসা',
+    'patients': 'রোগী ও চিকিৎসা',
+    'dreams': 'স্বপ্ন',
+    'invocations': 'দোয়া ও যিকির',
     'supplication': 'দোয়া',
+    'remembrance': 'যিকির',
     'repentance': 'তওবা',
     'virtues': 'ফযীলত',
     'destiny': 'তাকদীর',
-    'judgment': 'বিচার',
+    'divine will': 'তাকদীর',
+    'judgment': 'বিচার ও ফয়সালা',
     'judgments': 'বিচার ও ফয়সালা',
     'jihad': 'জিহাদ',
     'leadership': 'নেতৃত্ব',
     'fitnah': 'ফিতনা',
+    'tribulations': 'ফিতনা ও বিপদ',
     'paradise': 'জান্নাত',
     'hellfire': 'জাহান্নাম',
     'punishments': 'দণ্ডবিধি',
     'legal punishments': 'শরয়ী দণ্ড',
     'blood-money': 'রক্তপণ',
-    'medicine': 'চিকিৎসা',
-    'patients': 'রোগী ও চিকিৎসা',
-    'dreams': 'স্বপ্ন',
-    'creation': 'সৃষ্টির সূচনা',
-    'prophets': 'নবীগণ',
-    'companions': 'সাহাবায়ে কেরাম',
-    'revelation': 'ওহী',
-    'divine will': 'তাকদীর',
-    'tribulations': 'ফিতনা ও বিপদ',
-    'funerals': 'জানাযা',
     'sacrifice': 'কুরবানী',
     'hunting': 'শিকার',
-    'agriculture': 'কৃষি',
-    'loans': 'ঋণ',
-    'partnership': 'অংশীদারিত্ব',
-    'witnesses': 'সাক্ষ্য',
-    'testimonies': 'সাক্ষ্যসমূহ',
-    'peacemaking': 'মীমাংসা ও সন্ধি',
-    'conditions': 'শর্তাবলি',
+    'creation': 'সৃষ্টির সূচনা',
+    'beginning of creation': 'সৃষ্টির সূচনা',
+    'prophets': 'নবীগণ',
+    'companions': 'সাহাবায়ে কেরাম',
     'manumission': 'দাসমুক্তি',
     'asking permission': 'অনুমতি প্রার্থনা',
-    'invocations': 'দোয়া ও যিকির',
-    'night prayer': 'রাতের সালাত',
-    'friday prayer': 'জুমুআর সালাত',
-    'witr prayer': 'বিতর সালাত',
-    'eclipses': 'সূর্য ও চন্দ্রগ্রহণ',
-    'the two festivals': 'দুই ঈদের সালাত',
-    'times of the prayers': 'সালাতের ওয়াক্ত',
-    'call to prayers': 'আযান',
-    'fear prayer': 'ভয়ের সময়ের সালাত',
-    'bathing': 'গোসল',
-    'menstrual periods': 'হায়েয',
-    'tayammum': 'তায়াম্মুম',
-    'prostration': 'সিজদা',
-    'shortening the prayers': 'সালাত কসর করা',
-    'night of qadr': 'লাইলাতুল কদর',
-    'i\'tikaf': 'ইতিকাফ',
-    'beginning of creation': 'সৃষ্টির সূচনা',
-    'virtues of madinah': 'মদিনার ফযীলত',
+    'one-fifth of booty to the cause of allah (khumus)': 'গনীমতের এক-পঞ্চমাংশ',
+    "fighting for the cause of allah (jihaad)": 'আল্লাহর পথে জিহাদ',
+    'jizyah and mawaadaah': 'জিযিয়া ও সন্ধিচুক্তি',
   };
 
   static String _bnDigits(int value) {
