@@ -141,7 +141,7 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
             child: _ChapterCard(
               chapter: chapter,
               index: index,
-              title: _chapterTitle(chapter),
+              title: _chapterTitle(chapter, index),
               fallbackTitle: '$_chapterLabel ${_bnDigits(index + 1)}',
               stats: _stats[chapter.id],
               onTap: () => _openChapter(chapter),
@@ -214,12 +214,180 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     );
   }
 
-  String _chapterTitle(HadithChapter chapter) {
-    if (chapter.nameBn.trim().isNotEmpty) return chapter.nameBn.trim();
-    if (chapter.nameAr.trim().isNotEmpty) return chapter.nameAr.trim();
-    if (chapter.nameEn.trim().isNotEmpty) return chapter.nameEn.trim();
-    return '';
+  String _chapterTitle(HadithChapter chapter, int index) {
+    final bangla = chapter.nameBn.trim();
+
+    if (bangla.isNotEmpty && !_looksEnglish(bangla)) {
+      return bangla;
+    }
+
+    final translated = _translateChapterTitle(bangla);
+    if (translated.isNotEmpty) {
+      return translated;
+    }
+
+    final english = chapter.nameEn.trim();
+    final translatedEnglish = _translateChapterTitle(english);
+    if (translatedEnglish.isNotEmpty) {
+      return translatedEnglish;
+    }
+
+    if (chapter.nameAr.trim().isNotEmpty) {
+      return chapter.nameAr.trim();
+    }
+
+    // Never expose an English chapter title in the Bangla UI.
+    return '$_chapterLabel ${_bnDigits(index + 1)}';
   }
+
+  bool _looksEnglish(String value) {
+    if (value.isEmpty) return false;
+
+    final latin = RegExp(r'[A-Za-z]');
+    return latin.hasMatch(value);
+  }
+
+  String _translateChapterTitle(String value) {
+    final key = value.trim().toLowerCase();
+    if (key.isEmpty) return '';
+
+    return _chapterTranslations[key] ?? '';
+  }
+
+  static const Map<String, String> _chapterTranslations = {
+    // Sahih al-Bukhari
+    'revelation': 'ওহীর সূচনা',
+    'belief': 'ঈমান',
+    'knowledge': 'ইলম ও জ্ঞান',
+    "ablutions (wudu')": 'উযূ',
+    'bathing (ghusl)': 'গোসল',
+    'menstrual periods': 'হায়েয',
+    'rubbing hands and feet with dust (tayammum)': 'তায়াম্মুম',
+    'prayers (salat)': 'সালাত',
+    'times of the prayers': 'সালাতের ওয়াক্ত',
+    'call to prayers (adhaan)': 'আযান',
+    'friday prayer': 'জুমুআর সালাত',
+    'fear prayer': 'ভয়ের সময়ের সালাত',
+    'the two festivals (eids)': 'দুই ঈদের সালাত',
+    'witr prayer': 'বিতর সালাত',
+    'invoking allah for rain (istisqaa)': 'বৃষ্টির জন্য দোয়া (ইস্তিসকা)',
+    'eclipses': 'সূর্য ও চন্দ্রগ্রহণ',
+    "prostration during recital of qur'an": 'কুরআন তিলাওয়াতের সময় সিজদা',
+    'shortening the prayers (at-taqseer)': 'সালাত কসর করা',
+    'prayer at night (tahajjud)': 'রাতের সালাত (তাহাজ্জুদ)',
+    'virtues of prayer at masjid makkah and madinah': 'মক্কা ও মদিনার মসজিদে সালাতের ফযীলত',
+    'actions while praying': 'সালাতের সময়ের আমল',
+    'forgetfulness in prayer': 'সালাতে ভুল-ত্রুটি',
+    'funerals (al-janaa\'iz)': 'জানাযা',
+    'obligatory charity tax (zakat)': 'যাকাত',
+    'hajj (pilgrimage)': 'হজ্জ',
+    '`umrah (minor pilgrimage)': 'উমরাহ',
+    'pilgrims prevented from completing the pilgrimage': 'হজ্জ সম্পন্ন করতে বাধাগ্রস্ত হাজীদের বিধান',
+    'penalty of hunting while on pilgrimage': 'ইহরাম অবস্থায় শিকার করার কাফফারা',
+    'virtues of madinah': 'মদিনার ফযীলত',
+    'fasting': 'সিয়াম ও রোযা',
+    'praying at night in ramadaan (taraweeh)': 'রমযানে রাতের সালাত (তারাবীহ)',
+    'virtues of the night of qadr': 'লাইলাতুল কদরের ফযীলত',
+    "retiring to a mosque for remembrance of allah (i'tikaf)": 'আল্লাহর স্মরণের জন্য মসজিদে ইতিকাফ',
+    'sales and trade': 'ক্রয়-বিক্রয় ও ব্যবসা',
+    'sales in which a price is paid for goods to be delivered later (as-salam)': 'অগ্রিম মূল্য পরিশোধের মাধ্যমে ক্রয়-বিক্রয় (সালাম)',
+    "shuf'a": 'শুফআ',
+    'hiring': 'ভাড়া ও শ্রমিক নিয়োগ',
+    'transferance of a debt from one person to another (al-hawaala)': 'ঋণ এক ব্যক্তি থেকে অন্য ব্যক্তির কাছে হস্তান্তর (হাওয়ালা)',
+    'kafalah': 'জামিন ও কাফালাহ',
+    'representation, authorization, business by proxy': 'প্রতিনিধিত্ব, অনুমোদন ও代理 ব্যবসা',
+    'agriculture': 'কৃষি',
+    'distribution of water': 'পানি বণ্টন ও সেচ',
+    'loans, payment of loans, freezing of property, bankruptcy': 'ঋণ, ঋণ পরিশোধ, সম্পত্তি জব্দ ও দেউলিয়াত্ব',
+    'khusoomaat': 'কলহ-বিবাদ ও বিরোধ নিষ্পত্তি',
+    'lost things picked up by someone (luqatah)': 'কুড়িয়ে পাওয়া বস্তু (লুকাতাহ)',
+    'oppressions': 'জুলুম ও নির্যাতন',
+    'partnership': 'অংশীদারিত্ব',
+    'mortgaging': 'বন্ধক রাখা',
+    'manumission of slaves': 'দাসমুক্তি',
+    'makaatib': 'মুকাতাব',
+    'gifts': 'উপহার',
+    'witnesses': 'সাক্ষ্য',
+    'peacemaking': 'মীমাংসা ও সন্ধি',
+    'conditions': 'শর্তাবলি',
+    'wills and testaments (wasaayaa)': 'অছিয়ত ও উইল',
+    'fighting for the cause of allah (jihaad)': 'আল্লাহর পথে জিহাদ',
+    'one-fifth of booty to the cause of allah (khumus)': 'গনীমতের এক-পঞ্চমাংশ',
+    "jizyah and mawaada'ah": 'জিযিয়া ও সন্ধিচুক্তি',
+    'beginning of creation': 'সৃষ্টির সূচনা',
+    'prophets': 'নবীগণ',
+    'virtues and merits of the prophet (pbuh) and his companions': 'নবী ﷺ ও সাহাবায়ে কেরামের ফযীলত',
+    'companions of the prophet': 'রাসূল ﷺ-এর সাহাবীগণ',
+    'merits of the helpers in madinah (ansaar)': 'মদিনার আনসারদের ফযীলত',
+    'military expeditions led by the prophet (pbuh) (al-maghaazi)': 'নবী ﷺ-এর নেতৃত্বে সামরিক অভিযান (মাগাযী)',
+    'prophetic commentary on the qur\'an (tafseer of the prophet (pbuh))': 'কুরআনের নববী তাফসীর',
+    'virtues of the qur\'an': 'কুরআনের ফযীলত',
+    'wedlock, marriage (nikaah)': 'বিবাহ ও নিকাহ',
+    'divorce': 'তালাক',
+    'supporting the family': 'পরিবারের ভরণ-পোষণ',
+    'food, meals': 'খাদ্য ও পানাহার',
+    'sacrifice on occasion of birth (`aqiqa)': 'জন্ম উপলক্ষে আকীকা',
+    'hunting, slaughtering': 'শিকার ও যবেহ',
+    'al-adha festival sacrifice (adaahi)': 'কুরবানির বিধান',
+    'drinks': 'পানীয়',
+    'patients': 'রোগী ও অসুস্থতা',
+    'medicine': 'চিকিৎসা',
+    'dress': 'পোশাক-পরিচ্ছদ',
+    'good manners and form (al-adab)': 'উত্তম আখলাক ও শিষ্টাচার',
+    'asking permission': 'অনুমতি গ্রহণ',
+    'invocations': 'দোয়া ও যিকির',
+    'to make the heart tender (ar-riqaq)': 'হৃদয় কোমলকারী বিষয়সমূহ (রীকাক)',
+    'divine will (al-qadar)': 'তাকদীর',
+    'oaths and vows': 'শপথ ও মানত',
+    'expiation for unfulfilled oaths': 'শপথ ভঙ্গের কাফফারা',
+    'laws of inheritance (al-faraa\'id)': 'উত্তরাধিকার আইন (ফারায়েয)',
+    'limits and punishments set by allah (hudood)': 'আল্লাহ নির্ধারিত দণ্ডবিধি (হুদূদ)',
+    'blood money (ad-diyat)': 'রক্তপণ (দিয়াত)',
+    'apostates': 'ধর্মত্যাগী',
+    '(statements made under) coercion': 'জবরদস্তির অধীনে প্রদত্ত বক্তব্য',
+    'tricks': 'কৌশল ও হিলা',
+    'interpretation of dreams': 'স্বপ্নের ব্যাখ্যা',
+    'afflictions and the end of the world': 'ফিতনা ও কিয়ামতের আলামত',
+    'judgments (ahkaam)': 'বিচার ও বিধান (আহকাম)',
+    'wishes': 'আকাঙ্ক্ষা',
+    'accepting information given by a truthful person': 'সত্যবাদী ব্যক্তির সংবাদ গ্রহণ',
+    'holding fast to the qur\'an and sunnah': 'কুরআন ও সুন্নাহকে দৃঢ়ভাবে ধারণ',
+    'oneness, uniqueness of allah (tawheed)': 'আল্লাহর একত্ব ও তাওহীদ',
+
+    // Common chapter names used by the other collections.
+    'purification': 'পবিত্রতা',
+    'prayer': 'সালাত',
+    'charity': 'যাকাত',
+    'fasting': 'সিয়াম',
+    'pilgrimage': 'হজ্জ',
+    'marriage': 'বিবাহ',
+    'divorce': 'তালাক',
+    'judgements': 'বিচার ও বিধান',
+    'judgments': 'বিচার ও বিধান',
+    'manners': 'শিষ্টাচার',
+    'supplications': 'দোয়া',
+    'remembrance': 'যিকির',
+    'faith': 'ঈমান',
+    'knowledge and virtue': 'ইলম ও ফযীলত',
+    'virtues': 'ফযীলত',
+    'testimony': 'সাক্ষ্য',
+    'oaths': 'শপথ',
+    'inheritance': 'উত্তরাধিকার',
+    'business': 'ব্যবসা ও লেনদেন',
+    'transactions': 'লেনদেন',
+    'foods': 'খাদ্য',
+    'drinks': 'পানীয়',
+    'medicine': 'চিকিৎসা',
+    'clothing': 'পোশাক',
+    'funerals': 'জানাযা',
+    'zakat': 'যাকাত',
+    'hajj': 'হজ্জ',
+    'umrah': 'উমরাহ',
+    'jihad': 'জিহাদ',
+    'tafsir': 'তাফসীর',
+    'quran': 'কুরআন',
+    'tawhid': 'তাওহীদ',
+  };
 
   static String _bnDigits(int value) {
     const western = '0123456789';
