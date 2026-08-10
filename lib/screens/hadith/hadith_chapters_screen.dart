@@ -142,7 +142,7 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
               chapter: chapter,
               index: index,
               title: _chapterTitle(chapter),
-              fallbackTitle: '$_chapterLabel ${index + 1}',
+              fallbackTitle: '$_chapterLabel ${_bnDigits(index + 1)}',
               stats: _stats[chapter.id],
               onTap: () => _openChapter(chapter),
             ),
@@ -220,6 +220,17 @@ class _HadithChaptersScreenState extends State<HadithChaptersScreen> {
     if (chapter.nameEn.trim().isNotEmpty) return chapter.nameEn.trim();
     return '';
   }
+
+  static String _bnDigits(int value) {
+    const western = '0123456789';
+    const bengali = '০১২৩৪৫৬৭৮৯';
+
+    return value
+        .toString()
+        .split('')
+        .map((digit) => bengali[western.indexOf(digit)])
+        .join();
+  }
 }
 
 class _ChapterCard extends StatelessWidget {
@@ -245,7 +256,7 @@ class _ChapterCard extends StatelessWidget {
 
     final statsText = stats == null
         ? 'হাদিসের সংখ্যা পাওয়া যায়নি'
-        : '${_bnDigits(stats!.count)}টি হাদিস • ${_bnDigits(stats!.firstHadith)}–${_bnDigits(stats!.lastHadith)}';
+        : 'মোট ${_bnDigits(stats!.count)}টি হাদিস • ${_bnDigits(stats!.firstHadith)} থেকে ${_bnDigits(stats!.lastHadith)}';
 
     return NvCard(
       padding: EdgeInsets.zero,
@@ -264,7 +275,7 @@ class _ChapterCard extends StatelessWidget {
           ),
           alignment: Alignment.center,
           child: Text(
-            '${index + 1}',
+            _bnDigits(index + 1),
             style: const TextStyle(
               color: AppColors.seaBlue,
               fontWeight: FontWeight.w800,
