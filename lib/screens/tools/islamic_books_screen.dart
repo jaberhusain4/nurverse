@@ -34,6 +34,22 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
       url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/ইসলাম-কাহিনী_–_কাজী_আকরম_হোসেন_(১৯৪৬).pdf',
       isPdf: true,
     ),
+    _BookResource(
+      title: 'কোরআনের গল্প',
+      description: 'বন্দে আলি মিয়ার বাংলা ইসলামিক গ্রন্থ।',
+      source: 'Wikimedia Commons • Bengali PDF',
+      icon: Icons.auto_stories_rounded,
+      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/কোরাণের_গল্প_-_বন্দে_আলি_মিয়া.pdf',
+      isPdf: true,
+    ),
+    _BookResource(
+      title: 'কোরআন শরীফ — প্রথম খণ্ড',
+      description: 'মোহাম্মদ আকরম খাঁর বাংলা অনুবাদগ্রন্থ।',
+      source: 'Wikimedia Commons • Bengali PDF',
+      icon: Icons.library_books_rounded,
+      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/কোরআন_শরীফ_(প্রথম_খণ্ড)_-_মোহাম্মদ_আকরম_খাঁ.pdf',
+      isPdf: true,
+    ),
   ];
 
   static const _downloadBooks = <_BookResource>[
@@ -358,27 +374,13 @@ class _BooksIntroCard extends StatelessWidget {
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'জ্ঞানভাণ্ডার',
-                    style: TextStyle(
-                      color: context.primaryTextColor,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'শুধু বাংলা ভাষার নির্বাচিত ইসলামিক বই — পড়ুন ও প্রয়োজনমতো ডাউনলোড করুন।',
-                    style: TextStyle(
-                      color: context.secondaryTextColor,
-                      fontSize: 12,
-                      height: 1.45,
-                    ),
-                  ),
-                ],
+              child: Text(
+                'নির্বাচিত বাংলা ইসলামিক বই — অনলাইনে পড়ুন অথবা অনুমোদিত বই offline-এ সংরক্ষণ করুন।',
+                style: TextStyle(
+                  color: context.secondaryTextColor,
+                  fontSize: 13,
+                  height: 1.5,
+                ),
               ),
             ),
           ],
@@ -402,17 +404,10 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: AppColors.seaBlue.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: AppColors.seaBlueDark, size: 20),
-        ),
-        const SizedBox(width: 11),
+        Icon(icon, size: 20, color: context.primaryColor),
+        const SizedBox(width: 9),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -421,7 +416,7 @@ class _SectionHeader extends StatelessWidget {
                 title,
                 style: TextStyle(
                   color: context.primaryTextColor,
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -430,7 +425,7 @@ class _SectionHeader extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                   color: context.secondaryTextColor,
-                  fontSize: 11,
+                  fontSize: 12,
                 ),
               ),
             ],
@@ -461,25 +456,23 @@ class _BookCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      clipBehavior: Clip.antiAlias,
       child: InkWell(
+        borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(15, 15, 12, 13),
           child: Row(
             children: [
               Container(
-                width: 48,
-                height: 58,
+                width: 46,
+                height: 54,
                 decoration: BoxDecoration(
-                  color: context.isDark
-                      ? AppColors.seaBlue.withValues(alpha: 0.14)
-                      : AppColors.backgroundLight,
-                  borderRadius: BorderRadius.circular(12),
+                  color: context.primaryColor.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(13),
                 ),
-                child: Icon(book.icon, color: AppColors.seaBlueDark, size: 25),
+                child: Icon(book.icon, color: context.primaryColor),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 13),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -490,24 +483,24 @@ class _BookCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: context.primaryTextColor,
-                        fontSize: 14.5,
+                        fontSize: 15,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 4),
                     Text(
                       book.description,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: context.secondaryTextColor,
-                        fontSize: 11.5,
+                        fontSize: 12,
                         height: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 5),
                     Text(
-                      downloaded ? 'Offline সংরক্ষিত' : book.source,
+                      book.source,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -516,33 +509,36 @@ class _BookCard extends StatelessWidget {
                       ),
                     ),
                     if (progress != null) ...[
-                      const SizedBox(height: 9),
+                      const SizedBox(height: 8),
                       LinearProgressIndicator(value: progress),
                     ],
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              if (onDownload != null)
-                IconButton(
-                  tooltip: downloaded ? 'Offline বই মুছুন' : 'ডাউনলোড',
-                  onPressed: progress != null ? null : onDownload,
-                  icon: Icon(
-                    downloaded
-                        ? Icons.delete_outline_rounded
-                        : Icons.download_rounded,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: actionLabel,
+                    onPressed: progress != null ? null : onTap,
+                    icon: Icon(
+                      downloaded
+                          ? Icons.offline_pin_rounded
+                          : Icons.menu_book_rounded,
+                    ),
                   ),
-                ),
-              const SizedBox(width: 2),
-              Flexible(
-                child: FilledButton(
-                  onPressed: progress != null ? null : onTap,
-                  child: Text(
-                    actionLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+                  if (onDownload != null)
+                    IconButton(
+                      tooltip: downloaded ? 'মুছে ফেলুন' : actionLabel,
+                      onPressed: progress != null ? null : onDownload,
+                      icon: Icon(
+                        downloaded
+                            ? Icons.delete_outline_rounded
+                            : Icons.download_rounded,
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
