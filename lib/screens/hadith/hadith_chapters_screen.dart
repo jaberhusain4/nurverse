@@ -6,7 +6,6 @@ import '../../services/hadith_chapter_localization.dart';
 import '../../services/hadith_chapter_stats_service.dart';
 import '../../services/hadith_service.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/common_widgets.dart';
 import 'hadith_list_screen.dart';
 
 class HadithChaptersScreen extends StatefulWidget {
