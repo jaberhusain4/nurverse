@@ -2,16 +2,13 @@ import 'package:adhan/adhan.dart';
 
 /// Represents NurVerse's early-prayer guidance window.
 ///
-/// Important fiqh note:
-/// "Awal waqt" means the beginning of a prayer's valid time. The Qur'an and
-/// Sunnah establish prayer-time boundaries, and the Sunnah encourages praying
-/// at the proper/early time, but they do not define one universal number of
-/// minutes that marks the end of "awal waqt" for all five prayers.
+/// The Qur'an and Sunnah establish the valid boundaries of the prayers and
+/// strongly encourage praying at the proper/early time. They do not define one
+/// universal number of minutes that ends "awal waqt" for all five prayers.
 ///
-/// Therefore this service must NOT present its calculated end as a Shar'i
-/// deadline. NurVerse uses the first third of the interval to the next prayer
-/// as an app-level "early-prayer guidance window" so the user can have a
-/// useful live timer without inventing a religious cutoff.
+/// NurVerse therefore uses the first third of each prayer interval as an
+/// app-level early-prayer guidance window. This is a practical reminder and
+/// must not be presented as a Shar'i deadline.
 class AwalWaqtWindow {
   final String prayerKey;
   final DateTime start;
@@ -29,9 +26,46 @@ class AwalWaqtWindow {
     return !moment.isBefore(start) && moment.isBefore(end);
   }
 
+  bool hasStarted(DateTime moment) => !moment.isBefore(start);
+
+  bool hasEnded(DateTime moment) => !moment.isBefore(end);
+
   Duration remainingFrom(DateTime moment) {
     if (!contains(moment)) return Duration.zero;
     return end.difference(moment);
+  }
+
+  Duration elapsedFrom(DateTime moment) {
+    if (moment.isBefore(start)) return Duration.zero;
+    if (!moment.isBefore(end)) return duration;
+    return moment.difference(start);
+  }
+}
+
+/// Live state used by Home and Prayer screens.
+class AwalWaqtStatus {
+  final AwalWaqtWindow window;
+  final DateTime now;
+
+  const AwalWaqtStatus({
+    required this.window,
+    required this.now,
+  });
+
+  bool get isActive => window.contains(now);
+
+  bool get hasStarted => window.hasStarted(now);
+
+  bool get hasEnded => window.hasEnded(now);
+
+  Duration get remaining => window.remainingFrom(now);
+
+  Duration get elapsed => window.elapsedFrom(now);
+
+  double get progress {
+    final total = window.duration.inMilliseconds;
+    if (total <= 0) return 0;
+    return (elapsed.inMilliseconds / total).clamp(0.0, 1.0);
   }
 }
 
@@ -111,6 +145,25 @@ class AwalWaqtService {
     }
 
     return windows;
+  }
+
+  AwalWaqtStatus? activeStatus(
+    List<AwalWaqtWindow> windows,
+    DateTime moment,
+  ) {
+    final window = activeWindow(windows, moment);
+    if (window == null) return null;
+    return AwalWaqtStatus(window: window, now: moment);
+  }
+
+  AwalWaqtStatus? statusForPrayer(
+    List<AwalWaqtWindow> windows,
+    String prayerKey,
+    DateTime moment,
+  ) {
+    final window = windowForPrayer(windows, prayerKey);
+    if (window == null) return null;
+    return AwalWaqtStatus(window: window, now: moment);
   }
 
   AwalWaqtWindow _makeGuidanceWindow(
