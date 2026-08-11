@@ -227,22 +227,67 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
   Widget _buildBody() {
     if ((widget.isPdf || widget.localFilePath != null) &&
         _pdfController != null) {
-      return PdfViewPinch(
-        controller: _pdfController!,
-        scrollDirection: Axis.vertical,
-        builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
-          options: const DefaultBuilderOptions(),
-          documentLoaderBuilder: (_) =>
-              const Center(child: CircularProgressIndicator()),
-          pageLoaderBuilder: (_) =>
-              const Center(child: CircularProgressIndicator()),
-          errorBuilder: (_, __) => _ReaderError(
-            message: 'PDF পড়া যাচ্ছে না। আবার চেষ্টা করুন।',
-            onRetry: _reload,
+      return Stack(
+        children: [
+          PdfViewPinch(
+            controller: _pdfController!,
+            scrollDirection: Axis.vertical,
+            minScale: 1.0,
+            maxScale: 4.0,
+            padding: 8,
+            builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
+              options: const DefaultBuilderOptions(),
+              documentLoaderBuilder: (_) =>
+                  const Center(child: CircularProgressIndicator()),
+              pageLoaderBuilder: (_) =>
+                  const Center(child: CircularProgressIndicator()),
+              errorBuilder: (_, __) => _ReaderError(
+                message: 'PDF পড়া যাচ্ছে না। আবার চেষ্টা করুন।',
+                onRetry: _reload,
+              ),
+            ),
           ),
-        ),
+          Positioned(
+            right: 14,
+            bottom: 16,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor.withValues(alpha: 0.94),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: const [
+                  BoxShadow(
+                    blurRadius: 10,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                child: PdfPageNumber(
+                  controller: _pdfController!,
+                  builder: (_, __, loadingState, pagesCount) {
+                    final page = _pdfController!.page;
+                    return Text(
+                      loadingState == PdfLoadingState.success
+                          ? '$page / ${pagesCount ?? 0}'
+                          : 'লোড হচ্ছে…',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
       );
     }
+
     if (_webController != null) {
       return Stack(
         children: [
