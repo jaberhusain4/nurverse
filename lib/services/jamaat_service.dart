@@ -211,6 +211,16 @@ class JamaatService {
 
     await initialize();
 
+    // Editing any Jamaat time is an explicit user choice, so the global mode
+    // becomes Manual. Previously this method could save a custom value while
+    // leaving Automatic mode active, allowing the next prayer-time refresh to
+    // overwrite the user's edit.
+    if (_automaticMode) {
+      _automaticMode = false;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_modeKey, false);
+    }
+
     _jamaat[prayer] = normalized;
     _customPrayers.add(prayer);
 
