@@ -7,23 +7,22 @@ import 'package:provider/provider.dart';
 import '../controllers/prayer_controller.dart';
 import '../providers/settings_provider.dart';
 import '../services/date_service.dart';
+import '../services/jamaat_service.dart';
 import '../services/last_read_service.dart';
 import '../widgets/common/current_prayer_premium_card.dart';
 import '../widgets/home/continue_reading_card.dart';
 import '../widgets/home/daily_content_section.dart';
 import '../widgets/home/islamic_info_card.dart';
-import '../widgets/home/prayer_timeline.dart';
 import '../widgets/home/top_header.dart';
-import 'tools/ruqyah_screen.dart';
-import 'tools/zakat_calculator_screen.dart';
-
-// Existing screens
-import 'tools/asma_ul_husna.dart';
+import 'prayer/jamaat_settings_screen.dart';
 import 'qibla/qibla_screen.dart';
 import 'quran/audio_quran_screen.dart';
-import 'tools/tasbih_screen.dart';
+import 'tools/asma_ul_husna.dart';
 import 'tools/calendar_screen.dart';
-import 'dua/dua_screen.dart';
+import 'tools/dua/dua_screen.dart';
+import 'tools/ruqyah_screen.dart';
+import 'tools/tasbih_screen.dart';
+import 'tools/zakat_calculator_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(int)? onNavigateTab;
@@ -35,76 +34,45 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Timer? _timer;
-
+  Timer? _clockTimer;
   String _currentTime = '';
-
   Map<String, dynamic>? _lastRead;
   bool _lastReadLoading = true;
 
   @override
   void initState() {
     super.initState();
-
-    _updateTime();
+    _updateClock();
     _loadLastRead();
+    JamaatService.initialize().then((_) {
+      if (mounted) setState(() {});
+    });
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-
-      _updateTime();
-
-      final controller = Provider.of<PrayerController>(context, listen: false);
-
-      controller.updatePrayerTimes();
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) _updateClock();
     });
   }
 
-  // ============================================================
-  // LIVE CLOCK
-  // ============================================================
-
-  void _updateTime() {
+  void _updateClock() {
     final now = DateTime.now();
+    final period = now.hour >= 12 ? 'PM' : 'AM';
+    final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;
+    final value = '${hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')} $period';
 
-    int hour = now.hour;
-
-    final String period = hour >= 12 ? 'PM' : 'AM';
-
-    hour %= 12;
-
-    if (hour == 0) {
-      hour = 12;
-    }
-
-    final String hourStr = hour.toString().padLeft(2, '0');
-    final String minuteStr = now.minute.toString().padLeft(2, '0');
-    final String secondStr = now.second.toString().padLeft(2, '0');
-
-    if (!mounted) return;
-
-    setState(() {
-      _currentTime = '$hourStr:$minuteStr:$secondStr $period';
-    });
+    if (_currentTime == value) return;
+    setState(() => _currentTime = value);
   }
-
-  // ============================================================
-  // LAST READ
-  // ============================================================
 
   Future<void> _loadLastRead() async {
     try {
       final data = await LastReadService.getLastRead();
-
       if (!mounted) return;
-
       setState(() {
         _lastRead = data;
         _lastReadLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
-
       setState(() {
         _lastRead = null;
         _lastReadLoading = false;
@@ -112,185 +80,104 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ============================================================
-  // REFRESH HOME DATA
-  // ============================================================
-
   Future<void> _refreshHome() async {
-    final controller = Provider.of<PrayerController>(context, listen: false);
-
+    final controller = context.read<PrayerController>();
     await controller.refreshLocation();
-
     await _loadLastRead();
-
-    if (!mounted) return;
-
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
-  // ============================================================
-  // GREETING
-  // ============================================================
-
-  String _getGreeting(String languageCode) {
+  String _greeting(String languageCode) {
     final hour = DateTime.now().hour;
+    if (languageCode == 'en') {
+      if (hour < 12) return 'Good Morning';
+      if (hour < 18) return 'Good Afternoon';
+      return 'Good Evening';
+    }
+    if (languageCode == 'ar') {
+      return hour < 12 ? 'صباح الخير' : 'مساء الخير';
+    }
+    if (hour < 12) return 'শুভ সকাল';
+    if (hour < 15) return 'শুভ দুপুর';
+    if (hour < 18) return 'শুভ বিকেল';
+    return 'শুভ সন্ধ্যা';
+  }
 
-    switch (languageCode) {
-      case 'en':
-        if (hour < 12) {
-          return 'Good Morning';
-        }
+  String _label(String languageCode, String bn, String en, String ar) {
+    if (languageCode == 'en') return en;
+    if (languageCode == 'ar') return ar;
+    return bn;
+  }
 
-        if (hour < 15) {
-          return 'Good Afternoon';
-        }
+  String _hijriDate(String languageCode) {
+    try {
+      final h = HijriCalendar.now();
+      const bnMonths = <String>[
+        'মুহররম',
+        'সফর',
+        'রবিউল আউয়াল',
+        'রবিউস সানি',
+        'জুমাদিউল আউয়াল',
+        'জুমাদিউস সানি',
+        'রজব',
+        'শাবান',
+        'রমজান',
+        'শাওয়াল',
+        'জিলকদ',
+        'জিলহজ',
+      ];
+      const enMonths = <String>[
+        'Muharram',
+        'Safar',
+        'Rabi al-Awwal',
+        'Rabi al-Thani',
+        'Jumada al-Awwal',
+        'Jumada al-Thani',
+        'Rajab',
+        'Sha’ban',
+        'Ramadan',
+        'Shawwal',
+        'Dhul-Qadah',
+        'Dhul-Hijjah',
+      ];
+      const arMonths = <String>[
+        'محرم',
+        'صفر',
+        'ربيع الأول',
+        'ربيع الآخر',
+        'جمادى الأولى',
+        'جمادى الآخرة',
+        'رجب',
+        'شعبان',
+        'رمضان',
+        'شوال',
+        'ذو القعدة',
+        'ذو الحجة',
+      ];
+      const digits = <String>['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
 
-        if (hour < 18) {
-          return 'Good Evening';
-        }
+      String bnDigits(int value) => value
+          .toString()
+          .split('')
+          .map((d) => digits[int.parse(d)])
+          .join();
 
-        return 'Good Evening';
-
-      case 'ar':
-        if (hour < 12) {
-          return 'صباح الخير';
-        }
-
-        return 'مساء الخير';
-
-      case 'bn':
-      default:
-        if (hour < 12) {
-          return 'শুভ সকাল';
-        }
-
-        if (hour < 15) {
-          return 'শুভ দুপুর';
-        }
-
-        if (hour < 18) {
-          return 'শুভ বিকেল';
-        }
-
-        return 'শুভ সন্ধ্যা';
+      if (languageCode == 'en') {
+        return '${h.hDay} ${enMonths[h.hMonth - 1]} ${h.hYear} AH';
+      }
+      if (languageCode == 'ar') {
+        return '${h.hDay} ${arMonths[h.hMonth - 1]} ${h.hYear} هـ';
+      }
+      return '${bnDigits(h.hDay)} ${bnMonths[h.hMonth - 1]} ${bnDigits(h.hYear)} হিজরি';
+    } catch (_) {
+      return languageCode == 'en' ? 'Hijri date unavailable' : 'হিজরি তারিখ পাওয়া যায়নি';
     }
   }
 
-  // ============================================================
-  // FEATURE DIALOG
-  // ============================================================
-
-  void _showFeatureDialog(
-    BuildContext context,
-    String featureName,
-    String languageCode,
-  ) {
-    String message;
-    String okayText;
-
-    switch (languageCode) {
-      case 'en':
-        message = '$featureName will be available soon, In Sha Allah.';
-        okayText = 'OK';
-        break;
-
-      case 'ar':
-        message = 'ستتوفر ميزة $featureName قريبًا إن شاء الله.';
-        okayText = 'حسنًا';
-        break;
-
-      case 'bn':
-      default:
-        message = '$featureName ফিচারটি খুব শীঘ্রই যুক্ত হচ্ছে ইনশাআল্লাহ।';
-        okayText = 'ঠিক আছে';
-        break;
-    }
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(featureName),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child: Text(okayText),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // ============================================================
-  // OPEN SCREEN HELPER
-  // ============================================================
-
-  void _openScreen(Widget screen) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
-  }
-
-  // ============================================================
-  // QUICK ACTION ITEM
-  // ============================================================
-
-  Widget _buildQuickActionItem(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-
-    final primary = theme.colorScheme.primary;
-    final cardColor = theme.cardColor;
-    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black87;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: primary.withValues(alpha: 0.07)),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: primary, size: 24),
-              const SizedBox(height: 6),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // BANGLA DATE
-  // Bangladesh National Calendar
-  // ============================================================
-
-  String _getBanglaDate() {
+  String _banglaDate() {
     final now = DateTime.now();
-    final int year = now.year;
-
-    final List<DateTime> monthStarts = [
+    final year = now.year;
+    final starts = <DateTime>[
       DateTime(year, 4, 14),
       DateTime(year, 5, 15),
       DateTime(year, 6, 15),
@@ -304,8 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
       DateTime(year + 1, 2, 13),
       DateTime(year + 1, 3, 15),
     ];
-
-    final List<String> monthNames = [
+    const months = <String>[
       'বৈশাখ',
       'জ্যৈষ্ঠ',
       'আষাঢ়',
@@ -320,26 +206,13 @@ class _HomeScreenState extends State<HomeScreen> {
       'চৈত্র',
     ];
 
-    final DateTime effectiveDate = now;
-
-    int banglaYear;
-
-    if (now.month > 4 || (now.month == 4 && now.day >= 14)) {
-      banglaYear = year - 593;
-    } else {
-      banglaYear = year - 594;
+    var index = -1;
+    for (var i = 0; i < starts.length; i++) {
+      if (!now.isBefore(starts[i])) index = i;
     }
 
-    int monthIndex = -1;
-
-    for (int i = 0; i < monthStarts.length; i++) {
-      if (!now.isBefore(monthStarts[i])) {
-        monthIndex = i;
-      }
-    }
-
-    if (monthIndex == -1) {
-      final previousYearStarts = <DateTime>[
+    if (index < 0) {
+      final previousStarts = <DateTime>[
         DateTime(year - 1, 4, 14),
         DateTime(year - 1, 5, 15),
         DateTime(year - 1, 6, 15),
@@ -353,214 +226,170 @@ class _HomeScreenState extends State<HomeScreen> {
         DateTime(year, 2, 13),
         DateTime(year, 3, 15),
       ];
-
-      for (int i = 0; i < previousYearStarts.length; i++) {
-        if (!now.isBefore(previousYearStarts[i])) {
-          monthIndex = i;
-        }
+      for (var i = 0; i < previousStarts.length; i++) {
+        if (!now.isBefore(previousStarts[i])) index = i;
       }
-
-      banglaYear = year - 594;
     }
 
-    if (monthIndex < 0) {
-      monthIndex = 0;
-    }
+    index = index.clamp(0, 11);
+    final start = index < starts.length && !now.isBefore(starts[index])
+        ? starts[index]
+        : <DateTime>[
+            DateTime(year - 1, 4, 14),
+            DateTime(year - 1, 5, 15),
+            DateTime(year - 1, 6, 15),
+            DateTime(year - 1, 7, 16),
+            DateTime(year - 1, 8, 16),
+            DateTime(year - 1, 9, 16),
+            DateTime(year - 1, 10, 16),
+            DateTime(year - 1, 11, 15),
+            DateTime(year - 1, 12, 15),
+            DateTime(year, 1, 15),
+            DateTime(year, 2, 13),
+            DateTime(year, 3, 15),
+          ][index];
 
-    if (monthIndex >= monthNames.length) {
-      monthIndex = monthNames.length - 1;
-    }
-
-    DateTime startDate;
-
-    if (monthIndex < monthStarts.length &&
-        !now.isBefore(monthStarts[monthIndex])) {
-      startDate = monthStarts[monthIndex];
-    } else {
-      final previousYear = year - 1;
-
-      final List<DateTime> previousStarts = [
-        DateTime(previousYear, 4, 14),
-        DateTime(previousYear, 5, 15),
-        DateTime(previousYear, 6, 15),
-        DateTime(previousYear, 7, 16),
-        DateTime(previousYear, 8, 16),
-        DateTime(previousYear, 9, 16),
-        DateTime(previousYear, 10, 16),
-        DateTime(previousYear, 11, 15),
-        DateTime(previousYear, 12, 15),
-        DateTime(year, 1, 15),
-        DateTime(year, 2, 13),
-        DateTime(year, 3, 15),
-      ];
-
-      startDate = previousStarts[monthIndex];
-    }
-
-    final int day = effectiveDate.difference(startDate).inDays + 1;
-
-    return '$day ${monthNames[monthIndex]} $banglaYear';
+    final banglaYear = now.month > 4 || (now.month == 4 && now.day >= 14)
+        ? year - 593
+        : year - 594;
+    return '${now.difference(start).inDays + 1} ${months[index]} $banglaYear';
   }
 
-  // ============================================================
-  // HIJRI DATE
-  // ============================================================
-
-  String _getHijriDate() {
-    try {
-      final hijri = HijriCalendar.now();
-
-      final String formatted = hijri.toFormat('DD MMMM YYYY');
-
-      return '$formatted হিজরি';
-    } catch (_) {
-      return 'হিজরি তারিখ পাওয়া যায়নি';
+  String _currentJamaatKey(String prayer) {
+    switch (prayer) {
+      case 'ফজর':
+        return 'Fajr';
+      case 'যোহর':
+      case "জুমু'আ":
+        return 'Dhuhr';
+      case 'আসর':
+        return 'Asr';
+      case 'মাগরিব':
+        return 'Maghrib';
+      case 'ইশা':
+        return 'Isha';
+      default:
+        return '';
     }
   }
 
-  // ============================================================
-  // LAST READ WIDGET
-  // ============================================================
-
-  Widget _buildContinueReading(BuildContext context) {
+  Widget _continueReading(BuildContext context, String languageCode) {
     if (_lastReadLoading) {
       return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        height: 126,
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(24),
+          color: context.cardColor,
+          borderRadius: BorderRadius.circular(22),
         ),
-        child: const SizedBox(
-          height: 90,
-          child: Center(child: CircularProgressIndicator()),
-        ),
+        child: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_lastRead == null) {
       return ContinueReadingCard(
-        surahName: 'কুরআন তিলাওয়াত শুরু করুন',
+        languageCode: languageCode,
+        surahName: _label(languageCode, 'অনুধাবন কুরআন শুরু করুন', 'Start Onudhabon Quran', 'ابدأ قرآن الفهم'),
         paraNo: 1,
         pageNo: 1,
-        progress: 0.0,
-        onTap: () {
-          widget.onNavigateTab?.call(2);
-        },
+        progress: 0,
+        onTap: () => widget.onNavigateTab?.call(2),
       );
     }
 
-    final String surahName = _lastRead!['surahName']?.toString() ?? 'কুরআন';
-
-    final int paraNo =
-        _lastRead!['paraNo'] is int
-            ? _lastRead!['paraNo'] as int
-            : int.tryParse(_lastRead!['paraNo']?.toString() ?? '') ?? 1;
-
-    final int pageNo =
-        _lastRead!['pageNo'] is int
-            ? _lastRead!['pageNo'] as int
-            : int.tryParse(_lastRead!['pageNo']?.toString() ?? '') ?? 1;
-
-    final double progress =
-        _lastRead!['progress'] is num
-            ? (_lastRead!['progress'] as num).toDouble()
-            : double.tryParse(_lastRead!['progress']?.toString() ?? '') ?? 0.0;
+    final surahName = _lastRead!['surahName']?.toString() ?? 'কুরআন';
+    final paraNo = _lastRead!['paraNo'] is int
+        ? _lastRead!['paraNo'] as int
+        : int.tryParse(_lastRead!['paraNo']?.toString() ?? '') ?? 1;
+    final pageNo = _lastRead!['pageNo'] is int
+        ? _lastRead!['pageNo'] as int
+        : int.tryParse(_lastRead!['pageNo']?.toString() ?? '') ?? 1;
+    final progress = _lastRead!['progress'] is num
+        ? (_lastRead!['progress'] as num).toDouble().clamp(0.0, 1.0)
+        : (double.tryParse(_lastRead!['progress']?.toString() ?? '') ?? 0).clamp(0.0, 1.0);
 
     return ContinueReadingCard(
+      languageCode: languageCode,
       surahName: surahName,
       paraNo: paraNo,
       pageNo: pageNo,
-      progress: progress.clamp(0.0, 1.0),
-      onTap: () {
-        widget.onNavigateTab?.call(2);
-      },
+      progress: progress,
+      onTap: () => widget.onNavigateTab?.call(2),
     );
   }
 
-  // ============================================================
-  // TITLE
-  // ============================================================
-
-  String _title(
-    String languageCode, {
-    required String bn,
-    required String en,
-    required String ar,
+  Widget _quickAction(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
   }) {
-    switch (languageCode) {
-      case 'en':
-        return en;
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
 
-      case 'ar':
-        return ar;
-
-      case 'bn':
-      default:
-        return bn;
-    }
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.cardColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: primary.withValues(alpha: 0.06)),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: primary, size: 22),
+              const SizedBox(height: 5),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: text, fontSize: 10.5, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
+  Future<void> _openJamaatSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const JamaatSettingsScreen()),
+    );
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
-    final controller = Provider.of<PrayerController>(context);
-
-    final settings = Provider.of<SettingsProvider>(context);
-
+    final controller = context.watch<PrayerController>();
+    final settings = context.watch<SettingsProvider>();
     final languageCode = settings.languageCode;
 
-    final greeting = _getGreeting(languageCode);
-
-    final englishDate = DateService.englishDate();
-
-    final banglaDate = _getBanglaDate();
-
-    final hijriDate = _getHijriDate();
+    JamaatService.configureDefaultsFromPrayerList(controller.prayers);
+    final jamaatKey = _currentJamaatKey(controller.currentPrayer);
+    final currentJamaat = jamaatKey.isEmpty ? '--:--' : JamaatService.get(jamaatKey);
 
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _refreshHome,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ==================================================
-                // HEADER
-                // ==================================================
                 TopHeader(
-                  greeting: greeting,
+                  greeting: _greeting(languageCode),
                   currentTime: _currentTime,
-                  onNotificationTap: () {
-                    _showFeatureDialog(
-                      context,
-                      _title(
-                        languageCode,
-                        bn: 'নোটিফিকেশন',
-                        en: 'Notifications',
-                        ar: 'الإشعارات',
-                      ),
-                      languageCode,
-                    );
-                  },
-                  onProfileTap: () {
-                    widget.onNavigateTab?.call(5);
-                  },
+                  onNotificationTap: () => widget.onNavigateTab?.call(5),
+                  onProfileTap: () => widget.onNavigateTab?.call(5),
                 ),
-
-                const SizedBox(height: 20),
-
-                // ==================================================
-                // CURRENT PRAYER
-                // ==================================================
+                const SizedBox(height: 14),
                 CurrentPrayerPremiumCard(
                   previousPrayer: controller.previousPrayer,
                   previousPrayerTime: controller.previousPrayerTime,
@@ -570,230 +399,50 @@ class _HomeScreenState extends State<HomeScreen> {
                   nextPrayerTime: controller.nextPrayerTime,
                   remainingTime: controller.timeRemainingForNextPrayer,
                   progress: controller.prayerProgress,
-                  sunrise: controller.sunriseTime,
-                  sunset: controller.sunsetTime,
-                  iqamahTime: controller.iqamahTime,
+                  iqamahTime: currentJamaat,
                   status: controller.prayerStatus,
-                  showExtraInfo: true,
+                  languageCode: languageCode,
+                  onJamaatTap: _openJamaatSettings,
                 ),
-
-                const SizedBox(height: 20),
-
-                // ==================================================
-                // ISLAMIC INFORMATION
-                // ==================================================
+                const SizedBox(height: 14),
                 IslamicInfoCard(
                   location: controller.currentLocationName,
-                  englishDate: englishDate,
-                  banglaDate: banglaDate,
-                  hijriDate: hijriDate,
+                  englishDate: DateService.englishDate(),
+                  banglaDate: _banglaDate(),
+                  hijriDate: _hijriDate(languageCode),
                   sunrise: controller.sunriseTime,
                   sunset: controller.sunsetTime,
-                  onRefresh: () async {
-                    await controller.refreshLocation();
-                  },
+                  languageCode: languageCode,
+                  onRefresh: controller.refreshLocation,
                 ),
-
-                const SizedBox(height: 20),
-
-                // ==================================================
-                // PRAYER TIMELINE
-                // ==================================================
-                PrayerTimeline(prayers: controller.prayers),
-
-                const SizedBox(height: 20),
-
-                // ==================================================
-                // CONTINUE READING
-                // ==================================================
-                _buildContinueReading(context),
-
-                const SizedBox(height: 20),
-
-                // ==================================================
-                // QUICK ACTIONS TITLE
-                // ==================================================
+                const SizedBox(height: 14),
+                _continueReading(context, languageCode),
+                const SizedBox(height: 14),
                 Text(
-                  _title(
-                    languageCode,
-                    bn: 'কুইক অ্যাকশনস',
-                    en: 'Quick Actions',
-                    ar: 'إجراءات سريعة',
-                  ),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  _label(languageCode, 'কুইক অ্যাকশনস', 'Quick Actions', 'إجراءات سريعة'),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                 ),
-
-                const SizedBox(height: 12),
-
-                // ==================================================
-                // QUICK ACTIONS
-                // ==================================================
+                const SizedBox(height: 9),
                 GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: 4,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 0.92,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 1.02,
                   children: [
-                    // ==============================================
-                    // CALENDAR
-                    // ==============================================
-                    _buildQuickActionItem(
-                      context,
-                      title: _title(
-                        languageCode,
-                        bn: 'ক্যালেন্ডার',
-                        en: 'Calendar',
-                        ar: 'التقويم',
-                      ),
-                      icon: Icons.calendar_month_rounded,
-                      onTap: () {
-                        _openScreen(const CalendarScreen());
-                      },
-                    ),
-
-                    // ==============================================
-                    // DUA
-                    // ==============================================
-                    _buildQuickActionItem(
-                      context,
-                      title: _title(
-                        languageCode,
-                        bn: 'দোয়া',
-                        en: 'Dua',
-                        ar: 'الدعاء',
-                      ),
-                      icon: Icons.menu_book_rounded,
-                      onTap: () {
-                        _openScreen(const DuaScreen());
-                      },
-                    ),
-
-                    // ==============================================
-                    // QIBLA
-                    // ==============================================
-                    _buildQuickActionItem(
-                      context,
-                      title: _title(
-                        languageCode,
-                        bn: 'কিবলা',
-                        en: 'Qibla',
-                        ar: 'القبلة',
-                      ),
-                      icon: Icons.explore_rounded,
-                      onTap: () {
-                        _openScreen(const QiblaScreen());
-                      },
-                    ),
-
-                    // ==============================================
-                    // TASBIH
-                    // ==============================================
-                    _buildQuickActionItem(
-                      context,
-                      title: _title(
-                        languageCode,
-                        bn: 'তাসবীহ',
-                        en: 'Tasbih',
-                        ar: 'التسبيح',
-                      ),
-                      icon: Icons.radio_button_checked_rounded,
-                      onTap: () {
-                        _openScreen(const TasbihScreen());
-                      },
-                    ),
-
-                    // ==============================================
-                    // 99 NAMES
-                    // ==============================================
-                    _buildQuickActionItem(
-                      context,
-                      title: _title(
-                        languageCode,
-                        bn: '৯৯ নাম',
-                        en: '99 Names',
-                        ar: 'أسماء الله',
-                      ),
-                      icon: Icons.nightlight_round,
-                      onTap: () {
-                        _openScreen(const AsmaUlHusnaScreen());
-                      },
-                    ),
-
-                    // ==============================================
-                    // AUDIO QURAN
-                    // ==============================================
-                    _buildQuickActionItem(
-                      context,
-                      title: _title(
-                        languageCode,
-                        bn: 'অডিও কুরআন',
-                        en: 'Audio Quran',
-                        ar: 'القرآن الصوتي',
-                      ),
-                      icon: Icons.headphones_rounded,
-                      onTap: () {
-                        _openScreen(const AudioQuranScreen());
-                      },
-                    ),
-
-                    // ==============================================
-                    // RUQYAH
-                    // ==============================================
-                    _buildQuickActionItem(
-                      context,
-                      title: _title(
-                        languageCode,
-                        bn: 'রুকিয়াহ',
-                        en: 'Ruqyah',
-                        ar: 'الرقية',
-                      ),
-                      icon: Icons.shield_outlined,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const RuqyahScreen(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    // ==============================================
-                    // ZAKAT
-                    // ==============================================
-                    _buildQuickActionItem(
-                      context,
-                      title: _title(
-                        languageCode,
-                        bn: 'যাকাত',
-                        en: 'Zakat',
-                        ar: 'الزكاة',
-                      ),
-                      icon: Icons.monetization_on_outlined,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ZakatCalculatorScreen(),
-                          ),
-                        );
-                      },
-                    ),
+                    _quickAction(context, title: _label(languageCode, 'ক্যালেন্ডার', 'Calendar', 'التقويم'), icon: Icons.calendar_month_rounded, onTap: () => _openScreen(const CalendarScreen())),
+                    _quickAction(context, title: _label(languageCode, 'দোয়া', 'Dua', 'الدعاء'), icon: Icons.menu_book_rounded, onTap: () => _openScreen(const DuaScreen())),
+                    _quickAction(context, title: _label(languageCode, 'কিবলা', 'Qibla', 'القبلة'), icon: Icons.explore_rounded, onTap: () => _openScreen(const QiblaScreen())),
+                    _quickAction(context, title: _label(languageCode, 'তাসবীহ', 'Tasbih', 'التسبيح'), icon: Icons.radio_button_checked_rounded, onTap: () => _openScreen(const TasbihScreen())),
+                    _quickAction(context, title: _label(languageCode, '৯৯ নাম', '99 Names', 'أسماء الله'), icon: Icons.nightlight_round, onTap: () => _openScreen(const AsmaUlHusnaScreen())),
+                    _quickAction(context, title: _label(languageCode, 'অডিও কুরআন', 'Audio Quran', 'القرآن الصوتي'), icon: Icons.headphones_rounded, onTap: () => _openScreen(const AudioQuranScreen())),
+                    _quickAction(context, title: _label(languageCode, 'রুকিয়াহ', 'Ruqyah', 'الرقية'), icon: Icons.shield_outlined, onTap: () => _openScreen(const RuqyahScreen())),
+                    _quickAction(context, title: _label(languageCode, 'যাকাত', 'Zakat', 'الزكاة'), icon: Icons.monetization_on_outlined, onTap: () => _openScreen(const ZakatCalculatorScreen())),
                   ],
                 ),
-
-                const SizedBox(height: 20),
-
-                // ==================================================
-                // DAILY CONTENT
-                // ==================================================
+                const SizedBox(height: 14),
                 const DailyContentSection(),
-
-                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -802,13 +451,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ============================================================
-  // DISPOSE
-  // ============================================================
+  void _openScreen(Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
+  }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _clockTimer?.cancel();
     super.dispose();
   }
 }
