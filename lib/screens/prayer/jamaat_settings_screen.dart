@@ -33,11 +33,28 @@ class _JamaatSettingsScreenState extends State<JamaatSettingsScreen> {
 
     for (final prayer in JamaatService.prayers) {
       _controllers[prayer] = TextEditingController(
-        text: JamaatService.get(prayer),
+        text: _displayTime(prayer),
       );
     }
 
     if (mounted) setState(() => _loading = false);
+  }
+
+  String _displayTime(String prayer) {
+    if (JamaatService.isAutomatic) {
+      return JamaatService.defaultTime(prayer);
+    }
+    return JamaatService.get(prayer);
+  }
+
+  Future<void> _setMode(bool automatic) async {
+    await JamaatService.setAutomaticMode(automatic);
+
+    for (final prayer in JamaatService.prayers) {
+      _controllers[prayer]?.text = _displayTime(prayer);
+    }
+
+    if (mounted) setState(() {});
   }
 
   @override
@@ -64,12 +81,16 @@ class _JamaatSettingsScreenState extends State<JamaatSettingsScreen> {
     _controllers[prayer]?.text = formatted;
     await JamaatService.set(prayer, formatted);
 
+    for (final item in JamaatService.prayers) {
+      _controllers[item]?.text = _displayTime(item);
+    }
+
     if (mounted) setState(() {});
   }
 
   Future<void> _useDefault(String prayer) async {
     await JamaatService.useDefault(prayer);
-    _controllers[prayer]?.text = JamaatService.defaultTime(prayer);
+    _controllers[prayer]?.text = _displayTime(prayer);
     if (mounted) setState(() {});
   }
 
@@ -98,15 +119,17 @@ class _JamaatSettingsScreenState extends State<JamaatSettingsScreen> {
 
     await JamaatService.reset();
     for (final prayer in JamaatService.prayers) {
-      _controllers[prayer]?.text = JamaatService.defaultTime(prayer);
+      _controllers[prayer]?.text = _displayTime(prayer);
     }
 
     if (mounted) setState(() {});
   }
 
   TimeOfDay? _parseTime(String value) {
-    final match = RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)$', caseSensitive: false)
-        .firstMatch(value.trim());
+    final match = RegExp(
+      r'^(\d{1,2}):(\d{2})\s*(AM|PM)$',
+      caseSensitive: false,
+    ).firstMatch(value.trim());
     if (match == null) return null;
 
     var hour = int.tryParse(match.group(1)!) ?? 12;
@@ -154,19 +177,57 @@ class _JamaatSettingsScreenState extends State<JamaatSettingsScreen> {
                     color: primary.withValues(alpha: 0.07),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Column(
                     children: [
-                      Icon(Icons.groups_rounded, color: primary),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'আপনার স্থানীয় মসজিদের জামাআত সময় এখানে সরাসরি সেট করুন। ডিফল্ট সময় আজকের আপনার অবস্থানভিত্তিক সালাতের সময় থেকে স্বয়ংক্রিয়ভাবে তৈরি হয়।',
-                          style: TextStyle(
-                            color: secondary,
-                            fontSize: 12.5,
-                            height: 1.5,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.groups_rounded, color: primary),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'আপনার স্থানীয় মসজিদের জামাআত সময় এখানে সেট করুন। Automatic mode-এ সময় আজকের সালাতের হিসাব থেকে নির্ধারিত হবে; Manual mode-এ আপনি নিজে সময় সেট করবেন।',
+                              style: TextStyle(
+                                color: secondary,
+                                fontSize: 12.5,
+                                height: 1.5,
+                              ),
+                            ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: context.cardColor,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: SwitchListTile.adaptive(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 2,
+                          ),
+                          secondary: Icon(
+                            JamaatService.isAutomatic
+                                ? Icons.auto_awesome_rounded
+                                : Icons.edit_calendar_rounded,
+                            color: primary,
+                          ),
+                          title: Text(
+                            JamaatService.isAutomatic
+                                ? 'Automatic Jamaat'
+                                : 'Manual Jamaat',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          subtitle: Text(
+                            JamaatService.isAutomatic
+                                ? 'সালাতের সময় অনুযায়ী স্বয়ংক্রিয়ভাবে নির্ধারিত হবে'
+                                : 'প্রতিটি ওয়াক্তের সময় আপনি নিজে নির্ধারণ করবেন',
+                          ),
+                          value: JamaatService.isAutomatic,
+                          onChanged: _setMode,
                         ),
                       ),
                     ],
@@ -181,15 +242,18 @@ class _JamaatSettingsScreenState extends State<JamaatSettingsScreen> {
                       name: _bnNames[prayer] ?? prayer,
                       controller: _controllers[prayer]!,
                       isCustom: JamaatService.isCustom(prayer),
+                      automatic: JamaatService.isAutomatic,
                       defaultTime: JamaatService.defaultTime(prayer),
-                      onPick: () => _pickTime(prayer),
+                      onPick: JamaatService.isAutomatic
+                          ? null
+                          : () => _pickTime(prayer),
                       onDefault: () => _useDefault(prayer),
                     ),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'নোট: জামাআত সময় স্থানীয় মসজিদ অনুযায়ী সেট করা যায়। ডিফল্ট সময় কোনো মসজিদের নির্দিষ্ট ইকামাহ নয়; এটি সালাতের সময়ের ওপর ভিত্তি করে একটি স্বয়ংক্রিয় শুরু মান।',
+                  'নোট: Automatic mode-এ জামাআত সময় সালাতের calculated time-এর ওপর নির্ধারিত হয়। Manual mode-এ স্থানীয় মসজিদের প্রকৃত ইকামাহ সময় বসানোই সবচেয়ে উপযুক্ত।',
                   style: TextStyle(color: secondary, fontSize: 11, height: 1.5),
                 ),
               ],
@@ -203,8 +267,9 @@ class _JamaatTimeCard extends StatelessWidget {
   final String name;
   final TextEditingController controller;
   final bool isCustom;
+  final bool automatic;
   final String defaultTime;
-  final VoidCallback onPick;
+  final VoidCallback? onPick;
   final VoidCallback onDefault;
 
   const _JamaatTimeCard({
@@ -212,6 +277,7 @@ class _JamaatTimeCard extends StatelessWidget {
     required this.name,
     required this.controller,
     required this.isCustom,
+    required this.automatic,
     required this.defaultTime,
     required this.onPick,
     required this.onDefault,
@@ -257,7 +323,11 @@ class _JamaatTimeCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  isCustom ? 'স্থানীয় সময়' : 'স্বয়ংক্রিয় ডিফল্ট: $defaultTime',
+                  automatic
+                      ? 'স্বয়ংক্রিয়: $defaultTime'
+                      : isCustom
+                          ? 'স্থানীয় মসজিদের সময়'
+                          : 'Manual mode-এ সময় সেট করুন',
                   style: TextStyle(color: secondary, fontSize: 10.5),
                 ),
               ],
@@ -269,12 +339,13 @@ class _JamaatTimeCard extends StatelessWidget {
             child: TextField(
               controller: controller,
               readOnly: true,
+              enabled: !automatic,
               textAlign: TextAlign.center,
               onTap: onPick,
               decoration: InputDecoration(
                 isDense: true,
                 filled: true,
-                fillColor: primary.withValues(alpha: 0.05),
+                fillColor: primary.withValues(alpha: automatic ? 0.03 : 0.05),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 8,
                   vertical: 11,
@@ -299,7 +370,7 @@ class _JamaatTimeCard extends StatelessWidget {
             itemBuilder: (_) => const [
               PopupMenuItem(
                 value: 'default',
-                child: Text('ডিফল্ট সময় ব্যবহার করুন'),
+                child: Text('স্বয়ংক্রিয় ডিফল্ট ব্যবহার করুন'),
               ),
             ],
             icon: Icon(Icons.more_vert_rounded, color: secondary),
