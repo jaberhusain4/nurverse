@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Controls NurVerse's app-wide text scaling without changing the platform's
-/// accessibility setting.
+/// Four-level app-wide text scaling for NurVerse.
 ///
-/// The value is intentionally kept in a small, dedicated provider so global
-/// typography can evolve independently from Quran-specific font preferences.
+/// This controls general application typography only. Quran/Arabic-specific
+/// typography remains independent so the two settings do not overlap.
 class TextScaleProvider extends ChangeNotifier {
   static const String _storageKey = 'app_text_scale';
 
-  static const double minScale = 0.85;
-  static const double maxScale = 1.25;
-  static const double defaultScale = 1.0;
+  static const double smallScale = 0.85;
+  static const double normalScale = 1.0;
+  static const double largeScale = 1.15;
+  static const double veryLargeScale = 1.30;
+
+  static const double defaultScale = normalScale;
 
   double _scale = defaultScale;
   bool _isLoading = true;
@@ -24,18 +26,42 @@ class TextScaleProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   String get label {
-    if (_scale < 0.95) return 'ছোট';
-    if (_scale > 1.05) return 'বড়';
+    if ((_scale - smallScale).abs() < 0.03) {
+      return 'ছোট';
+    }
+
+    if ((_scale - largeScale).abs() < 0.03) {
+      return 'বড়';
+    }
+
+    if ((_scale - veryLargeScale).abs() < 0.03) {
+      return 'খুব বড়';
+    }
+
     return 'স্বাভাবিক';
   }
 
+  int get level {
+    if ((_scale - smallScale).abs() < 0.03) return 0;
+    if ((_scale - largeScale).abs() < 0.03) return 2;
+    if ((_scale - veryLargeScale).abs() < 0.03) return 3;
+    return 1;
+  }
+
+  static const List<double> levels = <double>[
+    smallScale,
+    normalScale,
+    largeScale,
+    veryLargeScale,
+  ];
+
   Future<void> _load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getDouble(_storageKey);
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final double? saved = prefs.getDouble(_storageKey);
 
       if (saved != null && saved.isFinite) {
-        _scale = saved.clamp(minScale, maxScale).toDouble();
+        _scale = _nearestLevel(saved);
       }
     } catch (_) {
       _scale = defaultScale;
@@ -46,7 +72,7 @@ class TextScaleProvider extends ChangeNotifier {
   }
 
   Future<void> setScale(double value) async {
-    final normalized = value.clamp(minScale, maxScale).toDouble();
+    final double normalized = _nearestLevel(value);
 
     if ((_scale - normalized).abs() < 0.001) {
       return;
@@ -56,17 +82,44 @@ class TextScaleProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setDouble(_storageKey, _scale);
     } catch (_) {
-      // Keep the in-memory value active even if persistence is temporarily
-      // unavailable. The next app launch will fall back safely.
+      // Keep the in-memory value active if persistence is temporarily
+      // unavailable. The next launch will safely fall back to defaults.
     }
   }
 
-  Future<void> increase() => setScale(_scale + 0.05);
+  Future<void> setLevel(int level) async {
+    final int normalizedLevel = level.clamp(0, levels.length - 1);
+    await setScale(levels[normalizedLevel]);
+  }
 
-  Future<void> decrease() => setScale(_scale - 0.05);
+  Future<void> increase() async {
+    await setLevel(level + 1);
+  }
 
-  Future<void> reset() => setScale(defaultScale);
+  Future<void> decrease() async {
+    await setLevel(level - 1);
+  }
+
+  Future<void> reset() async {
+    await setScale(defaultScale);
+  }
+
+  double _nearestLevel(double value) {
+    double nearest = levels.first;
+    double distance = (value - nearest).abs();
+
+    for (final double candidate in levels.skip(1)) {
+      final double candidateDistance = (value - candidate).abs();
+
+      if (candidateDistance < distance) {
+        nearest = candidate;
+        distance = candidateDistance;
+      }
+    }
+
+    return nearest;
+  }
 }
