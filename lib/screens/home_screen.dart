@@ -10,6 +10,7 @@ import '../services/date_service.dart';
 import '../services/jamaat_service.dart';
 import '../services/last_read_service.dart';
 import '../services/sun_time_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/common/current_prayer_premium_card.dart';
 import '../widgets/home/continue_reading_card.dart';
 import '../widgets/home/daily_content_section.dart';
