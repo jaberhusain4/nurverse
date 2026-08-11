@@ -1,6 +1,12 @@
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Single source of truth for resolved Jamaat times.
+///
+/// Automatic mode derives Jamaat from calculated prayer times using the
+/// configured offsets. Manual mode uses user-defined times. Per-prayer custom
+/// values are retained for backwards compatibility, but the global mode takes
+/// precedence when set to automatic.
 class JamaatService {
   static const Map<String, int> _defaultOffsets = {
     'Fajr': 20,
@@ -11,6 +17,7 @@ class JamaatService {
   };
 
   static const String _customPrefix = 'nurverse_jamaat_custom_';
+  static const String _modeKey = 'nurverse_jamaat_mode';
 
   static final Map<String, String> _dynamicDefaults = {
     'Fajr': '--:--',
@@ -23,6 +30,7 @@ class JamaatService {
   static final Map<String, String> _jamaat = {..._dynamicDefaults};
   static final Set<String> _customPrayers = <String>{};
   static bool _initialized = false;
+  static bool _automaticMode = true;
 
   static const List<String> prayers = <String>[
     'Fajr',
@@ -32,10 +40,15 @@ class JamaatService {
     'Isha',
   ];
 
+  static bool get isAutomatic => _automaticMode;
+  static bool get isManual => !_automaticMode;
+
   static Future<void> initialize() async {
     if (_initialized) return;
 
     final prefs = await SharedPreferences.getInstance();
+
+    _automaticMode = prefs.getBool(_modeKey) ?? true;
 
     for (final prayer in prayers) {
       final value = prefs.getString('$_customPrefix$prayer');
@@ -48,6 +61,41 @@ class JamaatService {
     _initialized = true;
   }
 
+  /// Enables or disables global automatic Jamaat calculation.
+  ///
+  /// Automatic mode does not delete manual values. Switching back to manual
+  /// therefore restores the user's previously saved custom times.
+  static Future<void> setAutomaticMode(bool value) async {
+    _automaticMode = value;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_modeKey, value);
+
+    if (!_initialized) {
+      await initialize();
+    }
+
+    if (_automaticMode) {
+      for (final prayer in prayers) {
+        final dynamicDefault = _dynamicDefaults[prayer];
+        if (dynamicDefault != null) {
+          _jamaat[prayer] = dynamicDefault;
+        }
+      }
+    } else {
+      for (final prayer in prayers) {
+        if (_customPrayers.contains(prayer)) {
+          final prefsValue = prefs.getString('$_customPrefix$prayer');
+          if (prefsValue != null && prefsValue.isNotEmpty) {
+            _jamaat[prayer] = prefsValue;
+          }
+        } else {
+          _jamaat[prayer] = '--:--';
+        }
+      }
+    }
+  }
+
   static void configureDefaults(Map<String, DateTime> prayerTimes) {
     for (final prayer in prayers) {
       final start = prayerTimes[prayer];
@@ -58,8 +106,11 @@ class JamaatService {
         start.add(Duration(minutes: offset)),
       );
 
-      if (!_customPrayers.contains(prayer)) {
+      if (_automaticMode) {
         _jamaat[prayer] = _dynamicDefaults[prayer]!;
+      } else if (_customPrayers.contains(prayer)) {
+        // Keep the user's manual value untouched.
+        continue;
       }
     }
   }
@@ -85,8 +136,10 @@ class JamaatService {
     if (times.isNotEmpty) configureDefaults(times);
   }
 
+  /// Returns the currently resolved Jamaat time.
   static String get(String prayer) => _jamaat[prayer] ?? '--:--';
 
+  /// Returns the automatically calculated Jamaat time, regardless of mode.
   static String defaultTime(String prayer) =>
       _dynamicDefaults[prayer] ?? '--:--';
 
@@ -96,10 +149,8 @@ class JamaatService {
 
   /// Compatibility bridge for SettingsProvider.
   ///
-  /// SettingsProvider historically stored Jamaat values in one place while
-  /// this service stores them in its own map. Keep this synchronous method so
-  /// both layers can stay in sync without introducing an async dependency into
-  /// provider initialization/reset flows.
+  /// This updates the in-memory resolved values without changing the global
+  /// mode or creating custom persistence records.
   static void setAll({
     required String fajr,
     required String dhuhr,
@@ -139,6 +190,9 @@ class JamaatService {
 
   static Future<void> reset() async {
     final prefs = await SharedPreferences.getInstance();
+
+    _automaticMode = true;
+    await prefs.setBool(_modeKey, true);
 
     for (final prayer in prayers) {
       _customPrayers.remove(prayer);
