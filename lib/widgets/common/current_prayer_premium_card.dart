@@ -41,6 +41,71 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
     }
   }
 
+  DateTime? _parseTime(String value, DateTime base) {
+    final match = RegExp(
+      r'^(\d{1,2}):(\d{2})\s*(AM|PM)$',
+      caseSensitive: false,
+    ).firstMatch(value.trim());
+    if (match == null) return null;
+
+    var hour = int.tryParse(match.group(1)!) ?? -1;
+    final minute = int.tryParse(match.group(2)!) ?? -1;
+    final period = match.group(3)!.toUpperCase();
+
+    if (hour < 1 || hour > 12 || minute < 0 || minute > 59) return null;
+
+    if (period == 'AM') {
+      if (hour == 12) hour = 0;
+    } else if (hour != 12) {
+      hour += 12;
+    }
+
+    return DateTime(base.year, base.month, base.day, hour, minute);
+  }
+
+  _AwalWaqtData? _awalWaqtData() {
+    final now = DateTime.now();
+    final start = _parseTime(currentPrayerTime, now);
+    var next = _parseTime(nextPrayerTime, now);
+    if (start == null || next == null) return null;
+
+    if (!next.isAfter(start)) {
+      next = next.add(const Duration(days: 1));
+    }
+
+    final interval = next.difference(start);
+    if (interval.inSeconds <= 0) return null;
+
+    // NurVerse's user-facing Awal Waqt guidance window is the first third of
+    // the current prayer interval. It is a reminder, not a Shar'i deadline.
+    final end = start.add(
+      Duration(milliseconds: interval.inMilliseconds ~/ 3),
+    );
+
+    final active = !now.isBefore(start) && now.isBefore(end);
+    final started = !now.isBefore(start);
+    final ended = !now.isBefore(end);
+
+    return _AwalWaqtData(
+      active: active,
+      started: started,
+      ended: ended,
+      remaining: active ? end.difference(now) : Duration.zero,
+    );
+  }
+
+  String _formatRemaining(Duration duration) {
+    final totalSeconds = duration.inSeconds.clamp(0, 86399);
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -52,9 +117,12 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
     final primary = scheme.primary;
     final safeProgress = progress.clamp(0.0, 1.0);
     final percentage = (safeProgress * 100).round();
+    final awal = _awalWaqtData();
 
     final previous = previousPrayer.isEmpty ? '--' : previousPrayer;
-    final current = currentPrayer.isEmpty ? _label(bn: 'ওয়াক্ত নেই', en: 'No prayer', ar: 'لا صلاة') : currentPrayer;
+    final current = currentPrayer.isEmpty
+        ? _label(bn: 'ওয়াক্ত নেই', en: 'No prayer', ar: 'لا صلاة')
+        : currentPrayer;
     final next = nextPrayer.isEmpty ? '--' : nextPrayer;
 
     return Container(
@@ -100,23 +168,14 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
                     children: [
                       Text(
                         _label(bn: 'সময় বাকি', en: 'Time left', ar: 'الوقت المتبقي'),
-                        style: TextStyle(
-                          color: secondary,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: TextStyle(color: secondary, fontSize: 9.5, fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 2),
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
                           remainingTime.isEmpty ? '--:--:--' : remainingTime,
-                          style: TextStyle(
-                            color: textColor,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.3,
-                          ),
+                          style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.3),
                         ),
                       ),
                     ],
@@ -141,19 +200,13 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.075),
-              borderRadius: BorderRadius.circular(16),
-            ),
+            decoration: BoxDecoration(color: primary.withValues(alpha: 0.075), borderRadius: BorderRadius.circular(16)),
             child: Row(
               children: [
                 Container(
                   width: 30,
                   height: 30,
-                  decoration: BoxDecoration(
-                    color: primary.withValues(alpha: 0.11),
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: BoxDecoration(color: primary.withValues(alpha: 0.11), shape: BoxShape.circle),
                   child: Icon(Icons.mosque_rounded, color: primary, size: 16),
                 ),
                 const SizedBox(width: 9),
@@ -161,41 +214,63 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _label(bn: 'বর্তমান সালাত', en: 'Current prayer', ar: 'الصلاة الحالية'),
-                        style: TextStyle(color: secondary, fontSize: 9.5, fontWeight: FontWeight.w600),
-                      ),
+                      Text(_label(bn: 'বর্তমান সালাত', en: 'Current prayer', ar: 'الصلاة الحالية'), style: TextStyle(color: secondary, fontSize: 9.5, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 1),
-                      Text(
-                        current,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w900),
-                      ),
+                      Text(current, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w900)),
                     ],
                   ),
                 ),
-                Text(
-                  currentPrayerTime.isEmpty ? '--:--' : currentPrayerTime,
-                  style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.w800),
-                ),
+                Text(currentPrayerTime.isEmpty ? '--:--' : currentPrayerTime, style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.w800)),
               ],
             ),
           ),
+          if (awal != null) ...[
+            const SizedBox(height: 9),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: awal.active ? 0.085 : 0.045),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: primary.withValues(alpha: awal.active ? 0.12 : 0.05)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.bolt_rounded, size: 17, color: primary),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          awal.active
+                              ? _label(bn: 'আওয়াল ওয়াক্ত চলছে', en: 'Awal Waqt is active', ar: 'وقت الأول مستمر')
+                              : _label(bn: 'আওয়াল ওয়াক্ত শেষ', en: 'Awal Waqt ended', ar: 'انتهى وقت الأول'),
+                          style: TextStyle(color: textColor, fontSize: 10.5, fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          awal.active
+                              ? _label(bn: 'সময় বাকি', en: 'Time left', ar: 'الوقت المتبقي')
+                              : _label(bn: 'প্রথম অংশের সময়সীমা শেষ হয়েছে', en: 'Early-prayer guidance window has ended', ar: 'انتهت نافذة التذكير المبكر'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: secondary, fontSize: 8.5, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (awal.active) Text(_formatRemaining(awal.remaining), style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.w900)),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           Row(
             children: [
-              _TimeLabel(
-                label: _label(bn: 'শুরু', en: 'Start', ar: 'البداية'),
-                time: currentPrayerTime,
-                color: secondary,
-              ),
+              _TimeLabel(label: _label(bn: 'শুরু', en: 'Start', ar: 'البداية'), time: currentPrayerTime, color: secondary),
               const Spacer(),
-              _TimeLabel(
-                label: _label(bn: 'শেষ', en: 'End', ar: 'النهاية'),
-                time: nextPrayerTime,
-                color: secondary,
-              ),
+              _TimeLabel(label: _label(bn: 'শেষ', en: 'End', ar: 'النهاية'), time: nextPrayerTime, color: secondary),
             ],
           ),
           const SizedBox(height: 6),
@@ -204,19 +279,11 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: LinearProgressIndicator(
-                    value: safeProgress,
-                    minHeight: 6,
-                    backgroundColor: primary.withValues(alpha: 0.09),
-                    valueColor: AlwaysStoppedAnimation<Color>(primary),
-                  ),
+                  child: LinearProgressIndicator(value: safeProgress, minHeight: 6, backgroundColor: primary.withValues(alpha: 0.09), valueColor: AlwaysStoppedAnimation<Color>(primary)),
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                '$percentage%',
-                style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.w800),
-              ),
+              Text('$percentage%', style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.w800)),
             ],
           ),
           const SizedBox(height: 8),
@@ -243,23 +310,14 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.045),
-                  borderRadius: BorderRadius.circular(13),
-                ),
+                decoration: BoxDecoration(color: primary.withValues(alpha: 0.045), borderRadius: BorderRadius.circular(13)),
                 child: Row(
                   children: [
                     Icon(Icons.groups_rounded, size: 16, color: primary),
                     const SizedBox(width: 7),
-                    Text(
-                      _label(bn: 'জামাআত', en: 'Jamaat', ar: 'الجماعة'),
-                      style: TextStyle(color: secondary, fontSize: 10, fontWeight: FontWeight.w600),
-                    ),
+                    Text(_label(bn: 'জামাআত', en: 'Jamaat', ar: 'الجماعة'), style: TextStyle(color: secondary, fontSize: 10, fontWeight: FontWeight.w600)),
                     const Spacer(),
-                    Text(
-                      iqamahTime.isEmpty ? '--:--' : iqamahTime,
-                      style: TextStyle(color: textColor, fontSize: 11.5, fontWeight: FontWeight.w800),
-                    ),
+                    Text(iqamahTime.isEmpty ? '--:--' : iqamahTime, style: TextStyle(color: textColor, fontSize: 11.5, fontWeight: FontWeight.w800)),
                     const SizedBox(width: 4),
                     Icon(Icons.chevron_right_rounded, size: 17, color: secondary),
                   ],
@@ -273,6 +331,15 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
   }
 }
 
+class _AwalWaqtData {
+  final bool active;
+  final bool started;
+  final bool ended;
+  final Duration remaining;
+
+  const _AwalWaqtData({required this.active, required this.started, required this.ended, required this.remaining});
+}
+
 class _PrayerMini extends StatelessWidget {
   final String label;
   final String prayer;
@@ -282,15 +349,7 @@ class _PrayerMini extends StatelessWidget {
   final Color textColor;
   final bool alignEnd;
 
-  const _PrayerMini({
-    required this.label,
-    required this.prayer,
-    required this.time,
-    required this.icon,
-    required this.color,
-    required this.textColor,
-    required this.alignEnd,
-  });
+  const _PrayerMini({required this.label, required this.prayer, required this.time, required this.icon, required this.color, required this.textColor, required this.alignEnd});
 
   @override
   Widget build(BuildContext context) {
@@ -304,13 +363,7 @@ class _PrayerMini extends StatelessWidget {
         const SizedBox(height: 3),
         Text(label, style: TextStyle(color: color, fontSize: 8.5, fontWeight: FontWeight.w600)),
         const SizedBox(height: 1),
-        Text(
-          prayer,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: textAlign,
-          style: TextStyle(color: textColor, fontSize: 11, fontWeight: FontWeight.w800),
-        ),
+        Text(prayer, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: textAlign, style: TextStyle(color: textColor, fontSize: 11, fontWeight: FontWeight.w800)),
         const SizedBox(height: 1),
         Text(time.isEmpty ? '--:--' : time, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w600)),
       ],
@@ -330,10 +383,7 @@ class _TimeLabel extends StatelessWidget {
     return Row(
       children: [
         Text('$label  ', style: TextStyle(color: color, fontSize: 8.5)),
-        Text(
-          time.isEmpty ? '--:--' : time,
-          style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w800),
-        ),
+        Text(time.isEmpty ? '--:--' : time, style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w800)),
       ],
     );
   }
