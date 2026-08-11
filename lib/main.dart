@@ -14,6 +14,7 @@ import 'theme/app_theme.dart';
 // Providers
 import 'providers/settings_provider.dart';
 import 'providers/premium_provider.dart';
+import 'providers/text_scale_provider.dart';
 
 // Controllers
 import 'controllers/prayer_controller.dart';
@@ -61,6 +62,13 @@ Future<void> main() async {
         ),
 
         // --------------------------------------------------------
+        // GLOBAL TEXT SIZE
+        // --------------------------------------------------------
+        ChangeNotifierProvider<TextScaleProvider>(
+          create: (_) => TextScaleProvider(),
+        ),
+
+        // --------------------------------------------------------
         // PREMIUM
         // --------------------------------------------------------
         ChangeNotifierProvider<PremiumProvider>(
@@ -94,6 +102,7 @@ class NurVerseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final SettingsProvider settings = context.watch<SettingsProvider>();
+    final TextScaleProvider textScale = context.watch<TextScaleProvider>();
 
     return MaterialApp(
       title: 'NurVerse',
@@ -127,7 +136,22 @@ class NurVerseApp extends StatelessWidget {
       // ============================================================
       // MAIN NAVIGATION
       // ============================================================
-      home: const MainNavigationScreen(),
+      home: Builder(
+        builder: (BuildContext context) {
+          final MediaQueryData mediaQuery = MediaQuery.of(context);
+          final double platformScale =
+              mediaQuery.textScaler.textScaleFactor;
+          final double combinedScale =
+              (platformScale * textScale.scale).clamp(0.70, 2.0).toDouble();
+
+          return MediaQuery(
+            data: mediaQuery.copyWith(
+              textScaler: TextScaler.linear(combinedScale),
+            ),
+            child: const MainNavigationScreen(),
+          );
+        },
+      ),
     );
   }
 }
@@ -293,54 +317,31 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           // NAVIGATION ITEMS
           // ======================================================
           items: [
-            // ====================================================
-            // HOME
-            // ====================================================
             BottomNavigationBarItem(
               icon: const Icon(Icons.home_outlined),
               activeIcon: const Icon(Icons.home),
               label: isBangla ? 'হোম' : 'Home',
             ),
-
-            // ====================================================
-            // PRAYER
-            // ====================================================
             BottomNavigationBarItem(
               icon: const Icon(Icons.mosque_outlined),
               activeIcon: const Icon(Icons.mosque),
               label: isBangla ? 'সালাত' : 'Prayer',
             ),
-
-            // ====================================================
-            // QURAN
-            // ====================================================
             BottomNavigationBarItem(
               icon: const Icon(Icons.menu_book_outlined),
               activeIcon: const Icon(Icons.menu_book),
               label: isBangla ? 'কুরআন' : 'Quran',
             ),
-
-            // ====================================================
-            // HADITH
-            // ====================================================
             BottomNavigationBarItem(
               icon: const Icon(Icons.auto_stories_outlined),
               activeIcon: const Icon(Icons.auto_stories),
               label: isBangla ? 'হাদিস' : 'Hadith',
             ),
-
-            // ====================================================
-            // TOOLS
-            // ====================================================
             BottomNavigationBarItem(
               icon: const Icon(Icons.grid_view_outlined),
               activeIcon: const Icon(Icons.grid_view),
               label: isBangla ? 'টুলস' : 'Tools',
             ),
-
-            // ====================================================
-            // MORE
-            // ====================================================
             BottomNavigationBarItem(
               icon: const Icon(Icons.more_horiz_outlined),
               activeIcon: const Icon(Icons.more_horiz),
