@@ -18,77 +18,22 @@ class IslamicBooksScreen extends StatefulWidget {
 
 class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
   static const _readBooks = <_BookResource>[
-    _BookResource(
-      title: 'উলূমুল কুরআন ও উলূমুল হাদীস',
-      description: 'বাংলাদেশ ওপেন ইউনিভার্সিটির বাংলা ইসলামিক পাঠ্যবই।',
-      source: 'Wikimedia Commons • CC BY 4.0',
-      icon: Icons.auto_stories_rounded,
-      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/উলূমুল_কুরআন_ও_উলূমুল_হাদীস.pdf',
-      isPdf: true,
-    ),
-    _BookResource(
-      title: 'ইসলাম-কাহিনী',
-      description: 'কাজী আকরম হোসেনের বাংলা ইসলামিক গ্রন্থ।',
-      source: 'Wikimedia Commons • Public Domain',
-      icon: Icons.menu_book_rounded,
-      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/ইসলাম-কাহিনী_–_কাজী_আকরম_হোসেন_(১৯৪৬).pdf',
-      isPdf: true,
-    ),
-    _BookResource(
-      title: 'কোরআনের গল্প',
-      description: 'বন্দে আলি মিয়ার বাংলা ইসলামিক গ্রন্থ।',
-      source: 'Wikimedia Commons • Bengali PDF',
-      icon: Icons.auto_stories_rounded,
-      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/কোরাণের_গল্প_-_বন্দে_আলি_মিয়া.pdf',
-      isPdf: true,
-    ),
-    _BookResource(
-      title: 'কোরআন শরীফ — প্রথম খণ্ড',
-      description: 'মোহাম্মদ আকরম খাঁর বাংলা অনুবাদগ্রন্থের প্রথম খণ্ড।',
-      source: 'Wikimedia Commons • Bengali PDF',
-      icon: Icons.library_books_rounded,
-      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/কোরআন_শরীফ_(প্রথম_খণ্ড)_-_মোহাম্মদ_আকরম_খাঁ.pdf',
-      isPdf: true,
-    ),
-    _BookResource(
-      title: 'কোরআন শরীফ — দ্বিতীয় খণ্ড',
-      description: 'মোহাম্মদ আকরম খাঁর বাংলা অনুবাদগ্রন্থের দ্বিতীয় খণ্ড।',
-      source: 'Wikimedia Commons • Bengali PDF',
-      icon: Icons.library_books_rounded,
-      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/কোরআন_শরীফ_(দ্বিতীয়_খণ্ড)_-_মোহাম্মদ_আকরম_খাঁ.pdf',
-      isPdf: true,
-    ),
-    _BookResource(
-      title: 'ইসলামি অর্থব্যবস্থা',
-      description: 'বাংলা ইসলামিক পাঠ্যবই — সরাসরি reader-এ পড়ুন।',
-      source: 'Wikimedia Commons • CC BY 4.0',
-      icon: Icons.account_balance_rounded,
-      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/ইসলামি_অর্থব্যবস্থা.pdf',
-      isPdf: true,
-    ),
-    _BookResource(
-      title: 'এক নজরে ইসলাম',
-      description: 'বাংলা ইসলাম বিষয়ক গ্রন্থ — সরাসরি reader-এ পড়ুন।',
-      source: 'Wikimedia Commons • CC BY-SA 4.0',
-      icon: Icons.menu_book_rounded,
-      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/এক_নজরে_ইসলাম.pdf',
-      isPdf: true,
-    ),
+    _BookResource(title: 'উলূমুল কুরআন ও উলূমুল হাদীস', description: 'বাংলাদেশ ওপেন ইউনিভার্সিটির বাংলা ইসলামিক পাঠ্যবই।', source: 'Wikimedia Commons • CC BY 4.0', icon: Icons.auto_stories_rounded, url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/উলূমুল_কুরআন_ও_উলূমুল_হাদীস.pdf', isPdf: true),
+    _BookResource(title: 'ইসলাম-কাহিনী', description: 'কাজী আকরম হোসেনের বাংলা ইসলামিক গ্রন্থ।', source: 'Wikimedia Commons • Public Domain', icon: Icons.menu_book_rounded, url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/ইসলাম-কাহিনী_–_কাজী_আকরম_হোসেন_(১৯৪৬).pdf', isPdf: true),
+    _BookResource(title: 'কোরআনের গল্প', description: 'বন্দে আলি মিয়ার বাংলা ইসলামিক গ্রন্থ।', source: 'Wikimedia Commons • Bengali PDF', icon: Icons.auto_stories_rounded, url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/কোরাণের_গল্প_-_বন্দে_আলি_মিয়া.pdf', isPdf: true),
+    _BookResource(title: 'কোরআন শরীফ — প্রথম খণ্ড', description: 'মোহাম্মদ আকরম খাঁর বাংলা অনুবাদগ্রন্থের প্রথম খণ্ড।', source: 'Wikimedia Commons • Bengali PDF', icon: Icons.library_books_rounded, url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/কোরআন_শরীফ_(প্রথম_খণ্ড)_-_মোহাম্মদ_আকরম_খাঁ.pdf', isPdf: true),
+    _BookResource(title: 'কোরআন শরীফ — দ্বিতীয় খণ্ড', description: 'মোহাম্মদ আকরম খাঁর বাংলা অনুবাদগ্রন্থের দ্বিতীয় খণ্ড।', source: 'Wikimedia Commons • Bengali PDF', icon: Icons.library_books_rounded, url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/কোরআন_শরীফ_(দ্বিতীয়_খণ্ড)_-_মোহাম্মদ_আকরম_খাঁ.pdf', isPdf: true),
+    _BookResource(title: 'ইসলামি অর্থব্যবস্থা', description: 'বাংলা ইসলামিক পাঠ্যবই — সরাসরি reader-এ পড়ুন।', source: 'Wikimedia Commons • CC BY 4.0', icon: Icons.account_balance_rounded, url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/ইসলামি_অর্থব্যবস্থা.pdf', isPdf: true),
+    _BookResource(title: 'এক নজরে ইসলাম', description: 'বাংলা ইসলাম বিষয়ক গ্রন্থ — সরাসরি reader-এ পড়ুন।', source: 'Wikimedia Commons • CC BY-SA 4.0', icon: Icons.menu_book_rounded, url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/এক_নজরে_ইসলাম.pdf', isPdf: true),
   ];
 
   static const _downloadBooks = <_BookResource>[
-    _BookResource(
-      title: 'মিশকাতুল মাসাবীহ — বাংলা অনুবাদসহ',
-      description: 'কওমি ধারায় বহুল পঠিত হাদিসগ্রন্থ। একাধিক খণ্ডের Download source।',
-      source: 'তাওহীদের ডাক • PDF download source',
-      icon: Icons.download_for_offline_rounded,
-      url: 'https://www.tauhiderdak.com/mishkatul-masabih-bangla',
-      isDownloadPage: true,
-    ),
+    _BookResource(title: 'মিশকাতুল মাসাবীহ — বাংলা অনুবাদসহ', description: 'কওমি ধারায় বহুল পঠিত হাদিসগ্রন্থ। একাধিক খণ্ডের Download source।', source: 'তাওহীদের ডাক • PDF download source', icon: Icons.download_for_offline_rounded, url: 'https://www.tauhiderdak.com/mishkatul-masabih-bangla', isDownloadPage: true),
   ];
 
   final Map<String, double> _downloadProgress = {};
   final Map<String, String> _downloadedPaths = {};
+  bool _showAllReadBooks = false;
 
   @override
   void initState() {
@@ -101,17 +46,12 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
     final paths = <String, String>{};
     for (final book in _downloadBooks) {
       final path = prefs.getString(_storageKey(book));
-      if (path != null && await File(path).exists()) {
-        paths[book.title] = path;
-      }
+      if (path != null && await File(path).exists()) paths[book.title] = path;
     }
-    if (mounted) {
-      setState(() => _downloadedPaths.addAll(paths));
-    }
+    if (mounted) setState(() => _downloadedPaths.addAll(paths));
   }
 
-  String _storageKey(_BookResource book) =>
-      'nurverse_islamic_book_${book.title.hashCode}';
+  String _storageKey(_BookResource book) => 'nurverse_islamic_book_${book.title.hashCode}';
 
   Future<void> _openBook(_BookResource book) async {
     final localPath = _downloadedPaths[book.title];
@@ -123,21 +63,18 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
   }
 
   void _pushReader(_BookResource book, {String? localFilePath}) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => IslamicBookReaderScreen(
-          title: book.title,
-          url: book.url,
-          isPdf: book.isPdf,
-          localFilePath: localFilePath,
-        ),
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => IslamicBookReaderScreen(
+        title: book.title,
+        url: book.url,
+        isPdf: book.isPdf,
+        localFilePath: localFilePath,
       ),
-    );
+    ));
   }
 
   Future<void> _downloadBook(_BookResource book) async {
     if (_downloadProgress.containsKey(book.title)) return;
-
     if (book.isDownloadPage) {
       _pushReader(book);
       return;
@@ -146,21 +83,14 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
     setState(() => _downloadProgress[book.title] = 0);
     try {
       final downloadsDirectory = await getDownloadsDirectory();
-      final baseDirectory =
-          downloadsDirectory ?? await getApplicationDocumentsDirectory();
-      final booksDirectory = Directory(
-        p.join(baseDirectory.path, 'NurVerse', 'Islamic Books'),
-      );
+      final baseDirectory = downloadsDirectory ?? await getApplicationDocumentsDirectory();
+      final booksDirectory = Directory(p.join(baseDirectory.path, 'NurVerse', 'Islamic Books'));
       await booksDirectory.create(recursive: true);
 
-      final file = File(
-        p.join(booksDirectory.path, '${_safeFileName(book.title)}.pdf'),
-      );
+      final file = File(p.join(booksDirectory.path, '${_safeFileName(book.title)}.pdf'));
       final request = http.Request('GET', Uri.parse(book.url));
-      request.headers['User-Agent'] =
-          'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 Chrome/151 Mobile Safari/537.36';
+      request.headers['User-Agent'] = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 Chrome/151 Mobile Safari/537.36';
       final response = await request.send();
-
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw HttpException('HTTP ${response.statusCode}');
       }
@@ -173,9 +103,7 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
           sink.add(chunk);
           received += chunk.length;
           if (mounted && total != null && total > 0) {
-            setState(() {
-              _downloadProgress[book.title] = received / total;
-            });
+            setState(() => _downloadProgress[book.title] = received / total);
           }
         }
       } finally {
@@ -185,14 +113,11 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_storageKey(book), file.path);
       if (!mounted) return;
-
       setState(() {
         _downloadedPaths[book.title] = file.path;
         _downloadProgress.remove(book.title);
       });
-      _showMessage(
-        '“${book.title}” Download complete — NurVerse/Islamic Books-এ সংরক্ষিত হয়েছে।',
-      );
+      _showMessage('“${book.title}” ডাউনলোড সম্পন্ন হয়েছে।');
     } catch (_) {
       if (!mounted) return;
       setState(() => _downloadProgress.remove(book.title));
@@ -208,30 +133,21 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
   Future<void> _deleteBook(_BookResource book) async {
     final localPath = _downloadedPaths[book.title];
     if (localPath == null) return;
-
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('বই মুছে ফেলবেন?'),
         content: Text('“${book.title}” offline storage থেকে মুছে যাবে।'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('না'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('মুছে ফেলুন'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('না')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('মুছে ফেলুন')),
         ],
       ),
     );
-
     if (confirmed != true) return;
     try {
       await File(localPath).delete();
     } catch (_) {}
-
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_storageKey(book));
     if (mounted) {
@@ -248,9 +164,9 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final downloaded = _downloadBooks
-        .where((book) => _downloadedPaths.containsKey(book.title))
-        .toList();
+    final downloaded = _downloadBooks.where((book) => _downloadedPaths.containsKey(book.title)).toList();
+    final visibleReadBooks = _showAllReadBooks ? _readBooks : _readBooks.take(2).toList();
+    final hiddenReadCount = _readBooks.length - 2;
 
     return Scaffold(
       appBar: AppBar(
@@ -274,16 +190,28 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
             icon: Icons.menu_book_rounded,
           ),
           const SizedBox(height: 10),
-          ..._readBooks.map(
-            (book) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _BookCard(
-                book: book,
-                actionLabel: 'পড়ুন',
-                onTap: () => _openBook(book),
+          ...visibleReadBooks.map((book) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _BookCard(book: book, actionLabel: 'পড়ুন', onTap: () => _openBook(book)),
+          )),
+          if (!_showAllReadBooks && hiddenReadCount > 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: OutlinedButton.icon(
+                onPressed: () => setState(() => _showAllReadBooks = true),
+                icon: const Icon(Icons.expand_more_rounded),
+                label: Text('আরও $hiddenReadCountটি বই দেখুন'),
               ),
             ),
-          ),
+          if (_showAllReadBooks)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: TextButton.icon(
+                onPressed: () => setState(() => _showAllReadBooks = false),
+                icon: const Icon(Icons.expand_less_rounded),
+                label: const Text('কম দেখান'),
+              ),
+            ),
           const SizedBox(height: 10),
           const _SectionHeader(
             title: 'Download E-Book',
@@ -291,21 +219,17 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
             icon: Icons.download_rounded,
           ),
           const SizedBox(height: 10),
-          ..._downloadBooks.map(
-            (book) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _BookCard(
-                book: book,
-                actionLabel: 'Download source',
-                progress: _downloadProgress[book.title],
-                onTap: () => _openBook(book),
-                onDownload: _downloadedPaths.containsKey(book.title)
-                    ? () => _deleteBook(book)
-                    : () => _downloadBook(book),
-                downloaded: _downloadedPaths.containsKey(book.title),
-              ),
+          ..._downloadBooks.map((book) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _BookCard(
+              book: book,
+              actionLabel: 'Download source',
+              progress: _downloadProgress[book.title],
+              onTap: () => _openBook(book),
+              onDownload: _downloadedPaths.containsKey(book.title) ? () => _deleteBook(book) : () => _downloadBook(book),
+              downloaded: _downloadedPaths.containsKey(book.title),
             ),
-          ),
+          )),
           if (downloaded.isNotEmpty) ...[
             const SizedBox(height: 10),
             const _SectionHeader(
@@ -314,18 +238,10 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
               icon: Icons.offline_pin_rounded,
             ),
             const SizedBox(height: 10),
-            ...downloaded.map(
-              (book) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _BookCard(
-                  book: book,
-                  actionLabel: 'পড়ুন',
-                  onTap: () => _openBook(book),
-                  downloaded: true,
-                  onDownload: () => _deleteBook(book),
-                ),
-              ),
-            ),
+            ...downloaded.map((book) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _BookCard(book: book, actionLabel: 'পড়ুন', onTap: () => _openBook(book), downloaded: true, onDownload: () => _deleteBook(book)),
+            )),
           ],
         ],
       ),
@@ -342,22 +258,11 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'বইয়ের উৎস',
-              style: TextStyle(
-                color: context.primaryTextColor,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+            Text('বইয়ের উৎস', style: TextStyle(color: context.primaryTextColor, fontSize: 18, fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
             Text(
               'NurVerse আপাতত বাংলা ভাষার নির্বাচিত ইসলামিক বই রাখছে। Read E-Book-এর বইগুলো সরাসরি PDF reader-এ খোলা হয়। মিশকাতুল মাসাবীহ-এর মতো multi-volume Download source বইগুলো NurVerse-এর ভেতরের reader-এ source page হিসেবে খোলা হয়।',
-              style: TextStyle(
-                color: context.secondaryTextColor,
-                fontSize: 13,
-                height: 1.55,
-              ),
+              style: TextStyle(color: context.secondaryTextColor, fontSize: 13, height: 1.55),
             ),
           ],
         ),
@@ -403,21 +308,13 @@ class _BooksIntroCard extends StatelessWidget {
                 color: AppColors.seaBlue.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: const Icon(
-                Icons.auto_stories_rounded,
-                color: AppColors.seaBlue,
-                size: 25,
-              ),
+              child: const Icon(Icons.auto_stories_rounded, color: AppColors.seaBlue, size: 25),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
                 'নির্বাচিত বাংলা ইসলামিক বই — অনলাইনে পড়ুন অথবা প্রয়োজন অনুযায়ী Download source ব্যবহার করুন।',
-                style: TextStyle(
-                  color: context.secondaryTextColor,
-                  fontSize: 13,
-                  height: 1.5,
-                ),
+                style: TextStyle(color: context.secondaryTextColor, fontSize: 13, height: 1.5),
               ),
             ),
           ],
@@ -432,11 +329,7 @@ class _SectionHeader extends StatelessWidget {
   final String subtitle;
   final IconData icon;
 
-  const _SectionHeader({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-  });
+  const _SectionHeader({required this.title, required this.subtitle, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -449,22 +342,9 @@ class _SectionHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: context.primaryTextColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+              Text(title, style: TextStyle(color: context.primaryTextColor, fontSize: 16, fontWeight: FontWeight.w800)),
               const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  color: context.secondaryTextColor,
-                  fontSize: 12,
-                ),
-              ),
+              Text(subtitle, style: TextStyle(color: context.secondaryTextColor, fontSize: 12)),
             ],
           ),
         ),
@@ -481,14 +361,7 @@ class _BookCard extends StatelessWidget {
   final double? progress;
   final bool downloaded;
 
-  const _BookCard({
-    required this.book,
-    required this.actionLabel,
-    required this.onTap,
-    this.onDownload,
-    this.progress,
-    this.downloaded = false,
-  });
+  const _BookCard({required this.book, required this.actionLabel, required this.onTap, this.onDownload, this.progress, this.downloaded = false});
 
   @override
   Widget build(BuildContext context) {
@@ -514,37 +387,11 @@ class _BookCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      book.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: context.primaryTextColor,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+                    Text(book.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.primaryTextColor, fontSize: 15, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 4),
-                    Text(
-                      book.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: context.secondaryTextColor,
-                        fontSize: 12,
-                        height: 1.4,
-                      ),
-                    ),
+                    Text(book.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.secondaryTextColor, fontSize: 12, height: 1.4)),
                     const SizedBox(height: 5),
-                    Text(
-                      book.source,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: context.secondaryTextColor,
-                        fontSize: 10.5,
-                      ),
-                    ),
+                    Text(book.source, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.secondaryTextColor, fontSize: 10.5)),
                     if (progress != null) ...[
                       const SizedBox(height: 8),
                       LinearProgressIndicator(value: progress),
@@ -559,29 +406,13 @@ class _BookCard extends StatelessWidget {
                   IconButton(
                     tooltip: actionLabel,
                     onPressed: progress != null ? null : onTap,
-                    icon: Icon(
-                      downloaded
-                          ? Icons.offline_pin_rounded
-                          : book.isDownloadPage
-                              ? Icons.open_in_new_rounded
-                              : Icons.menu_book_rounded,
-                    ),
+                    icon: Icon(downloaded ? Icons.offline_pin_rounded : Icons.menu_book_rounded),
                   ),
-                  if (onDownload != null && !book.isDownloadPage)
+                  if (onDownload != null)
                     IconButton(
                       tooltip: downloaded ? 'মুছে ফেলুন' : actionLabel,
                       onPressed: progress != null ? null : onDownload,
-                      icon: Icon(
-                        downloaded
-                            ? Icons.delete_outline_rounded
-                            : Icons.download_rounded,
-                      ),
-                    ),
-                  if (book.isDownloadPage)
-                    IconButton(
-                      tooltip: 'Download source খুলুন',
-                      onPressed: progress != null ? null : onDownload,
-                      icon: const Icon(Icons.download_rounded),
+                      icon: Icon(downloaded ? Icons.delete_outline_rounded : Icons.download_rounded),
                     ),
                 ],
               ),
