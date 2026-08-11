@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -9,12 +10,14 @@ class IslamicBookReaderScreen extends StatefulWidget {
   final String title;
   final String url;
   final bool isPdf;
+  final String? localFilePath;
 
   const IslamicBookReaderScreen({
     super.key,
     required this.title,
     required this.url,
     this.isPdf = false,
+    this.localFilePath,
   });
 
   @override
@@ -36,7 +39,40 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
   @override
   void initState() {
     super.initState();
-    widget.isPdf ? _loadPdf() : _loadWebPage();
+    if (widget.localFilePath != null) {
+      _loadLocalPdf();
+    } else if (widget.isPdf) {
+      _loadPdf();
+    } else {
+      _loadWebPage();
+    }
+  }
+
+  Future<void> _loadLocalPdf() async {
+    try {
+      final file = File(widget.localFilePath!);
+      if (!await file.exists()) throw Exception('File not found');
+      final controller = PdfControllerPinch(
+        document: PdfDocument.openFile(file.path),
+      );
+      if (!mounted) {
+        controller.dispose();
+        return;
+      }
+      setState(() {
+        _pdfController = controller;
+        _loading = false;
+        _hasError = false;
+        _progress = 100;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _hasError = true;
+        _errorMessage = 'ডাউনলোড করা বইটি খোলা যাচ্ছে না।';
+      });
+    }
   }
 
   Future<void> _loadPdf() async {
@@ -50,7 +86,9 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
       }
 
       final bytes = Uint8List.fromList(response.bodyBytes);
-      final controller = PdfControllerPinch(document: PdfDocument.openData(bytes));
+      final controller = PdfControllerPinch(
+        document: PdfDocument.openData(bytes),
+      );
 
       if (!mounted) {
         controller.dispose();
@@ -67,7 +105,8 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
       setState(() {
         _loading = false;
         _hasError = true;
-        _errorMessage = 'বইটির PDF ডাউনলোড করা যাচ্ছে না। ইন্টারনেট সংযোগ পরীক্ষা করুন।';
+        _errorMessage =
+            'বইটির PDF পাওয়া যাচ্ছে না। ইন্টারনেট সংযোগ পরীক্ষা করুন।';
       });
     }
   }
@@ -134,7 +173,11 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
       _hasError = false;
       _progress = 0;
     });
-    if (widget.isPdf) {
+    if (widget.localFilePath != null) {
+      _pdfController?.dispose();
+      _pdfController = null;
+      await _loadLocalPdf();
+    } else if (widget.isPdf) {
       _pdfController?.dispose();
       _pdfController = null;
       await _loadPdf();
@@ -175,19 +218,24 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
               )
             : null,
       ),
-      body: _hasError ? _ReaderError(message: _errorMessage, onRetry: _reload) : _buildBody(),
+      body: _hasError
+          ? _ReaderError(message: _errorMessage, onRetry: _reload)
+          : _buildBody(),
     );
   }
 
   Widget _buildBody() {
-    if (widget.isPdf && _pdfController != null) {
+    if ((widget.isPdf || widget.localFilePath != null) &&
+        _pdfController != null) {
       return PdfViewPinch(
         controller: _pdfController!,
         scrollDirection: Axis.vertical,
         builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
           options: const DefaultBuilderOptions(),
-          documentLoaderBuilder: (_) => const Center(child: CircularProgressIndicator()),
-          pageLoaderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+          documentLoaderBuilder: (_) =>
+              const Center(child: CircularProgressIndicator()),
+          pageLoaderBuilder: (_) =>
+              const Center(child: CircularProgressIndicator()),
           errorBuilder: (_, __) => _ReaderError(
             message: 'PDF পড়া যাচ্ছে না। আবার চেষ্টা করুন।',
             onRetry: _reload,
@@ -228,7 +276,10 @@ class _ReaderError extends StatelessWidget {
               children: [
                 const Icon(Icons.menu_book_rounded, size: 44),
                 const SizedBox(height: 14),
-                const Text('বইটি খোলা যাচ্ছে না', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                const Text(
+                  'বইটি খোলা যাচ্ছে না',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                ),
                 const SizedBox(height: 8),
                 Text(message, textAlign: TextAlign.center),
                 const SizedBox(height: 18),
