@@ -9,6 +9,7 @@ import '../providers/settings_provider.dart';
 import '../services/date_service.dart';
 import '../services/jamaat_service.dart';
 import '../services/last_read_service.dart';
+import '../services/sun_time_service.dart';
 import '../widgets/common/current_prayer_premium_card.dart';
 import '../widgets/home/continue_reading_card.dart';
 import '../widgets/home/daily_content_section.dart';
@@ -19,7 +20,7 @@ import 'qibla/qibla_screen.dart';
 import 'quran/audio_quran_screen.dart';
 import 'tools/asma_ul_husna.dart';
 import 'tools/calendar_screen.dart';
-import 'tools/dua/dua_screen.dart';
+import 'dua/dua_screen.dart';
 import 'tools/ruqyah_screen.dart';
 import 'tools/tasbih_screen.dart';
 import 'tools/zakat_calculator_screen.dart';
@@ -38,6 +39,11 @@ class _HomeScreenState extends State<HomeScreen> {
   String _currentTime = '';
   Map<String, dynamic>? _lastRead;
   bool _lastReadLoading = true;
+
+  double? _sunLatitude;
+  double? _sunLongitude;
+  DateTime? _sunDate;
+  SunTimeInfo? _sunTimeInfo;
 
   @override
   void initState() {
@@ -113,46 +119,19 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final h = HijriCalendar.now();
       const bnMonths = <String>[
-        'মুহররম',
-        'সফর',
-        'রবিউল আউয়াল',
-        'রবিউস সানি',
-        'জুমাদিউল আউয়াল',
-        'জুমাদিউস সানি',
-        'রজব',
-        'শাবান',
-        'রমজান',
-        'শাওয়াল',
-        'জিলকদ',
-        'জিলহজ',
+        'মুহররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি',
+        'জুমাদিউল আউয়াল', 'জুমাদিউস সানি', 'রজব', 'শাবান',
+        'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ',
       ];
       const enMonths = <String>[
-        'Muharram',
-        'Safar',
-        'Rabi al-Awwal',
-        'Rabi al-Thani',
-        'Jumada al-Awwal',
-        'Jumada al-Thani',
-        'Rajab',
-        'Sha’ban',
-        'Ramadan',
-        'Shawwal',
-        'Dhul-Qadah',
-        'Dhul-Hijjah',
+        'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
+        'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Sha’ban',
+        'Ramadan', 'Shawwal', 'Dhul-Qadah', 'Dhul-Hijjah',
       ];
       const arMonths = <String>[
-        'محرم',
-        'صفر',
-        'ربيع الأول',
-        'ربيع الآخر',
-        'جمادى الأولى',
-        'جمادى الآخرة',
-        'رجب',
-        'شعبان',
-        'رمضان',
-        'شوال',
-        'ذو القعدة',
-        'ذو الحجة',
+        'محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر',
+        'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان',
+        'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة',
       ];
       const digits = <String>['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
 
@@ -162,13 +141,10 @@ class _HomeScreenState extends State<HomeScreen> {
           .map((d) => digits[int.parse(d)])
           .join();
 
-      if (languageCode == 'en') {
-        return '${h.hDay} ${enMonths[h.hMonth - 1]} ${h.hYear} AH';
-      }
-      if (languageCode == 'ar') {
-        return '${h.hDay} ${arMonths[h.hMonth - 1]} ${h.hYear} هـ';
-      }
-      return '${bnDigits(h.hDay)} ${bnMonths[h.hMonth - 1]} ${bnDigits(h.hYear)} হিজরি';
+      final index = (h.hMonth - 1).clamp(0, 11);
+      if (languageCode == 'en') return '${h.hDay} ${enMonths[index]} ${h.hYear} AH';
+      if (languageCode == 'ar') return '${h.hDay} ${arMonths[index]} ${h.hYear} هـ';
+      return '${bnDigits(h.hDay)} ${bnMonths[index]} ${bnDigits(h.hYear)} হিজরি';
     } catch (_) {
       return languageCode == 'en' ? 'Hijri date unavailable' : 'হিজরি তারিখ পাওয়া যায়নি';
     }
@@ -178,32 +154,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final year = now.year;
     final starts = <DateTime>[
-      DateTime(year, 4, 14),
-      DateTime(year, 5, 15),
-      DateTime(year, 6, 15),
-      DateTime(year, 7, 16),
-      DateTime(year, 8, 16),
-      DateTime(year, 9, 16),
-      DateTime(year, 10, 16),
-      DateTime(year, 11, 15),
-      DateTime(year, 12, 15),
-      DateTime(year + 1, 1, 15),
-      DateTime(year + 1, 2, 13),
-      DateTime(year + 1, 3, 15),
+      DateTime(year, 4, 14), DateTime(year, 5, 15), DateTime(year, 6, 15),
+      DateTime(year, 7, 16), DateTime(year, 8, 16), DateTime(year, 9, 16),
+      DateTime(year, 10, 16), DateTime(year, 11, 15), DateTime(year, 12, 15),
+      DateTime(year + 1, 1, 15), DateTime(year + 1, 2, 13), DateTime(year + 1, 3, 15),
     ];
     const months = <String>[
-      'বৈশাখ',
-      'জ্যৈষ্ঠ',
-      'আষাঢ়',
-      'শ্রাবণ',
-      'ভাদ্র',
-      'আশ্বিন',
-      'কার্তিক',
-      'অগ্রহায়ণ',
-      'পৌষ',
-      'মাঘ',
-      'ফাল্গুন',
-      'চৈত্র',
+      'বৈশাখ', 'জ্যৈষ্ঠ', 'আষাঢ়', 'শ্রাবণ', 'ভাদ্র', 'আশ্বিন',
+      'কার্তিক', 'অগ্রহায়ণ', 'পৌষ', 'মাঘ', 'ফাল্গুন', 'চৈত্র',
     ];
 
     var index = -1;
@@ -211,48 +169,36 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!now.isBefore(starts[i])) index = i;
     }
 
-    if (index < 0) {
-      final previousStarts = <DateTime>[
-        DateTime(year - 1, 4, 14),
-        DateTime(year - 1, 5, 15),
-        DateTime(year - 1, 6, 15),
-        DateTime(year - 1, 7, 16),
-        DateTime(year - 1, 8, 16),
-        DateTime(year - 1, 9, 16),
-        DateTime(year - 1, 10, 16),
-        DateTime(year - 1, 11, 15),
-        DateTime(year - 1, 12, 15),
-        DateTime(year, 1, 15),
-        DateTime(year, 2, 13),
-        DateTime(year, 3, 15),
-      ];
-      for (var i = 0; i < previousStarts.length; i++) {
-        if (!now.isBefore(previousStarts[i])) index = i;
-      }
+    if (index < 0) index = 11;
+    final start = starts[index];
+    final banglaYear = now.month > 4 || (now.month == 4 && now.day >= 14) ? year - 593 : year - 594;
+    return '${now.difference(start).inDays + 1} ${months[index]} $banglaYear';
+  }
+
+  SunTimeInfo? _sunTimes(PrayerController controller) {
+    final position = controller.position;
+    if (position == null) return null;
+
+    final now = DateTime.now();
+    final sameDay = _sunDate != null &&
+        _sunDate!.year == now.year &&
+        _sunDate!.month == now.month &&
+        _sunDate!.day == now.day;
+    final sameLocation = _sunLatitude == position.latitude && _sunLongitude == position.longitude;
+
+    if (_sunTimeInfo == null || !sameDay || !sameLocation) {
+      _sunLatitude = position.latitude;
+      _sunLongitude = position.longitude;
+      _sunDate = now;
+      _sunTimeInfo = const SunTimeService().getSunTimes(
+        position,
+        date: null,
+        method: controller.calculationMethod,
+        madhab: controller.madhhab,
+      );
     }
 
-    index = index.clamp(0, 11);
-    final start = index < starts.length && !now.isBefore(starts[index])
-        ? starts[index]
-        : <DateTime>[
-            DateTime(year - 1, 4, 14),
-            DateTime(year - 1, 5, 15),
-            DateTime(year - 1, 6, 15),
-            DateTime(year - 1, 7, 16),
-            DateTime(year - 1, 8, 16),
-            DateTime(year - 1, 9, 16),
-            DateTime(year - 1, 10, 16),
-            DateTime(year - 1, 11, 15),
-            DateTime(year - 1, 12, 15),
-            DateTime(year, 1, 15),
-            DateTime(year, 2, 13),
-            DateTime(year, 3, 15),
-          ][index];
-
-    final banglaYear = now.month > 4 || (now.month == 4 && now.day >= 14)
-        ? year - 593
-        : year - 594;
-    return '${now.difference(start).inDays + 1} ${months[index]} $banglaYear';
+    return _sunTimeInfo;
   }
 
   String _currentJamaatKey(String prayer) {
@@ -277,10 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_lastReadLoading) {
       return Container(
         height: 126,
-        decoration: BoxDecoration(
-          color: context.cardColor,
-          borderRadius: BorderRadius.circular(22),
-        ),
+        decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(22)),
         child: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -297,12 +240,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final surahName = _lastRead!['surahName']?.toString() ?? 'কুরআন';
-    final paraNo = _lastRead!['paraNo'] is int
-        ? _lastRead!['paraNo'] as int
-        : int.tryParse(_lastRead!['paraNo']?.toString() ?? '') ?? 1;
-    final pageNo = _lastRead!['pageNo'] is int
-        ? _lastRead!['pageNo'] as int
-        : int.tryParse(_lastRead!['pageNo']?.toString() ?? '') ?? 1;
+    final paraNo = _lastRead!['paraNo'] is int ? _lastRead!['paraNo'] as int : int.tryParse(_lastRead!['paraNo']?.toString() ?? '') ?? 1;
+    final pageNo = _lastRead!['pageNo'] is int ? _lastRead!['pageNo'] as int : int.tryParse(_lastRead!['pageNo']?.toString() ?? '') ?? 1;
     final progress = _lastRead!['progress'] is num
         ? (_lastRead!['progress'] as num).toDouble().clamp(0.0, 1.0)
         : (double.tryParse(_lastRead!['progress']?.toString() ?? '') ?? 0).clamp(0.0, 1.0);
@@ -343,12 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(icon, color: primary, size: 22),
               const SizedBox(height: 5),
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: text, fontSize: 10.5, fontWeight: FontWeight.w700),
-              ),
+              Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 10.5, fontWeight: FontWeight.w700)),
             ],
           ),
         ),
@@ -357,10 +291,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openJamaatSettings() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const JamaatSettingsScreen()),
-    );
+    await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const JamaatSettingsScreen()));
     if (mounted) setState(() {});
+  }
+
+  void _openScreen(Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
   }
 
   @override
@@ -368,6 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final controller = context.watch<PrayerController>();
     final settings = context.watch<SettingsProvider>();
     final languageCode = settings.languageCode;
+    final sunTimes = _sunTimes(controller);
 
     JamaatService.configureDefaultsFromPrayerList(controller.prayers);
     final jamaatKey = _currentJamaatKey(controller.currentPrayer);
@@ -410,8 +347,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   englishDate: DateService.englishDate(),
                   banglaDate: _banglaDate(),
                   hijriDate: _hijriDate(languageCode),
-                  sunrise: controller.sunriseTime,
-                  sunset: controller.sunsetTime,
+                  sunrise: sunTimes?.sunriseString ?? controller.sunriseTime,
+                  sunset: sunTimes?.sunsetString ?? controller.sunsetTime,
                   languageCode: languageCode,
                   onRefresh: controller.refreshLocation,
                 ),
@@ -449,10 +386,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-  }
-
-  void _openScreen(Widget screen) {
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
   }
 
   @override
