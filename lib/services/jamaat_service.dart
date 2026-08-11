@@ -94,6 +94,26 @@ class JamaatService {
 
   static Map<String, String> get all => Map.unmodifiable(_jamaat);
 
+  /// Compatibility bridge for SettingsProvider.
+  ///
+  /// SettingsProvider historically stored Jamaat values in one place while
+  /// this service stores them in its own map. Keep this synchronous method so
+  /// both layers can stay in sync without introducing an async dependency into
+  /// provider initialization/reset flows.
+  static void setAll({
+    required String fajr,
+    required String dhuhr,
+    required String asr,
+    required String maghrib,
+    required String isha,
+  }) {
+    _jamaat['Fajr'] = fajr;
+    _jamaat['Dhuhr'] = dhuhr;
+    _jamaat['Asr'] = asr;
+    _jamaat['Maghrib'] = maghrib;
+    _jamaat['Isha'] = isha;
+  }
+
   static Future<void> set(String prayer, String time) async {
     if (!prayers.contains(prayer)) return;
 
