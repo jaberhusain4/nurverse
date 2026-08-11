@@ -33,11 +33,6 @@ class AwalWaqtWindow {
 class AwalWaqtService {
   const AwalWaqtService();
 
-  /// Builds the early-time window for each of the five obligatory prayers.
-  ///
-  /// [prayerTimes] should contain the calculated starts for Fajr, Dhuhr,
-  /// Asr, Maghrib and Isha. [nextFajr] is tomorrow's Fajr and is required to
-  /// close the Isha interval correctly.
   List<AwalWaqtWindow> buildWindows({
     required Map<String, DateTime> prayerTimes,
     required DateTime nextFajr,
@@ -73,6 +68,107 @@ class AwalWaqtService {
     return windows;
   }
 
+  /// Converts PrayerController's display-ready prayer list into DateTimes.
+  ///
+  /// The controller already owns the authoritative offline prayer calculation,
+  /// so the UI does not calculate prayer times a second time. This keeps the
+  /// Home and Prayer screens synchronized with the same source of truth.
+  List<AwalWaqtWindow> buildWindowsFromPrayerList(
+    List<Map<String, dynamic>> prayers, {
+    required DateTime now,
+  }) {
+    final starts = <String, DateTime>{};
+    final ends = <String, DateTime>{};
+
+    for (final prayer in prayers) {
+      final key = prayer['name']?.toString();
+      final startText = prayer['start']?.toString();
+      final endText = prayer['end']?.toString();
+      if (key == null || startText == null || endText == null) continue;
+
+      final normalizedKey = key == 'Jumuah' ? 'Dhuhr' : key;
+      final start = _parseDisplayTime(startText, now);
+      var end = _parseDisplayTime(endText, now);
+
+      if (start == null || end == null) continue;
+      if (!end.isAfter(start)) {
+        end = end.add(const Duration(days: 1));
+      }
+
+      starts[normalizedKey] = start;
+      ends[normalizedKey] = end;
+    }
+
+    final ordered = <String>['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    final windows = <AwalWaqtWindow>[];
+
+    for (var i = 0; i < ordered.length; i++) {
+      final key = ordered[i];
+      final start = starts[key];
+      if (start == null) continue;
+
+      DateTime? nextStart;
+      if (i < ordered.length - 1) {
+        nextStart = starts[ordered[i + 1]];
+      } else {
+        final fajr = starts['Fajr'];
+        if (fajr != null) {
+          nextStart = fajr.isAfter(start)
+              ? fajr
+              : fajr.add(const Duration(days: 1));
+        }
+      }
+
+      if (nextStart == null || !nextStart.isAfter(start)) {
+        final end = ends[key];
+        if (end == null || !end.isAfter(start)) continue;
+        nextStart = end;
+      }
+
+      final interval = nextStart.difference(start);
+      if (interval.inSeconds <= 0) continue;
+
+      windows.add(
+        AwalWaqtWindow(
+          prayerKey: key,
+          start: start,
+          end: start.add(
+            Duration(milliseconds: interval.inMilliseconds ~/ 3),
+          ),
+        ),
+      );
+    }
+
+    return windows;
+  }
+
+  DateTime? _parseDisplayTime(String value, DateTime base) {
+    final match = RegExp(
+      r'^(\d{1,2}):(\d{2})\s*(AM|PM)$',
+      caseSensitive: false,
+    ).firstMatch(value.trim());
+    if (match == null) return null;
+
+    var hour = int.tryParse(match.group(1)!) ?? -1;
+    final minute = int.tryParse(match.group(2)!) ?? -1;
+    final period = match.group(3)!.toUpperCase();
+    if (hour < 1 || hour > 12 || minute < 0 || minute > 59) return null;
+
+    if (period == 'AM') {
+      if (hour == 12) hour = 0;
+    } else if (hour != 12) {
+      hour += 12;
+    }
+
+    return DateTime(base.year, base.month, base.day, hour, minute);
+  }
+
+  String formatTime(DateTime time) {
+    final hour12 = time.hour % 12 == 0 ? 12 : time.hour % 12;
+    final period = time.hour >= 12 ? 'PM' : 'AM';
+    return '${hour12.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} $period';
+  }
+
   AwalWaqtWindow? activeWindow(
     List<AwalWaqtWindow> windows,
     DateTime moment,
@@ -93,7 +189,6 @@ class AwalWaqtService {
     return null;
   }
 
-  /// Maps an adhan Prayer enum to NurVerse's display key.
   String prayerKey(Prayer prayer) {
     switch (prayer) {
       case Prayer.fajr:
