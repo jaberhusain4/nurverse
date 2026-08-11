@@ -47,7 +47,12 @@ class SunTimeService {
     );
 
     final sunrise = prayerTimes.sunrise;
-    final sunset = prayerTimes.sunset;
+
+    // adhan 2.0.0+1 exposes sunrise, but does not expose an astronomical
+    // sunset getter. Maghrib is the engine's sunset-based evening boundary,
+    // so use it as the sunset value here instead of calling a non-existent API.
+    final sunset = prayerTimes.maghrib;
+
     final daylight = _safeDuration(sunset.difference(sunrise));
     final nightLength = _calculateNightLength(daylight);
 
@@ -87,10 +92,17 @@ class SunTimeService {
   }) {
     final now = date ?? DateTime.now();
     final today = getSunTimes(position, date: now, method: method, madhab: madhab);
-    if (now.isBefore(today.sunrise)) return _safeDuration(today.sunrise.difference(now));
+    if (now.isBefore(today.sunrise)) {
+      return _safeDuration(today.sunrise.difference(now));
+    }
 
     final tomorrow = DateTime(now.year, now.month, now.day + 1);
-    final tomorrowInfo = getSunTimes(position, date: tomorrow, method: method, madhab: madhab);
+    final tomorrowInfo = getSunTimes(
+      position,
+      date: tomorrow,
+      method: method,
+      madhab: madhab,
+    );
     return _safeDuration(tomorrowInfo.sunrise.difference(now));
   }
 
@@ -102,10 +114,17 @@ class SunTimeService {
   }) {
     final now = date ?? DateTime.now();
     final today = getSunTimes(position, date: now, method: method, madhab: madhab);
-    if (now.isBefore(today.sunset)) return _safeDuration(today.sunset.difference(now));
+    if (now.isBefore(today.sunset)) {
+      return _safeDuration(today.sunset.difference(now));
+    }
 
     final tomorrow = DateTime(now.year, now.month, now.day + 1);
-    final tomorrowInfo = getSunTimes(position, date: tomorrow, method: method, madhab: madhab);
+    final tomorrowInfo = getSunTimes(
+      position,
+      date: tomorrow,
+      method: method,
+      madhab: madhab,
+    );
     return _safeDuration(tomorrowInfo.sunset.difference(now));
   }
 
@@ -115,7 +134,12 @@ class SunTimeService {
     CalculationMethod method = CalculationMethod.muslim_world_league,
     Madhab madhab = Madhab.hanafi,
   }) {
-    return getSunTimes(position, date: date, method: method, madhab: madhab).daylight;
+    return getSunTimes(
+      position,
+      date: date,
+      method: method,
+      madhab: madhab,
+    ).daylight;
   }
 
   Duration getNightDuration(
@@ -124,7 +148,12 @@ class SunTimeService {
     CalculationMethod method = CalculationMethod.muslim_world_league,
     Madhab madhab = Madhab.hanafi,
   }) {
-    return getSunTimes(position, date: date, method: method, madhab: madhab).nightLength;
+    return getSunTimes(
+      position,
+      date: date,
+      method: method,
+      madhab: madhab,
+    ).nightLength;
   }
 
   Duration _safeDuration(Duration duration) {
