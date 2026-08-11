@@ -8,6 +8,7 @@ class ContinueReadingCard extends StatelessWidget {
   final int pageNo;
   final double progress;
   final VoidCallback? onTap;
+  final String languageCode;
 
   const ContinueReadingCard({
     super.key,
@@ -16,23 +17,27 @@ class ContinueReadingCard extends StatelessWidget {
     required this.pageNo,
     required this.progress,
     this.onTap,
+    this.languageCode = 'bn',
   });
+
+  String _label({required String bn, required String en, required String ar}) {
+    switch (languageCode) {
+      case 'en':
+        return en;
+      case 'ar':
+        return ar;
+      default:
+        return bn;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     final primary = theme.colorScheme.primary;
-
-    final cardColor = context.cardColor;
-
-    final textColor =
-        theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
-
-    final secondaryColor = context.secondaryTextColor;
-
+    final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
+    final secondary = context.secondaryTextColor;
     final safeProgress = progress.clamp(0.0, 1.0);
-
     final percentage = (safeProgress * 100).round();
 
     return Material(
@@ -42,70 +47,61 @@ class ContinueReadingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(15, 14, 15, 13),
           decoration: BoxDecoration(
-            color: cardColor,
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: primary.withValues(alpha: 0.08)),
+            border: Border.all(color: primary.withValues(alpha: 0.07)),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ====================================================
-              // HEADER
-              // ====================================================
               Row(
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
                       color: primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
-                      Icons.menu_book_rounded,
-                      color: primary,
-                      size: 21,
-                    ),
+                    child: Icon(Icons.menu_book_rounded, color: primary, size: 20),
                   ),
-                  const SizedBox(width: 11),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Continue Reading',
+                          'Continue Reading Onudhabon',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
+                            color: text,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'কুরআন তিলাওয়াত চালিয়ে যান',
+                          _label(
+                            bn: 'অনুধাবন কুরআন থেকে পড়া চালিয়ে যান',
+                            en: 'Continue from your Onudhabon Quran reading',
+                            ar: 'تابع القراءة من قرآن الفهم',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: secondaryColor,
-                            fontSize: 10,
+                            color: secondary,
+                            fontSize: 9.5,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 15,
-                    color: secondaryColor,
-                  ),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 14, color: secondary),
                 ],
               ),
-
-              const SizedBox(height: 16),
-
-              // ====================================================
-              // SURAH
-              // ====================================================
+              const SizedBox(height: 12),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Column(
@@ -116,57 +112,43 @@ class ContinueReadingCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
+                            color: text,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 3),
                         Text(
-                          'পারা $paraNo  •  পৃষ্ঠা $pageNo',
+                          _label(
+                            bn: 'পারা $paraNo  •  পৃষ্ঠা $pageNo',
+                            en: 'Juz $paraNo  •  Page $pageNo',
+                            ar: 'الجزء $paraNo  •  الصفحة $pageNo',
+                          ),
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: secondaryColor,
-                            fontSize: 11,
+                            color: secondary,
+                            fontSize: 10,
                           ),
                         ),
                       ],
                     ),
                   ),
-
-                  const SizedBox(width: 12),
-
-                  // ==================================================
-                  // PERCENTAGE
-                  // ==================================================
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 6,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                     decoration: BoxDecoration(
                       color: primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(9),
                     ),
                     child: Text(
                       '$percentage%',
-                      style: TextStyle(
-                        color: primary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 14),
-
-              // ====================================================
-              // PROGRESS BAR
-              // ====================================================
+              const SizedBox(height: 10),
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: SizedBox(
-                  height: 6,
+                  height: 5,
                   child: LinearProgressIndicator(
                     value: safeProgress,
                     backgroundColor: primary.withValues(alpha: 0.08),
@@ -174,31 +156,19 @@ class ContinueReadingCard extends StatelessWidget {
                   ),
                 ),
               ),
-
-              const SizedBox(height: 10),
-
-              // ====================================================
-              // FOOTER
-              // ====================================================
+              const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.play_arrow_rounded, size: 16, color: primary),
-                  const SizedBox(width: 5),
+                  Icon(Icons.play_arrow_rounded, size: 15, color: primary),
+                  const SizedBox(width: 4),
                   Text(
-                    'আবার শুরু করুন',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 10,
-                    ),
+                    _label(bn: 'আবার শুরু করুন', en: 'Resume reading', ar: 'استئناف القراءة'),
+                    style: TextStyle(color: primary, fontSize: 9.5, fontWeight: FontWeight.w700),
                   ),
                   const Spacer(),
                   Text(
-                    '$percentage% সম্পন্ন',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: secondaryColor,
-                      fontSize: 10,
-                    ),
+                    _label(bn: '$percentage% সম্পন্ন', en: '$percentage% complete', ar: '$percentage٪ مكتمل'),
+                    style: TextStyle(color: secondary, fontSize: 9.5),
                   ),
                 ],
               ),
