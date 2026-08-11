@@ -23,14 +23,16 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
       description: 'বাংলাদেশ ওপেন ইউনিভার্সিটির বাংলা ইসলামিক পাঠ্যবই।',
       source: 'Wikimedia Commons • CC BY 4.0',
       icon: Icons.auto_stories_rounded,
-      url: 'https://commons.wikimedia.org/wiki/File:উলূমুল_কুরআন_ও_উলূমুল_হাদীস.pdf',
+      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/উলূমুল_কুরআন_ও_উলূমুল_হাদীস.pdf',
+      isPdf: true,
     ),
     _BookResource(
       title: 'ইসলাম-কাহিনী',
       description: 'কাজী আকরম হোসেনের বাংলা ইসলামিক গ্রন্থ।',
       source: 'Wikimedia Commons • Public Domain',
       icon: Icons.menu_book_rounded,
-      url: 'https://commons.wikimedia.org/wiki/File:ইসলাম-কাহিনী_–_কাজী_আকরম_হোসেন_(১৯৪৬).pdf',
+      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/ইসলাম-কাহিনী_–_কাজী_আকরম_হোসেন_(১৯৪৬).pdf',
+      isPdf: true,
     ),
   ];
 
@@ -64,12 +66,11 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
 
   Future<void> _loadDownloadedBooks() async {
     final prefs = await SharedPreferences.getInstance();
-    final keys = _downloadBooks.map(_storageKey);
     final paths = <String, String>{};
-    for (final key in keys) {
-      final path = prefs.getString(key);
+    for (final book in _downloadBooks) {
+      final path = prefs.getString(_storageKey(book));
       if (path != null && await File(path).exists()) {
-        paths[_titleFromKey(key)] = path;
+        paths[book.title] = path;
       }
     }
     if (mounted) setState(() => _downloadedPaths.addAll(paths));
@@ -78,24 +79,13 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
   String _storageKey(_BookResource book) =>
       'nurverse_islamic_book_${book.title.hashCode}';
 
-  String _titleFromKey(String key) {
-    for (final book in _downloadBooks) {
-      if (_storageKey(book) == key) return book.title;
-    }
-    return key;
-  }
-
   Future<void> _openBook(_BookResource book) async {
     final localPath = _downloadedPaths[book.title];
     if (localPath != null && await File(localPath).exists()) {
       _pushReader(book, localFilePath: localPath);
       return;
     }
-    if (book.isPdf) {
-      await _downloadBook(book, openAfterDownload: true);
-    } else {
-      _pushReader(book);
-    }
+    _pushReader(book);
   }
 
   void _pushReader(_BookResource book, {String? localFilePath}) {
@@ -111,10 +101,7 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
     );
   }
 
-  Future<void> _downloadBook(
-    _BookResource book, {
-    bool openAfterDownload = false,
-  }) async {
+  Future<void> _downloadBook(_BookResource book) async {
     if (_downloadProgress.containsKey(book.title)) return;
 
     setState(() => _downloadProgress[book.title] = 0);
@@ -156,11 +143,7 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
         _downloadedPaths[book.title] = file.path;
         _downloadProgress.remove(book.title);
       });
-
       _showMessage('“${book.title}” ডাউনলোড সম্পন্ন হয়েছে।');
-      if (openAfterDownload) {
-        _pushReader(book, localFilePath: file.path);
-      }
     } catch (_) {
       if (!mounted) return;
       setState(() => _downloadProgress.remove(book.title));
@@ -191,7 +174,9 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
     );
     if (confirmed != true) return;
 
-    await File(localPath).delete().catchError((_) {});
+    try {
+      await File(localPath).delete();
+    } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_storageKey(book));
     if (mounted) {
@@ -537,7 +522,7 @@ class _BookCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               if (onDownload != null)
                 IconButton(
                   tooltip: downloaded ? 'Offline বই মুছুন' : 'ডাউনলোড',
