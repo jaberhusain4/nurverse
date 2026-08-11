@@ -50,6 +50,22 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
       url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/কোরআন_শরীফ_(প্রথম_খণ্ড)_-_মোহাম্মদ_আকরম_খাঁ.pdf',
       isPdf: true,
     ),
+    _BookResource(
+      title: 'কোরআন শরীফ — দ্বিতীয় খণ্ড',
+      description: 'মোহাম্মদ আকরম খাঁর বাংলা অনুবাদগ্রন্থের দ্বিতীয় খণ্ড।',
+      source: 'Wikimedia Commons • Public Domain',
+      icon: Icons.library_books_rounded,
+      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/কোরআন_শরীফ_(দ্বিতীয়_খণ্ড)_-_মোহাম্মদ_আকরম_খাঁ.pdf',
+      isPdf: true,
+    ),
+    _BookResource(
+      title: 'মহম্মদের জীবনচরিত্র',
+      description: 'রাসূলুল্লাহ ﷺ-এর জীবনচরিতের বাংলা ঐতিহাসিক গ্রন্থ।',
+      source: 'Wikimedia Commons • Public Domain',
+      icon: Icons.person_book_rounded,
+      url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/মহম্মদের_জীবনচরিত্র.pdf',
+      isPdf: true,
+    ),
   ];
 
   static const _downloadBooks = <_BookResource>[
