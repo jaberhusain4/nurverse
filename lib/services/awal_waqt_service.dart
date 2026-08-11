@@ -1,12 +1,17 @@
 import 'package:adhan/adhan.dart';
 
-/// Represents NurVerse's early-time window for a prayer.
+/// Represents NurVerse's early-prayer guidance window.
 ///
-/// The actual beginning of a prayer is the calculated prayer start. Because
-/// "awal waqt" is not a single fixed number of minutes for every prayer or
-/// every madhhab, NurVerse models it as an app-level early-time window: the
-/// first third of the interval between the prayer's start and the next prayer
-/// start. The underlying prayer boundaries still come from adhan.
+/// Important fiqh note:
+/// "Awal waqt" means the beginning of a prayer's valid time. The Qur'an and
+/// Sunnah establish prayer-time boundaries, and the Sunnah encourages praying
+/// at the proper/early time, but they do not define one universal number of
+/// minutes that marks the end of "awal waqt" for all five prayers.
+///
+/// Therefore this service must NOT present its calculated end as a Shar'i
+/// deadline. NurVerse uses the first third of the interval to the next prayer
+/// as an app-level "early-prayer guidance window" so the user can have a
+/// useful live timer without inventing a religious cutoff.
 class AwalWaqtWindow {
   final String prayerKey;
   final DateTime start;
@@ -33,83 +38,65 @@ class AwalWaqtWindow {
 class AwalWaqtService {
   const AwalWaqtService();
 
+  static const List<String> obligatoryPrayerKeys = <String>[
+    'Fajr',
+    'Dhuhr',
+    'Asr',
+    'Maghrib',
+    'Isha',
+  ];
+
   List<AwalWaqtWindow> buildWindows({
     required Map<String, DateTime> prayerTimes,
     required DateTime nextFajr,
   }) {
-    final ordered = <String>['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     final windows = <AwalWaqtWindow>[];
 
-    for (var i = 0; i < ordered.length; i++) {
-      final prayer = ordered[i];
+    for (var i = 0; i < obligatoryPrayerKeys.length; i++) {
+      final prayer = obligatoryPrayerKeys[i];
       final start = prayerTimes[prayer];
       if (start == null) continue;
 
-      final nextStart = i < ordered.length - 1
-          ? prayerTimes[ordered[i + 1]]
+      final nextStart = i < obligatoryPrayerKeys.length - 1
+          ? prayerTimes[obligatoryPrayerKeys[i + 1]]
           : nextFajr;
 
       if (nextStart == null || !nextStart.isAfter(start)) continue;
 
-      final interval = nextStart.difference(start);
-      final earlyEnd = start.add(
-        Duration(milliseconds: interval.inMilliseconds ~/ 3),
-      );
-
-      windows.add(
-        AwalWaqtWindow(
-          prayerKey: prayer,
-          start: start,
-          end: earlyEnd,
-        ),
-      );
+      windows.add(_makeGuidanceWindow(prayer, start, nextStart));
     }
 
     return windows;
   }
 
-  /// Converts PrayerController's display-ready prayer list into DateTimes.
-  ///
-  /// The controller already owns the authoritative offline prayer calculation,
-  /// so the UI does not calculate prayer times a second time. This keeps the
-  /// Home and Prayer screens synchronized with the same source of truth.
   List<AwalWaqtWindow> buildWindowsFromPrayerList(
     List<Map<String, dynamic>> prayers, {
     required DateTime now,
   }) {
     final starts = <String, DateTime>{};
-    final ends = <String, DateTime>{};
 
     for (final prayer in prayers) {
       final key = prayer['name']?.toString();
       final startText = prayer['start']?.toString();
-      final endText = prayer['end']?.toString();
-      if (key == null || startText == null || endText == null) continue;
+      if (key == null || startText == null) continue;
 
       final normalizedKey = key == 'Jumuah' ? 'Dhuhr' : key;
+      if (!obligatoryPrayerKeys.contains(normalizedKey)) continue;
+
       final start = _parseDisplayTime(startText, now);
-      var end = _parseDisplayTime(endText, now);
-
-      if (start == null || end == null) continue;
-      if (!end.isAfter(start)) {
-        end = end.add(const Duration(days: 1));
-      }
-
-      starts[normalizedKey] = start;
-      ends[normalizedKey] = end;
+      if (start != null) starts[normalizedKey] = start;
     }
 
-    final ordered = <String>['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     final windows = <AwalWaqtWindow>[];
 
-    for (var i = 0; i < ordered.length; i++) {
-      final key = ordered[i];
+    for (var i = 0; i < obligatoryPrayerKeys.length; i++) {
+      final key = obligatoryPrayerKeys[i];
       final start = starts[key];
       if (start == null) continue;
 
       DateTime? nextStart;
-      if (i < ordered.length - 1) {
-        nextStart = starts[ordered[i + 1]];
+      if (i < obligatoryPrayerKeys.length - 1) {
+        nextStart = starts[obligatoryPrayerKeys[i + 1]];
       } else {
         final fajr = starts['Fajr'];
         if (fajr != null) {
@@ -119,27 +106,28 @@ class AwalWaqtService {
         }
       }
 
-      if (nextStart == null || !nextStart.isAfter(start)) {
-        final end = ends[key];
-        if (end == null || !end.isAfter(start)) continue;
-        nextStart = end;
-      }
-
-      final interval = nextStart.difference(start);
-      if (interval.inSeconds <= 0) continue;
-
-      windows.add(
-        AwalWaqtWindow(
-          prayerKey: key,
-          start: start,
-          end: start.add(
-            Duration(milliseconds: interval.inMilliseconds ~/ 3),
-          ),
-        ),
-      );
+      if (nextStart == null || !nextStart.isAfter(start)) continue;
+      windows.add(_makeGuidanceWindow(key, start, nextStart));
     }
 
     return windows;
+  }
+
+  AwalWaqtWindow _makeGuidanceWindow(
+    String prayerKey,
+    DateTime start,
+    DateTime nextStart,
+  ) {
+    final interval = nextStart.difference(start);
+    final end = start.add(
+      Duration(milliseconds: interval.inMilliseconds ~/ 3),
+    );
+
+    return AwalWaqtWindow(
+      prayerKey: prayerKey,
+      start: start,
+      end: end,
+    );
   }
 
   DateTime? _parseDisplayTime(String value, DateTime base) {
@@ -152,6 +140,7 @@ class AwalWaqtService {
     var hour = int.tryParse(match.group(1)!) ?? -1;
     final minute = int.tryParse(match.group(2)!) ?? -1;
     final period = match.group(3)!.toUpperCase();
+
     if (hour < 1 || hour > 12 || minute < 0 || minute > 59) return null;
 
     if (period == 'AM') {
