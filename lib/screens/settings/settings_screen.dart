@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/settings_provider.dart';
 import '../../theme/app_theme.dart';
+import '../prayer/jamaat_settings_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -161,7 +162,79 @@ class SettingsScreen extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          _buildJamaatCard(context, settings),
+          _buildSettingsCard(
+            context,
+            children: [
+              _buildSettingTile(
+                context,
+                icon: Icons.tune_rounded,
+                title: 'জামাআত মোড ও সময়',
+                subtitle: 'Automatic / Manual এবং প্রতিটি ওয়াক্তের সময়',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const JamaatSettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+
+              _buildDivider(context),
+
+              _buildJamaatTimeRow(
+                context,
+                prayer: 'Fajr',
+                title: 'ফজর',
+                subtitle: 'Fajr',
+                icon: Icons.nights_stay_outlined,
+                value: settings.fajrJamaat,
+              ),
+
+              _buildDivider(context),
+
+              _buildJamaatTimeRow(
+                context,
+                prayer: 'Dhuhr',
+                title: 'যোহর',
+                subtitle: 'Dhuhr',
+                icon: Icons.wb_sunny_outlined,
+                value: settings.dhuhrJamaat,
+              ),
+
+              _buildDivider(context),
+
+              _buildJamaatTimeRow(
+                context,
+                prayer: 'Asr',
+                title: 'আসর',
+                subtitle: 'Asr',
+                icon: Icons.wb_twilight_outlined,
+                value: settings.asrJamaat,
+              ),
+
+              _buildDivider(context),
+
+              _buildJamaatTimeRow(
+                context,
+                prayer: 'Maghrib',
+                title: 'মাগরিব',
+                subtitle: 'Maghrib',
+                icon: Icons.wb_twilight_rounded,
+                value: settings.maghribJamaat,
+              ),
+
+              _buildDivider(context),
+
+              _buildJamaatTimeRow(
+                context,
+                prayer: 'Isha',
+                title: 'এশা',
+                subtitle: 'Isha',
+                icon: Icons.nights_stay_rounded,
+                value: settings.ishaJamaat,
+              ),
+            ],
+          ),
 
           const SizedBox(height: 22),
 
@@ -383,85 +456,6 @@ class SettingsScreen extends StatelessWidget {
   }
 
   // ==========================================================================
-  // JAMAAT CARD
-  // ==========================================================================
-
-  Widget _buildJamaatCard(BuildContext context, SettingsProvider settings) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: .07),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .035),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildJamaatTimeRow(
-            context,
-            prayer: 'Fajr',
-            title: 'ফজর',
-            subtitle: 'Fajr',
-            icon: Icons.nights_stay_outlined,
-            value: settings.fajrJamaat,
-          ),
-
-          _buildDivider(context),
-
-          _buildJamaatTimeRow(
-            context,
-            prayer: 'Dhuhr',
-            title: 'যোহর',
-            subtitle: 'Dhuhr',
-            icon: Icons.wb_sunny_outlined,
-            value: settings.dhuhrJamaat,
-          ),
-
-          _buildDivider(context),
-
-          _buildJamaatTimeRow(
-            context,
-            prayer: 'Asr',
-            title: 'আসর',
-            subtitle: 'Asr',
-            icon: Icons.wb_twilight_outlined,
-            value: settings.asrJamaat,
-          ),
-
-          _buildDivider(context),
-
-          _buildJamaatTimeRow(
-            context,
-            prayer: 'Maghrib',
-            title: 'মাগরিব',
-            subtitle: 'Maghrib',
-            icon: Icons.wb_twilight_rounded,
-            value: settings.maghribJamaat,
-          ),
-
-          _buildDivider(context),
-
-          _buildJamaatTimeRow(
-            context,
-            prayer: 'Isha',
-            title: 'এশা',
-            subtitle: 'Isha',
-            icon: Icons.nights_stay_rounded,
-            value: settings.ishaJamaat,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================================================
   // JAMAAT TIME ROW
   // ==========================================================================
 
@@ -479,14 +473,12 @@ class SettingsScreen extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap:
-            () => _showJamaatTimeDialog(
-              context,
-              prayer: prayer,
-              title: title,
-              currentValue: value,
-            ),
-        borderRadius: BorderRadius.circular(22),
+        onTap: () => _showJamaatTimeDialog(
+          context,
+          prayer: prayer,
+          title: title,
+          currentValue: value,
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
           child: Row(
@@ -500,9 +492,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 child: Icon(icon, size: 21, color: primary),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -523,16 +513,9 @@ class SettingsScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // --------------------------------------------------------------
-              // EXACT TIME BOX
-              // --------------------------------------------------------------
               Container(
                 constraints: const BoxConstraints(minWidth: 82),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 9,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                 decoration: BoxDecoration(
                   color: primary.withValues(alpha: .07),
                   borderRadius: BorderRadius.circular(13),
@@ -548,14 +531,8 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(width: 5),
-
-              Icon(
-                Icons.edit_outlined,
-                size: 18,
-                color: context.secondaryTextColor,
-              ),
+              Icon(Icons.edit_outlined, size: 18, color: context.secondaryTextColor),
             ],
           ),
         ),
@@ -574,13 +551,8 @@ class SettingsScreen extends StatelessWidget {
     required String currentValue,
   }) async {
     final settings = context.read<SettingsProvider>();
-
-    final TextEditingController controller = TextEditingController(
-      text: currentValue,
-    );
-
-    final FocusNode focusNode = FocusNode();
-
+    final controller = TextEditingController(text: currentValue);
+    final focusNode = FocusNode();
     String? errorText;
 
     await showDialog<void>(
@@ -591,37 +563,22 @@ class SettingsScreen extends StatelessWidget {
             return AlertDialog(
               title: Row(
                 children: [
-                  Icon(
-                    Icons.access_time_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                  Icon(Icons.access_time_rounded, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(width: 10),
-                  Text(
-                    '$title জামাআতের সময়',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  Text('$title জামাআতের সময়', style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
-
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'জামাআতের সঠিক সময় লিখুন।',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-
+                  Text('জামাআতের সঠিক সময় লিখুন.', style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: 16),
-
                   TextField(
                     controller: controller,
                     focusNode: focusNode,
                     autofocus: true,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: false,
-                      signed: false,
-                    ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
                     textInputAction: TextInputAction.done,
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9:]')),
@@ -633,30 +590,18 @@ class SettingsScreen extends StatelessWidget {
                       prefixIcon: const Icon(Icons.schedule_rounded),
                       suffixText: 'সময়',
                       errorText: errorText,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                     ),
                     onSubmitted: (_) async {
-                      final success = await _saveJamaatTime(
-                        context,
-                        settings,
-                        prayer,
-                        controller.text,
-                      );
-
+                      final success = await _saveJamaatTime(context, settings, prayer, controller.text);
                       if (success && dialogContext.mounted) {
                         Navigator.pop(dialogContext);
                       } else {
-                        setDialogState(() {
-                          errorText = 'সঠিক সময় লিখুন, যেমন 8:45';
-                        });
+                        setDialogState(() => errorText = 'সঠিক সময় লিখুন, যেমন 8:45');
                       }
                     },
                   ),
-
                   const SizedBox(height: 10),
-
                   Text(
                     'উদাহরণ: 5:00, 1:30, 8:45',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -666,31 +611,15 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ],
               ),
-
               actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(dialogContext);
-                  },
-                  child: const Text('বাতিল'),
-                ),
-
+                TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('বাতিল')),
                 FilledButton(
                   onPressed: () async {
-                    final success = await _saveJamaatTime(
-                      context,
-                      settings,
-                      prayer,
-                      controller.text,
-                    );
-
+                    final success = await _saveJamaatTime(context, settings, prayer, controller.text);
                     if (success && dialogContext.mounted) {
                       Navigator.pop(dialogContext);
                     } else {
-                      setDialogState(() {
-                        errorText = 'সঠিক সময় লিখুন, যেমন 8:45';
-                      });
-
+                      setDialogState(() => errorText = 'সঠিক সময় লিখুন, যেমন 8:45');
                       focusNode.requestFocus();
                     }
                   },
@@ -707,93 +636,51 @@ class SettingsScreen extends StatelessWidget {
     focusNode.dispose();
   }
 
-  // ==========================================================================
-  // SAVE JAMAAT TIME
-  // ==========================================================================
-
   Future<bool> _saveJamaatTime(
     BuildContext context,
     SettingsProvider settings,
     String prayer,
     String value,
   ) async {
-    final String input = value.trim();
+    final input = value.trim();
+    final match = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(input);
+    if (match == null) return false;
 
-    final RegExp pattern = RegExp(r'^(\d{1,2}):(\d{2})$');
+    final hour = int.tryParse(match.group(1)!) ?? 0;
+    final minute = int.tryParse(match.group(2)!) ?? 0;
+    if (hour < 1 || hour > 12 || minute < 0 || minute > 59) return false;
 
-    final Match? match = pattern.firstMatch(input);
-
-    if (match == null) {
-      return false;
-    }
-
-    final int hour = int.tryParse(match.group(1)!) ?? 0;
-
-    final int minute = int.tryParse(match.group(2)!) ?? 0;
-
-    if (hour < 1 || hour > 12 || minute < 0 || minute > 59) {
-      return false;
-    }
-
-    final String normalized = '$hour:${minute.toString().padLeft(2, '0')}';
-
+    final normalized = '$hour:${minute.toString().padLeft(2, '0')}';
     return settings.setJamaatTime(prayer, normalized);
   }
-
-  // ==========================================================================
-  // SECTION LABEL
-  // ==========================================================================
 
   Widget _buildSectionLabel(BuildContext context, String title, IconData icon) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-
     return Row(
       children: [
         Icon(icon, size: 18, color: primary),
         const SizedBox(width: 8),
-        Text(
-          title,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: primary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        Text(title, style: theme.textTheme.titleSmall?.copyWith(color: primary, fontWeight: FontWeight.bold)),
       ],
     );
   }
 
-  // ==========================================================================
-  // SETTINGS CARD
-  // ==========================================================================
-
-  Widget _buildSettingsCard(
-    BuildContext context, {
-    required List<Widget> children,
-  }) {
+  Widget _buildSettingsCard(BuildContext context, {required List<Widget> children}) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-
     return Container(
       decoration: BoxDecoration(
         color: context.cardColor,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: primary.withValues(alpha: .07)),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .035),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: .035), blurRadius: 18, offset: const Offset(0, 6)),
         ],
       ),
       child: Column(children: children),
     );
   }
-
-  // ==========================================================================
-  // SETTING TILE
-  // ==========================================================================
 
   Widget _buildSettingTile(
     BuildContext context, {
@@ -807,7 +694,6 @@ class SettingsScreen extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -826,45 +712,21 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 child: Icon(icon, size: 21, color: iconColor ?? primary),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: titleColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-
+                    Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium?.copyWith(color: titleColor, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 3),
-
-                    Text(
-                      subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: context.secondaryTextColor,
-                      ),
-                    ),
+                    Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: context.secondaryTextColor)),
                   ],
                 ),
               ),
-
               if (trailing != null)
                 trailing
               else if (onTap != null)
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: context.secondaryTextColor,
-                  size: 22,
-                ),
+                Icon(Icons.chevron_right_rounded, color: context.secondaryTextColor, size: 22),
             ],
           ),
         ),
@@ -882,814 +744,271 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  // ==========================================================================
-  // THEME DIALOG
-  // ==========================================================================
-
   Future<void> _showThemeDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return _buildBottomSheet(
-          context,
-          title: 'থিম নির্বাচন করুন',
-          icon: Icons.palette_outlined,
-          children: [
-            _buildChoiceTile(
-              context,
-              icon: Icons.brightness_auto_rounded,
-              title: 'সিস্টেম',
-              subtitle: 'ডিভাইসের থিম অনুসরণ করবে',
-              selected:
-                  settings.themeMode == ThemeMode.system &&
-                  !settings.isAmoledMode,
-              onTap: () async {
-                await settings.setSystemTheme();
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            _buildChoiceTile(
-              context,
-              icon: Icons.light_mode_outlined,
-              title: 'লাইট',
-              subtitle: 'উজ্জ্বল থিম',
-              selected: settings.themeMode == ThemeMode.light,
-              onTap: () async {
-                await settings.setLightTheme();
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            _buildChoiceTile(
-              context,
-              icon: Icons.dark_mode_outlined,
-              title: 'ডার্ক',
-              subtitle: 'ডার্ক থিম',
-              selected:
-                  settings.themeMode == ThemeMode.dark &&
-                  !settings.isAmoledMode,
-              onTap: () async {
-                await settings.setDarkTheme();
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            _buildChoiceTile(
-              context,
-              icon: Icons.contrast_rounded,
-              title: 'AMOLED Black',
-              subtitle: 'সম্পূর্ণ কালো ব্যাকগ্রাউন্ড',
-              selected: settings.isAmoledMode,
-              onTap: () async {
-                await settings.setAmoledTheme();
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ],
-        );
-      },
+      builder: (context) => _buildBottomSheet(
+        context,
+        title: 'থিম নির্বাচন করুন',
+        icon: Icons.palette_outlined,
+        children: [
+          _buildChoiceTile(context, icon: Icons.brightness_auto_rounded, title: 'সিস্টেম', subtitle: 'ডিভাইসের থিম অনুসরণ করবে', selected: settings.themeMode == ThemeMode.system && !settings.isAmoledMode, onTap: () async { await settings.setSystemTheme(); if (context.mounted) Navigator.pop(context); }),
+          _buildChoiceTile(context, icon: Icons.light_mode_outlined, title: 'লাইট', subtitle: 'উজ্জ্বল থিম', selected: settings.themeMode == ThemeMode.light, onTap: () async { await settings.setLightTheme(); if (context.mounted) Navigator.pop(context); }),
+          _buildChoiceTile(context, icon: Icons.dark_mode_outlined, title: 'ডার্ক', subtitle: 'ডার্ক থিম', selected: settings.themeMode == ThemeMode.dark && !settings.isAmoledMode, onTap: () async { await settings.setDarkTheme(); if (context.mounted) Navigator.pop(context); }),
+          _buildChoiceTile(context, icon: Icons.contrast_rounded, title: 'AMOLED Black', subtitle: 'সম্পূর্ণ কালো ব্যাকগ্রাউন্ড', selected: settings.isAmoledMode, onTap: () async { await settings.setAmoledTheme(); if (context.mounted) Navigator.pop(context); }),
+        ],
+      ),
     );
   }
-
-  // ==========================================================================
-  // LANGUAGE DIALOG
-  // ==========================================================================
 
   Future<void> _showLanguageDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return _buildBottomSheet(
-          context,
-          title: 'ভাষা নির্বাচন করুন',
-          icon: Icons.language_rounded,
-          children: [
-            _buildChoiceTile(
-              context,
-              icon: Icons.translate_rounded,
-              title: 'বাংলা',
-              subtitle: 'অ্যাপের ভাষা বাংলা হবে',
-              selected: settings.isBangla,
-              onTap: () async {
-                await settings.setBangla();
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            _buildChoiceTile(
-              context,
-              icon: Icons.language_outlined,
-              title: 'English',
-              subtitle: 'App language will be English',
-              selected: settings.isEnglish,
-              onTap: () async {
-                await settings.setEnglish();
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ],
-        );
-      },
+      builder: (context) => _buildBottomSheet(
+        context,
+        title: 'ভাষা নির্বাচন করুন',
+        icon: Icons.language_rounded,
+        children: [
+          _buildChoiceTile(context, icon: Icons.translate_rounded, title: 'বাংলা', subtitle: 'অ্যাপের ভাষা বাংলা হবে', selected: settings.isBangla, onTap: () async { await settings.setBangla(); if (context.mounted) Navigator.pop(context); }),
+          _buildChoiceTile(context, icon: Icons.language_outlined, title: 'English', subtitle: 'App language will be English', selected: settings.isEnglish, onTap: () async { await settings.setEnglish(); if (context.mounted) Navigator.pop(context); }),
+        ],
+      ),
     );
   }
 
-  // ==========================================================================
-  // CALCULATION METHOD
-  // ==========================================================================
-
   Future<void> _showCalculationMethodDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
-    final List<Map<String, String>> methods = [
-      {
-        'value': 'Karachi',
-        'title': 'Karachi',
-        'subtitle': 'University of Islamic Sciences, Karachi',
-      },
-      {
-        'value': 'Muslim World League',
-        'title': 'Muslim World League',
-        'subtitle': 'Muslim World League',
-      },
-      {
-        'value': 'Egyptian',
-        'title': 'Egyptian',
-        'subtitle': 'Egyptian General Authority of Survey',
-      },
-      {
-        'value': 'Umm Al Qura',
-        'title': 'Umm Al Qura',
-        'subtitle': 'Umm Al-Qura University, Makkah',
-      },
-      {
-        'value': 'Dubai',
-        'title': 'Dubai',
-        'subtitle': 'UAE calculation method',
-      },
-      {
-        'value': 'Moonsighting Committee',
-        'title': 'Moonsighting Committee',
-        'subtitle': 'Moonsighting Committee',
-      },
+    final methods = [
+      {'value': 'Karachi', 'title': 'Karachi', 'subtitle': 'University of Islamic Sciences, Karachi'},
+      {'value': 'Muslim World League', 'title': 'Muslim World League', 'subtitle': 'Muslim World League'},
+      {'value': 'Egyptian', 'title': 'Egyptian', 'subtitle': 'Egyptian General Authority of Survey'},
+      {'value': 'Umm Al Qura', 'title': 'Umm Al Qura', 'subtitle': 'Umm Al-Qura University, Makkah'},
+      {'value': 'Dubai', 'title': 'Dubai', 'subtitle': 'UAE calculation method'},
+      {'value': 'Moonsighting Committee', 'title': 'Moonsighting Committee', 'subtitle': 'Moonsighting Committee'},
     ];
-
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) {
-        return _buildBottomSheet(
-          context,
-          title: 'হিসাব পদ্ধতি',
-          icon: Icons.calculate_outlined,
-          children: [
-            ...methods.map(
-              (method) => _buildChoiceTile(
-                context,
-                icon: Icons.calculate_rounded,
-                title: method['title']!,
-                subtitle: method['subtitle']!,
-                selected: settings.calculationMethod == method['value'],
-                onTap: () async {
-                  await settings.setCalculationMethod(method['value']!);
-
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                  }
-                },
-              ),
-            ),
-          ],
-        );
-      },
+      builder: (context) => _buildBottomSheet(
+        context,
+        title: 'হিসাব পদ্ধতি',
+        icon: Icons.calculate_outlined,
+        children: methods.map((method) => _buildChoiceTile(context, icon: Icons.calculate_rounded, title: method['title']!, subtitle: method['subtitle']!, selected: settings.calculationMethod == method['value'], onTap: () async { await settings.setCalculationMethod(method['value']!); if (context.mounted) Navigator.pop(context); })).toList(),
+      ),
     );
   }
-
-  // ==========================================================================
-  // MADHHAB
-  // ==========================================================================
 
   Future<void> _showMadhhabDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return _buildBottomSheet(
-          context,
-          title: 'মাযহাব নির্বাচন করুন',
-          icon: Icons.menu_book_outlined,
-          children: [
-            _buildChoiceTile(
-              context,
-              icon: Icons.menu_book_rounded,
-              title: 'Hanafi',
-              subtitle: 'হানাফি মাযহাব',
-              selected: settings.madhhab == 'Hanafi',
-              onTap: () async {
-                await settings.setMadhhab('Hanafi');
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            _buildChoiceTile(
-              context,
-              icon: Icons.menu_book_rounded,
-              title: 'Shafi',
-              subtitle: 'শাফেয়ি মাযহাব',
-              selected: settings.madhhab == 'Shafi',
-              onTap: () async {
-                await settings.setMadhhab('Shafi');
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ],
-        );
-      },
+      builder: (context) => _buildBottomSheet(
+        context,
+        title: 'মাযহাব নির্বাচন করুন',
+        icon: Icons.menu_book_outlined,
+        children: [
+          _buildChoiceTile(context, icon: Icons.menu_book_rounded, title: 'Hanafi', subtitle: 'হানাফি মাযহাব', selected: settings.madhhab == 'Hanafi', onTap: () async { await settings.setMadhhab('Hanafi'); if (context.mounted) Navigator.pop(context); }),
+          _buildChoiceTile(context, icon: Icons.menu_book_rounded, title: 'Shafi', subtitle: 'শাফেয়ি মাযহাব', selected: settings.madhhab == 'Shafi', onTap: () async { await settings.setMadhhab('Shafi'); if (context.mounted) Navigator.pop(context); }),
+        ],
+      ),
     );
   }
-
-  // ==========================================================================
-  // LOCATION
-  // ==========================================================================
 
   Future<void> _showLocationModeDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return _buildBottomSheet(
-          context,
-          title: 'লোকেশন',
-          icon: Icons.location_on_outlined,
-          children: [
-            _buildChoiceTile(
-              context,
-              icon: Icons.my_location_rounded,
-              title: 'স্বয়ংক্রিয়',
-              subtitle: 'GPS দিয়ে অবস্থান নির্ধারণ',
-              selected: settings.autoLocation,
-              onTap: () async {
-                await settings.setAutoLocation(true);
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            _buildChoiceTile(
-              context,
-              icon: Icons.location_city_rounded,
-              title: 'ম্যানুয়াল',
-              subtitle: 'নিজে অবস্থান নির্বাচন করুন',
-              selected: !settings.autoLocation,
-              onTap: () async {
-                await settings.setAutoLocation(false);
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ],
-        );
-      },
+      builder: (context) => _buildBottomSheet(
+        context,
+        title: 'লোকেশন',
+        icon: Icons.location_on_outlined,
+        children: [
+          _buildChoiceTile(context, icon: Icons.my_location_rounded, title: 'স্বয়ংক্রিয়', subtitle: 'GPS দিয়ে অবস্থান নির্ধারণ', selected: settings.autoLocation, onTap: () async { await settings.setAutoLocation(true); if (context.mounted) Navigator.pop(context); }),
+          _buildChoiceTile(context, icon: Icons.location_city_rounded, title: 'ম্যানুয়াল', subtitle: 'নিজে অবস্থান নির্বাচন করুন', selected: !settings.autoLocation, onTap: () async { await settings.setAutoLocation(false); if (context.mounted) Navigator.pop(context); }),
+        ],
+      ),
     );
   }
-
-  // ==========================================================================
-  // HIJRI ADJUSTMENT
-  // ==========================================================================
 
   Future<void> _showHijriAdjustmentDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text(
-            'হিজরি তারিখ সমন্বয়',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'হিজরি তারিখ প্রয়োজন অনুযায়ী -২ থেকে +২ দিন পর্যন্ত সমন্বয় করতে পারবেন।',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 18),
-              DropdownButtonFormField<int>(
-                initialValue: settings.hijriAdjustment,
-                decoration: InputDecoration(
-                  labelText: 'সমন্বয়',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                items: List.generate(5, (index) {
-                  final value = index - 2;
-
-                  return DropdownMenuItem<int>(
-                    value: value,
-                    child: Text(
-                      value == 0
-                          ? 'কোনো সমন্বয় নেই'
-                          : value > 0
-                          ? '+$value দিন'
-                          : '$value দিন',
-                    ),
-                  );
-                }),
-                onChanged: (value) {
-                  if (value != null) {
-                    settings.setHijriAdjustment(value);
-                  }
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('সম্পন্ন'),
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('হিজরি তারিখ সমন্বয়', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('হিজরি তারিখ প্রয়োজন অনুযায়ী -২ থেকে +২ দিন পর্যন্ত সমন্বয় করতে পারবেন।', style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 18),
+            DropdownButtonFormField<int>(
+              initialValue: settings.hijriAdjustment,
+              decoration: InputDecoration(labelText: 'সমন্বয়', border: OutlineInputBorder(borderRadius: BorderRadius.circular(14))),
+              items: List.generate(5, (index) {
+                final value = index - 2;
+                return DropdownMenuItem<int>(value: value, child: Text(value == 0 ? 'কোনো সমন্বয় নেই' : value > 0 ? '+$value দিন' : '$value দিন'));
+              }),
+              onChanged: (value) { if (value != null) settings.setHijriAdjustment(value); },
             ),
           ],
-        );
-      },
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('সম্পন্ন'))],
+      ),
     );
   }
-
-  // ==========================================================================
-  // PRAYER REMINDER
-  // ==========================================================================
 
   Future<void> _showPrayerReminderDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
     const values = [0, 5, 10, 15, 20, 30, 45, 60];
-
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return _buildBottomSheet(
-          context,
-          title: 'সালাত রিমাইন্ডার',
-          icon: Icons.alarm_outlined,
-          children:
-              values.map((minutes) {
-                return _buildChoiceTile(
-                  context,
-                  icon: Icons.alarm_rounded,
-                  title:
-                      minutes == 0 ? 'রিমাইন্ডার বন্ধ' : '$minutes মিনিট আগে',
-                  subtitle:
-                      minutes == 0
-                          ? 'কোনো প্রি-প্রেয়ার রিমাইন্ডার থাকবে না'
-                          : 'সালাতের আগে নোটিফিকেশন',
-                  selected: settings.prayerReminderMinutes == minutes,
-                  onTap: () async {
-                    await settings.setPrayerReminderMinutes(minutes);
-
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  },
-                );
-              }).toList(),
-        );
-      },
+      builder: (context) => _buildBottomSheet(
+        context,
+        title: 'সালাত রিমাইন্ডার',
+        icon: Icons.alarm_outlined,
+        children: values.map((minutes) => _buildChoiceTile(context, icon: Icons.alarm_rounded, title: minutes == 0 ? 'রিমাইন্ডার বন্ধ' : '$minutes মিনিট আগে', subtitle: minutes == 0 ? 'কোনো প্রি-প্রেয়ার রিমাইন্ডার থাকবে না' : 'সালাতের আগে নোটিফিকেশন', selected: settings.prayerReminderMinutes == minutes, onTap: () async { await settings.setPrayerReminderMinutes(minutes); if (context.mounted) Navigator.pop(context); })).toList(),
+      ),
     );
   }
-
-  // ==========================================================================
-  // QURAN FONT SIZE
-  // ==========================================================================
 
   Future<void> _showQuranFontSizeDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
     double value = settings.quranFontSize;
-
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text(
-                'আরবি ফন্টের আকার',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    value.toStringAsFixed(0),
-                    style: const TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Slider(
-                    min: 14,
-                    max: 50,
-                    divisions: 36,
-                    value: value,
-                    onChanged: (newValue) {
-                      setDialogState(() {
-                        value = newValue;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    settings.updateQuranFontSize(value);
-                    Navigator.pop(dialogContext);
-                  },
-                  child: const Text('সম্পন্ন'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('আরবি ফন্টের আকার', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [Text(value.toStringAsFixed(0), style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold)), Slider(min: 14, max: 50, divisions: 36, value: value, onChanged: (newValue) => setDialogState(() => value = newValue))]),
+          actions: [TextButton(onPressed: () { settings.updateQuranFontSize(value); Navigator.pop(dialogContext); }, child: const Text('সম্পন্ন'))],
+        ),
+      ),
     );
   }
-
-  // ==========================================================================
-  // TRANSLATION FONT SIZE
-  // ==========================================================================
 
   Future<void> _showTranslationFontSizeDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
     double value = settings.translationFontSize;
-
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text(
-                'অনুবাদের ফন্টের আকার',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    value.toStringAsFixed(0),
-                    style: const TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Slider(
-                    min: 10,
-                    max: 30,
-                    divisions: 20,
-                    value: value,
-                    onChanged: (newValue) {
-                      setDialogState(() {
-                        value = newValue;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    settings.updateTranslationFontSize(value);
-                    Navigator.pop(dialogContext);
-                  },
-                  child: const Text('সম্পন্ন'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('অনুবাদের ফন্টের আকার', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [Text(value.toStringAsFixed(0), style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold)), Slider(min: 10, max: 30, divisions: 20, value: value, onChanged: (newValue) => setDialogState(() => value = newValue))]),
+          actions: [TextButton(onPressed: () { settings.updateTranslationFontSize(value); Navigator.pop(dialogContext); }, child: const Text('সম্পন্ন'))],
+        ),
+      ),
     );
   }
-
-  // ==========================================================================
-  // QURAN TRANSLATION
-  // ==========================================================================
 
   Future<void> _showQuranTranslationDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return _buildBottomSheet(
-          context,
-          title: 'কুরআন অনুবাদ',
-          icon: Icons.translate_rounded,
-          children: [
-            _buildChoiceTile(
-              context,
-              icon: Icons.translate_rounded,
-              title: 'Bangla',
-              subtitle: 'বাংলা অনুবাদ',
-              selected: settings.quranTranslation == 'Bangla',
-              onTap: () async {
-                await settings.setQuranTranslation('Bangla');
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            _buildChoiceTile(
-              context,
-              icon: Icons.language_rounded,
-              title: 'English',
-              subtitle: 'English translation',
-              selected: settings.quranTranslation == 'English',
-              onTap: () async {
-                await settings.setQuranTranslation('English');
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ],
-        );
-      },
+      builder: (context) => _buildBottomSheet(
+        context,
+        title: 'কুরআন অনুবাদ',
+        icon: Icons.translate_rounded,
+        children: [
+          _buildChoiceTile(context, icon: Icons.translate_rounded, title: 'Bangla', subtitle: 'বাংলা অনুবাদ', selected: settings.quranTranslation == 'Bangla', onTap: () async { await settings.setQuranTranslation('Bangla'); if (context.mounted) Navigator.pop(context); }),
+          _buildChoiceTile(context, icon: Icons.language_rounded, title: 'English', subtitle: 'English translation', selected: settings.quranTranslation == 'English', onTap: () async { await settings.setQuranTranslation('English'); if (context.mounted) Navigator.pop(context); }),
+        ],
+      ),
     );
   }
-
-  // ==========================================================================
-  // QURAN ARABIC FONT
-  // ==========================================================================
 
   Future<void> _showQuranArabicFontDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
     const fonts = ['Default', 'Amiri', 'Scheherazade', 'Noto Naskh Arabic'];
-
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return _buildBottomSheet(
-          context,
-          title: 'আরবি ফন্ট',
-          icon: Icons.font_download_outlined,
-          children:
-              fonts.map((font) {
-                return _buildChoiceTile(
-                  context,
-                  icon: Icons.font_download_rounded,
-                  title: font,
-                  subtitle: 'কুরআনের আরবি লেখার ফন্ট',
-                  selected: settings.quranArabicFont == font,
-                  onTap: () async {
-                    await settings.setQuranArabicFont(font);
-
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  },
-                );
-              }).toList(),
-        );
-      },
+      builder: (context) => _buildBottomSheet(
+        context,
+        title: 'আরবি ফন্ট',
+        icon: Icons.font_download_outlined,
+        children: fonts.map((font) => _buildChoiceTile(context, icon: Icons.font_download_rounded, title: font, subtitle: 'কুরআনের আরবি লেখার ফন্ট', selected: settings.quranArabicFont == font, onTap: () async { await settings.setQuranArabicFont(font); if (context.mounted) Navigator.pop(context); })).toList(),
+      ),
     );
   }
-
-  // ==========================================================================
-  // NOTIFICATION SOUND
-  // ==========================================================================
 
   Future<void> _showNotificationSoundDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
     const sounds = ['Default', 'Silent'];
-
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return _buildBottomSheet(
-          context,
-          title: 'নোটিফিকেশন সাউন্ড',
-          icon: Icons.music_note_outlined,
-          children:
-              sounds.map((sound) {
-                return _buildChoiceTile(
-                  context,
-                  icon:
-                      sound == 'Silent'
-                          ? Icons.volume_off_outlined
-                          : Icons.volume_up_outlined,
-                  title: sound,
-                  subtitle:
-                      sound == 'Silent'
-                          ? 'কোনো সাউন্ড বাজবে না'
-                          : 'ডিফল্ট নোটিফিকেশন সাউন্ড',
-                  selected: settings.notificationSound == sound,
-                  onTap: () async {
-                    await settings.setNotificationSound(sound);
-
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  },
-                );
-              }).toList(),
-        );
-      },
+      builder: (context) => _buildBottomSheet(
+        context,
+        title: 'নোটিফিকেশন সাউন্ড',
+        icon: Icons.music_note_outlined,
+        children: sounds.map((sound) => _buildChoiceTile(context, icon: sound == 'Silent' ? Icons.volume_off_outlined : Icons.volume_up_outlined, title: sound, subtitle: sound == 'Silent' ? 'কোনো সাউন্ড বাজবে না' : 'ডিফল্ট নোটিফিকেশন সাউন্ড', selected: settings.notificationSound == sound, onTap: () async { await settings.setNotificationSound(sound); if (context.mounted) Navigator.pop(context); })).toList(),
+      ),
     );
   }
-
-  // ==========================================================================
-  // RESET
-  // ==========================================================================
 
   Future<void> _confirmReset(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
-    final bool? confirmed = await showDialog<bool>(
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text(
-            'সব সেটিংস রিসেট করবেন?',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: const Text(
-            'আপনার অ্যাপের কাস্টম সেটিংসগুলো ডিফল্ট অবস্থায় ফিরে যাবে।',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext, false);
-              },
-              child: const Text('বাতিল'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(dialogContext, true);
-              },
-              child: const Text('রিসেট'),
-            ),
-          ],
-        );
-      },
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('সব সেটিংস রিসেট করবেন?', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('আপনার অ্যাপের কাস্টম সেটিংসগুলো ডিফল্ট অবস্থায় ফিরে যাবে।'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('বাতিল')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('রিসেট')),
+        ],
+      ),
     );
-
-    if (confirmed != true) {
-      return;
-    }
-
+    if (confirmed != true) return;
     await settings.resetSettings();
-
-    if (!context.mounted) {
-      return;
-    }
-
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text('সব সেটিংস ডিফল্ট অবস্থায় ফিরিয়ে দেওয়া হয়েছে।'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      ..showSnackBar(const SnackBar(content: Text('সব সেটিংস ডিফল্ট অবস্থায় ফিরিয়ে দেওয়া হয়েছে।'), behavior: SnackBarBehavior.floating));
   }
 
-  // ==========================================================================
-  // BOTTOM SHEET
-  // ==========================================================================
-
-  Widget _buildBottomSheet(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required List<Widget> children,
-  }) {
+  Widget _buildBottomSheet(BuildContext context, {required String title, required IconData icon, required List<Widget> children}) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-
     return SafeArea(
       child: Container(
         constraints: const BoxConstraints(maxHeight: 650),
-        decoration: BoxDecoration(
-          color: context.cardColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
+        decoration: BoxDecoration(color: context.cardColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(28))),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 10),
-
-            Container(
-              width: 42,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.dividerColor.withValues(alpha: .45),
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-
+            Container(width: 42, height: 4, decoration: BoxDecoration(color: theme.dividerColor.withValues(alpha: .45), borderRadius: BorderRadius.circular(20))),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
               child: Row(
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: primary.withValues(alpha: .09),
-                      borderRadius: BorderRadius.circular(13),
-                    ),
-                    child: Icon(icon, color: primary, size: 21),
-                  ),
-
+                  Container(width: 40, height: 40, decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(13)), child: Icon(icon, color: primary, size: 21)),
                   const SizedBox(width: 11),
-
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                  Expanded(child: Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold))),
                 ],
               ),
             ),
-
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 18),
-                children: children,
-              ),
-            ),
+            Flexible(child: ListView(shrinkWrap: true, physics: const BouncingScrollPhysics(), padding: const EdgeInsets.fromLTRB(12, 0, 12, 18), children: children)),
           ],
         ),
       ),
     );
   }
 
-  // ==========================================================================
-  // CHOICE TILE
-  // ==========================================================================
-
-  Widget _buildChoiceTile(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildChoiceTile(BuildContext context, {required IconData icon, required String title, required String subtitle, required bool selected, required VoidCallback onTap}) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1698,90 +1017,19 @@ class SettingsScreen extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 3),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          decoration: BoxDecoration(
-            color:
-                selected ? primary.withValues(alpha: .07) : Colors.transparent,
-            borderRadius: BorderRadius.circular(17),
-            border: Border.all(
-              color:
-                  selected
-                      ? primary.withValues(alpha: .14)
-                      : Colors.transparent,
-            ),
-          ),
+          decoration: BoxDecoration(color: selected ? primary.withValues(alpha: .07) : Colors.transparent, borderRadius: BorderRadius.circular(17), border: Border.all(color: selected ? primary.withValues(alpha: .14) : Colors.transparent)),
           child: Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color:
-                      selected
-                          ? primary.withValues(alpha: .11)
-                          : theme.dividerColor.withValues(alpha: .22),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: selected ? primary : context.secondaryTextColor,
-                ),
-              ),
-
+              Container(width: 40, height: 40, decoration: BoxDecoration(color: selected ? primary.withValues(alpha: .11) : theme.dividerColor.withValues(alpha: .22), borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 20, color: selected ? primary : context.secondaryTextColor)),
               const SizedBox(width: 11),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight:
-                            selected ? FontWeight.bold : FontWeight.w600,
-                        color: selected ? primary : null,
-                      ),
-                    ),
-
-                    const SizedBox(height: 2),
-
-                    Text(
-                      subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: context.secondaryTextColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: selected ? FontWeight.bold : FontWeight.w600, color: selected ? primary : null)), const SizedBox(height: 2), Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: context.secondaryTextColor))])),
               const SizedBox(width: 8),
-
               AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 width: 22,
                 height: 22,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: selected ? primary : Colors.transparent,
-                  border: Border.all(
-                    color:
-                        selected
-                            ? primary
-                            : context.secondaryTextColor.withValues(alpha: .35),
-                    width: 1.5,
-                  ),
-                ),
-                child:
-                    selected
-                        ? const Icon(
-                          Icons.check_rounded,
-                          color: Colors.white,
-                          size: 14,
-                        )
-                        : null,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: selected ? primary : Colors.transparent, border: Border.all(color: selected ? primary : context.secondaryTextColor.withValues(alpha: .35), width: 1.5)),
+                child: selected ? const Icon(Icons.check_rounded, color: Colors.white, size: 14) : null,
               ),
             ],
           ),
@@ -1790,22 +1038,13 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  // ==========================================================================
-  // LABEL HELPERS
-  // ==========================================================================
-
   String _themeLabel(SettingsProvider settings) {
-    if (settings.isAmoledMode) {
-      return 'AMOLED Black';
-    }
-
+    if (settings.isAmoledMode) return 'AMOLED Black';
     switch (settings.themeMode) {
       case ThemeMode.light:
         return 'লাইট';
-
       case ThemeMode.dark:
         return 'ডার্ক';
-
       case ThemeMode.system:
         return 'সিস্টেম';
     }
@@ -1815,22 +1054,16 @@ class SettingsScreen extends StatelessWidget {
     switch (method) {
       case 'Karachi':
         return 'Karachi';
-
       case 'Muslim World League':
         return 'Muslim World League';
-
       case 'Egyptian':
         return 'Egyptian';
-
       case 'Umm Al Qura':
         return 'Umm Al Qura';
-
       case 'Dubai':
         return 'Dubai';
-
       case 'Moonsighting Committee':
         return 'Moonsighting Committee';
-
       default:
         return method;
     }
@@ -1840,38 +1073,25 @@ class SettingsScreen extends StatelessWidget {
     switch (madhhab) {
       case 'Hanafi':
         return 'Hanafi';
-
       case 'Shafi':
         return 'Shafi';
-
       case 'Maliki':
         return 'Maliki';
-
       case 'Hanbali':
         return 'Hanbali';
-
       default:
         return madhhab;
     }
   }
 
   String _reminderLabel(int minutes) {
-    if (minutes <= 0) {
-      return 'বন্ধ';
-    }
-
+    if (minutes <= 0) return 'বন্ধ';
     return '$minutes মিনিট আগে';
   }
 
   String _hijriAdjustmentLabel(int adjustment) {
-    if (adjustment == 0) {
-      return 'কোনো সমন্বয় নেই';
-    }
-
-    if (adjustment > 0) {
-      return '+$adjustment দিন';
-    }
-
+    if (adjustment == 0) return 'কোনো সমন্বয় নেই';
+    if (adjustment > 0) return '+$adjustment দিন';
     return '$adjustment দিন';
   }
 }
