@@ -9,11 +9,10 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
   final String nextPrayerTime;
   final String remainingTime;
   final double progress;
-  final String sunrise;
-  final String sunset;
   final String iqamahTime;
   final String status;
-  final bool showExtraInfo;
+  final String languageCode;
+  final VoidCallback? onJamaatTap;
 
   const CurrentPrayerPremiumCard({
     super.key,
@@ -25,319 +24,295 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
     required this.nextPrayerTime,
     required this.remainingTime,
     required this.progress,
-    required this.sunrise,
-    required this.sunset,
     required this.iqamahTime,
     required this.status,
-    this.showExtraInfo = false,
+    this.languageCode = 'bn',
+    this.onJamaatTap,
   });
+
+  String _label({required String bn, required String en, required String ar}) {
+    switch (languageCode) {
+      case 'en':
+        return en;
+      case 'ar':
+        return ar;
+      default:
+        return bn;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final cardColor = theme.cardColor;
-    final textColor = theme.textTheme.bodyLarge?.color ?? colorScheme.onSurface;
-    final secondaryColor =
-        theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.68) ??
-        colorScheme.onSurface.withValues(alpha: 0.68);
-    final primaryColor = colorScheme.primary;
+    final scheme = theme.colorScheme;
+    final textColor = theme.textTheme.bodyLarge?.color ?? scheme.onSurface;
+    final secondary =
+        theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.66) ??
+        scheme.onSurface.withValues(alpha: 0.66);
+    final primary = scheme.primary;
     final safeProgress = progress.clamp(0.0, 1.0);
-    final progressPercent = (safeProgress * 100).round();
+    final percentage = (safeProgress * 100).round();
+
+    final previous = previousPrayer.isEmpty ? '--' : previousPrayer;
+    final current = currentPrayer.isEmpty ? _label(bn: 'ওয়াক্ত নেই', en: 'No prayer', ar: 'لا صلاة') : currentPrayer;
+    final next = nextPrayer.isEmpty ? '--' : nextPrayer;
 
     return Container(
       width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 13),
       decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(26),
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: primary.withValues(alpha: 0.06)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 16,
+            offset: const Offset(0, 7),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _PrayerSideItem(
-                    label: 'পূর্ববর্তী',
-                    prayer: previousPrayer.isEmpty ? '--' : previousPrayer,
-                    time: previousPrayerTime.isEmpty ? '--:--' : previousPrayerTime,
-                    icon: Icons.history_rounded,
-                    textColor: textColor,
-                    secondaryColor: secondaryColor,
-                    alignment: CrossAxisAlignment.start,
-                  ),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: _PrayerMini(
+                  label: _label(bn: 'পূর্ববর্তী', en: 'Previous', ar: 'السابق'),
+                  prayer: previous,
+                  time: previousPrayerTime,
+                  icon: Icons.history_rounded,
+                  color: secondary,
+                  textColor: textColor,
+                  alignEnd: false,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _CurrentPrayerItem(
-                    prayer: currentPrayer.isEmpty ? 'ওয়াক্ত নেই' : currentPrayer,
-                    time: currentPrayerTime.isEmpty ? '--:--' : currentPrayerTime,
-                    primaryColor: primaryColor,
-                    textColor: textColor,
-                    secondaryColor: secondaryColor,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _PrayerSideItem(
-                    label: 'পরবর্তী',
-                    prayer: nextPrayer.isEmpty ? '--' : nextPrayer,
-                    time: nextPrayerTime.isEmpty ? '--:--' : nextPrayerTime,
-                    icon: Icons.arrow_forward_rounded,
-                    textColor: textColor,
-                    secondaryColor: secondaryColor,
-                    alignment: CrossAxisAlignment.end,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: primaryColor.withValues(alpha: 0.055),
-                borderRadius: BorderRadius.circular(18),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: 0.10),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.schedule_rounded, size: 18, color: primaryColor),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: primary.withValues(alpha: 0.055),
+                    borderRadius: BorderRadius.circular(18),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'সময় বাকি',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: secondaryColor,
-                          ),
+                  child: Column(
+                    children: [
+                      Text(
+                        _label(bn: 'সময় বাকি', en: 'Time left', ar: 'الوقت المتبقي'),
+                        style: TextStyle(
+                          color: secondary,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
+                      ),
+                      const SizedBox(height: 2),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
                           remainingTime.isEmpty ? '--:--:--' : remainingTime,
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.4,
                             color: textColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.3,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  if (nextPrayer.isNotEmpty)
-                    Text(
-                      nextPrayer,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: primaryColor,
                       ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: LinearProgressIndicator(
-                      value: safeProgress,
-                      minHeight: 7,
-                      backgroundColor: primaryColor.withValues(alpha: 0.10),
-                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-                    ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 10),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _PrayerMini(
+                  label: _label(bn: 'পরবর্তী', en: 'Next', ar: 'التالي'),
+                  prayer: next,
+                  time: nextPrayerTime,
+                  icon: Icons.arrow_forward_rounded,
+                  color: secondary,
+                  textColor: textColor,
+                  alignEnd: true,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: 0.075),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: primary.withValues(alpha: 0.11),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.mosque_rounded, color: primary, size: 16),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _label(bn: 'বর্তমান সালাত', en: 'Current prayer', ar: 'الصلاة الحالية'),
+                        style: TextStyle(color: secondary, fontSize: 9.5, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        current,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w900),
+                      ),
+                    ],
+                  ),
+                ),
                 Text(
-                  '$progressPercent%',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: primaryColor,
-                  ),
+                  currentPrayerTime.isEmpty ? '--:--' : currentPrayerTime,
+                  style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.w800),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _TimeLabel(label: 'শুরু', time: currentPrayerTime, color: secondaryColor),
-                _TimeLabel(label: 'শেষ', time: nextPrayerTime, color: secondaryColor),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.info_outline_rounded, size: 15, color: primaryColor),
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Text(
-                    status.isEmpty ? 'সালাতের সময় গণনা করা হচ্ছে...' : status,
-                    style: TextStyle(
-                      fontSize: 11,
-                      height: 1.35,
-                      fontWeight: FontWeight.w500,
-                      color: secondaryColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (showExtraInfo) ...[
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _ExtraTimeItem(
-                      label: 'সূর্যোদয়',
-                      time: sunrise,
-                      icon: Icons.wb_sunny_outlined,
-                      primaryColor: primaryColor,
-                      textColor: textColor,
-                      secondaryColor: secondaryColor,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _ExtraTimeItem(
-                      label: 'সূর্যাস্ত',
-                      time: sunset,
-                      icon: Icons.wb_twilight_rounded,
-                      primaryColor: primaryColor,
-                      textColor: textColor,
-                      secondaryColor: secondaryColor,
-                    ),
-                  ),
-                ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _TimeLabel(
+                label: _label(bn: 'শুরু', en: 'Start', ar: 'البداية'),
+                time: currentPrayerTime,
+                color: secondary,
               ),
-              if (iqamahTime.isNotEmpty && iqamahTime != '--:--') ...[
-                const SizedBox(height: 10),
-                Row(
+              const Spacer(),
+              _TimeLabel(
+                label: _label(bn: 'শেষ', en: 'End', ar: 'النهاية'),
+                time: nextPrayerTime,
+                color: secondary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: LinearProgressIndicator(
+                    value: safeProgress,
+                    minHeight: 6,
+                    backgroundColor: primary.withValues(alpha: 0.09),
+                    valueColor: AlwaysStoppedAnimation<Color>(primary),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$percentage%',
+                style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.info_outline_rounded, size: 14, color: secondary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  status.isEmpty ? _label(bn: 'সালাতের সময় গণনা করা হচ্ছে...', en: 'Calculating prayer time...', ar: 'جارٍ حساب وقت الصلاة...') : status,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: secondary, fontSize: 9.5, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onJamaatTap,
+              borderRadius: BorderRadius.circular(13),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.045),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Row(
                   children: [
-                    Icon(Icons.groups_rounded, size: 16, color: primaryColor),
+                    Icon(Icons.groups_rounded, size: 16, color: primary),
                     const SizedBox(width: 7),
-                    Text('জামাআত', style: TextStyle(fontSize: 10, color: secondaryColor)),
+                    Text(
+                      _label(bn: 'জামাআত', en: 'Jamaat', ar: 'الجماعة'),
+                      style: TextStyle(color: secondary, fontSize: 10, fontWeight: FontWeight.w600),
+                    ),
                     const Spacer(),
                     Text(
-                      iqamahTime,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: textColor),
+                      iqamahTime.isEmpty ? '--:--' : iqamahTime,
+                      style: TextStyle(color: textColor, fontSize: 11.5, fontWeight: FontWeight.w800),
                     ),
+                    const SizedBox(width: 4),
+                    Icon(Icons.chevron_right_rounded, size: 17, color: secondary),
                   ],
                 ),
-              ],
-            ],
-          ],
-        ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _PrayerSideItem extends StatelessWidget {
+class _PrayerMini extends StatelessWidget {
   final String label;
   final String prayer;
   final String time;
   final IconData icon;
+  final Color color;
   final Color textColor;
-  final Color secondaryColor;
-  final CrossAxisAlignment alignment;
+  final bool alignEnd;
 
-  const _PrayerSideItem({
+  const _PrayerMini({
     required this.label,
     required this.prayer,
     required this.time,
     required this.icon,
+    required this.color,
     required this.textColor,
-    required this.secondaryColor,
-    required this.alignment,
+    required this.alignEnd,
   });
 
   @override
   Widget build(BuildContext context) {
+    final alignment = alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final textAlign = alignEnd ? TextAlign.end : TextAlign.start;
+
     return Column(
       crossAxisAlignment: alignment,
       children: [
-        Icon(icon, size: 16, color: secondaryColor),
-        const SizedBox(height: 5),
-        Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: secondaryColor)),
-        const SizedBox(height: 2),
+        Icon(icon, size: 14, color: color),
+        const SizedBox(height: 3),
+        Text(label, style: TextStyle(color: color, fontSize: 8.5, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 1),
         Text(
           prayer,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          textAlign: alignment == CrossAxisAlignment.end ? TextAlign.end : TextAlign.start,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: textColor),
+          textAlign: textAlign,
+          style: TextStyle(color: textColor, fontSize: 11, fontWeight: FontWeight.w800),
         ),
-        const SizedBox(height: 2),
-        Text(time, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: secondaryColor)),
-      ],
-    );
-  }
-}
-
-class _CurrentPrayerItem extends StatelessWidget {
-  final String prayer;
-  final String time;
-  final Color primaryColor;
-  final Color textColor;
-  final Color secondaryColor;
-
-  const _CurrentPrayerItem({
-    required this.prayer,
-    required this.time,
-    required this.primaryColor,
-    required this.textColor,
-    required this.secondaryColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.10), shape: BoxShape.circle),
-          child: Icon(Icons.mosque_rounded, size: 15, color: primaryColor),
-        ),
-        const SizedBox(height: 5),
-        Text('বর্তমান', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: secondaryColor)),
-        const SizedBox(height: 2),
-        Text(
-          prayer,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: textColor),
-        ),
-        const SizedBox(height: 2),
-        Text(time, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: secondaryColor)),
+        const SizedBox(height: 1),
+        Text(time.isEmpty ? '--:--' : time, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -354,60 +329,12 @@ class _TimeLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text('$label  ', style: TextStyle(fontSize: 9.5, color: color)),
+        Text('$label  ', style: TextStyle(color: color, fontSize: 8.5)),
         Text(
           time.isEmpty ? '--:--' : time,
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color),
+          style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w800),
         ),
       ],
-    );
-  }
-}
-
-class _ExtraTimeItem extends StatelessWidget {
-  final String label;
-  final String time;
-  final IconData icon;
-  final Color primaryColor;
-  final Color textColor;
-  final Color secondaryColor;
-
-  const _ExtraTimeItem({
-    required this.label,
-    required this.time,
-    required this.icon,
-    required this.primaryColor,
-    required this.textColor,
-    required this.secondaryColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
-      decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: primaryColor),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: TextStyle(fontSize: 9, color: secondaryColor)),
-                const SizedBox(height: 2),
-                Text(
-                  time.isEmpty ? '--:--' : time,
-                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: textColor),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
