@@ -268,8 +268,7 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
                 ),
                 child: PdfPageNumber(
                   controller: _pdfController!,
-                  builder: (_, __, loadingState, pagesCount) {
-                    final page = _pdfController!.page;
+                  builder: (_, loadingState, page, pagesCount) {
                     return Text(
                       loadingState == PdfLoadingState.success
                           ? '$page / ${pagesCount ?? 0}'
