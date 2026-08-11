@@ -3,11 +3,10 @@ import '../../controllers/prayer_controller.dart';
 import '../../services/awal_waqt_service.dart';
 import '../../theme/app_theme.dart';
 
-/// Compact, reusable Awal Waqt status card for Home and Prayer screens.
+/// Compact, reusable early-prayer guidance card for Home and Prayer screens.
 ///
 /// The card reads the already-calculated prayer list from PrayerController and
-/// never performs a second prayer-time calculation. This keeps the UI offline,
-/// fast, and synchronized with the app's single prayer-time source of truth.
+/// never performs a second prayer-time calculation.
 class AwalWaqtCard extends StatelessWidget {
   final PrayerController controller;
   final String languageCode;
@@ -65,9 +64,10 @@ class AwalWaqtCard extends StatelessWidget {
     final String subtitle;
     final String timer;
     final String range;
+    final bool isActive = active != null;
 
     if (active != null) {
-      title = _label('আওয়াল ওয়াক্ত চলছে', 'Awal Waqt is active');
+      title = _label('আওয়াল ওয়াক্ত চলছে', 'Early prayer time');
       subtitle = _name(active.prayerKey);
       timer = _duration(active.remainingFrom(now));
       range = '${service.formatTime(active.start)} – ${service.formatTime(active.end)}';
@@ -77,12 +77,12 @@ class AwalWaqtCard extends StatelessWidget {
       final next = upcoming.isEmpty ? null : upcoming.first;
 
       if (next == null) {
-        title = _label('আওয়াল ওয়াক্ত শেষ', 'Awal Waqt ended');
+        title = _label('প্রারম্ভিক সময় শেষ', 'Early window ended');
         subtitle = _label('পরবর্তী ওয়াক্তের জন্য অপেক্ষা করুন', 'Waiting for the next prayer');
         timer = '00:00:00';
         range = '--:--';
       } else {
-        title = _label('পরবর্তী আওয়াল ওয়াক্ত', 'Next Awal Waqt');
+        title = _label('পরবর্তী আওয়াল ওয়াক্ত', 'Next early prayer window');
         subtitle = _name(next.prayerKey);
         timer = _duration(next.start.difference(now));
         range = '${service.formatTime(next.start)} – ${service.formatTime(next.end)}';
@@ -112,21 +112,37 @@ class AwalWaqtCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: text,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      IconButton(
+                        tooltip: _label('আওয়াল ওয়াক্ত সম্পর্কে', 'About early prayer time'),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints.tightFor(width: 24, height: 24),
+                        onPressed: () => _showInfo(context),
+                        icon: Icon(Icons.info_outline_rounded, size: 16, color: secondary),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: secondary,
+                      color: primary,
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -142,7 +158,9 @@ class AwalWaqtCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  _label('সময় বাকি', 'Time left'),
+                  isActive
+                      ? _label('সময় বাকি', 'Time left')
+                      : _label('শুরু হতে', 'Starts in'),
                   style: TextStyle(color: secondary, fontSize: 10),
                 ),
                 const SizedBox(height: 2),
@@ -160,6 +178,45 @@ class AwalWaqtCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showInfo(BuildContext context) {
+    final isEnglish = languageCode == 'en';
+
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isEnglish ? 'About Awal Waqt' : 'আওয়াল ওয়াক্ত সম্পর্কে',
+                style: TextStyle(
+                  color: sheetContext.primaryTextColor,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                isEnglish
+                    ? 'The Sunnah encourages praying at its proper and early time. Islamic sources do not establish one universal number of minutes that defines the end of Awal Waqt for every prayer. NurVerse therefore shows an app-level early-prayer guidance window; it is not a Shar‘i deadline.'
+                    : 'সুন্নাহ সালাত যথাসময়ে ও শুরুতে আদায় করতে উৎসাহিত করে। তবে সব সালাতের জন্য “আওয়াল ওয়াক্ত” শেষ হওয়ার একক নির্দিষ্ট মিনিট শরিয়তে নির্ধারিত নেই। তাই NurVerse এখানে একটি সহায়ক প্রারম্ভিক সময়ের window দেখায়; এটিকে শরঈ শেষসীমা হিসেবে গণ্য করা যাবে না।',
+                style: TextStyle(
+                  color: sheetContext.secondaryTextColor,
+                  fontSize: 13,
+                  height: 1.55,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
