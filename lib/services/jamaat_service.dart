@@ -64,6 +64,27 @@ class JamaatService {
     }
   }
 
+  static void configureDefaultsFromPrayerList(
+    List<Map<String, dynamic>> prayerList,
+  ) {
+    final times = <String, DateTime>{};
+    final now = DateTime.now();
+
+    for (final item in prayerList) {
+      final name = item['name']?.toString();
+      final start = item['start']?.toString();
+      if (name == null || start == null) continue;
+
+      final key = name == 'Jumuah' ? 'Dhuhr' : name;
+      if (!prayers.contains(key)) continue;
+
+      final parsed = _parseTime(start, now);
+      if (parsed != null) times[key] = parsed;
+    }
+
+    if (times.isNotEmpty) configureDefaults(times);
+  }
+
   static String get(String prayer) => _jamaat[prayer] ?? '--:--';
 
   static String defaultTime(String prayer) =>
@@ -108,5 +129,20 @@ class JamaatService {
 
   static String _formatTime(DateTime value) {
     return DateFormat('hh:mm a').format(value);
+  }
+
+  static DateTime? _parseTime(String value, DateTime base) {
+    try {
+      final parsed = DateFormat('hh:mm a').parseStrict(value.trim());
+      return DateTime(
+        base.year,
+        base.month,
+        base.day,
+        parsed.hour,
+        parsed.minute,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 }
