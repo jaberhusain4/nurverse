@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///
 /// Automatic mode derives Jamaat from calculated prayer times using the
 /// configured offsets. Manual mode uses user-defined times. Per-prayer custom
-/// values are retained for backwards compatibility, but the global mode takes
-/// precedence when set to automatic.
+/// values are retained for backwards compatibility, and legacy SettingsProvider
+/// values are migrated without silently discarding an existing user's times.
 class JamaatService {
   static const Map<String, int> _defaultOffsets = {
     'Fajr': 20,
@@ -18,6 +18,15 @@ class JamaatService {
 
   static const String _customPrefix = 'nurverse_jamaat_custom_';
   static const String _modeKey = 'nurverse_jamaat_mode';
+
+  // Legacy SettingsProvider keys. These are read only during migration.
+  static const Map<String, String> _legacyKeys = {
+    'Fajr': 'jamaat_fajr',
+    'Dhuhr': 'jamaat_dhuhr',
+    'Asr': 'jamaat_asr',
+    'Maghrib': 'jamaat_maghrib',
+    'Isha': 'jamaat_isha',
+  };
 
   static final Map<String, String> _dynamicDefaults = {
     'Fajr': '--:--',
@@ -48,8 +57,38 @@ class JamaatService {
 
     final prefs = await SharedPreferences.getInstance();
 
+    final bool hasExplicitMode = prefs.containsKey(_modeKey);
     _automaticMode = prefs.getBool(_modeKey) ?? true;
 
+    // ------------------------------------------------------------------------
+    // MIGRATION
+    // ------------------------------------------------------------------------
+    // Older versions stored five Jamaat values directly in SettingsProvider.
+    // If a user already had those values and no new global mode exists, keep
+    // them by migrating them into the new manual source before proceeding.
+    if (!hasExplicitMode) {
+      bool foundLegacyValue = false;
+
+      for (final prayer in prayers) {
+        final legacyKey = _legacyKeys[prayer]!;
+        final legacyValue = prefs.getString(legacyKey);
+
+        if (legacyValue != null && legacyValue.trim().isNotEmpty) {
+          final normalized = legacyValue.trim();
+          _customPrayers.add(prayer);
+          _jamaat[prayer] = normalized;
+          await prefs.setString('$_customPrefix$prayer', normalized);
+          foundLegacyValue = true;
+        }
+      }
+
+      // Legacy Jamaat values represented user-defined times, so preserving
+      // them means the migrated state must be manual rather than automatic.
+      _automaticMode = !foundLegacyValue;
+      await prefs.setBool(_modeKey, _automaticMode);
+    }
+
+    // Load current custom values. Migrated values are naturally picked up.
     for (final prayer in prayers) {
       final value = prefs.getString('$_customPrefix$prayer');
       if (value != null && value.isNotEmpty) {
@@ -66,14 +105,12 @@ class JamaatService {
   /// Automatic mode does not delete manual values. Switching back to manual
   /// therefore restores the user's previously saved custom times.
   static Future<void> setAutomaticMode(bool value) async {
+    await initialize();
+
     _automaticMode = value;
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_modeKey, value);
-
-    if (!_initialized) {
-      await initialize();
-    }
 
     if (_automaticMode) {
       for (final prayer in prayers) {
@@ -108,9 +145,6 @@ class JamaatService {
 
       if (_automaticMode) {
         _jamaat[prayer] = _dynamicDefaults[prayer]!;
-      } else if (_customPrayers.contains(prayer)) {
-        // Keep the user's manual value untouched.
-        continue;
       }
     }
   }
@@ -147,10 +181,12 @@ class JamaatService {
 
   static Map<String, String> get all => Map.unmodifiable(_jamaat);
 
-  /// Compatibility bridge for SettingsProvider.
+  /// Compatibility bridge for the legacy SettingsProvider.
   ///
-  /// This updates the in-memory resolved values without changing the global
-  /// mode or creating custom persistence records.
+  /// In automatic mode, calculated Jamaat remains authoritative, so legacy
+  /// provider initialization must not overwrite it. In manual mode, this
+  /// updates the resolved values for compatibility while the persisted custom
+  /// records remain the source of truth.
   static void setAll({
     required String fajr,
     required String dhuhr,
@@ -158,6 +194,8 @@ class JamaatService {
     required String maghrib,
     required String isha,
   }) {
+    if (_automaticMode) return;
+
     _jamaat['Fajr'] = fajr;
     _jamaat['Dhuhr'] = dhuhr;
     _jamaat['Asr'] = asr;
@@ -171,6 +209,8 @@ class JamaatService {
     final normalized = time.trim();
     if (normalized.isEmpty) return;
 
+    await initialize();
+
     _jamaat[prayer] = normalized;
     _customPrayers.add(prayer);
 
@@ -180,6 +220,8 @@ class JamaatService {
 
   static Future<void> useDefault(String prayer) async {
     if (!prayers.contains(prayer)) return;
+
+    await initialize();
 
     _customPrayers.remove(prayer);
     _jamaat[prayer] = _dynamicDefaults[prayer] ?? '--:--';
@@ -198,6 +240,11 @@ class JamaatService {
       _customPrayers.remove(prayer);
       _jamaat[prayer] = _dynamicDefaults[prayer] ?? '--:--';
       await prefs.remove('$_customPrefix$prayer');
+    }
+
+    // Remove legacy values so a reset cannot be undone by a later migration.
+    for (final key in _legacyKeys.values) {
+      await prefs.remove(key);
     }
   }
 
