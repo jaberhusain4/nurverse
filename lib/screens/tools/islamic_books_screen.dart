@@ -1,11 +1,22 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../theme/app_theme.dart';
 import 'islamic_book_reader_screen.dart';
 
-class IslamicBooksScreen extends StatelessWidget {
+class IslamicBooksScreen extends StatefulWidget {
   const IslamicBooksScreen({super.key});
 
+  @override
+  State<IslamicBooksScreen> createState() => _IslamicBooksScreenState();
+}
+
+class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
   static const _readBooks = <_BookResource>[
     _BookResource(
       title: 'উলূমুল কুরআন ও উলূমুল হাদীস',
@@ -13,7 +24,6 @@ class IslamicBooksScreen extends StatelessWidget {
       source: 'Wikimedia Commons • CC BY 4.0',
       icon: Icons.auto_stories_rounded,
       url: 'https://commons.wikimedia.org/wiki/File:উলূমুল_কুরআন_ও_উলূমুল_হাদীস.pdf',
-      isPdf: false,
     ),
     _BookResource(
       title: 'ইসলাম-কাহিনী',
@@ -21,14 +31,13 @@ class IslamicBooksScreen extends StatelessWidget {
       source: 'Wikimedia Commons • Public Domain',
       icon: Icons.menu_book_rounded,
       url: 'https://commons.wikimedia.org/wiki/File:ইসলাম-কাহিনী_–_কাজী_আকরম_হোসেন_(১৯৪৬).pdf',
-      isPdf: false,
     ),
   ];
 
   static const _downloadBooks = <_BookResource>[
     _BookResource(
       title: 'ইসলামি অর্থব্যবস্থা',
-      description: 'বাংলা ইসলামিক পাঠ্যবই — সরাসরি PDF ই-বুক।',
+      description: 'বাংলা ইসলামিক পাঠ্যবই — CC BY 4.0 PDF।',
       source: 'Wikimedia Commons • CC BY 4.0',
       icon: Icons.download_for_offline_rounded,
       url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/ইসলামি_অর্থব্যবস্থা.pdf',
@@ -36,7 +45,7 @@ class IslamicBooksScreen extends StatelessWidget {
     ),
     _BookResource(
       title: 'এক নজরে ইসলাম',
-      description: 'বাংলা ভাষার ইসলাম বিষয়ক গ্রন্থ — সরাসরি PDF ই-বুক।',
+      description: 'বাংলা ইসলাম বিষয়ক গ্রন্থ — CC BY-SA 4.0 PDF।',
       source: 'Wikimedia Commons • CC BY-SA 4.0',
       icon: Icons.download_for_offline_rounded,
       url: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/এক_নজরে_ইসলাম.pdf',
@@ -44,20 +53,165 @@ class IslamicBooksScreen extends StatelessWidget {
     ),
   ];
 
-  void _openReader(BuildContext context, _BookResource book) {
+  final Map<String, double> _downloadProgress = {};
+  final Map<String, String> _downloadedPaths = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDownloadedBooks();
+  }
+
+  Future<void> _loadDownloadedBooks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = _downloadBooks.map(_storageKey);
+    final paths = <String, String>{};
+    for (final key in keys) {
+      final path = prefs.getString(key);
+      if (path != null && await File(path).exists()) {
+        paths[_titleFromKey(key)] = path;
+      }
+    }
+    if (mounted) setState(() => _downloadedPaths.addAll(paths));
+  }
+
+  String _storageKey(_BookResource book) =>
+      'nurverse_islamic_book_${book.title.hashCode}';
+
+  String _titleFromKey(String key) {
+    for (final book in _downloadBooks) {
+      if (_storageKey(book) == key) return book.title;
+    }
+    return key;
+  }
+
+  Future<void> _openBook(_BookResource book) async {
+    final localPath = _downloadedPaths[book.title];
+    if (localPath != null && await File(localPath).exists()) {
+      _pushReader(book, localFilePath: localPath);
+      return;
+    }
+    if (book.isPdf) {
+      await _downloadBook(book, openAfterDownload: true);
+    } else {
+      _pushReader(book);
+    }
+  }
+
+  void _pushReader(_BookResource book, {String? localFilePath}) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => IslamicBookReaderScreen(
           title: book.title,
           url: book.url,
           isPdf: book.isPdf,
+          localFilePath: localFilePath,
         ),
       ),
     );
   }
 
+  Future<void> _downloadBook(
+    _BookResource book, {
+    bool openAfterDownload = false,
+  }) async {
+    if (_downloadProgress.containsKey(book.title)) return;
+
+    setState(() => _downloadProgress[book.title] = 0);
+
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final booksDirectory = Directory(p.join(directory.path, 'islamic_books'));
+      await booksDirectory.create(recursive: true);
+
+      final file = File(p.join(booksDirectory.path, '${book.title}.pdf'));
+      final request = http.Request('GET', Uri.parse(book.url));
+      request.headers['User-Agent'] =
+          'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 Chrome/151 Mobile Safari/537.36';
+      final response = await request.send();
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw HttpException('HTTP ${response.statusCode}');
+      }
+
+      final total = response.contentLength;
+      var received = 0;
+      final sink = file.openWrite();
+      try {
+        await for (final chunk in response.stream) {
+          sink.add(chunk);
+          received += chunk.length;
+          if (mounted && total != null && total > 0) {
+            setState(() => _downloadProgress[book.title] = received / total);
+          }
+        }
+      } finally {
+        await sink.close();
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_storageKey(book), file.path);
+      if (!mounted) return;
+      setState(() {
+        _downloadedPaths[book.title] = file.path;
+        _downloadProgress.remove(book.title);
+      });
+
+      _showMessage('“${book.title}” ডাউনলোড সম্পন্ন হয়েছে।');
+      if (openAfterDownload) {
+        _pushReader(book, localFilePath: file.path);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _downloadProgress.remove(book.title));
+      _showMessage('বইটি ডাউনলোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।');
+    }
+  }
+
+  Future<void> _deleteBook(_BookResource book) async {
+    final localPath = _downloadedPaths[book.title];
+    if (localPath == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('বই মুছে ফেলবেন?'),
+        content: Text('“${book.title}” ফোনের offline storage থেকে মুছে যাবে।'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('না'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('মুছে ফেলুন'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    await File(localPath).delete().catchError((_) {});
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_storageKey(book));
+    if (mounted) {
+      setState(() => _downloadedPaths.remove(book.title));
+      _showMessage('বইটি offline storage থেকে মুছে ফেলা হয়েছে।');
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final downloaded = _downloadBooks
+        .where((book) => _downloadedPaths.containsKey(book.title))
+        .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('ইসলামিক বই'),
@@ -86,14 +240,14 @@ class IslamicBooksScreen extends StatelessWidget {
               child: _BookCard(
                 book: book,
                 actionLabel: 'পড়ুন',
-                onTap: () => _openReader(context, book),
+                onTap: () => _openBook(book),
               ),
             ),
           ),
           const SizedBox(height: 10),
           const _SectionHeader(
             title: 'Download E-Book',
-            subtitle: 'ডাউনলোডযোগ্য বাংলা PDF ই-বুক',
+            subtitle: 'ডাউনলোড করে offline-এ পড়ুন',
             icon: Icons.download_rounded,
           ),
           const SizedBox(height: 10),
@@ -102,11 +256,41 @@ class IslamicBooksScreen extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 12),
               child: _BookCard(
                 book: book,
-                actionLabel: 'খুলুন',
-                onTap: () => _openReader(context, book),
+                actionLabel: _downloadProgress.containsKey(book.title)
+                    ? 'ডাউনলোড হচ্ছে'
+                    : _downloadedPaths.containsKey(book.title)
+                        ? 'Offline-এ পড়ুন'
+                        : 'ডাউনলোড',
+                progress: _downloadProgress[book.title],
+                onTap: () => _openBook(book),
+                onDownload: _downloadedPaths.containsKey(book.title)
+                    ? () => _deleteBook(book)
+                    : () => _downloadBook(book),
+                downloaded: _downloadedPaths.containsKey(book.title),
               ),
             ),
           ),
+          if (downloaded.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            const _SectionHeader(
+              title: 'Offline Books',
+              subtitle: 'ইন্টারনেট ছাড়াই পড়ার জন্য সংরক্ষিত বই',
+              icon: Icons.offline_pin_rounded,
+            ),
+            const SizedBox(height: 10),
+            ...downloaded.map(
+              (book) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _BookCard(
+                  book: book,
+                  actionLabel: 'পড়ুন',
+                  onTap: () => _openBook(book),
+                  downloaded: true,
+                  onDownload: () => _deleteBook(book),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -132,7 +316,7 @@ class IslamicBooksScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'NurVerse আপাতত শুধু বাংলা ভাষার নির্বাচিত ইসলামিক বই রাখছে। বইগুলো বিশ্বস্ত অনলাইন আর্কাইভ ও উন্মুক্ত লাইসেন্সের উৎস থেকে নেওয়া হচ্ছে।',
+              'NurVerse আপাতত শুধু বাংলা ভাষার নির্বাচিত ইসলামিক বই রাখছে। Download E-Book অংশে উন্মুক্ত লাইসেন্সের PDF রাখা হয়েছে, যাতে ডাউনলোড করে offline-এ পড়া যায়।',
               style: TextStyle(
                 color: context.secondaryTextColor,
                 fontSize: 13,
@@ -276,11 +460,17 @@ class _BookCard extends StatelessWidget {
   final _BookResource book;
   final String actionLabel;
   final VoidCallback onTap;
+  final VoidCallback? onDownload;
+  final double? progress;
+  final bool downloaded;
 
   const _BookCard({
     required this.book,
     required this.actionLabel,
     required this.onTap,
+    this.onDownload,
+    this.progress,
+    this.downloaded = false,
   });
 
   @override
@@ -327,44 +517,47 @@ class _BookCard extends StatelessWidget {
                       style: TextStyle(
                         color: context.secondaryTextColor,
                         fontSize: 11.5,
-                        height: 1.45,
+                        height: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 7),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            book.source,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: context.secondaryTextColor,
-                              fontSize: 10.5,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          actionLabel,
-                          style: const TextStyle(
-                            color: AppColors.seaBlueDark,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 6),
+                    Text(
+                      downloaded ? 'Offline সংরক্ষিত' : book.source,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: context.secondaryTextColor,
+                        fontSize: 10.5,
+                      ),
                     ),
+                    if (progress != null) ...[
+                      const SizedBox(height: 9),
+                      LinearProgressIndicator(value: progress),
+                    ],
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Icon(
-                book.isPdf
-                    ? Icons.picture_as_pdf_rounded
-                    : Icons.menu_book_rounded,
-                color: context.secondaryTextColor,
-                size: 20,
+              const SizedBox(width: 10),
+              if (onDownload != null)
+                IconButton(
+                  tooltip: downloaded ? 'Offline বই মুছুন' : 'ডাউনলোড',
+                  onPressed: progress != null ? null : onDownload,
+                  icon: Icon(
+                    downloaded
+                        ? Icons.delete_outline_rounded
+                        : Icons.download_rounded,
+                  ),
+                ),
+              const SizedBox(width: 2),
+              Flexible(
+                child: FilledButton(
+                  onPressed: progress != null ? null : onTap,
+                  child: Text(
+                    actionLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
             ],
           ),
