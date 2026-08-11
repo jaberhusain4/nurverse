@@ -1,91 +1,112 @@
-// lib/services/jamaat_service.dart
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class JamaatService {
-  // ==========================================================================
-  // DEFAULT JAMAAT TIMES
-  // ==========================================================================
-
-  static const Map<String, String> _defaultJamaat = {
-    'Fajr': '05:00 AM',
-    'Dhuhr': '01:30 PM',
-    'Asr': '05:15 PM',
-    'Maghrib': '06:57 PM',
-    'Isha': '08:45 PM',
+  static const Map<String, int> _defaultOffsets = {
+    'Fajr': 20,
+    'Dhuhr': 20,
+    'Asr': 20,
+    'Maghrib': 10,
+    'Isha': 20,
   };
 
-  // ==========================================================================
-  // CURRENT JAMAAT TIMES
-  // ==========================================================================
+  static const String _customPrefix = 'nurverse_jamaat_custom_';
 
-  static final Map<String, String> _jamaat = {..._defaultJamaat};
+  static final Map<String, String> _dynamicDefaults = {
+    'Fajr': '--:--',
+    'Dhuhr': '--:--',
+    'Asr': '--:--',
+    'Maghrib': '--:--',
+    'Isha': '--:--',
+  };
 
-  // ==========================================================================
-  // GET
-  // ==========================================================================
+  static final Map<String, String> _jamaat = {..._dynamicDefaults};
+  static final Set<String> _customPrayers = <String>{};
+  static bool _initialized = false;
 
-  static String get(String prayer) {
-    return _jamaat[prayer] ?? '--:--';
-  }
+  static const List<String> prayers = <String>[
+    'Fajr',
+    'Dhuhr',
+    'Asr',
+    'Maghrib',
+    'Isha',
+  ];
 
-  // ==========================================================================
-  // SET
-  // ==========================================================================
+  static Future<void> initialize() async {
+    if (_initialized) return;
 
-  static void set(String prayer, String time) {
-    if (!_jamaat.containsKey(prayer)) {
-      return;
+    final prefs = await SharedPreferences.getInstance();
+
+    for (final prayer in prayers) {
+      final value = prefs.getString('$_customPrefix$prayer');
+      if (value != null && value.isNotEmpty) {
+        _customPrayers.add(prayer);
+        _jamaat[prayer] = value;
+      }
     }
 
-    final normalizedTime = time.trim();
+    _initialized = true;
+  }
 
-    if (normalizedTime.isEmpty) {
-      return;
+  static void configureDefaults(Map<String, DateTime> prayerTimes) {
+    for (final prayer in prayers) {
+      final start = prayerTimes[prayer];
+      if (start == null) continue;
+
+      final offset = _defaultOffsets[prayer] ?? 20;
+      _dynamicDefaults[prayer] = _formatTime(
+        start.add(Duration(minutes: offset)),
+      );
+
+      if (!_customPrayers.contains(prayer)) {
+        _jamaat[prayer] = _dynamicDefaults[prayer]!;
+      }
     }
-
-    _jamaat[prayer] = normalizedTime;
   }
 
-  // ==========================================================================
-  // SET ALL
-  // ==========================================================================
+  static String get(String prayer) => _jamaat[prayer] ?? '--:--';
 
-  static void setAll({
-    required String fajr,
-    required String dhuhr,
-    required String asr,
-    required String maghrib,
-    required String isha,
-  }) {
-    set('Fajr', fajr);
-    set('Dhuhr', dhuhr);
-    set('Asr', asr);
-    set('Maghrib', maghrib);
-    set('Isha', isha);
+  static String defaultTime(String prayer) =>
+      _dynamicDefaults[prayer] ?? '--:--';
+
+  static bool isCustom(String prayer) => _customPrayers.contains(prayer);
+
+  static Map<String, String> get all => Map.unmodifiable(_jamaat);
+
+  static Future<void> set(String prayer, String time) async {
+    if (!prayers.contains(prayer)) return;
+
+    final normalized = time.trim();
+    if (normalized.isEmpty) return;
+
+    _jamaat[prayer] = normalized;
+    _customPrayers.add(prayer);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('$_customPrefix$prayer', normalized);
   }
 
-  // ==========================================================================
-  // RESET
-  // ==========================================================================
+  static Future<void> useDefault(String prayer) async {
+    if (!prayers.contains(prayer)) return;
 
-  static void reset() {
-    _jamaat
-      ..clear()
-      ..addAll(_defaultJamaat);
+    _customPrayers.remove(prayer);
+    _jamaat[prayer] = _dynamicDefaults[prayer] ?? '--:--';
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('$_customPrefix$prayer');
   }
 
-  // ==========================================================================
-  // DEFAULT VALUE
-  // ==========================================================================
+  static Future<void> reset() async {
+    final prefs = await SharedPreferences.getInstance();
 
-  static String defaultTime(String prayer) {
-    return _defaultJamaat[prayer] ?? '--:--';
+    for (final prayer in prayers) {
+      _customPrayers.remove(prayer);
+      _jamaat[prayer] = _dynamicDefaults[prayer] ?? '--:--';
+      await prefs.remove('$_customPrefix$prayer');
+    }
   }
 
-  // ==========================================================================
-  // ALL TIMES
-  // ==========================================================================
-
-  static Map<String, String> get all {
-    return Map.unmodifiable(_jamaat);
+  static String _formatTime(DateTime value) {
+    return DateFormat('hh:mm a').format(value);
   }
 }
