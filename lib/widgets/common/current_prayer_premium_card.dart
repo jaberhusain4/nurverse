@@ -36,14 +36,12 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
     final cardColor = theme.cardColor;
     final textColor = theme.textTheme.bodyLarge?.color ?? colorScheme.onSurface;
     final secondaryColor =
         theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.68) ??
         colorScheme.onSurface.withValues(alpha: 0.68);
     final primaryColor = colorScheme.primary;
-
     final safeProgress = progress.clamp(0.0, 1.0);
     final progressPercent = (safeProgress * 100).round();
 
@@ -52,7 +50,6 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -66,51 +63,36 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ==========================================================
-            // PREVIOUS / CURRENT / NEXT
-            // ==========================================================
             Row(
               children: [
                 Expanded(
                   child: _PrayerSideItem(
                     label: 'পূর্ববর্তী',
                     prayer: previousPrayer.isEmpty ? '--' : previousPrayer,
-                    time:
-                        previousPrayerTime.isEmpty
-                            ? '--:--'
-                            : previousPrayerTime,
+                    time: previousPrayerTime.isEmpty ? '--:--' : previousPrayerTime,
                     icon: Icons.history_rounded,
-                    primaryColor: primaryColor,
                     textColor: textColor,
                     secondaryColor: secondaryColor,
                     alignment: CrossAxisAlignment.start,
                   ),
                 ),
-
                 const SizedBox(width: 8),
-
                 Expanded(
-                  flex: 1,
                   child: _CurrentPrayerItem(
-                    prayer:
-                        currentPrayer.isEmpty ? 'ওয়াক্ত নেই' : currentPrayer,
-                    time:
-                        currentPrayerTime.isEmpty ? '--:--' : currentPrayerTime,
+                    prayer: currentPrayer.isEmpty ? 'ওয়াক্ত নেই' : currentPrayer,
+                    time: currentPrayerTime.isEmpty ? '--:--' : currentPrayerTime,
                     primaryColor: primaryColor,
                     textColor: textColor,
                     secondaryColor: secondaryColor,
                   ),
                 ),
-
                 const SizedBox(width: 8),
-
                 Expanded(
                   child: _PrayerSideItem(
                     label: 'পরবর্তী',
                     prayer: nextPrayer.isEmpty ? '--' : nextPrayer,
                     time: nextPrayerTime.isEmpty ? '--:--' : nextPrayerTime,
                     icon: Icons.arrow_forward_rounded,
-                    primaryColor: primaryColor,
                     textColor: textColor,
                     secondaryColor: secondaryColor,
                     alignment: CrossAxisAlignment.end,
@@ -118,12 +100,7 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 18),
-
-            // ==========================================================
-            // REMAINING TIME
-            // ==========================================================
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -140,11 +117,7 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
                       color: primaryColor.withValues(alpha: 0.10),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.schedule_rounded,
-                      size: 18,
-                      color: primaryColor,
-                    ),
+                    child: Icon(Icons.schedule_rounded, size: 18, color: primaryColor),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -152,7 +125,7 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'পরবর্তী সালাত পর্যন্ত',
+                          'সময় বাকি',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -184,12 +157,7 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
-
-            // ==========================================================
-            // REAL-TIME PROGRESS
-            // ==========================================================
             Row(
               children: [
                 Expanded(
@@ -214,39 +182,15 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 8),
-
-            // ==========================================================
-            // START / END
-            // ==========================================================
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  currentPrayerTime.isEmpty ? '--:--' : currentPrayerTime,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: secondaryColor,
-                  ),
-                ),
-                Text(
-                  _extractEndTime(status),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: secondaryColor,
-                  ),
-                ),
+                _TimeLabel(label: 'শুরু', time: currentPrayerTime, color: secondaryColor),
+                _TimeLabel(label: 'শেষ', time: nextPrayerTime, color: secondaryColor),
               ],
             ),
-
             const SizedBox(height: 14),
-
-            // ==========================================================
-            // STATUS
-            // ==========================================================
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -265,39 +209,61 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
                 ),
               ],
             ),
-
-            // ==========================================================
-            // NOTE:
-            // Sunrise / Sunset / Iqamah are intentionally NOT shown.
-            // Their parameters remain in the constructor so the existing
-            // HomeScreen call does not break.
-            // ==========================================================
+            if (showExtraInfo) ...[
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ExtraTimeItem(
+                      label: 'সূর্যোদয়',
+                      time: sunrise,
+                      icon: Icons.wb_sunny_outlined,
+                      primaryColor: primaryColor,
+                      textColor: textColor,
+                      secondaryColor: secondaryColor,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _ExtraTimeItem(
+                      label: 'সূর্যাস্ত',
+                      time: sunset,
+                      icon: Icons.wb_twilight_rounded,
+                      primaryColor: primaryColor,
+                      textColor: textColor,
+                      secondaryColor: secondaryColor,
+                    ),
+                  ),
+                ],
+              ),
+              if (iqamahTime.isNotEmpty && iqamahTime != '--:--') ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(Icons.groups_rounded, size: 16, color: primaryColor),
+                    const SizedBox(width: 7),
+                    Text('জামাআত', style: TextStyle(fontSize: 10, color: secondaryColor)),
+                    const Spacer(),
+                    Text(
+                      iqamahTime,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: textColor),
+                    ),
+                  ],
+                ),
+              ],
+            ],
           ],
         ),
       ),
     );
   }
-
-  String _extractEndTime(String value) {
-    // The current controller exposes status separately and does not expose
-    // currentPrayerEnd through the existing HomeScreen constructor.
-    //
-    // Therefore we intentionally do not invent an end time here.
-    // The card uses the real current prayer start time and real progress.
-    return '--:--';
-  }
 }
-
-// ==========================================================================
-// PREVIOUS / NEXT ITEM
-// ==========================================================================
 
 class _PrayerSideItem extends StatelessWidget {
   final String label;
   final String prayer;
   final String time;
   final IconData icon;
-  final Color primaryColor;
   final Color textColor;
   final Color secondaryColor;
   final CrossAxisAlignment alignment;
@@ -307,7 +273,6 @@ class _PrayerSideItem extends StatelessWidget {
     required this.prayer,
     required this.time,
     required this.icon,
-    required this.primaryColor,
     required this.textColor,
     required this.secondaryColor,
     required this.alignment,
@@ -320,46 +285,21 @@ class _PrayerSideItem extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: secondaryColor),
         const SizedBox(height: 5),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: secondaryColor,
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: secondaryColor)),
         const SizedBox(height: 2),
         Text(
           prayer,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          textAlign:
-              alignment == CrossAxisAlignment.end
-                  ? TextAlign.end
-                  : TextAlign.start,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: textColor,
-          ),
+          textAlign: alignment == CrossAxisAlignment.end ? TextAlign.end : TextAlign.start,
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: textColor),
         ),
         const SizedBox(height: 2),
-        Text(
-          time,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: secondaryColor,
-          ),
-        ),
+        Text(time, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: secondaryColor)),
       ],
     );
   }
 }
-
-// ==========================================================================
-// CURRENT PRAYER
-// ==========================================================================
 
 class _CurrentPrayerItem extends StatelessWidget {
   final String prayer;
@@ -383,43 +323,91 @@ class _CurrentPrayerItem extends StatelessWidget {
         Container(
           width: 30,
           height: 30,
-          decoration: BoxDecoration(
-            color: primaryColor.withValues(alpha: 0.10),
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.10), shape: BoxShape.circle),
           child: Icon(Icons.mosque_rounded, size: 15, color: primaryColor),
         ),
         const SizedBox(height: 5),
-        Text(
-          'বর্তমান',
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: secondaryColor,
-          ),
-        ),
+        Text('বর্তমান', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: secondaryColor)),
         const SizedBox(height: 2),
         Text(
           prayer,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-            color: textColor,
-          ),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: textColor),
         ),
         const SizedBox(height: 2),
+        Text(time, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: secondaryColor)),
+      ],
+    );
+  }
+}
+
+class _TimeLabel extends StatelessWidget {
+  final String label;
+  final String time;
+  final Color color;
+
+  const _TimeLabel({required this.label, required this.time, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text('$label  ', style: TextStyle(fontSize: 9.5, color: color)),
         Text(
-          time,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: secondaryColor,
-          ),
+          time.isEmpty ? '--:--' : time,
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color),
         ),
       ],
+    );
+  }
+}
+
+class _ExtraTimeItem extends StatelessWidget {
+  final String label;
+  final String time;
+  final IconData icon;
+  final Color primaryColor;
+  final Color textColor;
+  final Color secondaryColor;
+
+  const _ExtraTimeItem({
+    required this.label,
+    required this.time,
+    required this.icon,
+    required this.primaryColor,
+    required this.textColor,
+    required this.secondaryColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+      decoration: BoxDecoration(
+        color: primaryColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: primaryColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(fontSize: 9, color: secondaryColor)),
+                const SizedBox(height: 2),
+                Text(
+                  time.isEmpty ? '--:--' : time,
+                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: textColor),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
