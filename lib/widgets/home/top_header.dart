@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../providers/settings_provider.dart';
 import '../../screens/auth/google_login_screen.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
@@ -213,7 +214,6 @@ class TopHeader extends StatelessWidget {
     }
 
     await _openAccount(context, user);
-    onProfileTap?.call();
   }
 
   Widget _profileButton(BuildContext context, String language, User? user) {
