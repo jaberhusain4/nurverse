@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../providers/settings_provider.dart';
 import '../../screens/auth/google_login_screen.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
@@ -134,8 +133,6 @@ class TopHeader extends StatelessWidget {
   }
 
   Future<void> _openAccount(BuildContext context, User user) async {
-    final settings = context.read<SettingsProvider>();
-
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -192,9 +189,6 @@ class TopHeader extends StatelessWidget {
                     onPressed: () async {
                       Navigator.of(sheetContext).pop();
                       await AuthService.instance.signOut();
-                      if (context.mounted) {
-                        await settings.reloadFromStorage();
-                      }
                     },
                     icon: const Icon(Icons.logout_rounded),
                     label: const Text('Logout'),
