@@ -1,5 +1,6 @@
 // lib/main.dart
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -33,6 +34,12 @@ import 'screens/more_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ============================================================
+  // FIREBASE
+  // ============================================================
+
+  await Firebase.initializeApp();
 
   // ============================================================
   // DATE LOCALIZATION
