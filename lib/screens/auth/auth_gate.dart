@@ -18,7 +18,7 @@ class _AuthGateState extends State<AuthGate> {
   @override
   Widget build(BuildContext context) {
     if (_continueAsGuest) {
-      return const MainNavigationScreen();
+      return MainNavigationScreen();
     }
 
     return StreamBuilder<User?>(
@@ -31,7 +31,7 @@ class _AuthGateState extends State<AuthGate> {
         }
 
         if (snapshot.hasData) {
-          return const MainNavigationScreen();
+          return MainNavigationScreen();
         }
 
         return GoogleLoginScreen(
