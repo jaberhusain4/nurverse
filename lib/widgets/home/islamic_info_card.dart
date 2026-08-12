@@ -40,18 +40,9 @@ class IslamicInfoCard extends StatelessWidget {
     try {
       final h = HijriCalendar.now();
       const months = <String>[
-        'মুহররম',
-        'সফর',
-        'রবিউল আউয়াল',
-        'রবিউস সানি',
-        'জুমাদিউল আউয়াল',
-        'জুমাদিউস সানি',
-        'রজব',
-        'শাবান',
-        'রমজান',
-        'শাওয়াল',
-        'জিলকদ',
-        'জিলহজ',
+        'মুহররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি',
+        'জুমাদিউল আউয়াল', 'জুমাদিউস সানি', 'রজব', 'শাবান',
+        'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ',
       ];
       const digits = <String>['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
 
@@ -133,12 +124,8 @@ class IslamicInfoCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 1),
                     Text(
-                      _label(
-                        bn: 'NurVerse দৈনিক সারসংক্ষেপ',
-                        en: 'NurVerse Daily Overview',
-                        ar: 'ملخص نورفيرس اليومي',
-                      ),
-                      style: theme.textTheme.bodySmall?.copyWith(color: secondary, fontSize: 9.5),
+                      _label(bn: 'NurVerse দৈনিক সারসংক্ষেপ', en: 'NurVerse Daily Overview', ar: 'ملخص نورفيرس اليومي'),
+                      style: theme.textTheme.bodySmall?.copyWith(color: secondary, fontSize: 10),
                     ),
                   ],
                 ),
@@ -257,7 +244,7 @@ class _InfoRow extends StatelessWidget {
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: secondaryColor,
-              fontSize: 9.5,
+              fontSize: 10.5,
             ),
           ),
         ),
@@ -271,7 +258,7 @@ class _InfoRow extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: titleColor,
               fontWeight: FontWeight.w600,
-              fontSize: 10.5,
+              fontSize: 11.5,
             ),
           ),
         ),
@@ -313,13 +300,13 @@ class _SunTimeItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(color: secondaryColor, fontSize: 8.5)),
+                Text(label, style: TextStyle(color: secondaryColor, fontSize: 9.5)),
                 const SizedBox(height: 2),
                 Text(
                   time.isEmpty ? '--:--' : time,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: titleColor, fontSize: 11, fontWeight: FontWeight.w800),
+                  style: TextStyle(color: titleColor, fontSize: 12, fontWeight: FontWeight.w800),
                 ),
               ],
             ),
