@@ -204,41 +204,47 @@ class PrayerController extends ChangeNotifier {
         if (placemarks.isNotEmpty) {
           final Placemark place = placemarks.first;
 
-          final String street =
-              place.street?.trim().isNotEmpty == true
-                  ? place.street!.trim()
-                  : '';
-
           final String subLocality =
               place.subLocality?.trim().isNotEmpty == true
                   ? place.subLocality!.trim()
                   : '';
 
-          final String locality =
-              place.locality?.trim().isNotEmpty == true
-                  ? place.locality!.trim()
-                  : '';
+          final String locality = place.locality?.trim().isNotEmpty == true
+              ? place.locality!.trim()
+              : '';
 
-          final String district =
+          String district =
               place.subAdministrativeArea?.trim().isNotEmpty == true
                   ? place.subAdministrativeArea!.trim()
                   : (place.administrativeArea?.trim() ?? '');
 
+          final String country = place.country?.trim().isNotEmpty == true
+              ? place.country!.trim()
+              : '';
+
+// Remove "District" / "district" from the district name.
+          district = district.replaceAll(RegExp(r'\s+[Dd]istrict$'), '').trim();
+
           final List<String> parts = [];
 
-          if (street.isNotEmpty) parts.add(street);
-          if (subLocality.isNotEmpty && subLocality != street) {
+          if (subLocality.isNotEmpty) {
             parts.add(subLocality);
           }
-          if (locality.isNotEmpty &&
-              locality != subLocality &&
-              locality != street) {
+
+          if (locality.isNotEmpty && locality != subLocality) {
             parts.add(locality);
           }
+
           if (district.isNotEmpty &&
               district != locality &&
               district != subLocality) {
             parts.add(district);
+          }
+
+// Bangladesh is useful as the final country label,
+// but never include plus codes or street addresses.
+          if (country.isNotEmpty && country.toLowerCase() == 'bangladesh') {
+            parts.add('Bangladesh');
           }
 
           _currentLocationName =
@@ -520,7 +526,8 @@ class PrayerController extends ChangeNotifier {
       _nextPrayerName = isFriday ? "জুমু'আ" : 'যোহর';
       _nextPrayer = _nextPrayerName;
       _nextPrayerTime = _formatTime(dhuhr);
-      _prayerStatus = isFriday ? "পরবর্তী সালাত: জুমু'আ" : 'পরবর্তী সালাত: যোহর';
+      _prayerStatus =
+          isFriday ? "পরবর্তী সালাত: জুমু'আ" : 'পরবর্তী সালাত: যোহর';
       return;
     }
 
@@ -642,10 +649,12 @@ class PrayerController extends ChangeNotifier {
     } else if (!now.isBefore(times['Dhuhr']!) && now.isBefore(times['Asr']!)) {
       start = times['Dhuhr'];
       end = times['Asr'];
-    } else if (!now.isBefore(times['Asr']!) && now.isBefore(times['Maghrib']!)) {
+    } else if (!now.isBefore(times['Asr']!) &&
+        now.isBefore(times['Maghrib']!)) {
       start = times['Asr'];
       end = times['Maghrib'];
-    } else if (!now.isBefore(times['Maghrib']!) && now.isBefore(times['Isha']!)) {
+    } else if (!now.isBefore(times['Maghrib']!) &&
+        now.isBefore(times['Isha']!)) {
       start = times['Maghrib'];
       end = times['Isha'];
     } else if (!now.isBefore(times['Isha']!)) {
@@ -677,7 +686,8 @@ class PrayerController extends ChangeNotifier {
     final DateTime dhuhr = times['Dhuhr']!;
     final DateTime sunset = times['Maghrib']!;
 
-    final DateTime sunriseProhibitedEnd = sunrise.add(const Duration(minutes: 15));
+    final DateTime sunriseProhibitedEnd =
+        sunrise.add(const Duration(minutes: 15));
     final DateTime zawalStart = dhuhr.subtract(const Duration(minutes: 10));
     final DateTime sunsetStart = sunset.subtract(const Duration(minutes: 15));
 
@@ -691,11 +701,13 @@ class PrayerController extends ChangeNotifier {
       _prohibitedTimeText = 'বর্তমানে কোনো নিষিদ্ধ সময় নেই';
     }
 
-    final DateTime morningMakruhStart = sunrise.subtract(const Duration(minutes: 15));
+    final DateTime morningMakruhStart =
+        sunrise.subtract(const Duration(minutes: 15));
     final DateTime zawalMakruhEnd = dhuhr.add(const Duration(minutes: 5));
     final DateTime eveningMakruhEnd = sunset.add(const Duration(minutes: 15));
 
-    if (!now.isBefore(morningMakruhStart) && now.isBefore(sunriseProhibitedEnd)) {
+    if (!now.isBefore(morningMakruhStart) &&
+        now.isBefore(sunriseProhibitedEnd)) {
       _makruhTimeText = 'সূর্যোদয়ের আশেপাশের মাকরূহ সময়';
     } else if (!now.isBefore(zawalStart) && now.isBefore(zawalMakruhEnd)) {
       _makruhTimeText = 'জাওয়ালের আশেপাশের মাকরূহ সময়';

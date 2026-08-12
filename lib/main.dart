@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 // Localization
 import 'localization/app_localizations.dart';
@@ -146,8 +148,7 @@ class NurVerseApp extends StatelessWidget {
       home: Builder(
         builder: (BuildContext context) {
           final MediaQueryData mediaQuery = MediaQuery.of(context);
-          final double platformScale =
-              mediaQuery.textScaler.textScaleFactor;
+          final double platformScale = mediaQuery.textScaler.textScaleFactor;
           final double combinedScale =
               (platformScale * textScale.scale).clamp(0.70, 2.0).toDouble();
 

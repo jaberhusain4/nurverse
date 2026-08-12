@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "220451879730",
+    "project_id": "nurverse",
+    "storage_bucket": "nurverse.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:220451879730:android:2731320a9193999308b52b",
+        "android_client_info": {
+          "package_name": "com.example.nurverse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwLk6hW0Uj9h4f563zmr3waCeiCOTePzg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

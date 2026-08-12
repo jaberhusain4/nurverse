@@ -422,21 +422,13 @@ illa khasara.
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _buildHeroCard(context),
-
                 const SizedBox(height: 16),
-
                 _buildSearchBar(context),
-
                 const SizedBox(height: 12),
-
                 _buildCategorySelector(context),
-
                 const SizedBox(height: 20),
-
                 _buildSectionHeader(context),
-
                 const SizedBox(height: 12),
-
                 if (_filteredItems.isEmpty)
                   _buildEmptyState(context)
                 else
@@ -510,16 +502,12 @@ illa khasara.
               ),
             ],
           ),
-
           const SizedBox(height: 15),
-
           Text(
             'রুকইয়াহ হলো কুরআনের আয়াত ও বৈধ দু‘আ দ্বারা আল্লাহর কাছে শিফা ও সুরক্ষা চাওয়া। শিফা একমাত্র আল্লাহর পক্ষ থেকেই আসে।',
             style: theme.textTheme.bodyMedium?.copyWith(height: 1.55),
           ),
-
           const SizedBox(height: 13),
-
           Container(
             padding: const EdgeInsets.all(11),
             decoration: BoxDecoration(
@@ -566,19 +554,18 @@ illa khasara.
       decoration: InputDecoration(
         hintText: 'রুকইয়াহ বা দু‘আ খুঁজুন...',
         prefixIcon: const Icon(Icons.search_rounded),
-        suffixIcon:
-            _query.isEmpty
-                ? null
-                : IconButton(
-                  icon: const Icon(Icons.clear_rounded),
-                  onPressed: () {
-                    _searchController.clear();
+        suffixIcon: _query.isEmpty
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.clear_rounded),
+                onPressed: () {
+                  _searchController.clear();
 
-                    setState(() {
-                      _query = '';
-                    });
-                  },
-                ),
+                  setState(() {
+                    _query = '';
+                  });
+                },
+              ),
         filled: true,
         fillColor: theme.cardColor,
         contentPadding: const EdgeInsets.symmetric(
@@ -615,7 +602,7 @@ illa khasara.
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         itemCount: _categories.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final category = _categories[index];
 
@@ -643,10 +630,9 @@ illa khasara.
                 child: Text(
                   category,
                   style: TextStyle(
-                    color:
-                        selected
-                            ? Colors.white
-                            : theme.textTheme.bodyMedium?.color,
+                    color: selected
+                        ? Colors.white
+                        : theme.textTheme.bodyMedium?.color,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                   ),
@@ -721,9 +707,7 @@ illa khasara.
                 ),
                 child: Icon(item.icon, color: primary, size: 23),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -737,9 +721,7 @@ illa khasara.
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-
                     const SizedBox(height: 4),
-
                     Text(
                       item.subtitle,
                       maxLines: 2,
@@ -751,9 +733,7 @@ illa khasara.
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 7),
-
                     Row(
                       children: [
                         Container(
@@ -792,9 +772,7 @@ illa khasara.
                   ],
                 ),
               ),
-
               const SizedBox(width: 7),
-
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 15,
