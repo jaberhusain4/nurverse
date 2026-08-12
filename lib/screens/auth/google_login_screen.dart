@@ -4,7 +4,9 @@ import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 
 class GoogleLoginScreen extends StatefulWidget {
-  const GoogleLoginScreen({super.key});
+  const GoogleLoginScreen({super.key, required this.onContinueWithoutAccount});
+
+  final VoidCallback onContinueWithoutAccount;
 
   @override
   State<GoogleLoginScreen> createState() => _GoogleLoginScreenState();
@@ -26,14 +28,9 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
       await AuthService.instance.signInWithGoogle();
     } on Exception catch (e) {
       if (!mounted) return;
-
-      setState(() {
-        _error = _friendlyError(e);
-      });
+      setState(() => _error = _friendlyError(e));
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -43,16 +40,13 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
     if (message.contains('canceled') || message.contains('cancelled')) {
       return 'Google sign-in বাতিল করা হয়েছে।';
     }
-
     if (message.contains('operation-not-allowed')) {
       return 'Firebase Console-এ Google Sign-In চালু করা নেই।';
     }
-
     if (message.contains('ApiException: 10') ||
         message.contains('DEVELOPER_ERROR')) {
       return 'Google Sign-In configuration ঠিক নেই। Firebase-এ Android SHA-1/SHA-256 যাচাই করুন।';
     }
-
     return 'Google Sign-In সম্পন্ন হয়নি। আবার চেষ্টা করুন।';
   }
 
@@ -104,10 +98,9 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                         children: [
                           Text(
                             'অ্যাকাউন্টে সাইন ইন করুন',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w800),
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 10),
@@ -128,18 +121,12 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                                   ? const SizedBox(
                                       width: 20,
                                       height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
+                                      child: CircularProgressIndicator(strokeWidth: 2),
                                     )
                                   : const Icon(Icons.account_circle_outlined),
                               label: Text(
-                                _loading
-                                    ? 'Signing in...'
-                                    : 'Continue with Google',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                _loading ? 'Signing in...' : 'Continue with Google',
+                                style: const TextStyle(fontWeight: FontWeight.w700),
                               ),
                             ),
                           ),
@@ -160,7 +147,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Google account ছাড়া এখনই ব্যবহার করতে চাইলে নিচের অপশনটি বেছে নিন।',
+                    'Google account ছাড়াও NurVerse ব্যবহার করা যাবে।',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: context.secondaryTextColor,
@@ -168,13 +155,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const _ContinueWithoutAccountScreen(),
-                        ),
-                      );
-                    },
+                    onPressed: widget.onContinueWithoutAccount,
                     child: const Text('Continue without account'),
                   ),
                 ],
@@ -184,23 +165,5 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
         ),
       ),
     );
-  }
-}
-
-class _ContinueWithoutAccountScreen extends StatelessWidget {
-  const _ContinueWithoutAccountScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return const _LocalContinueScreen();
-  }
-}
-
-class _LocalContinueScreen extends StatelessWidget {
-  const _LocalContinueScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Placeholder();
   }
 }
