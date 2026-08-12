@@ -54,14 +54,11 @@ class AuthService {
         final String? photoUrl = googleUser.photoUrl;
         final String? displayName = googleUser.displayName;
 
-        if (photoUrl != null && photoUrl.isNotEmpty && user.photoURL != photoUrl ||
-            displayName != null && displayName.isNotEmpty && user.displayName != displayName) {
-          await user.updateProfile(
-            displayName: displayName ?? user.displayName,
-            photoURL: photoUrl ?? user.photoURL,
-          );
-          await user.reload();
-        }
+        await user.updateProfile(
+          displayName: displayName ?? user.displayName,
+          photoURL: photoUrl ?? user.photoURL,
+        );
+        await user.reload();
       }
 
       // Restore the account's saved NurVerse settings, or create the first
