@@ -189,8 +189,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       _settingsProvider = settings;
       _settingsProvider!.addListener(_onSettingsChanged);
 
-      // Apply the currently loaded settings immediately.
-      _syncPrayerSettings(settings);
+      // PrayerController.updatePrayerAdjustments() recalculates prayer times
+      // and notifies listeners. didChangeDependencies can run while the widget
+      // tree is being built, so defer the initial synchronization until the
+      // current frame has completed.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _settingsProvider != settings) {
+          return;
+        }
+
+        _syncPrayerSettings(settings);
+      });
     }
   }
 
