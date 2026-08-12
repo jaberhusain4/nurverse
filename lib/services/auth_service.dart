@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import 'settings_sync_service.dart';
+
 class AuthService {
   AuthService._();
 
@@ -44,7 +46,29 @@ class AuthService {
         idToken: idToken,
       );
 
-      return await _auth.signInWithCredential(credential);
+      final UserCredential credentialResult =
+          await _auth.signInWithCredential(credential);
+
+      final User? user = credentialResult.user;
+      if (user != null) {
+        final String? photoUrl = googleUser.photoUrl;
+        final String? displayName = googleUser.displayName;
+
+        if (photoUrl != null && photoUrl.isNotEmpty && user.photoURL != photoUrl ||
+            displayName != null && displayName.isNotEmpty && user.displayName != displayName) {
+          await user.updateProfile(
+            displayName: displayName ?? user.displayName,
+            photoURL: photoUrl ?? user.photoURL,
+          );
+          await user.reload();
+        }
+      }
+
+      // Restore the account's saved NurVerse settings, or create the first
+      // cloud backup from the device's current settings.
+      await SettingsSyncService.instance.syncCurrentUser();
+
+      return credentialResult;
     } on FirebaseAuthException {
       rethrow;
     } on GoogleSignInException {
