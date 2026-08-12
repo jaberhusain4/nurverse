@@ -8,10 +8,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class TextScaleProvider extends ChangeNotifier {
   static const String _storageKey = 'app_text_scale';
 
-  static const double smallScale = 0.85;
+  // The Normal level is the new typography baseline for general UI text.
+  // Quran/Arabic-specific sizes remain controlled separately.
+  static const double smallScale = 0.90;
   static const double normalScale = 1.0;
-  static const double largeScale = 1.15;
-  static const double veryLargeScale = 1.30;
+  static const double largeScale = 1.10;
+  static const double veryLargeScale = 1.20;
 
   static const double defaultScale = normalScale;
 
