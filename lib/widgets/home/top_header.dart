@@ -10,12 +10,16 @@ class TopHeader extends StatelessWidget {
   final String greeting;
   final String currentTime;
   final VoidCallback? onNotificationTap;
+  // Kept for compatibility with existing HomeScreen wiring.
+  // The profile/login icon is intentionally not rendered here to avoid duplication.
+  final VoidCallback? onProfileTap;
 
   const TopHeader({
     super.key,
     required this.greeting,
     required this.currentTime,
     this.onNotificationTap,
+    this.onProfileTap,
   });
 
   String _subtitle(String language) {
