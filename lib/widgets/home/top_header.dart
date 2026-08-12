@@ -51,9 +51,6 @@ class TopHeader extends StatelessWidget {
   String _localizedGreeting(String language) {
     final normalized = greeting.trim();
 
-    // ============================================================
-    // BANGLA
-    // ============================================================
     if (language == 'bn') {
       if (normalized == 'শুভ সকাল' ||
           normalized == 'Good Morning' ||
@@ -78,9 +75,6 @@ class TopHeader extends StatelessWidget {
       return normalized;
     }
 
-    // ============================================================
-    // ARABIC
-    // ============================================================
     if (language == 'ar') {
       if (normalized == 'শুভ সকাল' ||
           normalized == 'Good Morning' ||
@@ -103,9 +97,6 @@ class TopHeader extends StatelessWidget {
       return normalized;
     }
 
-    // ============================================================
-    // ENGLISH
-    // ============================================================
     if (normalized == 'শুভ সকাল' || normalized == 'صباح الخير') {
       return 'Good Morning';
     }
@@ -167,14 +158,8 @@ class TopHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ============================================================
-        // LOGO + APP NAME + SUBTITLE + ACTIONS
-        // ============================================================
         Row(
           children: [
-            // --------------------------------------------------------
-            // Logo
-            // --------------------------------------------------------
             Container(
               width: 52,
               height: 52,
@@ -191,9 +176,6 @@ class TopHeader extends StatelessWidget {
 
             const SizedBox(width: 12),
 
-            // --------------------------------------------------------
-            // NurVerse + Arabic + Subtitle
-            // --------------------------------------------------------
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,7 +187,7 @@ class TopHeader extends StatelessWidget {
                           'NurVerse',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.headlineSmall?.copyWith(
+                          style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -229,7 +211,6 @@ class TopHeader extends StatelessWidget {
 
                   const SizedBox(height: 2),
 
-                  // App subtitle
                   Text(
                     subtitle,
                     maxLines: 1,
@@ -242,18 +223,12 @@ class TopHeader extends StatelessWidget {
               ),
             ),
 
-            // --------------------------------------------------------
-            // Notification
-            // --------------------------------------------------------
             IconButton(
               onPressed: onNotificationTap,
               tooltip: _notificationTooltip(language),
               icon: const Icon(Icons.notifications_none_rounded),
             ),
 
-            // --------------------------------------------------------
-            // Profile
-            // --------------------------------------------------------
             IconButton(
               onPressed: onProfileTap,
               tooltip: _profileTooltip(language),
@@ -262,11 +237,8 @@ class TopHeader extends StatelessWidget {
           ],
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
 
-        // ============================================================
-        // GREETING + CURRENT TIME
-        // ============================================================
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -274,17 +246,15 @@ class TopHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Islamic greeting
                   Text(
                     assalamuAlaikum,
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
 
                   const SizedBox(height: 3),
 
-                  // Time-of-day greeting
                   Text(
                     localizedGreeting,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -295,18 +265,15 @@ class TopHeader extends StatelessWidget {
               ),
             ),
 
-            // --------------------------------------------------------
-            // Current Time
-            // --------------------------------------------------------
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               decoration: BoxDecoration(
                 color: context.cardColor,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Text(
                 currentTime,
-                style: theme.textTheme.titleMedium?.copyWith(
+                style: theme.textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
