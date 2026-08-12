@@ -22,16 +22,29 @@ class AuthService {
       throw StateError('Google Sign-In is not supported on this platform.');
     }
 
-    final GoogleSignInAccount googleUser =
-        await _googleSignIn.authenticate();
+    try {
+      final GoogleSignInAccount googleUser =
+          await _googleSignIn.authenticate();
 
-    final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
-    final AuthCredential credential = GoogleAuthProvider.credential(
-      idToken: googleAuth.idToken,
-    );
+      final String? idToken = googleAuth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw StateError(
+          'Google did not return an ID token. Check the Android Google OAuth configuration.',
+        );
+      }
 
-    return _auth.signInWithCredential(credential);
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        idToken: idToken,
+      );
+
+      return await _auth.signInWithCredential(credential);
+    } on FirebaseAuthException {
+      rethrow;
+    } on GoogleSignInException {
+      rethrow;
+    }
   }
 
   Future<void> signOut() async {
