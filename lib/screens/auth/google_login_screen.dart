@@ -4,9 +4,9 @@ import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 
 class GoogleLoginScreen extends StatefulWidget {
-  const GoogleLoginScreen({super.key, required this.onContinueWithoutAccount});
+  const GoogleLoginScreen({super.key, this.onContinueWithoutAccount});
 
-  final VoidCallback onContinueWithoutAccount;
+  final VoidCallback? onContinueWithoutAccount;
 
   @override
   State<GoogleLoginScreen> createState() => _GoogleLoginScreenState();
@@ -26,6 +26,8 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
 
     try {
       await AuthService.instance.signInWithGoogle();
+      if (!mounted) return;
+      Navigator.of(context).pop();
     } on Exception catch (e) {
       if (!mounted) return;
       setState(() => _error = _friendlyError(e));
@@ -52,7 +54,10 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool canContinueAsGuest = widget.onContinueWithoutAccount != null;
+
     return Scaffold(
+      appBar: AppBar(),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -145,19 +150,21 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Google account ছাড়াও NurVerse ব্যবহার করা যাবে।',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.secondaryTextColor,
+                  if (canContinueAsGuest) ...[
+                    const SizedBox(height: 20),
+                    Text(
+                      'Google account ছাড়াও NurVerse ব্যবহার করা যাবে।',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.secondaryTextColor,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: widget.onContinueWithoutAccount,
-                    child: const Text('Continue without account'),
-                  ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: widget.onContinueWithoutAccount,
+                      child: const Text('Continue without account'),
+                    ),
+                  ],
                 ],
               ),
             ),
