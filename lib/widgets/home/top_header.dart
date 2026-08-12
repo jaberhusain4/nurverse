@@ -24,10 +24,8 @@ class TopHeader extends StatelessWidget {
     switch (language) {
       case 'bn':
         return 'আপনার দৈনন্দিন ইসলামিক সঙ্গী';
-
       case 'ar':
         return 'رفيقك الإسلامي اليومي';
-
       case 'en':
       default:
         return 'Your Daily Islamic Companion';
@@ -38,10 +36,8 @@ class TopHeader extends StatelessWidget {
     switch (language) {
       case 'bn':
         return 'আসসালামু আলাইকুম';
-
       case 'ar':
         return 'السلام عليكم';
-
       case 'en':
       default:
         return 'Assalamu Alaikum';
@@ -57,21 +53,15 @@ class TopHeader extends StatelessWidget {
           normalized == 'صباح الخير') {
         return 'শুভ সকাল';
       }
-
       if (normalized == 'শুভ দুপুর' || normalized == 'Good Afternoon') {
         return 'শুভ দুপুর';
       }
-
-      if (normalized == 'শুভ বিকেল') {
-        return 'শুভ বিকেল';
-      }
-
+      if (normalized == 'শুভ বিকেল') return 'শুভ বিকেল';
       if (normalized == 'শুভ সন্ধ্যা' ||
           normalized == 'Good Evening' ||
           normalized == 'مساء الخير') {
         return 'শুভ সন্ধ্যা';
       }
-
       return normalized;
     }
 
@@ -81,7 +71,6 @@ class TopHeader extends StatelessWidget {
           normalized == 'صباح الخير') {
         return 'صباح الخير';
       }
-
       if (normalized == 'শুভ দুপুর' ||
           normalized == 'শুভ বিকেল' ||
           normalized == 'Good Afternoon' ||
@@ -89,30 +78,19 @@ class TopHeader extends StatelessWidget {
           normalized == 'مساء الخير') {
         return 'مساء الخير';
       }
-
-      if (normalized == 'শুভ সন্ধ্যা') {
-        return 'مساء الخير';
-      }
-
+      if (normalized == 'শুভ সন্ধ্যা') return 'مساء الخير';
       return normalized;
     }
 
     if (normalized == 'শুভ সকাল' || normalized == 'صباح الخير') {
       return 'Good Morning';
     }
-
-    if (normalized == 'শুভ দুপুর') {
+    if (normalized == 'শুভ দুপুর' || normalized == 'শুভ বিকেল') {
       return 'Good Afternoon';
     }
-
-    if (normalized == 'শুভ বিকেল') {
-      return 'Good Afternoon';
-    }
-
     if (normalized == 'শুভ সন্ধ্যা' || normalized == 'مساء الخير') {
       return 'Good Evening';
     }
-
     return normalized;
   }
 
@@ -120,10 +98,8 @@ class TopHeader extends StatelessWidget {
     switch (language) {
       case 'bn':
         return 'নোটিফিকেশন';
-
       case 'ar':
         return 'الإشعارات';
-
       case 'en':
       default:
         return 'Notifications';
@@ -133,21 +109,18 @@ class TopHeader extends StatelessWidget {
   String _profileTooltip(String language) {
     switch (language) {
       case 'bn':
-        return 'প্রোফাইল';
-
+        return 'লগইন';
       case 'ar':
-        return 'الملف الشخصي';
-
+        return 'تسجيل الدخول';
       case 'en':
       default:
-        return 'Profile';
+        return 'Login';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     final settings = context.watch<SettingsProvider>();
     final language = settings.languageCode;
 
@@ -173,9 +146,7 @@ class TopHeader extends StatelessWidget {
                 size: 28,
               ),
             ),
-
             const SizedBox(width: 12),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,25 +163,25 @@ class TopHeader extends StatelessWidget {
                           ),
                         ),
                       ),
-
                       const SizedBox(width: 8),
-
-                      Text(
-                        'نُورٌ عَلَىٰ نُورٍ',
-                        style: TextStyle(
-                          fontFamily: 'Amiri',
-                          fontSize: 12,
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.80,
+                      Flexible(
+                        child: Text(
+                          'نُورٌ عَلَىٰ نُورٍ',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Amiri',
+                            fontSize: 12,
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.80,
+                            ),
+                            fontWeight: FontWeight.w600,
                           ),
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 2),
-
                   Text(
                     subtitle,
                     maxLines: 1,
@@ -222,23 +193,26 @@ class TopHeader extends StatelessWidget {
                 ],
               ),
             ),
-
+            const SizedBox(width: 2),
             IconButton(
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
               onPressed: onNotificationTap,
               tooltip: _notificationTooltip(language),
               icon: const Icon(Icons.notifications_none_rounded),
             ),
-
             IconButton(
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
               onPressed: onProfileTap,
               tooltip: _profileTooltip(language),
               icon: const Icon(Icons.account_circle_outlined),
             ),
           ],
         ),
-
         const SizedBox(height: 16),
-
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -252,9 +226,7 @@ class TopHeader extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 3),
-
                   Text(
                     localizedGreeting,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -264,7 +236,6 @@ class TopHeader extends StatelessWidget {
                 ],
               ),
             ),
-
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               decoration: BoxDecoration(
