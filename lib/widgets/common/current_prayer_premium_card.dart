@@ -63,12 +63,7 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
     if (interval.inSeconds <= 0) return null;
     final end = start.add(Duration(milliseconds: interval.inMilliseconds ~/ 3));
     final active = !now.isBefore(start) && now.isBefore(end);
-    return _AwalWaqtData(
-      active: active,
-      remaining: active ? end.difference(now) : Duration.zero,
-      start: start,
-      end: end,
-    );
+    return _AwalWaqtData(active: active, remaining: active ? end.difference(now) : Duration.zero, start: start, end: end);
   }
 
   String _formatRemaining(Duration duration) {
@@ -134,35 +129,9 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: _InfoPanel(
-                  color: primary,
-                  background: primary.withValues(alpha: 0.075),
-                  icon: Icons.mosque_rounded,
-                  title: _label(bn: 'বর্তমান সালাত', en: 'Current prayer', ar: 'الصلاة الحالية'),
-                  value: current,
-                  subtitle: currentPrayerTime.isEmpty ? '--:--' : currentPrayerTime,
-                  valueSize: 15,
-                  subtitleSize: 12,
-                ),
-              ),
+              Expanded(child: _InfoPanel(color: primary, background: primary.withValues(alpha: 0.075), icon: Icons.mosque_rounded, title: _label(bn: 'বর্তমান সালাত', en: 'Current prayer', ar: 'الصلاة الحالية'), value: current, subtitle: currentPrayerTime.isEmpty ? '--:--' : currentPrayerTime, valueSize: 15, subtitleSize: 12)),
               const SizedBox(width: 8),
-              Expanded(
-                child: _AwalPanel(
-                  primary: primary,
-                  textColor: textColor,
-                  secondary: secondary,
-                  data: awal,
-                  label: _label(bn: 'আওয়াল ওয়াক্ত', en: 'Awal Waqt', ar: 'وقت الأول'),
-                  formatClock: _formatClock,
-                  formatRemaining: _formatRemaining,
-                  activeLabel: _label(bn: 'চলছে', en: 'Active', ar: 'مستمر'),
-                  endedLabel: _label(bn: 'শেষ', en: 'Ended', ar: 'انتهى'),
-                  startLabel: _label(bn: 'শুরু', en: 'Start', ar: 'البداية'),
-                  endLabel: _label(bn: 'শেষ', en: 'End', ar: 'النهاية'),
-                  leftLabel: _label(bn: 'বাকি', en: 'Left', ar: 'المتبقي'),
-                ),
-              ),
+              Expanded(child: _AwalPanel(primary: primary, textColor: textColor, secondary: secondary, data: awal, label: _label(bn: 'আওয়াল ওয়াক্ত', en: 'Awal Waqt', ar: 'وقت الأول'), formatClock: _formatClock, formatRemaining: _formatRemaining, activeLabel: _label(bn: 'চলছে', en: 'Active', ar: 'مستمر'), endedLabel: _label(bn: 'শেষ', en: 'Ended', ar: 'انتهى'), startLabel: _label(bn: 'শুরু', en: 'Start', ar: 'البداية'), endLabel: _label(bn: 'শেষ', en: 'End', ar: 'النهاية'), leftLabel: _label(bn: 'বাকি', en: 'Left', ar: 'المتبقي'))),
             ],
           ),
           const SizedBox(height: 9),
@@ -220,25 +189,21 @@ class _InfoPanel extends StatelessWidget {
   final String subtitle;
   final double valueSize;
   final double subtitleSize;
-
   const _InfoPanel({required this.color, required this.background, required this.icon, required this.title, required this.value, required this.subtitle, required this.valueSize, required this.subtitleSize});
-
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
-      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(16)),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(icon, color: color, size: 18),
-        const SizedBox(height: 3),
-        Text(title, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color.withValues(alpha: 0.72), fontSize: 9.5, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 2),
-        Text(value, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: valueSize, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 2),
-        Text(subtitle, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: subtitleSize, fontWeight: FontWeight.w800)),
-      ]),
-    );
-  }
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
+    decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(16)),
+    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      Icon(icon, color: color, size: 18),
+      const SizedBox(height: 3),
+      Text(title, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color.withValues(alpha: 0.72), fontSize: 9.5, fontWeight: FontWeight.w600)),
+      const SizedBox(height: 2),
+      Text(value, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: valueSize, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 2),
+      Text(subtitle, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: subtitleSize, fontWeight: FontWeight.w800)),
+    ]),
+  );
 }
 
 class _AwalPanel extends StatelessWidget {
@@ -254,28 +219,28 @@ class _AwalPanel extends StatelessWidget {
   final String leftLabel;
   final String Function(DateTime) formatClock;
   final String Function(Duration) formatRemaining;
-
   const _AwalPanel({required this.primary, required this.textColor, required this.secondary, required this.data, required this.label, required this.formatClock, required this.formatRemaining, required this.activeLabel, required this.endedLabel, required this.startLabel, required this.endLabel, required this.leftLabel});
-
   @override
   Widget build(BuildContext context) {
     final active = data?.active ?? false;
+    final values = <Widget>[];
+    if (data != null) {
+      values.add(_AwalValue(label: startLabel, value: formatClock(data!.start), color: secondary));
+      values.add(_AwalValue(label: endLabel, value: formatClock(data!.end), color: secondary));
+      if (active) values.add(_AwalValue(label: leftLabel, value: formatRemaining(data!.remaining), color: primary));
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       decoration: BoxDecoration(color: primary.withValues(alpha: active ? 0.075 : 0.045), borderRadius: BorderRadius.circular(16), border: Border.all(color: primary.withValues(alpha: active ? 0.11 : 0.045))),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         Icon(Icons.bolt_rounded, color: primary, size: 18),
         const SizedBox(height: 3),
-        Text(label, textAlign: TextAlign.center, style: TextStyle(color: primary.withValues(alpha: 0.72), fontSize: 9.5, fontWeight: FontWeight.w600)),
+        Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: primary.withValues(alpha: 0.72), fontSize: 9.5, fontWeight: FontWeight.w600)),
         const SizedBox(height: 2),
-        Text(active ? activeLabel : endedLabel, style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w900)),
-        if (data != null) ...[
+        Text(active ? activeLabel : endedLabel, textAlign: TextAlign.center, style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w900)),
+        if (values.isNotEmpty) ...[
           const SizedBox(height: 5),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-            _AwalValue(label: startLabel, value: formatClock(data!.start), color: secondary),
-            _AwalValue(label: endLabel, value: formatClock(data!.end), color: secondary),
-            if (active) _AwalValue(label: leftLabel, value: formatRemaining(data!.remaining), color: primary),
-          ]),
+          Wrap(alignment: WrapAlignment.center, spacing: 8, runSpacing: 3, children: values),
         ],
       ]),
     );
@@ -288,7 +253,7 @@ class _AwalValue extends StatelessWidget {
   final Color color;
   const _AwalValue({required this.label, required this.value, required this.color});
   @override
-  Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, children: [Text(label, style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.w600)), const SizedBox(height: 1), Text(value, style: TextStyle(color: color, fontSize: 8.8, fontWeight: FontWeight.w800))]);
+  Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, children: [Text(label, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.w600)), const SizedBox(height: 1), Text(value, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: 8.8, fontWeight: FontWeight.w800))]);
 }
 
 class _AwalWaqtData {
