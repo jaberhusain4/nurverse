@@ -24,20 +24,19 @@ class DailyContentCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0x220288D1)),
         boxShadow: [
           BoxShadow(
-            color:
-                isDark
-                    ? Colors.black.withValues(alpha: .35)
-                    : Colors.black.withValues(alpha: .06),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: isDark
+                ? Colors.black.withValues(alpha: .28)
+                : Colors.black.withValues(alpha: .045),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -46,52 +45,52 @@ class DailyContentCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, color: iconColor),
-
-              const SizedBox(width: 10),
-
+              Icon(icon, color: iconColor, size: 20),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   content.title,
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-
-              IconButton(
-                onPressed: onBookmark,
-                icon: const Icon(Icons.bookmark_border_rounded),
-              ),
-
-              IconButton(
-                onPressed: onShare,
-                icon: const Icon(Icons.share_outlined),
-              ),
+              if (onBookmark != null)
+                IconButton(
+                  onPressed: onBookmark,
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  icon: const Icon(Icons.bookmark_border_rounded, size: 20),
+                ),
+              if (onShare != null)
+                IconButton(
+                  onPressed: onShare,
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  icon: const Icon(Icons.share_outlined, size: 20),
+                ),
             ],
           ),
-
-          const SizedBox(height: 14),
-
+          const SizedBox(height: 8),
           SelectableText(
             content.arabic,
             textAlign: TextAlign.right,
             style: const TextStyle(
               fontFamily: 'Amiri',
-              fontSize: 24,
-              height: 2,
+              fontSize: 21,
+              height: 1.8,
             ),
           ),
-
-          const SizedBox(height: 16),
-
+          const SizedBox(height: 9),
           Text(
             content.bangla,
-            style: theme.textTheme.bodyLarge?.copyWith(height: 1.7),
+            style: theme.textTheme.bodyMedium?.copyWith(height: 1.55),
           ),
-
-          const SizedBox(height: 14),
-
+          const SizedBox(height: 8),
           Text(
             content.reference,
             style: theme.textTheme.bodySmall?.copyWith(
