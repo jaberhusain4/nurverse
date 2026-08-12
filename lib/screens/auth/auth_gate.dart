@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../services/auth_service.dart';
-import '../home_screen.dart';
+import '../main_navigation_screen.dart';
 import 'google_login_screen.dart';
 
 class AuthGate extends StatefulWidget {
@@ -18,7 +18,7 @@ class _AuthGateState extends State<AuthGate> {
   @override
   Widget build(BuildContext context) {
     if (_continueAsGuest) {
-      return MainNavigationScreen();
+      return const MainNavigationScreen();
     }
 
     return StreamBuilder<User?>(
@@ -31,7 +31,7 @@ class _AuthGateState extends State<AuthGate> {
         }
 
         if (snapshot.hasData) {
-          return MainNavigationScreen();
+          return const MainNavigationScreen();
         }
 
         return GoogleLoginScreen(
