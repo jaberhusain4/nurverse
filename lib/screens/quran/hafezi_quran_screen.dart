@@ -335,7 +335,7 @@ class _ParaList extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       itemCount: 30,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final juz = service.getJuz(index + 1);
         return Material(
@@ -426,7 +426,7 @@ class _SurahList extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       itemCount: service.surahs.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final surah = service.surahs[index];
         return Material(
@@ -493,7 +493,7 @@ class _BookmarkList extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       itemCount: pages.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final pdfPage = pages[index];
         final location = service.locationForPdfPage(pdfPage);
