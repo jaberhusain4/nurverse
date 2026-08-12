@@ -133,6 +133,81 @@ class TopHeader extends StatelessWidget {
     }
   }
 
+  Future<void> _openAccount(BuildContext context, User user) async {
+    final settings = context.read<SettingsProvider>();
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: context.cardColor,
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        final photoUrl = user.photoURL;
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 34,
+                  backgroundColor:
+                      theme.colorScheme.primary.withValues(alpha: 0.10),
+                  backgroundImage: photoUrl != null && photoUrl.isNotEmpty
+                      ? NetworkImage(photoUrl)
+                      : null,
+                  child: photoUrl == null || photoUrl.isEmpty
+                      ? Icon(
+                          Icons.account_circle_rounded,
+                          size: 48,
+                          color: theme.colorScheme.primary,
+                        )
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  user.displayName?.trim().isNotEmpty == true
+                      ? user.displayName!
+                      : 'NurVerse User',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (user.email?.isNotEmpty == true) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    user.email!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: context.secondaryTextColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      Navigator.of(sheetContext).pop();
+                      await AuthService.instance.signOut();
+                      if (context.mounted) {
+                        await settings.reloadFromStorage();
+                      }
+                    },
+                    icon: const Icon(Icons.logout_rounded),
+                    label: const Text('Logout'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _handleProfileTap(BuildContext context, User? user) async {
     if (user == null) {
       await Navigator.of(context).push(
@@ -143,6 +218,7 @@ class TopHeader extends StatelessWidget {
       return;
     }
 
+    await _openAccount(context, user);
     onProfileTap?.call();
   }
 
@@ -151,23 +227,26 @@ class TopHeader extends StatelessWidget {
     final signedIn = user != null;
     final photoUrl = user?.photoURL;
 
-    return IconButton(
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-      onPressed: () => _handleProfileTap(context, user),
-      tooltip: _profileTooltip(language, signedIn),
-      icon: signedIn && photoUrl != null && photoUrl.isNotEmpty
-          ? CircleAvatar(
-              radius: 17,
-              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.10),
-              backgroundImage: NetworkImage(photoUrl),
-            )
-          : Icon(
-              signedIn
-                  ? Icons.account_circle_rounded
-                  : Icons.account_circle_outlined,
-            ),
+    return SizedBox(
+      width: 40,
+      height: 40,
+      child: IconButton(
+        padding: EdgeInsets.zero,
+        onPressed: () => _handleProfileTap(context, user),
+        tooltip: _profileTooltip(language, signedIn),
+        icon: signedIn && photoUrl != null && photoUrl.isNotEmpty
+            ? CircleAvatar(
+                radius: 17,
+                backgroundColor:
+                    theme.colorScheme.primary.withValues(alpha: 0.10),
+                backgroundImage: NetworkImage(photoUrl),
+              )
+            : Icon(
+                signedIn
+                    ? Icons.account_circle_rounded
+                    : Icons.account_circle_outlined,
+              ),
+      ),
     );
   }
 
@@ -191,6 +270,7 @@ class TopHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   width: 52,
@@ -253,13 +333,15 @@ class TopHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 4),
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                  onPressed: onNotificationTap,
-                  tooltip: _notificationTooltip(language),
-                  icon: const Icon(Icons.notifications_none_rounded),
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: onNotificationTap,
+                    tooltip: _notificationTooltip(language),
+                    icon: const Icon(Icons.notifications_none_rounded),
+                  ),
                 ),
                 const SizedBox(width: 2),
                 _profileButton(context, language, user),
@@ -290,7 +372,10 @@ class TopHeader extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: context.cardColor,
                     borderRadius: BorderRadius.circular(14),
