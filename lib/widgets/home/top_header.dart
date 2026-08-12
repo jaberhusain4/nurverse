@@ -5,20 +5,17 @@ import 'package:provider/provider.dart';
 
 import '../../providers/settings_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../screens/auth/google_login_screen.dart';
 
 class TopHeader extends StatelessWidget {
   final String greeting;
   final String currentTime;
   final VoidCallback? onNotificationTap;
-  final VoidCallback? onProfileTap;
 
   const TopHeader({
     super.key,
     required this.greeting,
     required this.currentTime,
     this.onNotificationTap,
-    this.onProfileTap,
   });
 
   String _subtitle(String language) {
@@ -107,26 +104,6 @@ class TopHeader extends StatelessWidget {
     }
   }
 
-  String _profileTooltip(String language) {
-    switch (language) {
-      case 'bn':
-        return 'লগইন';
-      case 'ar':
-        return 'تسجيل الدخول';
-      case 'en':
-      default:
-        return 'Login';
-    }
-  }
-
-  void _openLogin(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const GoogleLoginScreen(),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -210,14 +187,6 @@ class TopHeader extends StatelessWidget {
               onPressed: onNotificationTap,
               tooltip: _notificationTooltip(language),
               icon: const Icon(Icons.notifications_none_rounded),
-            ),
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-              onPressed: () => _openLogin(context),
-              tooltip: _profileTooltip(language),
-              icon: const Icon(Icons.account_circle_outlined),
             ),
           ],
         ),
