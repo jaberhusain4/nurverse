@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/settings_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../screens/auth/google_login_screen.dart';
 
 class TopHeader extends StatelessWidget {
   final String greeting;
@@ -118,6 +119,14 @@ class TopHeader extends StatelessWidget {
     }
   }
 
+  void _openLogin(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const GoogleLoginScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -206,7 +215,7 @@ class TopHeader extends StatelessWidget {
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-              onPressed: onProfileTap,
+              onPressed: () => _openLogin(context),
               tooltip: _profileTooltip(language),
               icon: const Icon(Icons.account_circle_outlined),
             ),
