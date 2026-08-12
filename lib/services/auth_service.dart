@@ -6,11 +6,16 @@ class AuthService {
 
   static final AuthService instance = AuthService._();
 
+  static const String _serverClientId =
+      '220451879730-t11scoc7f9018t41vdhlblnompmuuin1.apps.googleusercontent.com';
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
   Future<void> initializeGoogleSignIn() async {
-    await _googleSignIn.initialize();
+    await _googleSignIn.initialize(
+      serverClientId: _serverClientId,
+    );
   }
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
