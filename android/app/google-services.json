@@ -12,7 +12,20 @@
           "package_name": "com.example.nurverse"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "220451879730-9qlroa48bt6bo072glbvdvrho9doqjde.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nurverse",
+            "certificate_hash": "7fe6ef7b7b048e5eaf7e22c746afbaf9f7dc3ebc"
+          }
+        },
+        {
+          "client_id": "220451879730-t11scoc7f9018t41vdhlblnompmuuin1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAwLk6hW0Uj9h4f563zmr3waCeiCOTePzg"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "220451879730-t11scoc7f9018t41vdhlblnompmuuin1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "220451879730-305trgchas2h6ti8rchndu2slqv1vtfv.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.nurverse"
+              }
+            }
+          ]
         }
       }
     }
