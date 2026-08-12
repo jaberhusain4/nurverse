@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../controllers/prayer_controller.dart';
 import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
+import 'auth/google_login_screen.dart';
 import 'home_screen.dart';
 import 'prayer_screen.dart';
 import 'quran_screen.dart';
@@ -62,18 +63,52 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     setState(() => _selectedIndex = index);
   }
 
+  Future<void> _openLogin() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const GoogleLoginScreen(),
+      ),
+    );
+  }
+
+  Widget _withAccountButton(Widget child, {required bool home}) {
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          top: home ? 8 : 4,
+          right: 8,
+          child: SafeArea(
+            bottom: false,
+            child: Material(
+              color: Colors.transparent,
+              child: IconButton(
+                tooltip: 'Login',
+                onPressed: _openLogin,
+                icon: const Icon(Icons.account_circle_outlined),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final SettingsProvider settings = context.watch<SettingsProvider>();
     final bool isBangla = settings.isBangla;
 
     final List<Widget> screens = [
-      HomeScreen(onNavigateTab: _onNavigateTab),
+      _withAccountButton(
+        HomeScreen(onNavigateTab: _onNavigateTab),
+        home: true,
+      ),
       const PrayerScreen(),
       const QuranScreen(),
       const HadithScreen(),
       const ToolsScreen(),
-      const MoreScreen(),
+      _withAccountButton(const MoreScreen(), home: false),
     ];
 
     return Scaffold(
