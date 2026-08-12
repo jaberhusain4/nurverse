@@ -114,7 +114,7 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
                 decoration: BoxDecoration(color: primary.withValues(alpha: 0.055), borderRadius: BorderRadius.circular(18)),
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Text(_label(bn: 'সময় বাকি', en: 'Time left', ar: 'الوقت المتبقي'), textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 9.5, fontWeight: FontWeight.w700)),
+                  Text(_label(bn: 'সময় বাকি', en: 'Time left', ar: 'الوقت المتبقي'), textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 2),
                   FittedBox(fit: BoxFit.scaleDown, child: Text(remainingTime.isEmpty ? '--:--:--' : remainingTime, style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.3))),
                 ]),
@@ -149,13 +149,13 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
           Row(children: [
             Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: safeProgress, minHeight: 6, backgroundColor: primary.withValues(alpha: 0.09), valueColor: AlwaysStoppedAnimation<Color>(primary)))),
             const SizedBox(width: 8),
-            Text('$percentage%', style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.w800)),
+            Text('$percentage%', style: TextStyle(color: primary, fontSize: 10.5, fontWeight: FontWeight.w800)),
           ]),
           const SizedBox(height: 8),
           Row(children: [
             Icon(Icons.info_outline_rounded, size: 14, color: secondary),
             const SizedBox(width: 6),
-            Expanded(child: Text(status.isEmpty ? _label(bn: 'সালাতের সময় গণনা করা হচ্ছে...', en: 'Calculating prayer time...', ar: 'جارٍ حساب وقت الصلاة...') : status, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 9.5, fontWeight: FontWeight.w500))),
+            Expanded(child: Text(status.isEmpty ? _label(bn: 'সালাতের সময় গণনা করা হচ্ছে...', en: 'Calculating prayer time...', ar: 'جارٍ حساب وقت الصلاة...') : status, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w500))),
           ]),
           const SizedBox(height: 8),
           Material(color: Colors.transparent, child: InkWell(
@@ -168,7 +168,7 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
               child: Row(children: [
                 Icon(Icons.groups_rounded, size: 16, color: primary),
                 const SizedBox(width: 7),
-                Text(_label(bn: 'জামাআত', en: 'Jamaat', ar: 'الجماعة'), style: TextStyle(color: secondary, fontSize: 10, fontWeight: FontWeight.w600)),
+                Text(_label(bn: 'জামাআত', en: 'Jamaat', ar: 'الجماعة'), style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600)),
                 const Spacer(),
                 Text(iqamahTime.isEmpty ? '--:--' : iqamahTime, style: TextStyle(color: textColor, fontSize: 11.5, fontWeight: FontWeight.w800)),
                 const SizedBox(width: 4),
@@ -192,7 +192,7 @@ class _InfoPanel extends StatelessWidget {
     decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(16)),
     child: Column(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
       Icon(icon, color: color, size: 18), const SizedBox(height: 3),
-      Text(title, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color.withValues(alpha: 0.72), fontSize: 9.5, fontWeight: FontWeight.w600)),
+      Text(title, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color.withValues(alpha: 0.72), fontSize: 10.5, fontWeight: FontWeight.w600)),
       const SizedBox(height: 2),
       Text(value, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: valueSize, fontWeight: FontWeight.w900)),
       const SizedBox(height: 2), Text(subtitle, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: subtitleSize, fontWeight: FontWeight.w800)),
@@ -212,7 +212,7 @@ class _AwalPanel extends StatelessWidget {
       decoration: BoxDecoration(color: primary.withValues(alpha: active ? 0.075 : 0.045), borderRadius: BorderRadius.circular(16), border: Border.all(color: primary.withValues(alpha: active ? 0.11 : 0.045))),
       child: Column(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
         Icon(Icons.bolt_rounded, color: primary, size: 18), const SizedBox(height: 3),
-        Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: primary.withValues(alpha: 0.72), fontSize: 9.5, fontWeight: FontWeight.w600)),
+        Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: primary.withValues(alpha: 0.72), fontSize: 10.5, fontWeight: FontWeight.w600)),
         const SizedBox(height: 2),
         Text(active ? activeLabel : endedLabel, textAlign: TextAlign.center, style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w900)),
         if (data != null) ...[
@@ -232,28 +232,16 @@ class _AwalValue extends StatelessWidget {
   final String label, value; final Color color;
   const _AwalValue({required this.label, required this.value, required this.color});
   @override
-  Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, children: [Text(label, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.w600)), const SizedBox(height: 1), Text(value, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: 8.8, fontWeight: FontWeight.w800))]);
+  Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, children: [Text(label, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w600)), const SizedBox(height: 1), Text(value, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w800))]);
 }
 
 class _AwalWaqtData { final bool active; final Duration remaining; final DateTime start; final DateTime end; const _AwalWaqtData({required this.active, required this.remaining, required this.start, required this.end}); }
 
-class _PrayerMini extends StatelessWidget {
-  final String label, prayer, time; final IconData icon; final Color color, textColor;
-  const _PrayerMini({required this.label, required this.prayer, required this.time, required this.icon, required this.color, required this.textColor});
-  @override
-  Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, children: [
-    Icon(icon, size: 15, color: color), const SizedBox(height: 2),
-    Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: 8.5, fontWeight: FontWeight.w600)),
-    const SizedBox(height: 1),
-    Text(prayer, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: textColor, fontSize: 10.5, fontWeight: FontWeight.w800)),
-    const SizedBox(height: 1),
-    Text(time.isEmpty ? '--:--' : time, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: textColor, fontSize: 9.5, fontWeight: FontWeight.w700)),
-  ]);
-}
+class _PrayerMini extends StatelessWidget { final String label, prayer, time; final IconData icon; final Color color, textColor; const _PrayerMini({required this.label, required this.prayer, required this.time, required this.icon, required this.color, required this.textColor}); @override Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 15, color: color), const SizedBox(height: 2), Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w600)), const SizedBox(height: 1), Text(prayer, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: textColor, fontSize: 10.5, fontWeight: FontWeight.w800)), const SizedBox(height: 1), Text(time.isEmpty ? '--:--' : time, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: textColor, fontSize: 10.5, fontWeight: FontWeight.w700))]); }
 
 class _TimeLabel extends StatelessWidget {
   final String label, time; final Color color;
   const _TimeLabel({required this.label, required this.time, required this.color});
   @override
-  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [Text('$label  ', style: TextStyle(color: color, fontSize: 8.5)), Text(time.isEmpty ? '--:--' : time, style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w800))]);
+  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [Text('$label  ', style: TextStyle(color: color, fontSize: 10)), Text(time.isEmpty ? '--:--' : time, style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w800))]);
 }
