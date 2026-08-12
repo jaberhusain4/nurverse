@@ -1,10 +1,10 @@
-// lib/services/location_service.dart
-
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
   const LocationService();
+
+  static const Duration _startupCacheMaxAge = Duration(minutes: 30);
 
   // ==========================================================================
   // LOCATION SERVICE STATUS
@@ -32,11 +32,15 @@ class LocationService {
   // CURRENT POSITION
   // ==========================================================================
   //
-  // IMPORTANT:
-  // GPS/location calculation does NOT require internet.
+  // OFFLINE-FIRST / FAST STARTUP:
   //
-  // This method intentionally returns Position independently of address
-  // lookup or reverse geocoding.
+  // A recent last-known GPS position is good enough to calculate prayer times
+  // immediately. A fresh high-accuracy GPS fix can take several seconds and
+  // should not block the first Home screen when a recent position exists.
+  //
+  // If the cached position is missing or too old, a fresh GPS fix is requested.
+  // This keeps the first calculation fast without accepting stale locations
+  // indefinitely.
   // ==========================================================================
 
   Future<Position> getCurrentPosition() async {
@@ -56,9 +60,51 @@ class LocationService {
       throw Exception('Location permission permanently denied.');
     }
 
+    final lastKnown = await getLastKnownPosition();
+
+    if (_isRecentEnough(lastKnown)) {
+      return lastKnown!;
+    }
+
+    return _getFreshPosition();
+  }
+
+  /// Forces a fresh GPS position.
+  ///
+  /// Use this when the user explicitly requests a location refresh or when
+  /// accuracy is more important than startup speed.
+  Future<Position> getFreshCurrentPosition() async {
+    final enabled = await isLocationEnabled();
+
+    if (!enabled) {
+      throw Exception('Location service is disabled.');
+    }
+
+    final permission = await requestPermission();
+
+    if (permission == LocationPermission.denied) {
+      throw Exception('Location permission denied.');
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception('Location permission permanently denied.');
+    }
+
+    return _getFreshPosition();
+  }
+
+  Future<Position> _getFreshPosition() {
     return Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
     );
+  }
+
+  bool _isRecentEnough(Position? position) {
+    if (position == null) return false;
+
+    final age = DateTime.now().difference(position.timestamp);
+
+    return !age.isNegative && age <= _startupCacheMaxAge;
   }
 
   // ==========================================================================
