@@ -1,17 +1,18 @@
 // lib/widgets/home/top_header.dart
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/settings_provider.dart';
+import '../../screens/auth/google_login_screen.dart';
+import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 
 class TopHeader extends StatelessWidget {
   final String greeting;
   final String currentTime;
   final VoidCallback? onNotificationTap;
-  // Kept for compatibility with existing HomeScreen wiring.
-  // The profile/login icon is intentionally not rendered here to avoid duplication.
   final VoidCallback? onProfileTap;
 
   const TopHeader({
@@ -108,6 +109,68 @@ class TopHeader extends StatelessWidget {
     }
   }
 
+  String _profileTooltip(String language, bool signedIn) {
+    if (signedIn) {
+      switch (language) {
+        case 'bn':
+          return 'অ্যাকাউন্ট';
+        case 'ar':
+          return 'الحساب';
+        case 'en':
+        default:
+          return 'Account';
+      }
+    }
+
+    switch (language) {
+      case 'bn':
+        return 'লগইন';
+      case 'ar':
+        return 'تسجيل الدخول';
+      case 'en':
+      default:
+        return 'Login';
+    }
+  }
+
+  Future<void> _handleProfileTap(BuildContext context, User? user) async {
+    if (user == null) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const GoogleLoginScreen(),
+        ),
+      );
+      return;
+    }
+
+    onProfileTap?.call();
+  }
+
+  Widget _profileButton(BuildContext context, String language, User? user) {
+    final theme = Theme.of(context);
+    final signedIn = user != null;
+    final photoUrl = user?.photoURL;
+
+    return IconButton(
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+      onPressed: () => _handleProfileTap(context, user),
+      tooltip: _profileTooltip(language, signedIn),
+      icon: signedIn && photoUrl != null && photoUrl.isNotEmpty
+          ? CircleAvatar(
+              radius: 17,
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.10),
+              backgroundImage: NetworkImage(photoUrl),
+            )
+          : Icon(
+              signedIn
+                  ? Icons.account_circle_rounded
+                  : Icons.account_circle_outlined,
+            ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -118,122 +181,132 @@ class TopHeader extends StatelessWidget {
     final assalamuAlaikum = _assalamuAlaikum(language);
     final localizedGreeting = _localizedGreeting(language);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return StreamBuilder<User?>(
+      stream: AuthService.instance.authStateChanges,
+      initialData: AuthService.instance.currentUser,
+      builder: (context, snapshot) {
+        final user = snapshot.data;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                Icons.mosque_rounded,
-                color: theme.colorScheme.primary,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    Icons.mosque_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Flexible(
-                        child: Text(
-                          'NurVerse',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          'نُورٌ عَلَىٰ نُورٍ',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: 'Amiri',
-                            fontSize: 12,
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.80,
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              'NurVerse',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            fontWeight: FontWeight.w600,
                           ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'نُورٌ عَلَىٰ نُورٍ',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: 'Amiri',
+                                fontSize: 12,
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.80,
+                                ),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: context.secondaryTextColor,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: context.secondaryTextColor,
-                    ),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                  onPressed: onNotificationTap,
+                  tooltip: _notificationTooltip(language),
+                  icon: const Icon(Icons.notifications_none_rounded),
+                ),
+                const SizedBox(width: 2),
+                _profileButton(context, language, user),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        assalamuAlaikum,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        localizedGreeting,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: context.secondaryTextColor,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 2),
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-              onPressed: onNotificationTap,
-              tooltip: _notificationTooltip(language),
-              icon: const Icon(Icons.notifications_none_rounded),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    assalamuAlaikum,
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: context.cardColor,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    currentTime,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    localizedGreeting,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: context.secondaryTextColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              decoration: BoxDecoration(
-                color: context.cardColor,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Text(
-                currentTime,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
                 ),
-              ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }
