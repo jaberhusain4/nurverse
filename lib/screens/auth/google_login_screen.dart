@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/settings_provider.dart';
 import '../../services/auth_service.dart';
+import '../../services/settings_sync_service.dart';
 import '../../theme/app_theme.dart';
 
 class GoogleLoginScreen extends StatefulWidget {
@@ -26,6 +29,16 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
 
     try {
       await AuthService.instance.signInWithGoogle();
+
+      if (!mounted) return;
+
+      // AuthService restores the account's saved settings into local storage.
+      // Apply those values to the currently running SettingsProvider too, so
+      // the UI changes immediately without requiring an app restart.
+      await SettingsSyncService.instance.applyToProvider(
+        context.read<SettingsProvider>(),
+      );
+
       if (!mounted) return;
       Navigator.of(context).pop();
     } on Exception catch (e) {
