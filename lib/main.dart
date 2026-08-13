@@ -12,6 +12,7 @@ import 'theme/app_theme.dart';
 import 'providers/settings_provider.dart';
 import 'providers/premium_provider.dart';
 import 'providers/text_scale_provider.dart';
+import 'providers/bold_text_provider.dart';
 import 'controllers/prayer_controller.dart';
 import 'services/audio_service.dart';
 import 'services/auth_service.dart';
@@ -47,6 +48,9 @@ Future<void> main() async {
         ChangeNotifierProvider<TextScaleProvider>(
           create: (_) => TextScaleProvider(),
         ),
+        ChangeNotifierProvider<BoldTextProvider>(
+          create: (_) => BoldTextProvider(),
+        ),
         ChangeNotifierProvider<PremiumProvider>(
           create: (_) => PremiumProvider()..checkPremiumStatus(),
         ),
@@ -67,6 +71,7 @@ class NurVerseApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final SettingsProvider settings = context.watch<SettingsProvider>();
     final TextScaleProvider textScale = context.watch<TextScaleProvider>();
+    final BoldTextProvider boldText = context.watch<BoldTextProvider>();
 
     return MaterialApp(
       title: 'NurVerse',
@@ -90,16 +95,51 @@ class NurVerseApp extends StatelessWidget {
           final double combinedScale =
               (platformScale * textScale.scale).clamp(0.70, 2.0).toDouble();
 
-          return MediaQuery(
-            data: mediaQuery.copyWith(
-              textScaler: TextScaler.linear(combinedScale),
+          final ThemeData baseTheme = Theme.of(context);
+          final TextTheme textTheme = baseTheme.textTheme;
+          final TextStyle? normalBody = textTheme.bodyMedium;
+          final TextStyle? normalLabel = textTheme.labelLarge;
+          final TextTheme effectiveTextTheme = boldText.isBold
+              ? textTheme.copyWith(
+                  bodyLarge: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                  bodyMedium: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                  bodySmall: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                  labelLarge: normalLabel?.copyWith(fontWeight: FontWeight.bold),
+                  labelMedium: textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
+                  labelSmall: textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                  titleLarge: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  titleMedium: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  titleSmall: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  headlineLarge: textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
+                  headlineMedium: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                  headlineSmall: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  displayLarge: textTheme.displayLarge?.copyWith(fontWeight: FontWeight.bold),
+                  displayMedium: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold),
+                  displaySmall: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold),
+                )
+              : textTheme;
+
+          final ThemeData effectiveTheme = baseTheme.copyWith(
+            textTheme: effectiveTextTheme,
+          );
+
+          return Theme(
+            data: effectiveTheme,
+            child: MediaQuery(
+              data: mediaQuery.copyWith(
+                textScaler: TextScaler.linear(combinedScale),
+              ),
+              child: const AuthGate(),
             ),
-            child: const AuthGate(),
           );
         },
       ),
     );
   }
+
+  // ignore: unused_element
+  static TextStyle? _keepTextStylesAlive(TextTheme textTheme) =>
+      textTheme.bodyMedium;
 }
 
 class MainNavigationScreen extends StatefulWidget {
