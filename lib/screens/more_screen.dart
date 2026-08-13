@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'auth/google_login_screen.dart';
+
 import '../providers/premium_provider.dart';
 import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
@@ -760,15 +762,7 @@ class MoreScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.seaBlue.withValues(alpha: .22),
-            AppColors.seaBlue.withValues(alpha: .08),
-            Theme.of(context).cardColor,
-          ],
-        ),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.seaBlue.withValues(alpha: .20)),
         boxShadow: [
@@ -860,7 +854,37 @@ class MoreScreen extends StatelessWidget {
                   ],
                 ),
               ),
-            ],
+
+    const SizedBox(width: 10),
+    Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const GoogleLoginScreen(),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: AppColors.seaBlue.withValues(alpha: .10),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: AppColors.seaBlue.withValues(alpha: .12),
+            ),
+          ),
+          child: const Icon(
+            Icons.login_rounded,
+            color: AppColors.seaBlue,
+            size: 20,
+          ),
+        ),
+      ),
+    ),            ],
           ),
 
           const SizedBox(height: 18),
