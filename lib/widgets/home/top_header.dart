@@ -159,38 +159,50 @@ class TopHeader extends StatelessWidget {
     await _openAccount(context, user);
   }
 
+  Widget _profileFallback(BuildContext context, User? user) {
+    final theme = Theme.of(context);
+    final signedIn = user != null;
+
+    return Icon(
+      signedIn ? Icons.person_rounded : Icons.person_outline_rounded,
+      size: 24,
+      color: theme.colorScheme.primary,
+    );
+  }
+
   Widget _profileButton(BuildContext context, String language, User? user) {
     final theme = Theme.of(context);
     final signedIn = user != null;
-    final photoUrl = user?.photoURL;
+    final photoUrl = user?.photoURL?.trim();
+    final hasPhoto = signedIn && photoUrl != null && photoUrl.isNotEmpty;
 
-    return SizedBox(
-      width: 40,
-      height: 40,
-      child: Material(
-        color: Colors.transparent,
-        shape: const CircleBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => _handleProfileTap(context, user),
-          customBorder: const CircleBorder(),
-          child: signedIn && photoUrl != null && photoUrl.isNotEmpty
-              ? Image.network(
-                  photoUrl,
-                  width: 34,
-                  height: 34,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Icon(
-                    Icons.account_circle_rounded,
-                    size: 34,
-                    color: theme.colorScheme.primary,
-                  ),
-                )
-              : Icon(
-                  signedIn ? Icons.account_circle_rounded : Icons.account_circle_outlined,
-                  size: 34,
-                  color: theme.colorScheme.primary,
-                ),
+    return Tooltip(
+      message: _profileTooltip(language, signedIn),
+      child: SizedBox(
+        width: 40,
+        height: 40,
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () => _handleProfileTap(context, user),
+            customBorder: const CircleBorder(),
+            child: hasPhoto
+                ? ClipOval(
+                    child: Image.network(
+                      photoUrl!,
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
+                      errorBuilder: (_, __, ___) => Center(
+                        child: _profileFallback(context, user),
+                      ),
+                    ),
+                  )
+                : Center(child: _profileFallback(context, user)),
+          ),
         ),
       ),
     );
