@@ -1,5 +1,6 @@
 // lib/screens/more_screen.dart
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -7,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'auth/google_login_screen.dart';
 
 import '../providers/premium_provider.dart';
+import '../services/auth_service.dart';
 import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/brand_logo.dart';
@@ -751,6 +753,149 @@ class MoreScreen extends StatelessWidget {
   // PREMIUM HERO
   // ========================================================================
 
+  Future<void> _openAccount(BuildContext context, User user) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: context.cardColor,
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        final photoUrl = user.photoURL;
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 34,
+                  backgroundColor:
+                      theme.colorScheme.primary.withValues(alpha: 0.10),
+                  backgroundImage:
+                      photoUrl != null && photoUrl.isNotEmpty
+                          ? NetworkImage(photoUrl)
+                          : null,
+                  child:
+                      photoUrl == null || photoUrl.isEmpty
+                          ? Icon(
+                              Icons.account_circle_rounded,
+                              size: 48,
+                              color: theme.colorScheme.primary,
+                            )
+                          : null,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  user.displayName?.trim().isNotEmpty == true
+                      ? user.displayName!
+                      : 'NurVerse User',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (user.email?.isNotEmpty == true) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    user.email!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: context.secondaryTextColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      Navigator.of(sheetContext).pop();
+                      await AuthService.instance.signOut();
+                    },
+                    icon: const Icon(Icons.logout_rounded),
+                    label: const Text('Logout'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleProfileTap(BuildContext context, User? user) async {
+    if (user == null) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const GoogleLoginScreen(),
+        ),
+      );
+      return;
+    }
+
+    await _openAccount(context, user);
+  }
+
+  Widget _premiumAccountButton(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return StreamBuilder<User?>(
+      stream: AuthService.instance.authStateChanges,
+      initialData: AuthService.instance.currentUser,
+      builder: (context, snapshot) {
+        final user = snapshot.data;
+        final photoUrl = user?.photoURL?.trim();
+        final hasPhoto = user != null && photoUrl != null && photoUrl.isNotEmpty;
+
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _handleProfileTap(context, user),
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppColors.seaBlue.withValues(alpha: .10),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.seaBlue.withValues(alpha: .12),
+                ),
+              ),
+              child:
+                  hasPhoto
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(13),
+                          child: Image.network(
+                            photoUrl!,
+                            width: 42,
+                            height: 42,
+                            fit: BoxFit.cover,
+                            filterQuality: FilterQuality.high,
+                            errorBuilder:
+                                (_, __, ___) => Icon(
+                                  Icons.person_rounded,
+                                  color: theme.colorScheme.primary,
+                                  size: 22,
+                                ),
+                          ),
+                        )
+                      : Icon(
+                          user != null
+                              ? Icons.person_rounded
+                              : Icons.person_outline_rounded,
+                          color: theme.colorScheme.primary,
+                          size: 22,
+                        ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildPremiumHero(
     BuildContext context,
     SettingsProvider settings,
@@ -854,37 +999,9 @@ class MoreScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
-    const SizedBox(width: 10),
-    Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const GoogleLoginScreen(),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: AppColors.seaBlue.withValues(alpha: .10),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: AppColors.seaBlue.withValues(alpha: .12),
-            ),
-          ),
-          child: const Icon(
-            Icons.login_rounded,
-            color: AppColors.seaBlue,
-            size: 20,
-          ),
-        ),
-      ),
-    ),            ],
+              const SizedBox(width: 10),
+              _premiumAccountButton(context),
+            ],
           ),
 
           const SizedBox(height: 18),
