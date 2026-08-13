@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../controllers/prayer_controller.dart';
 import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
-import 'auth/google_login_screen.dart';
 import 'home_screen.dart';
 import 'prayer_screen.dart';
 import 'quran_screen.dart';
@@ -63,54 +62,22 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     setState(() => _selectedIndex = index);
   }
 
-  Future<void> _openLogin() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const GoogleLoginScreen(),
-      ),
-    );
-  }
-
-  Widget _withAccountButton(Widget child, {required bool home}) {
-    return Stack(
-      children: [
-        child,
-        Positioned(
-          top: home ? 8 : 4,
-          right: 8,
-          child: SafeArea(
-            bottom: false,
-            child: Material(
-              color: Colors.transparent,
-              child: IconButton(
-                tooltip: 'Login',
-                onPressed: _openLogin,
-                icon: const Icon(Icons.account_circle_outlined),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final SettingsProvider settings = context.watch<SettingsProvider>();
     final bool isBangla = settings.isBangla;
 
+    // Authentication controls belong to the actual screens that own them.
+    // In particular, HomeScreen owns its scrolling header/profile control.
+    // Never place a login/profile button in a Stack around a screen: that
+    // creates a fixed overlay which stays behind when the screen scrolls.
     final List<Widget> screens = [
-      // HomeScreen already owns its notification and account controls.
-      // Do NOT wrap it in a Stack with another account button, otherwise
-      // a second icon remains fixed above the scrolling header.
       HomeScreen(onNavigateTab: _onNavigateTab),
       const PrayerScreen(),
       const QuranScreen(),
       const HadithScreen(),
       const ToolsScreen(),
-      // Keep the Settings account entry for now; unlike Home, MoreScreen
-      // does not currently render its own account control.
-      _withAccountButton(const MoreScreen(), home: false),
+      const MoreScreen(),
     ];
 
     return Scaffold(
