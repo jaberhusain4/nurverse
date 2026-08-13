@@ -3,16 +3,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// App-wide typography scale for NurVerse.
 ///
-/// Normal is the default baseline used throughout the app. The smallest
-/// available setting is intentionally only slightly smaller than Normal.
-/// Quran-specific typography is kept separate from this app-wide setting.
+/// The design system has two visual levels: Normal and Headline.
+/// This provider controls the user's global accessibility scale.
+/// Quran-specific typography remains separate from this app-wide setting.
 class TextScaleProvider extends ChangeNotifier {
   static const String _storageKey = 'app_text_scale';
 
   static const double smallScale = 0.94;
   static const double normalScale = 1.0;
   static const double largeScale = 1.10;
-  static const double veryLargeScale = 1.20;
+  static const double extraLargeScale = 1.20;
 
   static const double defaultScale = normalScale;
 
@@ -29,14 +29,14 @@ class TextScaleProvider extends ChangeNotifier {
   String get label {
     if ((_scale - smallScale).abs() < 0.03) return 'ছোট';
     if ((_scale - largeScale).abs() < 0.03) return 'বড়';
-    if ((_scale - veryLargeScale).abs() < 0.03) return 'খুব বড়';
+    if ((_scale - extraLargeScale).abs() < 0.03) return 'Extra Large';
     return 'স্বাভাবিক';
   }
 
   int get level {
     if ((_scale - smallScale).abs() < 0.03) return 0;
     if ((_scale - largeScale).abs() < 0.03) return 2;
-    if ((_scale - veryLargeScale).abs() < 0.03) return 3;
+    if ((_scale - extraLargeScale).abs() < 0.03) return 3;
     return 1;
   }
 
@@ -44,7 +44,7 @@ class TextScaleProvider extends ChangeNotifier {
     smallScale,
     normalScale,
     largeScale,
-    veryLargeScale,
+    extraLargeScale,
   ];
 
   Future<void> _load() async {
