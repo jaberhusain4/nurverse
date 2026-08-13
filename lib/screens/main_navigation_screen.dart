@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../controllers/prayer_controller.dart';
 import '../providers/settings_provider.dart';
 import '../services/auth_service.dart';
-import '../screens/auth/google_login_screen.dart';
+import 'auth/google_login_screen.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'prayer_screen.dart';
