@@ -1,11 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/prayer_controller.dart';
 import '../providers/settings_provider.dart';
-import '../services/auth_service.dart';
-import 'auth/google_login_screen.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'prayer_screen.dart';
@@ -76,7 +73,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       const QuranScreen(),
       const HadithScreen(),
       const ToolsScreen(),
-      const _SettingsScreenWithAccount(),
+      const MoreScreen(),
     ];
 
     return Scaffold(
@@ -140,166 +137,5 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _settingsProvider?.removeListener(_onSettingsChanged);
     _settingsProvider = null;
     super.dispose();
-  }
-}
-
-class _SettingsScreenWithAccount extends StatelessWidget {
-  const _SettingsScreenWithAccount();
-
-  Future<void> _openAccount(BuildContext context, User user) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: context.cardColor,
-      builder: (sheetContext) {
-        final theme = Theme.of(sheetContext);
-        final photoUrl = user.photoURL;
-
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircleAvatar(
-                  radius: 34,
-                  backgroundColor:
-                      theme.colorScheme.primary.withValues(alpha: 0.10),
-                  backgroundImage:
-                      photoUrl != null && photoUrl.isNotEmpty
-                          ? NetworkImage(photoUrl)
-                          : null,
-                  child:
-                      photoUrl == null || photoUrl.isEmpty
-                          ? Icon(
-                            Icons.account_circle_rounded,
-                            size: 48,
-                            color: theme.colorScheme.primary,
-                          )
-                          : null,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  user.displayName?.trim().isNotEmpty == true
-                      ? user.displayName!
-                      : 'NurVerse User',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                if (user.email?.isNotEmpty == true) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    user.email!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: context.secondaryTextColor,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      Navigator.of(sheetContext).pop();
-                      await AuthService.instance.signOut();
-                    },
-                    icon: const Icon(Icons.logout_rounded),
-                    label: const Text('Logout'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _handleTap(BuildContext context, User? user) async {
-    if (user == null) {
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => const GoogleLoginScreen(),
-        ),
-      );
-      return;
-    }
-
-    await _openAccount(context, user);
-  }
-
-  Widget _accountButton(BuildContext context, User? user) {
-    final theme = Theme.of(context);
-    final photoUrl = user?.photoURL?.trim();
-    final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
-
-    return Tooltip(
-      message: user == null ? 'Login' : 'Account',
-      child: SizedBox(
-        width: 40,
-        height: 40,
-        child: Material(
-          color: Colors.transparent,
-          shape: const CircleBorder(),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () => _handleTap(context, user),
-            customBorder: const CircleBorder(),
-            child:
-                hasPhoto
-                    ? ClipOval(
-                      child: Image.network(
-                        photoUrl,
-                        width: 40,
-                        height: 40,
-                        fit: BoxFit.cover,
-                        filterQuality: FilterQuality.high,
-                        errorBuilder:
-                            (_, __, ___) => Icon(
-                              user == null
-                                  ? Icons.person_outline_rounded
-                                  : Icons.person_rounded,
-                              size: 24,
-                              color: theme.colorScheme.primary,
-                            ),
-                      ),
-                    )
-                    : Center(
-                      child: Icon(
-                        user == null
-                            ? Icons.person_outline_rounded
-                            : Icons.person_rounded,
-                        size: 24,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        const MoreScreen(),
-        Positioned(
-          top: MediaQuery.paddingOf(context).top + 8,
-          right: 8,
-          child: StreamBuilder<User?>(
-            stream: AuthService.instance.authStateChanges,
-            initialData: AuthService.instance.currentUser,
-            builder: (context, snapshot) {
-              return _accountButton(context, snapshot.data);
-            },
-          ),
-        ),
-      ],
-    );
   }
 }
