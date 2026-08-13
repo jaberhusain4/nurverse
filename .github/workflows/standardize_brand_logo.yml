@@ -1,0 +1,90 @@
+name: Standardize NurVerse brand logo
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  standardize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply shared brand logo
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          brand = Path("lib/widgets/common/brand_logo.dart")
+          brand.parent.mkdir(parents=True, exist_ok=True)
+          brand.write_text('''import \'package:flutter/material.dart\';
+
+class BrandLogo extends StatelessWidget {
+  final double size;
+
+  const BrandLogo({super.key, this.size = 52});
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final iconSize = size * (28 / 52);
+    final radius = size * (16 / 52);
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: primary.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(radius),
+        ),
+        child: Center(
+          child: Icon(
+            Icons.mosque_rounded,
+            color: primary,
+            size: iconSize,
+          ),
+        ),
+      ),
+    );
+  }
+}
+''', encoding="utf-8")
+
+          top = Path("lib/widgets/home/top_header.dart")
+          text = top.read_text(encoding="utf-8")
+          if "../common/brand_logo.dart" not in text:
+              text = text.replace("import '../../theme/app_theme.dart';", "import '../../theme/app_theme.dart';\nimport '../common/brand_logo.dart';", 1)
+          pattern = re.compile(r"                Container\(\n                  width: 52,\n                  height: 52,\n                  decoration: BoxDecoration\(\n                    color: theme\.colorScheme\.primary\.withValues\(alpha: 0\.10\),\n                    borderRadius: BorderRadius\.circular\(16\),\n                  \),\n                  child: Icon\(Icons\.mosque_rounded, color: theme\.colorScheme\.primary, size: 28\),\n                \),")
+          text, count = pattern.subn("                const BrandLogo(size: 52),", text, count=1)
+          if count != 1:
+              raise SystemExit("Home header logo pattern not found")
+          top.write_text(text, encoding="utf-8")
+
+          more = Path("lib/screens/more_screen.dart")
+          text = more.read_text(encoding="utf-8")
+          if "../widgets/common/brand_logo.dart" not in text:
+              text = text.replace("import '../theme/app_theme.dart';", "import '../theme/app_theme.dart';\nimport '../widgets/common/brand_logo.dart';", 1)
+          text, n1 = re.subn(r"Image\.asset\(\s*'assets/icons/app_icon\.png',\s*width: 42,\s*height: 42,\s*fit: BoxFit\.contain,\s*\)", "const BrandLogo(size: 42)", text, count=1)
+          text, n2 = re.subn(r"Image\.asset\(\s*'assets/icons/app_icon\.png',\s*width: 28,\s*height: 28,\s*fit: BoxFit\.contain,\s*\)", "const BrandLogo(size: 28)", text, count=1)
+          text, n3 = re.subn(r"Image\.asset\(\s*'assets/icons/app_icon\.png',\s*width: 52,\s*height: 52,\s*fit: BoxFit\.contain,\s*\)", "const BrandLogo(size: 52)", text, count=1)
+          if (n1, n2, n3) != (1, 1, 1):
+              raise SystemExit(f"Expected 3 brand image replacements, got {(n1, n2, n3)}")
+          more.write_text(text, encoding="utf-8")
+
+      - name: Remove temporary workflow
+        run: rm .github/workflows/standardize_brand_logo.yml
+
+      - name: Commit changes
+        shell: bash
+        run: |
+          git config user.name "NurVerse Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add lib/widgets/common/brand_logo.dart lib/widgets/home/top_header.dart lib/screens/more_screen.dart .github/workflows/standardize_brand_logo.yml
+          git commit -m "fix: use home header brand logo across settings"
+          git push
