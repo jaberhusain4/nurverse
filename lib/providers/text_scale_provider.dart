@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Four-level app-wide text scaling for NurVerse.
+/// App-wide typography scale for NurVerse.
 ///
-/// This controls general application typography only. Quran/Arabic-specific
-/// typography remains independent so the two settings do not overlap.
+/// Normal is the default baseline used throughout the app. The smallest
+/// available setting is intentionally only slightly smaller than Normal.
+/// Quran-specific typography is kept separate from this app-wide setting.
 class TextScaleProvider extends ChangeNotifier {
   static const String _storageKey = 'app_text_scale';
 
-  // The Normal level is the new typography baseline for general UI text.
-  // Quran/Arabic-specific sizes remain controlled separately.
-  static const double smallScale = 0.90;
+  static const double smallScale = 0.94;
   static const double normalScale = 1.0;
   static const double largeScale = 1.10;
   static const double veryLargeScale = 1.20;
@@ -28,18 +27,9 @@ class TextScaleProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   String get label {
-    if ((_scale - smallScale).abs() < 0.03) {
-      return 'ছোট';
-    }
-
-    if ((_scale - largeScale).abs() < 0.03) {
-      return 'বড়';
-    }
-
-    if ((_scale - veryLargeScale).abs() < 0.03) {
-      return 'খুব বড়';
-    }
-
+    if ((_scale - smallScale).abs() < 0.03) return 'ছোট';
+    if ((_scale - largeScale).abs() < 0.03) return 'বড়';
+    if ((_scale - veryLargeScale).abs() < 0.03) return 'খুব বড়';
     return 'স্বাভাবিক';
   }
 
@@ -61,7 +51,6 @@ class TextScaleProvider extends ChangeNotifier {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final double? saved = prefs.getDouble(_storageKey);
-
       if (saved != null && saved.isFinite) {
         _scale = _nearestLevel(saved);
       }
@@ -75,10 +64,7 @@ class TextScaleProvider extends ChangeNotifier {
 
   Future<void> setScale(double value) async {
     final double normalized = _nearestLevel(value);
-
-    if ((_scale - normalized).abs() < 0.001) {
-      return;
-    }
+    if ((_scale - normalized).abs() < 0.001) return;
 
     _scale = normalized;
     notifyListeners();
@@ -86,10 +72,7 @@ class TextScaleProvider extends ChangeNotifier {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setDouble(_storageKey, _scale);
-    } catch (_) {
-      // Keep the in-memory value active if persistence is temporarily
-      // unavailable. The next launch will safely fall back to defaults.
-    }
+    } catch (_) {}
   }
 
   Future<void> setLevel(int level) async {
@@ -97,31 +80,20 @@ class TextScaleProvider extends ChangeNotifier {
     await setScale(levels[normalizedLevel]);
   }
 
-  Future<void> increase() async {
-    await setLevel(level + 1);
-  }
-
-  Future<void> decrease() async {
-    await setLevel(level - 1);
-  }
-
-  Future<void> reset() async {
-    await setScale(defaultScale);
-  }
+  Future<void> increase() async => setLevel(level + 1);
+  Future<void> decrease() async => setLevel(level - 1);
+  Future<void> reset() async => setScale(defaultScale);
 
   double _nearestLevel(double value) {
     double nearest = levels.first;
     double distance = (value - nearest).abs();
-
     for (final double candidate in levels.skip(1)) {
       final double candidateDistance = (value - candidate).abs();
-
       if (candidateDistance < distance) {
         nearest = candidate;
         distance = candidateDistance;
       }
     }
-
     return nearest;
   }
 }
