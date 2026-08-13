@@ -100,14 +100,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final bool isBangla = settings.isBangla;
 
     final List<Widget> screens = [
-      _withAccountButton(
-        HomeScreen(onNavigateTab: _onNavigateTab),
-        home: true,
-      ),
+      // HomeScreen already owns its notification and account controls.
+      // Do NOT wrap it in a Stack with another account button, otherwise
+      // a second icon remains fixed above the scrolling header.
+      HomeScreen(onNavigateTab: _onNavigateTab),
       const PrayerScreen(),
       const QuranScreen(),
       const HadithScreen(),
       const ToolsScreen(),
+      // Keep the Settings account entry for now; unlike Home, MoreScreen
+      // does not currently render its own account control.
       _withAccountButton(const MoreScreen(), home: false),
     ];
 
