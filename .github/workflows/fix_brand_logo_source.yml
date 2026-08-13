@@ -1,0 +1,149 @@
+name: Standardize NurVerse Brand Logo
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use the Home header brand mark everywhere
+        shell: python
+        run: |
+          from pathlib import Path
+
+          brand_logo = Path("lib/widgets/brand_logo.dart")
+          brand_logo.parent.mkdir(parents=True, exist_ok=True)
+          brand_logo.write_text('''import 'package:flutter/material.dart';
+
+class BrandLogo extends StatelessWidget {
+  final double size;
+  final double iconSize;
+  final double borderRadius;
+
+  const BrandLogo({
+    super.key,
+    this.size = 52,
+    this.iconSize = 28,
+    this.borderRadius = 16,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+      child: Icon(
+        Icons.mosque_rounded,
+        color: color,
+        size: iconSize,
+      ),
+    );
+  }
+}
+''', encoding="utf-8")
+
+          header = Path("lib/widgets/home/top_header.dart")
+          text = header.read_text(encoding="utf-8")
+          if "import '../../widgets/brand_logo.dart';" not in text:
+              text = text.replace(
+                  "import '../../theme/app_theme.dart';",
+                  "import '../../theme/app_theme.dart';\nimport '../../widgets/brand_logo.dart';",
+                  1,
+              )
+
+          old_header = '''                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(Icons.mosque_rounded, color: theme.colorScheme.primary, size: 28),
+                ),'''
+          new_header = '''                const BrandLogo(),'''
+          if old_header in text:
+              text = text.replace(old_header, new_header, 1)
+          header.write_text(text, encoding="utf-8")
+
+          more = Path("lib/screens/more_screen.dart")
+          text = more.read_text(encoding="utf-8")
+          if "import '../widgets/brand_logo.dart';" not in text:
+              text = text.replace(
+                  "import '../theme/app_theme.dart';",
+                  "import '../theme/app_theme.dart';\nimport '../widgets/brand_logo.dart';",
+                  1,
+              )
+
+          text = text.replace(
+              """Image.asset(
+                  'assets/icons/app_icon.png',
+                  width: 42,
+                  height: 42,
+                  fit: BoxFit.contain,
+                )""",
+              """const BrandLogo(
+                  size: 42,
+                  iconSize: 23,
+                  borderRadius: 13,
+                )""",
+              1,
+          )
+
+          text = text.replace(
+              """Image.asset(
+                  'assets/icons/app_icon.png',
+                  width: 28,
+                  height: 28,
+                  fit: BoxFit.contain,
+                )""",
+              """const BrandLogo(
+                  size: 28,
+                  iconSize: 16,
+                  borderRadius: 9,
+                )""",
+              1,
+          )
+
+          text = text.replace(
+              """Image.asset(
+          'assets/icons/app_icon.png',
+          width: 52,
+          height: 52,
+          fit: BoxFit.contain,
+        )""",
+              """const BrandLogo(
+          size: 52,
+          iconSize: 28,
+          borderRadius: 15,
+        )""",
+              1,
+          )
+
+          if "assets/icons/app_icon.png" in text:
+              raise SystemExit("Unexpected app icon reference remains in more_screen.dart")
+
+          more.write_text(text, encoding="utf-8")
+
+      - name: Commit changes and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "NurVerse Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add lib/widgets/brand_logo.dart lib/widgets/home/top_header.dart lib/screens/more_screen.dart .github/workflows/fix_brand_logo_source.yml
+          git rm .github/workflows/fix_brand_logo_source.yml
+          git commit -m "Use home header brand logo across NurVerse"
+          git push
