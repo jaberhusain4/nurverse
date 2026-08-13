@@ -32,9 +32,6 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
 
       if (!mounted) return;
 
-      // AuthService restores the account's saved settings into local storage.
-      // Apply those values to the currently running SettingsProvider too, so
-      // the UI changes immediately without requiring an app restart.
       await SettingsSyncService.instance.applyToProvider(
         context.read<SettingsProvider>(),
       );
@@ -80,16 +77,18 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // NurVerse brand mark: keep the same mosque identity used
+                  // by the Home header throughout the app.
                   Container(
                     width: 92,
                     height: 92,
                     decoration: BoxDecoration(
                       color: AppColors.seaBlue.withValues(alpha: 0.10),
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(26),
                     ),
                     child: Icon(
-                      Icons.nightlight_round,
-                      size: 48,
+                      Icons.mosque_rounded,
+                      size: 50,
                       color: AppColors.seaBlue,
                     ),
                   ),
