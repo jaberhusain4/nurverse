@@ -22,39 +22,39 @@ jobs:
 
           brand = Path("lib/widgets/common/brand_logo.dart")
           brand.parent.mkdir(parents=True, exist_ok=True)
-          brand.write_text('''import \'package:flutter/material.dart\';
+          brand.write_text("""import 'package:flutter/material.dart';
 
-class BrandLogo extends StatelessWidget {
-  final double size;
+          class BrandLogo extends StatelessWidget {
+            final double size;
 
-  const BrandLogo({super.key, this.size = 52});
+            const BrandLogo({super.key, this.size = 52});
 
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final iconSize = size * (28 / 52);
-    final radius = size * (16 / 52);
+            @override
+            Widget build(BuildContext context) {
+              final primary = Theme.of(context).colorScheme.primary;
+              final iconSize = size * (28 / 52);
+              final radius = size * (16 / 52);
 
-    return SizedBox(
-      width: size,
-      height: size,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: primary.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(radius),
-        ),
-        child: Center(
-          child: Icon(
-            Icons.mosque_rounded,
-            color: primary,
-            size: iconSize,
-          ),
-        ),
-      ),
-    );
-  }
-}
-''', encoding="utf-8")
+              return SizedBox(
+                width: size,
+                height: size,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(radius),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.mosque_rounded,
+                      color: primary,
+                      size: iconSize,
+                    ),
+                  ),
+                ),
+              );
+            }
+          }
+          """, encoding="utf-8")
 
           top = Path("lib/widgets/home/top_header.dart")
           text = top.read_text(encoding="utf-8")
