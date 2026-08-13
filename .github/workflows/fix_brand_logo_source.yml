@@ -2,7 +2,8 @@ name: Standardize NurVerse Brand Logo
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -11,17 +12,17 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Use the Home header brand mark everywhere
-        shell: python
+      - name: Replace app icon branding with the Home header brand mark
         run: |
+          python - <<'PY'
           from pathlib import Path
 
-          brand_logo = Path("lib/widgets/brand_logo.dart")
-          brand_logo.parent.mkdir(parents=True, exist_ok=True)
-          brand_logo.write_text('''import 'package:flutter/material.dart';
+          brand = Path('lib/widgets/brand_logo.dart')
+          brand.parent.mkdir(parents=True, exist_ok=True)
+          brand.write_text("""import 'package:flutter/material.dart';
 
 class BrandLogo extends StatelessWidget {
   final double size;
@@ -38,7 +39,6 @@ class BrandLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
-
     return Container(
       width: size,
       height: size,
@@ -46,22 +46,16 @@ class BrandLogo extends StatelessWidget {
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
-      child: Icon(
-        Icons.mosque_rounded,
-        color: color,
-        size: iconSize,
-      ),
+      child: Icon(Icons.mosque_rounded, color: color, size: iconSize),
     );
   }
 }
-''', encoding="utf-8")
+""", encoding='utf-8')
 
-          header = Path("lib/widgets/home/top_header.dart")
-          text = header.read_text(encoding="utf-8")
-          if "import '../../widgets/brand_logo.dart';" not in text:
-              text = text.replace("import '../../theme/app_theme.dart';", "import '../../theme/app_theme.dart';\nimport '../../widgets/brand_logo.dart';", 1)
-
-          old_header = '''                Container(
+          header = Path('lib/widgets/home/top_header.dart')
+          text = header.read_text(encoding='utf-8')
+          text = text.replace("import '../../theme/app_theme.dart';", "import '../../theme/app_theme.dart';\nimport '../../widgets/brand_logo.dart';", 1)
+          old = """                Container(
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
@@ -69,16 +63,13 @@ class BrandLogo extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(Icons.mosque_rounded, color: theme.colorScheme.primary, size: 28),
-                ),'''
-          if old_header in text:
-              text = text.replace(old_header, "                const BrandLogo(),", 1)
-          header.write_text(text, encoding="utf-8")
+                ),"""
+          text = text.replace(old, '                const BrandLogo(),', 1)
+          header.write_text(text, encoding='utf-8')
 
-          more = Path("lib/screens/more_screen.dart")
-          text = more.read_text(encoding="utf-8")
-          if "import '../widgets/brand_logo.dart';" not in text:
-              text = text.replace("import '../theme/app_theme.dart';", "import '../theme/app_theme.dart';\nimport '../widgets/brand_logo.dart';", 1)
-
+          more = Path('lib/screens/more_screen.dart')
+          text = more.read_text(encoding='utf-8')
+          text = text.replace("import '../theme/app_theme.dart';", "import '../theme/app_theme.dart';\nimport '../widgets/brand_logo.dart';", 1)
           text = text.replace("""Image.asset(
                   'assets/icons/app_icon.png',
                   width: 42,
@@ -109,13 +100,12 @@ class BrandLogo extends StatelessWidget {
           iconSize: 28,
           borderRadius: 15,
         )""", 1)
+          if 'assets/icons/app_icon.png' in text:
+              raise SystemExit('app_icon.png reference remains in more_screen.dart')
+          more.write_text(text, encoding='utf-8')
+          PY
 
-          if "assets/icons/app_icon.png" in text:
-              raise SystemExit("Unexpected app icon reference remains in more_screen.dart")
-          more.write_text(text, encoding="utf-8")
-
-      - name: Commit changes and remove temporary workflow
-        shell: bash
+      - name: Commit and remove temporary workflow
         run: |
           git config user.name "NurVerse Bot"
           git config user.email "actions@users.noreply.github.com"
