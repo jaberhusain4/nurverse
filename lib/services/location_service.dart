@@ -1,22 +1,19 @@
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LocationService {
   const LocationService();
 
   static const Duration _startupCacheMaxAge = Duration(minutes: 30);
-
-  // ==========================================================================
-  // LOCATION SERVICE STATUS
-  // ==========================================================================
+  static const String _latitudeKey = 'nurverse_cached_latitude';
+  static const String _longitudeKey = 'nurverse_cached_longitude';
+  static const String _timestampKey = 'nurverse_cached_location_timestamp';
+  static const String _addressKey = 'nurverse_cached_location_address';
 
   Future<bool> isLocationEnabled() async {
     return Geolocator.isLocationServiceEnabled();
   }
-
-  // ==========================================================================
-  // PERMISSION
-  // ==========================================================================
 
   Future<LocationPermission> requestPermission() async {
     var permission = await Geolocator.checkPermission();
@@ -28,34 +25,49 @@ class LocationService {
     return permission;
   }
 
-  // ==========================================================================
-  // CURRENT POSITION
-  // ==========================================================================
-
+  // Offline-first position resolution.
+  //
+  // Once NurVerse has obtained a valid position at least once, the coordinates
+  // are persisted locally. If Location Services are later turned OFF, those
+  // saved coordinates remain sufficient for adhan's fully local calculations.
   Future<Position> getCurrentPosition() async {
-    final enabled = await isLocationEnabled();
+    final cached = await getPersistedPosition();
 
+    // When Location Services are disabled, never block the core prayer engine
+    // if NurVerse already has a previously saved position.
+    final enabled = await isLocationEnabled();
     if (!enabled) {
+      if (cached != null) return cached;
       throw Exception('Location service is disabled.');
     }
 
     final permission = await requestPermission();
 
     if (permission == LocationPermission.denied) {
+      if (cached != null) return cached;
       throw Exception('Location permission denied.');
     }
 
     if (permission == LocationPermission.deniedForever) {
+      if (cached != null) return cached;
       throw Exception('Location permission permanently denied.');
     }
 
     final lastKnown = await getLastKnownPosition();
 
     if (_isRecentEnough(lastKnown)) {
-      return lastKnown!;
+      await _savePosition(lastKnown!);
+      return lastKnown;
     }
 
-    return _getFreshPosition();
+    try {
+      return await _getFreshPosition();
+    } catch (_) {
+      // GPS/network-assisted location may fail temporarily. A previously
+      // saved position is still valid enough to calculate prayer times.
+      if (cached != null) return cached;
+      rethrow;
+    }
   }
 
   Future<Position> getFreshCurrentPosition() async {
@@ -78,31 +90,88 @@ class LocationService {
     return _getFreshPosition();
   }
 
-  Future<Position> _getFreshPosition() {
-    return Geolocator.getCurrentPosition(
+  Future<Position> _getFreshPosition() async {
+    final position = await Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
     );
+
+    await _savePosition(position);
+    return position;
   }
 
   bool _isRecentEnough(Position? position) {
     if (position == null) return false;
 
     final age = DateTime.now().difference(position.timestamp);
-
     return !age.isNegative && age <= _startupCacheMaxAge;
   }
 
-  // ==========================================================================
-  // COMPATIBILITY API
-  // ==========================================================================
+  Future<void> _savePosition(Position position) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_latitudeKey, position.latitude);
+      await prefs.setDouble(_longitudeKey, position.longitude);
+      await prefs.setInt(
+        _timestampKey,
+        position.timestamp.millisecondsSinceEpoch,
+      );
+    } catch (_) {
+      // Local caching is an optimization. Never let it break prayer times.
+    }
+  }
+
+  Future<Position?> getPersistedPosition() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final latitude = prefs.getDouble(_latitudeKey);
+      final longitude = prefs.getDouble(_longitudeKey);
+
+      if (latitude == null || longitude == null) return null;
+
+      final timestampMs = prefs.getInt(_timestampKey);
+      final timestamp = timestampMs == null
+          ? DateTime.now()
+          : DateTime.fromMillisecondsSinceEpoch(timestampMs);
+
+      return Position(
+        latitude: latitude,
+        longitude: longitude,
+        timestamp: timestamp,
+        accuracy: 0,
+        altitude: 0,
+        altitudeAccuracy: 0,
+        heading: 0,
+        headingAccuracy: 0,
+        speed: 0,
+        speedAccuracy: 0,
+        isMocked: false,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> getPersistedAddress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_addressKey);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _saveAddress(String address) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_addressKey, address);
+    } catch (_) {
+      // Never let address caching break prayer calculations.
+    }
+  }
 
   Future<Position> getCurrentLocation() {
     return getCurrentPosition();
   }
-
-  // ==========================================================================
-  // LAST KNOWN POSITION
-  // ==========================================================================
 
   Future<Position?> getLastKnownPosition() async {
     try {
@@ -112,28 +181,18 @@ class LocationService {
     }
   }
 
-  // ==========================================================================
-  // OFFLINE-FIRST POSITION
-  // ==========================================================================
-
   Future<Position> getBestAvailablePosition() async {
-    final lastKnown = await getLastKnownPosition();
+    final persisted = await getPersistedPosition();
+    if (persisted != null) return persisted;
 
+    final lastKnown = await getLastKnownPosition();
     if (lastKnown != null) {
+      await _savePosition(lastKnown);
       return lastKnown;
     }
 
     return getCurrentPosition();
   }
-
-  // ==========================================================================
-  // REVERSE GEOCODING
-  // ==========================================================================
-  //
-  // Returns a short, human-friendly hierarchy only:
-  // Locality/Sub-locality -> City/District -> Division -> Country.
-  // Street names, house/road details, postal codes and plus codes are omitted.
-  // ==========================================================================
 
   Future<String?> getAddress(Position position) async {
     try {
@@ -143,11 +202,10 @@ class LocationService {
       );
 
       if (places.isEmpty) {
-        return null;
+        return getPersistedAddress();
       }
 
       final place = places.first;
-
       final subLocality = place.subLocality?.trim() ?? '';
       final locality = place.locality?.trim() ?? '';
       final district = place.subAdministrativeArea?.trim() ?? '';
@@ -157,15 +215,8 @@ class LocationService {
       final parts = <String>[];
 
       void addIfUnique(String value) {
-        if (value.isEmpty) {
-          return;
-        }
-
-        // Plus codes / coordinate-like values are not useful as a display
-        // location and should never appear in the Home Screen address.
-        if (_looksLikePlusCode(value) || _looksLikeCoordinates(value)) {
-          return;
-        }
+        if (value.isEmpty) return;
+        if (_looksLikePlusCode(value) || _looksLikeCoordinates(value)) return;
 
         if (parts.any(
           (existing) => existing.toLowerCase() == value.toLowerCase(),
@@ -176,9 +227,6 @@ class LocationService {
         parts.add(value);
       }
 
-      // Keep the most useful human-readable hierarchy. In Bangladesh,
-      // subLocality + locality + district commonly produces values such as:
-      // "Nagar Konda, Savar, Dhaka".
       addIfUnique(subLocality);
       addIfUnique(locality);
       addIfUnique(district);
@@ -186,19 +234,21 @@ class LocationService {
       addIfUnique(country);
 
       if (parts.isEmpty) {
-        return null;
+        return getPersistedAddress();
       }
 
-      return parts.join(', ');
+      final address = parts.join(', ');
+      await _saveAddress(address);
+      return address;
     } catch (_) {
-      // Reverse geocoding failure must NEVER break offline core features.
-      return null;
+      // Reverse geocoding may require platform/network services. The cached
+      // human-readable address keeps the UI useful while fully offline.
+      return getPersistedAddress();
     }
   }
 
   bool _looksLikePlusCode(String value) {
     final normalized = value.replaceAll(' ', '').toUpperCase();
-
     return normalized.contains('+') && normalized.length <= 12;
   }
 
@@ -206,13 +256,8 @@ class LocationService {
     final coordinatePattern = RegExp(
       r'^[-+]?\d+(\.\d+)?\s*[, ]\s*[-+]?\d+(\.\d+)?$',
     );
-
     return coordinatePattern.hasMatch(value.trim());
   }
-
-  // ==========================================================================
-  // SAFE ADDRESS
-  // ==========================================================================
 
   Future<String> getSafeAddress(Position position) async {
     final address = await getAddress(position);
@@ -224,33 +269,17 @@ class LocationService {
     return _formatCoordinates(position);
   }
 
-  // ==========================================================================
-  // LOCATION + ADDRESS
-  // ==========================================================================
-
   Future<(Position, String)> getLocationWithAddress() async {
     final position = await getCurrentPosition();
-
     final address = await getSafeAddress(position);
-
     return (position, address);
   }
-
-  // ==========================================================================
-  // LOCATION + OPTIONAL ADDRESS
-  // ==========================================================================
 
   Future<(Position, String?)> getLocationWithOptionalAddress() async {
     final position = await getCurrentPosition();
-
     final address = await getAddress(position);
-
     return (position, address);
   }
-
-  // ==========================================================================
-  // COORDINATE FALLBACK
-  // ==========================================================================
 
   String _formatCoordinates(Position position) {
     return '${position.latitude.toStringAsFixed(3)}, '
