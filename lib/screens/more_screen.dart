@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../providers/premium_provider.dart';
 import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/common/brand_logo.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -639,12 +640,7 @@ class MoreScreen extends StatelessWidget {
               _buildSettingTile(
                 context,
                 icon: Icons.info_outline_rounded,
-                leadingWidget: Image.asset(
-                  'assets/icons/app_icon.png',
-                  width: 42,
-                  height: 42,
-                  fit: BoxFit.contain,
-                ),
+                leadingWidget: const BrandLogo(size: 42),
                 title: isEnglish ? 'About NurVerse' : 'NurVerse সম্পর্কে',
                 subtitle: 'Version 1.0.0',
                 onTap: () {
@@ -706,12 +702,7 @@ class MoreScreen extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                Image.asset(
-                  'assets/icons/app_icon.png',
-                  width: 28,
-                  height: 28,
-                  fit: BoxFit.contain,
-                ),
+                const BrandLogo(size: 28),
                 const SizedBox(height: 8),
                 Text(
                   'NurVerse',
@@ -2407,12 +2398,7 @@ class MoreScreen extends StatelessWidget {
           color: AppColors.seaBlue.withValues(alpha: .12),
           borderRadius: BorderRadius.circular(15),
         ),
-        child: Image.asset(
-          'assets/icons/app_icon.png',
-          width: 52,
-          height: 52,
-          fit: BoxFit.contain,
-        ),
+        child: const BrandLogo(size: 52),
       ),
       children: [
         Text(

@@ -8,6 +8,7 @@ import '../../providers/settings_provider.dart';
 import '../../screens/auth/google_login_screen.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
+import '../common/brand_logo.dart';
 
 class TopHeader extends StatelessWidget {
   final String greeting;
@@ -229,15 +230,7 @@ class TopHeader extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(Icons.mosque_rounded, color: theme.colorScheme.primary, size: 28),
-                ),
+                const BrandLogo(size: 52),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
