@@ -1,0 +1,65 @@
+name: Fix NurVerse Brand Icons
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Replace moon branding with NurVerse logo
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("lib/screens/more_screen.dart")
+          text = path.read_text(encoding="utf-8")
+
+          old = """              _buildSettingTile(\n                context,\n                icon: Icons.nightlight_round,\n                title: isEnglish ? 'About NurVerse' : 'NurVerse সম্পর্কে',\n                subtitle: 'Version 1.0.0',\n                onTap: () {\n                  _showAboutDialog(context, settings);\n                },\n              ),"""
+          new = """              _buildSettingTile(\n                context,\n                icon: Icons.info_outline_rounded,\n                leadingWidget: Image.asset(\n                  'assets/icons/app_icon.png',\n                  width: 42,\n                  height: 42,\n                  fit: BoxFit.contain,\n                ),\n                title: isEnglish ? 'About NurVerse' : 'NurVerse সম্পর্কে',\n                subtitle: 'Version 1.0.0',\n                onTap: () {\n                  _showAboutDialog(context, settings);\n                },\n              ),"""
+          if old not in text:
+              raise SystemExit("About tile pattern not found")
+          text = text.replace(old, new, 1)
+
+          old = """          Center(\n            child: Column(\n              children: [\n                Icon(\n                  Icons.nightlight_round,\n                  size: 24,\n                  color: AppColors.seaBlue.withValues(alpha: .65),\n                ),"""
+          new = """          Center(\n            child: Column(\n              children: [\n                Image.asset(\n                  'assets/icons/app_icon.png',\n                  width: 28,\n                  height: 28,\n                  fit: BoxFit.contain,\n                ),"""
+          if old not in text:
+              raise SystemExit("Footer pattern not found")
+          text = text.replace(old, new, 1)
+
+          old = """  Widget _buildSettingTile(\n    BuildContext context, {\n    required IconData icon,\n    required String title,\n    required String subtitle,\n    required VoidCallback onTap,\n    IconData? trailing,\n    bool premium = false,\n  }) {"""
+          new = """  Widget _buildSettingTile(\n    BuildContext context, {\n    required IconData icon,\n    required String title,\n    required String subtitle,\n    required VoidCallback onTap,\n    IconData? trailing,\n    Widget? leadingWidget,\n    bool premium = false,\n  }) {"""
+          if old not in text:
+              raise SystemExit("Setting tile signature not found")
+          text = text.replace(old, new, 1)
+
+          old = """              _iconContainer(icon, iconColor),"""
+          new = """              leadingWidget ?? _iconContainer(icon, iconColor),"""
+          if old not in text:
+              raise SystemExit("Setting tile leading pattern not found")
+          text = text.replace(old, new, 1)
+
+          old = """        child: const Icon(\n          Icons.nightlight_round,\n          color: AppColors.seaBlue,\n          size: 28,\n        ),"""
+          new = """        child: Image.asset(\n          'assets/icons/app_icon.png',\n          width: 52,\n          height: 52,\n          fit: BoxFit.contain,\n        ),"""
+          if old not in text:
+              raise SystemExit("About dialog pattern not found")
+          text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding="utf-8")
+
+      - name: Commit and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "NurVerse Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add lib/screens/more_screen.dart .github/workflows/fix_nurverse_brand_icons.yml
+          git rm .github/workflows/fix_nurverse_brand_icons.yml
+          git commit -m "Replace moon branding with NurVerse logo"
+          git push
