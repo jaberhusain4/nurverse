@@ -59,11 +59,7 @@ class BrandLogo extends StatelessWidget {
           header = Path("lib/widgets/home/top_header.dart")
           text = header.read_text(encoding="utf-8")
           if "import '../../widgets/brand_logo.dart';" not in text:
-              text = text.replace(
-                  "import '../../theme/app_theme.dart';",
-                  "import '../../theme/app_theme.dart';\nimport '../../widgets/brand_logo.dart';",
-                  1,
-              )
+              text = text.replace("import '../../theme/app_theme.dart';", "import '../../theme/app_theme.dart';\nimport '../../widgets/brand_logo.dart';", 1)
 
           old_header = '''                Container(
                   width: 52,
@@ -74,68 +70,48 @@ class BrandLogo extends StatelessWidget {
                   ),
                   child: Icon(Icons.mosque_rounded, color: theme.colorScheme.primary, size: 28),
                 ),'''
-          new_header = '''                const BrandLogo(),'''
           if old_header in text:
-              text = text.replace(old_header, new_header, 1)
+              text = text.replace(old_header, "                const BrandLogo(),", 1)
           header.write_text(text, encoding="utf-8")
 
           more = Path("lib/screens/more_screen.dart")
           text = more.read_text(encoding="utf-8")
           if "import '../widgets/brand_logo.dart';" not in text:
-              text = text.replace(
-                  "import '../theme/app_theme.dart';",
-                  "import '../theme/app_theme.dart';\nimport '../widgets/brand_logo.dart';",
-                  1,
-              )
+              text = text.replace("import '../theme/app_theme.dart';", "import '../theme/app_theme.dart';\nimport '../widgets/brand_logo.dart';", 1)
 
-          text = text.replace(
-              """Image.asset(
+          text = text.replace("""Image.asset(
                   'assets/icons/app_icon.png',
                   width: 42,
                   height: 42,
                   fit: BoxFit.contain,
-                )""",
-              """const BrandLogo(
+                )""", """const BrandLogo(
                   size: 42,
                   iconSize: 23,
                   borderRadius: 13,
-                )""",
-              1,
-          )
-
-          text = text.replace(
-              """Image.asset(
+                )""", 1)
+          text = text.replace("""Image.asset(
                   'assets/icons/app_icon.png',
                   width: 28,
                   height: 28,
                   fit: BoxFit.contain,
-                )""",
-              """const BrandLogo(
+                )""", """const BrandLogo(
                   size: 28,
                   iconSize: 16,
                   borderRadius: 9,
-                )""",
-              1,
-          )
-
-          text = text.replace(
-              """Image.asset(
+                )""", 1)
+          text = text.replace("""Image.asset(
           'assets/icons/app_icon.png',
           width: 52,
           height: 52,
           fit: BoxFit.contain,
-        )""",
-              """const BrandLogo(
+        )""", """const BrandLogo(
           size: 52,
           iconSize: 28,
           borderRadius: 15,
-        )""",
-              1,
-          )
+        )""", 1)
 
           if "assets/icons/app_icon.png" in text:
               raise SystemExit("Unexpected app icon reference remains in more_screen.dart")
-
           more.write_text(text, encoding="utf-8")
 
       - name: Commit changes and remove temporary workflow
