@@ -638,7 +638,13 @@ class MoreScreen extends StatelessWidget {
             children: [
               _buildSettingTile(
                 context,
-                icon: Icons.nightlight_round,
+                icon: Icons.info_outline_rounded,
+                leadingWidget: Image.asset(
+                  'assets/icons/app_icon.png',
+                  width: 42,
+                  height: 42,
+                  fit: BoxFit.contain,
+                ),
                 title: isEnglish ? 'About NurVerse' : 'NurVerse সম্পর্কে',
                 subtitle: 'Version 1.0.0',
                 onTap: () {
@@ -700,10 +706,11 @@ class MoreScreen extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                Icon(
-                  Icons.nightlight_round,
-                  size: 24,
-                  color: AppColors.seaBlue.withValues(alpha: .65),
+                Image.asset(
+                  'assets/icons/app_icon.png',
+                  width: 28,
+                  height: 28,
+                  fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -993,6 +1000,7 @@ class MoreScreen extends StatelessWidget {
     required String subtitle,
     required VoidCallback onTap,
     IconData? trailing,
+    Widget? leadingWidget,
     bool premium = false,
   }) {
     final iconColor = AppColors.seaBlue;
@@ -1005,7 +1013,7 @@ class MoreScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
           child: Row(
             children: [
-              _iconContainer(icon, iconColor),
+              leadingWidget ?? _iconContainer(icon, iconColor),
               const SizedBox(width: 13),
               Expanded(
                 child: Column(
@@ -2399,10 +2407,11 @@ class MoreScreen extends StatelessWidget {
           color: AppColors.seaBlue.withValues(alpha: .12),
           borderRadius: BorderRadius.circular(15),
         ),
-        child: const Icon(
-          Icons.nightlight_round,
-          color: AppColors.seaBlue,
-          size: 28,
+        child: Image.asset(
+          'assets/icons/app_icon.png',
+          width: 52,
+          height: 52,
+          fit: BoxFit.contain,
         ),
       ),
       children: [
