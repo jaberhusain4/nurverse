@@ -1,13 +1,11 @@
 // lib/controllers/prayer_controller.dart
 
 import 'dart:async';
-
 import 'package:adhan/adhan.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
-
 import '../services/jamaat_service.dart';
 import '../services/location_service.dart';
 import '../services/prayer_calculation_config.dart';
@@ -23,14 +21,11 @@ class PrayerController extends ChangeNotifier {
   String? _error;
   Position? _position;
   PrayerCalculationConfig _calculationConfig = PrayerCalculationConfig.defaults;
-  Map<String, int> _prayerAdjustments = <String, int>{
-    'Fajr': 0, 'Dhuhr': 0, 'Asr': 0, 'Maghrib': 0, 'Isha': 0,
-  };
+  Map<String, int> _prayerAdjustments = {'Fajr': 0, 'Dhuhr': 0, 'Asr': 0, 'Maghrib': 0, 'Isha': 0};
 
   PrayerCalculationConfig get calculationConfig => _calculationConfig;
   CalculationMethod get calculationMethod => _calculationConfig.method;
   Madhab get madhhab => _calculationConfig.madhab;
-
   String _currentLocationName = 'লোকেশন লোড হচ্ছে...';
   String _currentPrayer = 'ওয়াক্ত নেই';
   String _previousPrayer = '';
@@ -52,12 +47,7 @@ class PrayerController extends ChangeNotifier {
   String _prayerStatus = 'সালাতের সময় গণনা করা হচ্ছে...';
   final List<Map<String, dynamic>> _prayers = [];
 
-  DateTime? _ishraqStart, _ishraqEnd;
-  DateTime? _duhaStart, _duhaEnd;
-  DateTime? _awwwabinStart, _awwwabinEnd;
-  DateTime? _tahajjudStart, _tahajjudEnd;
-  DateTime? _prohibitedStart, _prohibitedEnd;
-  DateTime? _makruhStart, _makruhEnd;
+  DateTime? _ishraqStart, _ishraqEnd, _duhaStart, _duhaEnd, _awwwabinStart, _awwwabinEnd, _tahajjudStart, _tahajjudEnd, _prohibitedStart, _prohibitedEnd, _makruhStart, _makruhEnd;
 
   bool get loading => _loading;
   String? get error => _error;
@@ -88,7 +78,6 @@ class PrayerController extends ChangeNotifier {
   Position? get position => _position;
   String get currentPrayerTime => _currentPrayerStart;
   String get iqamahTime => _currentIqamahTime;
-
   DateTime? get ishraqStart => _ishraqStart;
   DateTime? get ishraqEnd => _ishraqEnd;
   DateTime? get duhaStart => _duhaStart;
@@ -101,7 +90,6 @@ class PrayerController extends ChangeNotifier {
   DateTime? get prohibitedEnd => _prohibitedEnd;
   DateTime? get makruhStart => _makruhStart;
   DateTime? get makruhEnd => _makruhEnd;
-
   String get ishraqTime => _windowText(_ishraqStart, _ishraqEnd);
   String get duhaTime => _windowText(_duhaStart, _duhaEnd);
   String get awwabinTime => _windowText(_awwwabinStart, _awwwabinEnd);
@@ -111,9 +99,7 @@ class PrayerController extends ChangeNotifier {
     _calculationConfig = calculationConfig ?? PrayerCalculationConfig.defaults;
     _updateWithoutLocation();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) => updatePrayerTimes());
-    JamaatService.initialize().then((_) {
-      if (_position != null) updatePrayerTimes();
-    });
+    JamaatService.initialize().then((_) { if (_position != null) updatePrayerTimes(); });
     determinePositionAndAddress();
   }
 
@@ -124,9 +110,7 @@ class PrayerController extends ChangeNotifier {
   }
 
   void updateCalculationSettings({required String calculationMethod, required String madhhab}) {
-    setCalculationConfig(PrayerCalculationConfig.fromSettings(
-      calculationMethod: calculationMethod, madhhab: madhhab,
-    ));
+    setCalculationConfig(PrayerCalculationConfig.fromSettings(calculationMethod: calculationMethod, madhhab: madhhab));
   }
 
   void updatePrayerAdjustments(Map<String, int> adjustments) {
@@ -160,9 +144,7 @@ class PrayerController extends ChangeNotifier {
           if (district.isNotEmpty && district != locality && district != subLocality) parts.add(district);
           if (country.isNotEmpty && country.toLowerCase() == 'bangladesh') parts.add('Bangladesh');
           _currentLocationName = parts.isNotEmpty ? parts.join(', ') : 'লোকেশন পাওয়া যায়নি';
-        } else {
-          _currentLocationName = _coordinateFallback(position);
-        }
+        } else { _currentLocationName = _coordinateFallback(position); }
       } catch (_) { _currentLocationName = _coordinateFallback(position); }
       updatePrayerTimes(notify: false);
     } catch (e) {
@@ -179,18 +161,14 @@ class PrayerController extends ChangeNotifier {
 
   Future<void> refreshPrayerTimes() async {
     _loading = true; _error = null; notifyListeners();
-    try {
-      if (_position == null) await determinePositionAndAddress();
-      else updatePrayerTimes(notify: false);
-    } catch (e) { _error = e.toString(); }
+    try { if (_position == null) await determinePositionAndAddress(); else updatePrayerTimes(notify: false); }
+    catch (e) { _error = e.toString(); }
     finally { _loading = false; notifyListeners(); }
   }
 
   void updatePrayerTimes({bool notify = true}) {
     final Position? position = _position;
-    if (position == null) {
-      _updateWithoutLocation(); if (notify) notifyListeners(); return;
-    }
+    if (position == null) { _updateWithoutLocation(); if (notify) notifyListeners(); return; }
     final DateTime now = DateTime.now();
     final PrayerTimes prayerTimes = _prayerEngine.getPrayerTimes(position: position, date: now, config: _calculationConfig);
     final DateTime fajr = _applyPrayerAdjustment('Fajr', _safeTime(prayerTimes.fajr, DateTime(now.year, now.month, now.day, 5)));
@@ -215,36 +193,17 @@ class PrayerController extends ChangeNotifier {
   DateTime _applyPrayerAdjustment(String prayerName, DateTime time) => time.add(Duration(minutes: _prayerAdjustments[prayerName]?.clamp(-60, 60) ?? 0));
 
   void _calculateSpecialWindows({required Map<String, DateTime> times, required DateTime now}) {
-    final DateTime sunrise = times['Sunrise']!;
-    final DateTime dhuhr = times['Dhuhr']!;
-    final DateTime maghrib = times['Maghrib']!;
-    final DateTime isha = times['Isha']!;
-    final DateTime tomorrowFajr = _tomorrowPrayerTime(now, PrayerField.fajr);
-
-    // Ishraq begins after the early post-sunrise prohibition period.
-    _ishraqStart = sunrise.add(const Duration(minutes: 15));
-    _ishraqEnd = dhuhr.subtract(const Duration(minutes: 10));
-    // Duha has the same valid daylight window, represented separately for the UI.
-    _duhaStart = sunrise.add(const Duration(minutes: 15));
-    _duhaEnd = dhuhr.subtract(const Duration(minutes: 10));
-    // Awwabin window: after Maghrib until Isha.
-    _awwwabinStart = maghrib;
-    _awwwabinEnd = isha;
-    // Tahajjud: last third of the night, ending at Fajr.
-    _tahajjudStart = _calculateTahajjudStart(now: now, todayIsha: isha, tomorrowFajr: tomorrowFajr);
-    _tahajjudEnd = tomorrowFajr;
-
-    final DateTime sunriseProhibitedEnd = sunrise.add(const Duration(minutes: 15));
-    final DateTime zawalStart = dhuhr.subtract(const Duration(minutes: 10));
-    final DateTime sunsetStart = maghrib.subtract(const Duration(minutes: 15));
+    final DateTime sunrise = times['Sunrise']!; final DateTime dhuhr = times['Dhuhr']!; final DateTime maghrib = times['Maghrib']!; final DateTime isha = times['Isha']!; final DateTime tomorrowFajr = _tomorrowPrayerTime(now, PrayerField.fajr);
+    _ishraqStart = sunrise.add(const Duration(minutes: 15)); _ishraqEnd = dhuhr.subtract(const Duration(minutes: 10));
+    _duhaStart = sunrise.add(const Duration(minutes: 15)); _duhaEnd = dhuhr.subtract(const Duration(minutes: 10));
+    _awwwabinStart = maghrib; _awwwabinEnd = isha;
+    _tahajjudStart = _calculateTahajjudStart(now: now, todayIsha: isha, tomorrowFajr: tomorrowFajr); _tahajjudEnd = tomorrowFajr;
+    final DateTime sunriseProhibitedEnd = sunrise.add(const Duration(minutes: 15)); final DateTime zawalStart = dhuhr.subtract(const Duration(minutes: 10)); final DateTime sunsetStart = maghrib.subtract(const Duration(minutes: 15));
     _prohibitedStart = null; _prohibitedEnd = null;
     if (!now.isBefore(sunrise) && now.isBefore(sunriseProhibitedEnd)) { _prohibitedStart = sunrise; _prohibitedEnd = sunriseProhibitedEnd; }
     else if (!now.isBefore(zawalStart) && now.isBefore(dhuhr)) { _prohibitedStart = zawalStart; _prohibitedEnd = dhuhr; }
     else if (!now.isBefore(sunsetStart) && now.isBefore(maghrib)) { _prohibitedStart = sunsetStart; _prohibitedEnd = maghrib; }
-
-    final DateTime morningMakruhStart = sunrise.subtract(const Duration(minutes: 15));
-    final DateTime zawalMakruhEnd = dhuhr.add(const Duration(minutes: 5));
-    final DateTime eveningMakruhEnd = maghrib.add(const Duration(minutes: 15));
+    final DateTime morningMakruhStart = sunrise.subtract(const Duration(minutes: 15)); final DateTime zawalMakruhEnd = dhuhr.add(const Duration(minutes: 5)); final DateTime eveningMakruhEnd = maghrib.add(const Duration(minutes: 15));
     _makruhStart = null; _makruhEnd = null;
     if (!now.isBefore(morningMakruhStart) && now.isBefore(sunriseProhibitedEnd)) { _makruhStart = morningMakruhStart; _makruhEnd = sunriseProhibitedEnd; }
     else if (!now.isBefore(zawalStart) && now.isBefore(zawalMakruhEnd)) { _makruhStart = zawalStart; _makruhEnd = zawalMakruhEnd; }
@@ -252,11 +211,8 @@ class PrayerController extends ChangeNotifier {
   }
 
   void _buildPrayerList({required Map<String, DateTime> times, required DateTime now}) {
-    final bool isFriday = now.weekday == DateTime.friday;
-    _prayers.clear();
-    void add(String name, String nameBn, String nameAr, DateTime start, DateTime end, String jamaat, String category) {
-      _prayers.add({'name': name, 'nameBn': nameBn, 'nameAr': nameAr, 'start': _formatTime(start), 'end': _formatTime(end), 'jamaat': jamaat, 'isCurrent': false, 'category': category});
-    }
+    final bool isFriday = now.weekday == DateTime.friday; _prayers.clear();
+    void add(String name, String nameBn, String nameAr, DateTime start, DateTime end, String jamaat, String category) => _prayers.add({'name': name, 'nameBn': nameBn, 'nameAr': nameAr, 'start': _formatTime(start), 'end': _formatTime(end), 'jamaat': jamaat, 'isCurrent': false, 'category': category});
     add('Fajr', 'ফজর', 'الفجر', times['Fajr']!, times['Sunrise']!, JamaatService.get('Fajr'), 'obligatory');
     add(isFriday ? 'Jumuah' : 'Dhuhr', isFriday ? "জুমু'আ" : 'যোহর', isFriday ? 'الجمعة' : 'الظهر', times['Dhuhr']!, times['Asr']!, JamaatService.get('Dhuhr'), 'obligatory');
     add('Asr', 'আসর', 'العصر', times['Asr']!, times['Maghrib']!, JamaatService.get('Asr'), 'obligatory');
@@ -269,31 +225,16 @@ class PrayerController extends ChangeNotifier {
   }
 
   void _updatePrayerState({required Map<String, DateTime> times, required DateTime now}) {
-    final DateTime fajr = times['Fajr']!; final DateTime sunrise = times['Sunrise']!; final DateTime dhuhr = times['Dhuhr']!; final DateTime asr = times['Asr']!; final DateTime maghrib = times['Maghrib']!; final DateTime isha = times['Isha']!;
-    final bool isFriday = now.weekday == DateTime.friday; final DateTime tomorrowFajr = _tomorrowPrayerTime(now, PrayerField.fajr);
-    final DateTime tahajjudStart = _tahajjudStart!;
+    final DateTime fajr = times['Fajr']!; final DateTime sunrise = times['Sunrise']!; final DateTime dhuhr = times['Dhuhr']!; final DateTime asr = times['Asr']!; final DateTime maghrib = times['Maghrib']!; final DateTime isha = times['Isha']!; final bool isFriday = now.weekday == DateTime.friday; final DateTime tomorrowFajr = _tomorrowPrayerTime(now, PrayerField.fajr); final DateTime tahajjudStart = _tahajjudStart!;
     _clearCurrentPrayer();
-    if (now.isBefore(fajr)) {
-      _currentPrayer = 'ইশা'; _currentPrayerStart = _formatTime(_yesterdayIsha(now)); _currentPrayerEnd = _formatTime(fajr); _currentIqamahTime = JamaatService.get('Isha'); _previousPrayer = 'ইশা'; _previousPrayerTime = JamaatService.get('Isha'); _previousPrayerText = 'ইশার ওয়াক্ত চলছে'; _nextPrayerName = 'ফজর'; _nextPrayer = 'ফজর'; _nextPrayerTime = _formatTime(fajr); _prayerStatus = 'ফজরের সময় শুরু হতে চলেছে'; return;
-    }
-    if (now.isBefore(sunrise)) {
-      _currentPrayer = 'ফজর'; _currentPrayerStart = _formatTime(fajr); _currentPrayerEnd = _formatTime(sunrise); _currentIqamahTime = JamaatService.get('Fajr'); _previousPrayer = 'ইশা'; _previousPrayerTime = JamaatService.get('Isha'); _previousPrayerText = 'ইশা শেষ হয়েছে'; _nextPrayerName = isFriday ? "জুমু'আ" : 'যোহর'; _nextPrayer = _nextPrayerName; _nextPrayerTime = _formatTime(dhuhr); _prayerStatus = 'ফজরের ওয়াক্ত চলছে'; _setCurrentPrayer('Fajr'); return;
-    }
-    if (now.isBefore(dhuhr)) {
-      _currentPrayer = 'ওয়াক্ত নেই'; _currentPrayerStart = _formatTime(sunrise); _currentPrayerEnd = _formatTime(dhuhr); _currentIqamahTime = '--:--'; _previousPrayer = 'ফজর'; _previousPrayerTime = _formatTime(fajr); _previousPrayerText = 'ফজরের ওয়াক্ত শেষ হয়েছে'; _nextPrayerName = isFriday ? "জুমু'আ" : 'যোহর'; _nextPrayer = _nextPrayerName; _nextPrayerTime = _formatTime(dhuhr); _prayerStatus = isFriday ? "পরবর্তী সালাত: জুমু'আ" : 'পরবর্তী সালাত: যোহর'; return;
-    }
-    if (now.isBefore(asr)) {
-      _currentPrayer = isFriday ? "জুমু'আ" : 'যোহর'; _currentPrayerStart = _formatTime(dhuhr); _currentPrayerEnd = _formatTime(asr); _currentIqamahTime = JamaatService.get('Dhuhr'); _previousPrayer = 'ফজর'; _previousPrayerTime = _formatTime(fajr); _previousPrayerText = 'ফজর শেষ হয়েছে'; _nextPrayerName = 'আসর'; _nextPrayer = 'আসর'; _nextPrayerTime = _formatTime(asr); _prayerStatus = isFriday ? "জুমু'আর ওয়াক্ত চলছে" : 'যোহরের ওয়াক্ত চলছে'; _setCurrentPrayer(isFriday ? 'Jumuah' : 'Dhuhr'); return;
-    }
-    if (now.isBefore(maghrib)) {
-      _currentPrayer = 'আসর'; _currentPrayerStart = _formatTime(asr); _currentPrayerEnd = _formatTime(maghrib); _currentIqamahTime = JamaatService.get('Asr'); _previousPrayer = isFriday ? "জুমু'আ" : 'যোহর'; _previousPrayerTime = _formatTime(dhuhr); _previousPrayerText = '$_previousPrayer শেষ হয়েছে'; _nextPrayerName = 'মাগরিব'; _nextPrayer = 'মাগরিব'; _nextPrayerTime = _formatTime(maghrib); _prayerStatus = 'আসরের ওয়াক্ত চলছে'; _setCurrentPrayer('Asr'); return;
-    }
-    if (now.isBefore(isha)) {
-      _currentPrayer = 'মাগরিব'; _currentPrayerStart = _formatTime(maghrib); _currentPrayerEnd = _formatTime(isha); _currentIqamahTime = JamaatService.get('Maghrib'); _previousPrayer = 'আসর'; _previousPrayerTime = _formatTime(asr); _previousPrayerText = 'আসর শেষ হয়েছে'; _nextPrayerName = 'ইশা'; _nextPrayer = 'ইশা'; _nextPrayerTime = _formatTime(isha); _prayerStatus = 'মাগরিবের ওয়াক্ত চলছে'; _setCurrentPrayer('Maghrib'); return;
-    }
+    if (now.isBefore(fajr)) { _currentPrayer = 'ইশা'; _currentPrayerStart = _formatTime(_yesterdayIsha(now)); _currentPrayerEnd = _formatTime(fajr); _currentIqamahTime = JamaatService.get('Isha'); _previousPrayer = 'ইশা'; _previousPrayerTime = JamaatService.get('Isha'); _previousPrayerText = 'ইশার ওয়াক্ত চলছে'; _nextPrayerName = 'ফজর'; _nextPrayer = 'ফজর'; _nextPrayerTime = _formatTime(fajr); _prayerStatus = 'ফজরের সময় শুরু হতে চলেছে'; return; }
+    if (now.isBefore(sunrise)) { _currentPrayer = 'ফজর'; _currentPrayerStart = _formatTime(fajr); _currentPrayerEnd = _formatTime(sunrise); _currentIqamahTime = JamaatService.get('Fajr'); _previousPrayer = 'ইশা'; _previousPrayerTime = JamaatService.get('Isha'); _previousPrayerText = 'ইশা শেষ হয়েছে'; _nextPrayerName = isFriday ? "জুমু'আ" : 'যোহর'; _nextPrayer = _nextPrayerName; _nextPrayerTime = _formatTime(dhuhr); _prayerStatus = 'ফজরের ওয়াক্ত চলছে'; _setCurrentPrayer('Fajr'); return; }
+    if (now.isBefore(dhuhr)) { _currentPrayer = 'ওয়াক্ত নেই'; _currentPrayerStart = _formatTime(sunrise); _currentPrayerEnd = _formatTime(dhuhr); _currentIqamahTime = '--:--'; _previousPrayer = 'ফজর'; _previousPrayerTime = _formatTime(fajr); _previousPrayerText = 'ফজরের ওয়াক্ত শেষ হয়েছে'; _nextPrayerName = isFriday ? "জুমু'আ" : 'যোহর'; _nextPrayer = _nextPrayerName; _nextPrayerTime = _formatTime(dhuhr); _prayerStatus = isFriday ? "পরবর্তী সালাত: জুমু'আ" : 'পরবর্তী সালাত: যোহর'; return; }
+    if (now.isBefore(asr)) { _currentPrayer = isFriday ? "জুমু'আ" : 'যোহর'; _currentPrayerStart = _formatTime(dhuhr); _currentPrayerEnd = _formatTime(asr); _currentIqamahTime = JamaatService.get('Dhuhr'); _previousPrayer = 'ফজর'; _previousPrayerTime = _formatTime(fajr); _previousPrayerText = 'ফজর শেষ হয়েছে'; _nextPrayerName = 'আসর'; _nextPrayer = 'আসর'; _nextPrayerTime = _formatTime(asr); _prayerStatus = isFriday ? "জুমু'আর ওয়াক্ত চলছে" : 'যোহরের ওয়াক্ত চলছে'; _setCurrentPrayer(isFriday ? 'Jumuah' : 'Dhuhr'); return; }
+    if (now.isBefore(maghrib)) { _currentPrayer = 'আসর'; _currentPrayerStart = _formatTime(asr); _currentPrayerEnd = _formatTime(maghrib); _currentIqamahTime = JamaatService.get('Asr'); _previousPrayer = isFriday ? "জুমু'আ" : 'যোহর'; _previousPrayerTime = _formatTime(dhuhr); _previousPrayerText = '$_previousPrayer শেষ হয়েছে'; _nextPrayerName = 'মাগরিব'; _nextPrayer = 'মাগরিব'; _nextPrayerTime = _formatTime(maghrib); _prayerStatus = 'আসরের ওয়াক্ত চলছে'; _setCurrentPrayer('Asr'); return; }
+    if (now.isBefore(isha)) { _currentPrayer = 'মাগরিব'; _currentPrayerStart = _formatTime(maghrib); _currentPrayerEnd = _formatTime(isha); _currentIqamahTime = JamaatService.get('Maghrib'); _previousPrayer = 'আসর'; _previousPrayerTime = _formatTime(asr); _previousPrayerText = 'আসর শেষ হয়েছে'; _nextPrayerName = 'ইশা'; _nextPrayer = 'ইশা'; _nextPrayerTime = _formatTime(isha); _prayerStatus = 'মাগরিবের ওয়াক্ত চলছে'; _setCurrentPrayer('Maghrib'); return; }
     _currentPrayer = 'ইশা'; _currentPrayerStart = _formatTime(isha); _currentPrayerEnd = _formatTime(tomorrowFajr); _currentIqamahTime = JamaatService.get('Isha'); _previousPrayer = 'মাগরিব'; _previousPrayerTime = _formatTime(maghrib); _previousPrayerText = 'মাগরিব শেষ হয়েছে';
-    if (now.isBefore(tahajjudStart)) { _nextPrayerName = 'তাহাজ্জুদ'; _nextPrayer = 'তাহাজ্জুদ'; _nextPrayerTime = _formatTime(tahajjudStart); }
-    else { _nextPrayerName = 'ফজর'; _nextPrayer = 'ফজর'; _nextPrayerTime = _formatTime(tomorrowFajr); }
+    if (now.isBefore(tahajjudStart)) { _nextPrayerName = 'তাহাজ্জুদ'; _nextPrayer = 'তাহাজ্জুদ'; _nextPrayerTime = _formatTime(tahajjudStart); } else { _nextPrayerName = 'ফজর'; _nextPrayer = 'ফজর'; _nextPrayerTime = _formatTime(tomorrowFajr); }
     _prayerStatus = 'ইশার ওয়াক্ত চলছে'; _setCurrentPrayer('Isha');
   }
 
@@ -387,7 +328,6 @@ class PrayerController extends ChangeNotifier {
 
   String _formatTime(DateTime time) => DateFormat('hh:mm a').format(time);
   String _formatDuration(Duration duration) { if (duration.isNegative) return '00:00:00'; final int hours = duration.inHours; final int minutes = duration.inMinutes.remainder(60); final int seconds = duration.inSeconds.remainder(60); return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}'; }
-
   @override
   void dispose() { _ticker?.cancel(); _ticker = null; super.dispose(); }
 }
