@@ -32,12 +32,12 @@ class CurrentPrayerCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final borderColor = const Color(0x220288D1);
-
     final shadowColor =
         isDark ? Colors.black.withValues(alpha: .35) : const Color(0x140288D1);
 
-    final infoBg =
-        isDark ? Colors.white.withValues(alpha: .05) : const Color(0xFFEAF6FC);
+    // Keep every card-like surface opaque. Accent chips/icons may still use
+    // controlled alpha because they are decorative indicators, not cards.
+    final infoBg = theme.cardColor;
 
     final chipBg =
         status.contains("মাকরুহ")
@@ -85,9 +85,7 @@ class CurrentPrayerCard extends StatelessWidget {
                   size: 24,
                 ),
               ),
-
               const SizedBox(width: 14),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,9 +96,7 @@ class CurrentPrayerCard extends StatelessWidget {
                         color: theme.hintColor,
                       ),
                     ),
-
                     const SizedBox(height: 2),
-
                     Text(
                       currentPrayer,
                       style: theme.textTheme.headlineSmall?.copyWith(
@@ -110,7 +106,6 @@ class CurrentPrayerCard extends StatelessWidget {
                   ],
                 ),
               ),
-
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
@@ -131,29 +126,21 @@ class CurrentPrayerCard extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 20),
-
           Text(
             currentPrayerTime,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 6),
-
           Text(
             "Next • $nextPrayer  •  $nextPrayerTime",
             style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
           ),
-
           const SizedBox(height: 20),
-
           AppProgressBar(value: progress),
-
           const SizedBox(height: 18),
-
           Row(
             children: [
               Expanded(
@@ -163,9 +150,7 @@ class CurrentPrayerCard extends StatelessWidget {
                   backgroundColor: infoBg,
                 ),
               ),
-
               const SizedBox(width: 10),
-
               Expanded(
                 child: _InfoItem(
                   title: "Next",
@@ -173,9 +158,7 @@ class CurrentPrayerCard extends StatelessWidget {
                   backgroundColor: infoBg,
                 ),
               ),
-
               const SizedBox(width: 10),
-
               Expanded(
                 child: _InfoItem(
                   title: "Time",
@@ -185,10 +168,8 @@ class CurrentPrayerCard extends StatelessWidget {
               ),
             ],
           ),
-
           if (sunrise != null || sunset != null) ...[
             const SizedBox(height: 18),
-
             Row(
               children: [
                 if (sunrise != null)
@@ -199,10 +180,8 @@ class CurrentPrayerCard extends StatelessWidget {
                       backgroundColor: infoBg,
                     ),
                   ),
-
                 if (sunrise != null && sunset != null)
                   const SizedBox(width: 10),
-
                 if (sunset != null)
                   Expanded(
                     child: _InfoItem(
@@ -252,9 +231,7 @@ class _InfoItem extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-
           const SizedBox(height: 6),
-
           Text(
             value,
             textAlign: TextAlign.center,
