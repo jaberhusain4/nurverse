@@ -145,29 +145,41 @@ class _SunBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 8),
-        decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(14)),
-        child: Row(
+        constraints: const BoxConstraints(minHeight: 64),
+        decoration: BoxDecoration(
+          color: primary.withValues(alpha: .045),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 1),
-              child: Icon(icon, size: 18, color: primary),
+            Positioned(
+              left: 14,
+              child: Icon(icon, size: 19, color: primary),
             ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 2),
-                    Text(value.isEmpty ? '--:--' : value, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w800)),
-                  ],
-                ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 42, vertical: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value.isEmpty ? '--:--' : value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w800),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 22),
           ],
         ),
       );
