@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../localization/app_localizations.dart';
+import '../../localization/app_localizations_x.dart';
 import '../common/app_progress_bar.dart';
 
 class CurrentPrayerCard extends StatelessWidget {
@@ -28,28 +31,29 @@ class CurrentPrayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     final borderColor = const Color(0x220288D1);
     final shadowColor =
         isDark ? Colors.black.withValues(alpha: .35) : const Color(0x140288D1);
-
-    // Keep every card-like surface opaque. Accent chips/icons may still use
-    // controlled alpha because they are decorative indicators, not cards.
     final infoBg = theme.cardColor;
 
-    final chipBg =
-        status.contains("মাকরুহ")
-            ? Colors.red.withValues(alpha: .10)
-            : status.contains("জামাত")
+    final localizedStatus = l10n.prayerStatus(status);
+    final statusForColor = status.toLowerCase();
+    final chipBg = statusForColor.contains('মাকরুহ') ||
+            statusForColor.contains('makruh')
+        ? Colors.red.withValues(alpha: .10)
+        : statusForColor.contains('জামাত') ||
+                statusForColor.contains('jama')
             ? Colors.orange.withValues(alpha: .12)
             : Colors.green.withValues(alpha: .10);
-
-    final chipText =
-        status.contains("মাকরুহ")
-            ? Colors.red
-            : status.contains("জামাত")
+    final chipText = statusForColor.contains('মাকরুহ') ||
+            statusForColor.contains('makruh')
+        ? Colors.red
+        : statusForColor.contains('জামাত') ||
+                statusForColor.contains('jama')
             ? Colors.orange
             : Colors.green;
 
@@ -91,14 +95,14 @@ class CurrentPrayerCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Current Prayer",
-                      style: theme.textTheme.bodySmall?.copyWith(
+                      l10n.currentPrayer,
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.hintColor,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      currentPrayer,
+                      l10n.prayerName(currentPrayer),
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -106,21 +110,26 @@ class CurrentPrayerCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: chipBg,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Text(
-                  status,
-                  style: TextStyle(
-                    color: chipText,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: chipBg,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Text(
+                    localizedStatus,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: chipText,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ),
@@ -135,7 +144,7 @@ class CurrentPrayerCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            "Next • $nextPrayer  •  $nextPrayerTime",
+            '${l10n.next} • ${l10n.prayerName(nextPrayer)}  •  $nextPrayerTime',
             style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
           ),
           const SizedBox(height: 20),
@@ -145,7 +154,7 @@ class CurrentPrayerCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _InfoItem(
-                  title: "Remaining",
+                  title: l10n.tr('বাকি', 'Remaining'),
                   value: remainingTime,
                   backgroundColor: infoBg,
                 ),
@@ -153,15 +162,15 @@ class CurrentPrayerCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: _InfoItem(
-                  title: "Next",
-                  value: nextPrayer,
+                  title: l10n.next,
+                  value: l10n.prayerName(nextPrayer),
                   backgroundColor: infoBg,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _InfoItem(
-                  title: "Time",
+                  title: l10n.prayerTime,
                   value: nextPrayerTime,
                   backgroundColor: infoBg,
                 ),
@@ -175,7 +184,7 @@ class CurrentPrayerCard extends StatelessWidget {
                 if (sunrise != null)
                   Expanded(
                     child: _InfoItem(
-                      title: "Sunrise",
+                      title: l10n.sunrise,
                       value: sunrise!,
                       backgroundColor: infoBg,
                     ),
@@ -185,7 +194,7 @@ class CurrentPrayerCard extends StatelessWidget {
                 if (sunset != null)
                   Expanded(
                     child: _InfoItem(
-                      title: "Sunset",
+                      title: l10n.sunset,
                       value: sunset!,
                       backgroundColor: infoBg,
                     ),
@@ -225,7 +234,7 @@ class _InfoItem extends StatelessWidget {
         children: [
           Text(
             title,
-            style: theme.textTheme.bodySmall?.copyWith(
+            style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.hintColor,
               fontWeight: FontWeight.w500,
             ),
