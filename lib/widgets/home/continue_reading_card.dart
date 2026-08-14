@@ -108,9 +108,11 @@ class ContinueReadingCard extends StatelessWidget {
                           surahName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleMedium?.copyWith(
+                          style: TextStyle(
                             color: text,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                            height: 1.35,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 3),
