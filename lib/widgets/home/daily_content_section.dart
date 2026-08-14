@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../localization/app_localizations.dart';
 import '../../localization/app_localizations_x.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/daily_content_service.dart';
 import '../../theme/app_theme.dart';
 import 'daily_content_card.dart';
@@ -12,6 +13,7 @@ class DailyContentSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final languageCode = context.watch<SettingsProvider>().languageCode;
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final secondary = context.secondaryTextColor;
@@ -60,9 +62,9 @@ class DailyContentSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 11),
-        DailyContentCard(content: ayah, icon: Icons.auto_stories_rounded, iconColor: primary),
-        DailyContentCard(content: hadith, icon: Icons.menu_book_rounded, iconColor: primary),
-        DailyContentCard(content: dua, icon: Icons.favorite_rounded, iconColor: primary),
+        DailyContentCard(content: ayah, languageCode: languageCode, icon: Icons.auto_stories_rounded, iconColor: primary),
+        DailyContentCard(content: hadith, languageCode: languageCode, icon: Icons.menu_book_rounded, iconColor: primary),
+        DailyContentCard(content: dua, languageCode: languageCode, icon: Icons.favorite_rounded, iconColor: primary),
       ],
     );
   }
