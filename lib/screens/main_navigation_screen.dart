@@ -6,7 +6,7 @@ import '../localization/app_localizations.dart';
 import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
-import 'prayer_screen.dart';
+import 'localized_prayer_screen.dart';
 import 'quran_screen.dart';
 import 'hadith_screen.dart';
 import 'tools_screen.dart';
@@ -62,7 +62,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final l10n = AppLocalizations.of(context);
     final screens = <Widget>[
       HomeScreen(onNavigateTab: _onNavigateTab),
-      const PrayerScreen(),
+      const LocalizedPrayerScreen(),
       const QuranScreen(),
       const HadithScreen(),
       const ToolsScreen(),
