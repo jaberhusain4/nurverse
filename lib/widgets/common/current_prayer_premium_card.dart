@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 class CurrentPrayerPremiumCard extends StatelessWidget {
@@ -428,9 +430,17 @@ class _RemainingTimePanel extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.nightlight_round, size: 16, color: primary.withValues(alpha: .55)),
+                  Icon(
+                    Icons.nightlight_round,
+                    size: 16,
+                    color: primary.withValues(alpha: .55),
+                  ),
                   const SizedBox(width: 4),
-                  Icon(Icons.auto_awesome_rounded, size: 10, color: primary.withValues(alpha: .38)),
+                  Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 10,
+                    color: primary.withValues(alpha: .38),
+                  ),
                 ],
               ),
             ),
@@ -443,9 +453,17 @@ class _RemainingTimePanel extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.auto_awesome_rounded, size: 10, color: primary.withValues(alpha: .38)),
+                  Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 10,
+                    color: primary.withValues(alpha: .38),
+                  ),
                   const SizedBox(width: 4),
-                  Icon(Icons.nightlight_round, size: 16, color: primary.withValues(alpha: .55)),
+                  Icon(
+                    Icons.nightlight_round,
+                    size: 16,
+                    color: primary.withValues(alpha: .55),
+                  ),
                 ],
               ),
             ),
@@ -507,8 +525,11 @@ class _IslamicPatternPainter extends CustomPainter {
         final center = Offset(x, y);
         final path = Path();
         for (var i = 0; i < 8; i++) {
-          final angle = (i * 3.141592653589793 / 4) - 3.141592653589793 / 8;
-          final point = center + Offset(cos(angle) * 6, sin(angle) * 6);
+          final angle = (i * math.pi / 4) - math.pi / 8;
+          final point = center + Offset(
+            math.cos(angle) * 6,
+            math.sin(angle) * 6,
+          );
           if (i == 0) {
             path.moveTo(point.dx, point.dy);
           } else {
