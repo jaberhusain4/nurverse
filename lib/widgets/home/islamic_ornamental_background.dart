@@ -4,26 +4,27 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
 
-/// Offline Islamic artwork for the Home background.
+/// Premium offline Islamic calligraphic ornament.
 ///
-/// The artwork keeps the left side quiet for UI readability and places the
-/// Qur'anic inscription on a flowing, curved calligraphic path in the
-/// upper-right field. Everything is painted locally; no image or network
-/// asset is required.
+/// This is intentionally abstract: there is no readable Qur'an verse or
+/// Arabic sentence. The flowing strokes are inspired by traditional Arabic
+/// calligraphy and illuminated Islamic artwork.
 class IslamicOrnamentalBackground extends StatelessWidget {
   const IslamicOrnamentalBackground({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final isAmoled = context.isAmoled;
-    final opacity = isAmoled ? 0.11 : isDark ? 0.115 : 0.052;
+    final opacity = context.isAmoled
+        ? 0.16
+        : theme.brightness == Brightness.dark
+            ? 0.135
+            : 0.06;
 
     return IgnorePointer(
       child: RepaintBoundary(
         child: CustomPaint(
-          painter: _PremiumQuranCalligraphyPainter(
+          painter: _AbstractArabicCalligraphyPainter(
             color: theme.colorScheme.primary,
             opacity: opacity,
           ),
@@ -34,8 +35,8 @@ class IslamicOrnamentalBackground extends StatelessWidget {
   }
 }
 
-class _PremiumQuranCalligraphyPainter extends CustomPainter {
-  const _PremiumQuranCalligraphyPainter({
+class _AbstractArabicCalligraphyPainter extends CustomPainter {
+  const _AbstractArabicCalligraphyPainter({
     required this.color,
     required this.opacity,
   });
@@ -43,391 +44,171 @@ class _PremiumQuranCalligraphyPainter extends CustomPainter {
   final Color color;
   final double opacity;
 
-  static const String _ayah = 'فَإِنَّ مَعَ الْعُسْرِ يُسْرًا';
-  static const List<String> _ayahWords = <String>[
-    'فَإِنَّ',
-    'مَعَ',
-    'الْعُسْرِ',
-    'يُسْرًا',
-  ];
-
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.76, size.height * 0.18);
-    final radius = math.min(size.width, size.height) * 0.37;
+    final c = Offset(size.width * .76, size.height * .19);
+    final s = math.min(size.width, size.height) / 430.0;
 
-    _drawDeepBlueAtmosphere(canvas, size, center, radius);
-    _drawFloralArabesque(canvas, size, center, radius);
-    _drawCalligraphicHalo(canvas, center, radius);
-    _drawCurvedAyah(canvas, center, radius);
-    _drawCalligraphySwashes(canvas, center, radius);
-    _drawDecorativeDots(canvas, center, radius);
-    _drawCrescent(canvas, size);
-  }
-
-  void _drawDeepBlueAtmosphere(
-    Canvas canvas,
-    Size size,
-    Offset center,
-    double radius,
-  ) {
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height * 0.58);
-    final gradient = RadialGradient(
-      center: const Alignment(0.62, -0.45),
+    final glowRect = Rect.fromLTWH(0, 0, size.width, size.height * .62);
+    final shader = RadialGradient(
+      center: const Alignment(.48, -.34),
       radius: 1.05,
       colors: [
-        color.withValues(alpha: opacity * 0.78),
-        color.withValues(alpha: opacity * 0.22),
+        color.withValues(alpha: opacity * .75),
+        color.withValues(alpha: opacity * .18),
         Colors.transparent,
       ],
-      stops: const [0.0, 0.56, 1.0],
-    );
-    canvas.drawRect(rect, Paint()..shader = gradient.createShader(rect));
+      stops: const [0, .56, 1],
+    ).createShader(glowRect);
+    canvas.drawRect(glowRect, Paint()..shader = shader);
 
-    final glow = Paint()
-      ..color = color.withValues(alpha: opacity * 0.20)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 22);
-    canvas.drawCircle(center, radius * 0.62, glow);
+    _drawFlourishingLetterforms(canvas, c, s);
+    _drawArabesqueFrame(canvas, c, s);
+    _drawFineTexture(canvas, c, s);
+    _drawCrescent(canvas, size, s);
   }
 
-  void _drawCurvedAyah(Canvas canvas, Offset center, double radius) {
-    // The reference direction is a genuine flowing composition rather than
-    // one straight text line: each word follows a sweeping S-shaped baseline,
-    // with a slight rotation and scale change to mimic hand-lettered rhythm.
-    final wordPaint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = color.withValues(alpha: opacity * 1.72);
-
-    final outlinePaint = Paint()
+  void _drawFlourishingLetterforms(Canvas canvas, Offset c, double s) {
+    final bold = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.35
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = 8.5 * s
+      ..color = color.withValues(alpha: opacity * 1.55);
+
+    final edge = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = 2.2 * s
       ..color = color.withValues(alpha: opacity * 1.05);
 
-    final startX = center.dx - radius * 1.00;
-    final step = radius * 0.56;
+    final paths = <Path>[
+      Path()
+        ..moveTo(c.dx - 185 * s, c.dy + 18 * s)
+        ..cubicTo(c.dx - 116 * s, c.dy - 78 * s, c.dx - 30 * s, c.dy - 92 * s, c.dx + 48 * s, c.dy - 28 * s)
+        ..cubicTo(c.dx + 112 * s, c.dy + 24 * s, c.dx + 155 * s, c.dy + 14 * s, c.dx + 194 * s, c.dy - 42 * s),
+      Path()
+        ..moveTo(c.dx - 158 * s, c.dy + 62 * s)
+        ..cubicTo(c.dx - 84 * s, c.dy + 112 * s, c.dx - 12 * s, c.dy + 110 * s, c.dx + 52 * s, c.dy + 50 * s)
+        ..cubicTo(c.dx + 94 * s, c.dy + 10 * s, c.dx + 137 * s, c.dy + 18 * s, c.dx + 181 * s, c.dy + 58 * s),
+      Path()
+        ..moveTo(c.dx - 126 * s, c.dy - 104 * s)
+        ..cubicTo(c.dx - 58 * s, c.dy - 150 * s, c.dx + 10 * s, c.dy - 128 * s, c.dx + 50 * s, c.dy - 78 * s)
+        ..cubicTo(c.dx + 82 * s, c.dy - 36 * s, c.dx + 122 * s, c.dy - 46 * s, c.dx + 166 * s, c.dy - 96 * s),
+      Path()
+        ..moveTo(c.dx - 184 * s, c.dy + 112 * s)
+        ..cubicTo(c.dx - 96 * s, c.dy + 76 * s, c.dx - 28 * s, c.dy + 138 * s, c.dx + 34 * s, c.dy + 112 * s)
+        ..cubicTo(c.dx + 98 * s, c.dy + 84 * s, c.dx + 136 * s, c.dy + 126 * s, c.dx + 192 * s, c.dy + 88 * s),
+    ];
 
-    for (var i = 0; i < _ayahWords.length; i++) {
-      final t = i / (_ayahWords.length - 1);
-      final x = startX + step * i;
-      final wave = math.sin(t * math.pi * 1.35 - 0.45);
-      final y = center.dy + wave * radius * 0.27 + (i.isOdd ? -radius * 0.035 : radius * 0.02);
-      final tangent = math.cos(t * math.pi * 1.35 - 0.45) * 0.22;
-      final angle = tangent + (i - 1.5) * 0.035;
-      final scale = 0.92 + (1 - (i - 1.5).abs() / 2.0) * 0.18;
-      final fontSize = (radius * 0.31 * scale).clamp(36.0, 76.0);
-
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: _ayahWords[i],
-          style: TextStyle(
-            fontSize: fontSize,
-            height: 0.92,
-            fontWeight: FontWeight.w900,
-            fontFamilyFallback: const [
-              'Aref Ruqaa',
-              'Amiri',
-              'Noto Naskh Arabic',
-              'Noto Sans Arabic',
-            ],
-            color: wordPaint.color,
-            shadows: [
-              Shadow(
-                color: color.withValues(alpha: opacity * 0.72),
-                blurRadius: 16,
-                offset: const Offset(0, 0),
-              ),
-            ],
-          ),
-        ),
-        textDirection: TextDirection.rtl,
-        textAlign: TextAlign.center,
-      )..layout(maxWidth: radius * 0.78);
-
-      final position = Offset(
-        x - textPainter.width / 2,
-        y - textPainter.height / 2,
-      );
-
-      canvas.save();
-      canvas.translate(x, y);
-      canvas.rotate(angle);
-      canvas.scale(scale, 1.08 - (i * 0.025));
-      textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
-      canvas.restore();
-
-      // Fine underline/pen stroke follows each word and visually joins the
-      // separate glyph groups into one continuous calligraphic artwork.
-      final underline = Path()
-        ..moveTo(position.dx - radius * 0.05, y + textPainter.height * 0.32)
-        ..cubicTo(
-          position.dx + textPainter.width * 0.25,
-          y + radius * 0.12,
-          position.dx + textPainter.width * 0.62,
-          y - radius * 0.08,
-          position.dx + textPainter.width * 1.02,
-          y + radius * 0.03,
-        );
-      canvas.drawPath(underline, outlinePaint);
+    for (final path in paths) {
+      canvas.drawPath(path, bold);
+      canvas.drawPath(path, edge);
     }
 
-    // Long sweeping tail under the composition gives it the unmistakable
-    // hand-drawn wall-art silhouette while remaining abstract and subtle.
+    // Tall stems, hooks and descending tails give the composition its
+    // calligraphic character without forming readable words.
+    for (var i = 0; i < 8; i++) {
+      final x = c.dx + (-150 + i * 43) * s;
+      final path = Path()
+        ..moveTo(x, c.dy - (142 - (i.isOdd ? 18 : 0)) * s)
+        ..cubicTo(x - 12 * s, c.dy - 58 * s, x + 18 * s, c.dy - 4 * s, x - 3 * s, c.dy + 78 * s)
+        ..cubicTo(x - 12 * s, c.dy + 102 * s, x + 18 * s, c.dy + 110 * s, x + 34 * s, c.dy + 90 * s);
+      canvas.drawPath(path, edge);
+    }
+
     final sweep = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = radius * 0.032
-      ..color = color.withValues(alpha: opacity * 1.05);
-    final path = Path()
-      ..moveTo(center.dx - radius * 1.12, center.dy + radius * 0.42)
-      ..cubicTo(
-        center.dx - radius * 0.62,
-        center.dy + radius * 0.68,
-        center.dx + radius * 0.12,
-        center.dy + radius * 0.70,
-        center.dx + radius * 0.94,
-        center.dy + radius * 0.24,
-      )
-      ..cubicTo(
-        center.dx + radius * 1.12,
-        center.dy + radius * 0.14,
-        center.dx + radius * 1.18,
-        center.dy + radius * 0.32,
-        center.dx + radius * 1.00,
-        center.dy + radius * 0.47,
-      );
-    canvas.drawPath(path, sweep);
+      ..strokeWidth = 5 * s
+      ..color = color.withValues(alpha: opacity * 1.18);
+    final tail = Path()
+      ..moveTo(c.dx - 205 * s, c.dy + 146 * s)
+      ..cubicTo(c.dx - 120 * s, c.dy + 104 * s, c.dx - 34 * s, c.dy + 172 * s, c.dx + 52 * s, c.dy + 132 * s)
+      ..cubicTo(c.dx + 122 * s, c.dy + 100 * s, c.dx + 174 * s, c.dy + 132 * s, c.dx + 214 * s, c.dy + 88 * s);
+    canvas.drawPath(tail, sweep);
   }
 
-  void _drawCalligraphicHalo(Canvas canvas, Offset center, double radius) {
-    final fine = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0
-      ..strokeCap = StrokeCap.round
-      ..color = color.withValues(alpha: opacity * 0.52);
-
-    for (var i = 0; i < 4; i++) {
-      final rect = Rect.fromCenter(
-        center: Offset(center.dx + radius * 0.08, center.dy + radius * 0.02),
-        width: radius * (2.22 - i * 0.16),
-        height: radius * (1.30 - i * 0.08),
-      );
-      canvas.drawOval(rect, fine);
-    }
-  }
-
-  void _drawCalligraphySwashes(Canvas canvas, Offset center, double radius) {
+  void _drawArabesqueFrame(Canvas canvas, Offset c, double s) {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 1.35
-      ..color = color.withValues(alpha: opacity * 1.00);
+      ..strokeWidth = 1.05 * s
+      ..color = color.withValues(alpha: opacity * .68);
 
-    final paths = <Path>[
-      Path()
-        ..moveTo(center.dx - radius * 1.05, center.dy - radius * 0.42)
-        ..cubicTo(
-          center.dx - radius * 0.74,
-          center.dy - radius * 0.74,
-          center.dx - radius * 0.38,
-          center.dy - radius * 0.20,
-          center.dx - radius * 0.04,
-          center.dy - radius * 0.54,
-        )
-        ..cubicTo(
-          center.dx + radius * 0.36,
-          center.dy - radius * 0.92,
-          center.dx + radius * 0.68,
-          center.dy - radius * 0.26,
-          center.dx + radius * 1.08,
-          center.dy - radius * 0.56,
-        ),
-      Path()
-        ..moveTo(center.dx - radius * 0.96, center.dy + radius * 0.28)
-        ..cubicTo(
-          center.dx - radius * 0.52,
-          center.dy + radius * 0.02,
-          center.dx - radius * 0.30,
-          center.dy + radius * 0.62,
-          center.dx + radius * 0.10,
-          center.dy + radius * 0.36,
-        )
-        ..cubicTo(
-          center.dx + radius * 0.52,
-          center.dy + radius * 0.08,
-          center.dx + radius * 0.72,
-          center.dy + radius * 0.58,
-          center.dx + radius * 1.06,
-          center.dy + radius * 0.22,
-        ),
-    ];
-
-    for (final path in paths) {
-      canvas.drawPath(path, paint);
+    for (var ring = 0; ring < 3; ring++) {
+      final rect = Rect.fromCenter(
+        center: Offset(c.dx + 8 * s, c.dy + 2 * s),
+        width: (420 - ring * 30) * s,
+        height: (286 - ring * 22) * s,
+      );
+      canvas.drawOval(rect, paint);
     }
+
+    for (var i = 0; i < 26; i++) {
+      final a = -1.5 + i * .12;
+      final r = (155 + (i % 4) * 16) * s;
+      final p = c + Offset(math.cos(a) * r, math.sin(a) * r * .68);
+      _leaf(canvas, p, a + 1.0, 13 * s, paint);
+    }
+  }
+
+  void _drawFineTexture(Canvas canvas, Offset c, double s) {
+    final fine = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = .85 * s
+      ..color = color.withValues(alpha: opacity * .56);
 
     for (var i = 0; i < 18; i++) {
-      final angle = -1.18 + i * 0.145;
-      final p = center + Offset(
-        math.cos(angle) * radius * 1.05,
-        math.sin(angle) * radius * 0.66,
-      );
-      final hook = Path()
+      final a = -1.35 + i * .15;
+      final p = c + Offset(math.cos(a) * 178 * s, math.sin(a) * 120 * s);
+      final path = Path()
         ..moveTo(p.dx, p.dy)
-        ..quadraticBezierTo(
-          p.dx + math.cos(angle + 0.7) * radius * 0.10,
-          p.dy + math.sin(angle + 0.7) * radius * 0.10,
-          p.dx + math.cos(angle + 1.35) * radius * 0.17,
-          p.dy + math.sin(angle + 1.35) * radius * 0.17,
-        );
-      canvas.drawPath(hook, paint);
-    }
-  }
-
-  void _drawFloralArabesque(
-    Canvas canvas,
-    Size size,
-    Offset center,
-    double radius,
-  ) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.76
-      ..strokeCap = StrokeCap.round
-      ..color = color.withValues(alpha: opacity * 0.64);
-
-    for (var i = 0; i < 22; i++) {
-      final t = i / 21;
-      final x = size.width * (0.47 + t * 0.51);
-      final y = size.height * (0.015 + math.sin(t * math.pi * 1.55) * 0.19);
-      final r = size.width * (0.010 + (i % 3) * 0.003);
-      _drawFloralMotif(canvas, Offset(x, y), r, paint, i);
-    }
-
-    for (var i = 0; i < 8; i++) {
-      final path = Path()
-        ..moveTo(size.width * (0.48 + i * 0.065), size.height * 0.02)
         ..cubicTo(
-          size.width * (0.43 + i * 0.075),
-          size.height * 0.10,
-          size.width * (0.67 + i * 0.05),
-          size.height * 0.15,
-          size.width * (0.57 + i * 0.07),
-          size.height * 0.26,
-        )
-        ..cubicTo(
-          size.width * (0.50 + i * 0.07),
-          size.height * 0.33,
-          size.width * (0.80 + i * 0.03),
-          size.height * 0.30,
-          size.width * (0.92 + i * 0.015),
-          size.height * 0.22,
+          p.dx + math.cos(a + .8) * 28 * s,
+          p.dy + math.sin(a + .8) * 28 * s,
+          p.dx + math.cos(a + 1.4) * 46 * s,
+          p.dy + math.sin(a + 1.4) * 46 * s,
+          p.dx + math.cos(a + 1.9) * 58 * s,
+          p.dy + math.sin(a + 1.9) * 58 * s,
         );
-      canvas.drawPath(path, paint);
+      canvas.drawPath(path, fine);
     }
 
-    for (var i = 0; i < 20; i++) {
-      final angle = -1.30 + i * 0.16;
-      final p = center + Offset(
-        math.cos(angle) * radius * 1.00,
-        math.sin(angle) * radius * 0.64,
-      );
-      _drawLeaf(canvas, p, angle + 1.08, radius * 0.075, paint);
-    }
-  }
-
-  void _drawFloralMotif(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    Paint paint,
-    int seed,
-  ) {
-    final petalCount = 5 + seed % 3;
-    for (var i = 0; i < petalCount; i++) {
-      final a = i * math.pi * 2 / petalCount;
-      final p = center + Offset(
-        math.cos(a) * radius * 0.72,
-        math.sin(a) * radius * 0.72,
-      );
-      final path = Path()
-        ..moveTo(center.dx, center.dy)
-        ..quadraticBezierTo(
-          p.dx + math.cos(a + math.pi / 2) * radius * 0.42,
-          p.dy + math.sin(a + math.pi / 2) * radius * 0.42,
-          p.dx,
-          p.dy,
-        )
-        ..quadraticBezierTo(
-          p.dx + math.cos(a - math.pi / 2) * radius * 0.42,
-          p.dy + math.sin(a - math.pi / 2) * radius * 0.42,
-          center.dx,
-          center.dy,
-        );
-      canvas.drawPath(path, paint);
-    }
-    canvas.drawCircle(center, radius * 0.20, paint);
-  }
-
-  void _drawDecorativeDots(Canvas canvas, Offset center, double radius) {
-    final paint = Paint()..color = color.withValues(alpha: opacity * 0.92);
-    for (var i = 0; i < 54; i++) {
-      final angle = -math.pi * 0.96 + i * math.pi * 1.78 / 53;
-      final r = radius * (0.72 + (i % 4) * 0.075);
-      final p = center + Offset(
-        math.cos(angle) * r,
-        math.sin(angle) * r * 0.66,
-      );
-      canvas.drawCircle(p, i % 7 == 0 ? 1.7 : 0.75, paint);
+    final dots = Paint()..color = color.withValues(alpha: opacity * .82);
+    for (var i = 0; i < 64; i++) {
+      final a = -1.52 + i * .115;
+      final r = (115 + (i % 5) * 19) * s;
+      final p = c + Offset(math.cos(a) * r, math.sin(a) * r * .66);
+      canvas.drawCircle(p, (i % 8 == 0 ? 1.7 : .7) * s, dots);
     }
   }
 
-  void _drawCrescent(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.90, size.height * 0.34);
-    final radius = math.min(size.width, size.height) * 0.044;
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.35
-      ..strokeCap = StrokeCap.round
-      ..color = color.withValues(alpha: opacity * 1.15);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -math.pi * 0.82,
-      math.pi * 1.62,
-      false,
-      paint,
-    );
-  }
-
-  void _drawLeaf(
-    Canvas canvas,
-    Offset center,
-    double angle,
-    double radius,
-    Paint paint,
-  ) {
-    final axis = Offset(math.cos(angle), math.sin(angle));
-    final normal = Offset(-axis.dy, axis.dx);
-    final a = center + axis * radius;
-    final b = center - axis * radius;
+  void _leaf(Canvas canvas, Offset c, double angle, double length, Paint paint) {
+    final tip = c + Offset(math.cos(angle) * length, math.sin(angle) * length);
+    final side = length * .42;
+    final a = c + Offset(math.cos(angle + math.pi / 2) * side, math.sin(angle + math.pi / 2) * side);
+    final b = c + Offset(math.cos(angle - math.pi / 2) * side, math.sin(angle - math.pi / 2) * side);
     final path = Path()
-      ..moveTo(a.dx, a.dy)
-      ..quadraticBezierTo(
-        center.dx + normal.dx * radius * 0.8,
-        center.dy + normal.dy * radius * 0.8,
-        b.dx,
-        b.dy,
-      )
-      ..quadraticBezierTo(
-        center.dx - normal.dx * radius * 0.8,
-        center.dy - normal.dy * radius * 0.8,
-        a.dx,
-        a.dy,
-      );
+      ..moveTo(c.dx, c.dy)
+      ..quadraticBezierTo(a.dx, a.dy, tip.dx, tip.dy)
+      ..quadraticBezierTo(b.dx, b.dy, c.dx, c.dy);
     canvas.drawPath(path, paint);
   }
 
+  void _drawCrescent(Canvas canvas, Size size, double s) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8 * s
+      ..color = color.withValues(alpha: opacity * .95);
+    final center = Offset(size.width * .43, size.height * .13);
+    canvas.drawArc(Rect.fromCenter(center: center, width: 48 * s, height: 48 * s), .65, 4.35, false, paint);
+  }
+
   @override
-  bool shouldRepaint(covariant _PremiumQuranCalligraphyPainter oldDelegate) =>
+  bool shouldRepaint(covariant _AbstractArabicCalligraphyPainter oldDelegate) =>
       oldDelegate.color != color || oldDelegate.opacity != opacity;
 }
