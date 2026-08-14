@@ -15,6 +15,7 @@ import '../widgets/common/current_prayer_premium_card.dart';
 import '../widgets/home/continue_reading_card.dart';
 import '../widgets/home/daily_content_section.dart';
 import '../widgets/home/islamic_info_card.dart';
+import '../widgets/home/islamic_ornamental_background.dart';
 import '../widgets/home/prayer_timeline_card.dart';
 import '../widgets/home/top_header.dart';
 import 'prayer/jamaat_settings_screen.dart';
@@ -313,84 +314,92 @@ class _HomeScreenState extends State<HomeScreen> {
     final currentJamaat = jamaatKey.isEmpty ? '--:--' : JamaatService.get(jamaatKey);
 
     return Scaffold(
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refreshHome,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TopHeader(
-                  greeting: _greeting(languageCode),
-                  currentTime: _currentTime,
-                  onNotificationTap: () => widget.onNavigateTab?.call(5),
-                  onProfileTap: () => widget.onNavigateTab?.call(5),
-                ),
-                const SizedBox(height: 14),
-                CurrentPrayerPremiumCard(
-                  previousPrayer: controller.previousPrayer,
-                  previousPrayerTime: controller.previousPrayerTime,
-                  currentPrayer: controller.currentPrayer,
-                  currentPrayerTime: controller.currentPrayerTime,
-                  nextPrayer: controller.nextPrayer,
-                  nextPrayerTime: controller.nextPrayerTime,
-                  remainingTime: controller.timeRemainingForNextPrayer,
-                  progress: controller.prayerProgress,
-                  iqamahTime: currentJamaat,
-                  status: controller.prayerStatus,
-                  languageCode: languageCode,
-                  onJamaatTap: _openJamaatSettings,
-                ),
-                const SizedBox(height: 10),
-                PrayerTimelineCard(
-                  prayers: controller.prayers,
-                  languageCode: languageCode,
-                ),
-                const SizedBox(height: 10),
-                IslamicInfoCard(
-                  location: controller.currentLocationName,
-                  englishDate: DateService.englishDate(),
-                  banglaDate: _banglaDate(),
-                  hijriDate: _hijriDate(languageCode),
-                  sunrise: sunTimes?.sunriseString ?? controller.sunriseTime,
-                  sunset: sunTimes?.sunsetString ?? controller.sunsetTime,
-                  languageCode: languageCode,
-                  onRefresh: controller.refreshLocation,
-                ),
-                const SizedBox(height: 14),
-                _continueReading(context, languageCode),
-                const SizedBox(height: 16),
-                Text(
-                  _label(languageCode, 'কুইক অ্যাকশনস', 'Quick Actions', 'إجراءات سريعة'),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 9),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 4,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  childAspectRatio: 1.02,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const Positioned.fill(
+            child: IslamicOrnamentalBackground(),
+          ),
+          SafeArea(
+            child: RefreshIndicator(
+              onRefresh: _refreshHome,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _quickAction(context, title: _label(languageCode, 'ক্যালেন্ডার', 'Calendar', 'التقويم'), icon: Icons.calendar_month_rounded, onTap: () => _openScreen(const CalendarScreen())),
-                    _quickAction(context, title: _label(languageCode, 'দোয়া', 'Dua', 'الدعاء'), icon: Icons.menu_book_rounded, onTap: () => _openScreen(const DuaScreen())),
-                    _quickAction(context, title: _label(languageCode, 'কিবলা', 'Qibla', 'القبلة'), icon: Icons.explore_rounded, onTap: () => _openScreen(const QiblaScreen())),
-                    _quickAction(context, title: _label(languageCode, 'তাসবীহ', 'Tasbih', 'التسبيح'), icon: Icons.radio_button_checked_rounded, onTap: () => _openScreen(const TasbihScreen())),
-                    _quickAction(context, title: _label(languageCode, '৯৯ নাম', '99 Names', 'أسماء الله'), icon: Icons.nightlight_round, onTap: () => _openScreen(const AsmaUlHusnaScreen())),
-                    _quickAction(context, title: _label(languageCode, 'অডিও কুরআন', 'Audio Quran', 'القرآن الصوتي'), icon: Icons.headphones_rounded, onTap: () => _openScreen(const AudioQuranScreen())),
-                    _quickAction(context, title: _label(languageCode, 'রুকিয়াহ', 'Ruqyah', 'الرقية'), icon: Icons.shield_outlined, onTap: () => _openScreen(const RuqyahScreen())),
-                    _quickAction(context, title: _label(languageCode, 'যাকাত', 'Zakat', 'الزكاة'), icon: Icons.monetization_on_outlined, onTap: () => _openScreen(const ZakatCalculatorScreen())),
+                    TopHeader(
+                      greeting: _greeting(languageCode),
+                      currentTime: _currentTime,
+                      onNotificationTap: () => widget.onNavigateTab?.call(5),
+                      onProfileTap: () => widget.onNavigateTab?.call(5),
+                    ),
+                    const SizedBox(height: 14),
+                    CurrentPrayerPremiumCard(
+                      previousPrayer: controller.previousPrayer,
+                      previousPrayerTime: controller.previousPrayerTime,
+                      currentPrayer: controller.currentPrayer,
+                      currentPrayerTime: controller.currentPrayerTime,
+                      nextPrayer: controller.nextPrayer,
+                      nextPrayerTime: controller.nextPrayerTime,
+                      remainingTime: controller.timeRemainingForNextPrayer,
+                      progress: controller.prayerProgress,
+                      iqamahTime: currentJamaat,
+                      status: controller.prayerStatus,
+                      languageCode: languageCode,
+                      onJamaatTap: _openJamaatSettings,
+                    ),
+                    const SizedBox(height: 10),
+                    PrayerTimelineCard(
+                      prayers: controller.prayers,
+                      languageCode: languageCode,
+                    ),
+                    const SizedBox(height: 10),
+                    IslamicInfoCard(
+                      location: controller.currentLocationName,
+                      englishDate: DateService.englishDate(),
+                      banglaDate: _banglaDate(),
+                      hijriDate: _hijriDate(languageCode),
+                      sunrise: sunTimes?.sunriseString ?? controller.sunriseTime,
+                      sunset: sunTimes?.sunsetString ?? controller.sunsetTime,
+                      languageCode: languageCode,
+                      onRefresh: controller.refreshLocation,
+                    ),
+                    const SizedBox(height: 14),
+                    _continueReading(context, languageCode),
+                    const SizedBox(height: 16),
+                    Text(
+                      _label(languageCode, 'কুইক অ্যাকশনস', 'Quick Actions', 'إجراءات سريعة'),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 9),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 1.02,
+                      children: [
+                        _quickAction(context, title: _label(languageCode, 'ক্যালেন্ডার', 'Calendar', 'التقويم'), icon: Icons.calendar_month_rounded, onTap: () => _openScreen(const CalendarScreen())),
+                        _quickAction(context, title: _label(languageCode, 'দোয়া', 'Dua', 'الدعاء'), icon: Icons.menu_book_rounded, onTap: () => _openScreen(const DuaScreen())),
+                        _quickAction(context, title: _label(languageCode, 'কিবলা', 'Qibla', 'القبلة'), icon: Icons.explore_rounded, onTap: () => _openScreen(const QiblaScreen())),
+                        _quickAction(context, title: _label(languageCode, 'তাসবীহ', 'Tasbih', 'التسبيح'), icon: Icons.radio_button_checked_rounded, onTap: () => _openScreen(const TasbihScreen())),
+                        _quickAction(context, title: _label(languageCode, '৯৯ নাম', '99 Names', 'أسماء الله'), icon: Icons.nightlight_round, onTap: () => _openScreen(const AsmaUlHusnaScreen())),
+                        _quickAction(context, title: _label(languageCode, 'অডিও কুরআন', 'Audio Quran', 'القرآن الصوتي'), icon: Icons.headphones_rounded, onTap: () => _openScreen(const AudioQuranScreen())),
+                        _quickAction(context, title: _label(languageCode, 'রুকিয়াহ', 'Ruqyah', 'الرقية'), icon: Icons.shield_outlined, onTap: () => _openScreen(const RuqyahScreen())),
+                        _quickAction(context, title: _label(languageCode, 'যাকাত', 'Zakat', 'الزكاة'), icon: Icons.monetization_on_outlined, onTap: () => _openScreen(const ZakatCalculatorScreen())),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const DailyContentSection(),
                   ],
                 ),
-                const SizedBox(height: 16),
-                const DailyContentSection(),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
