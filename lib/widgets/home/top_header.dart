@@ -172,7 +172,6 @@ class TopHeader extends StatelessWidget {
   }
 
   Widget _profileButton(BuildContext context, String language, User? user) {
-    final theme = Theme.of(context);
     final signedIn = user != null;
     final photoUrl = user?.photoURL?.trim();
     final hasPhoto = signedIn && photoUrl != null && photoUrl.isNotEmpty;
@@ -197,9 +196,7 @@ class TopHeader extends StatelessWidget {
                       height: 40,
                       fit: BoxFit.cover,
                       filterQuality: FilterQuality.high,
-                      errorBuilder: (_, __, ___) => Center(
-                        child: _profileFallback(context, user),
-                      ),
+                      errorBuilder: (_, __, ___) => Center(child: _profileFallback(context, user)),
                     ),
                   )
                 : Center(child: _profileFallback(context, user)),
@@ -252,7 +249,7 @@ class TopHeader extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 1),
                       Text(
                         subtitle,
                         maxLines: 1,
@@ -280,7 +277,7 @@ class TopHeader extends StatelessWidget {
                 _profileButton(context, language, user),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -291,15 +288,15 @@ class TopHeader extends StatelessWidget {
                       Text(
                         assalamuAlaikum,
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          fontSize: 15,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 2),
                       Text(
                         localizedGreeting,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 15,
+                          fontSize: 14,
                           color: context.secondaryTextColor,
                         ),
                       ),
@@ -315,7 +312,7 @@ class TopHeader extends StatelessWidget {
                       currentTime,
                       maxLines: 1,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        fontSize: 15,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
