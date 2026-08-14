@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../localization/app_localizations.dart';
 import '../../screens/dua/dua_screen.dart';
 import '../../screens/tools/asma_ul_husna.dart';
 import '../../screens/hadith_screen.dart';
@@ -18,9 +19,10 @@ class QuickActionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final actions = [
       (
-        'Prayer',
+        l10n.prayer,
         Icons.mosque_rounded,
         () => Navigator.push(
           context,
@@ -28,7 +30,7 @@ class QuickActionsSection extends StatelessWidget {
         ),
       ),
       (
-        'Quran',
+        l10n.quran,
         Icons.menu_book_rounded,
         () => Navigator.push(
           context,
@@ -36,7 +38,7 @@ class QuickActionsSection extends StatelessWidget {
         ),
       ),
       (
-        'Hadith',
+        l10n.hadith,
         Icons.auto_stories_rounded,
         () => Navigator.push(
           context,
@@ -44,7 +46,7 @@ class QuickActionsSection extends StatelessWidget {
         ),
       ),
       (
-        'Qibla',
+        l10n.qibla,
         Icons.explore_rounded,
         () => Navigator.push(
           context,
@@ -52,7 +54,7 @@ class QuickActionsSection extends StatelessWidget {
         ),
       ),
       (
-        'Tasbih',
+        l10n.tasbih,
         Icons.radio_button_checked_rounded,
         () => Navigator.push(
           context,
@@ -60,7 +62,7 @@ class QuickActionsSection extends StatelessWidget {
         ),
       ),
       (
-        'Asma',
+        l10n.asmaUlHusna,
         Icons.star_rounded,
         () => Navigator.push(
           context,
@@ -68,7 +70,7 @@ class QuickActionsSection extends StatelessWidget {
         ),
       ),
       (
-        "Dua",
+        l10n.dua,
         Icons.favorite_rounded,
         () => Navigator.push(
           context,
@@ -76,7 +78,7 @@ class QuickActionsSection extends StatelessWidget {
         ),
       ),
       (
-        'Calendar',
+        l10n.calendar,
         Icons.calendar_month_rounded,
         () => Navigator.push(
           context,
@@ -84,7 +86,7 @@ class QuickActionsSection extends StatelessWidget {
         ),
       ),
       (
-        'Tools',
+        l10n.tools,
         Icons.handyman_rounded,
         () => Navigator.push(
           context,
@@ -92,7 +94,7 @@ class QuickActionsSection extends StatelessWidget {
         ),
       ),
       (
-        'More',
+        l10n.more,
         Icons.more_horiz_rounded,
         () => Navigator.push(
           context,
@@ -105,7 +107,7 @@ class QuickActionsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Actions',
+          l10n.tr('দ্রুত অ্যাকশন', 'Quick Actions'),
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
