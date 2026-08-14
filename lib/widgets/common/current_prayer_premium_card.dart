@@ -459,10 +459,13 @@ class _RemainingTimePanel extends StatelessWidget {
                     color: primary.withValues(alpha: .38),
                   ),
                   const SizedBox(width: 4),
-                  Icon(
-                    Icons.nightlight_round,
-                    size: 16,
-                    color: primary.withValues(alpha: .55),
+                  Transform.scale(
+                    scaleX: -1,
+                    child: Icon(
+                      Icons.nightlight_round,
+                      size: 16,
+                      color: primary.withValues(alpha: .55),
+                    ),
                   ),
                 ],
               ),
