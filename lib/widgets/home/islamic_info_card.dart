@@ -135,15 +135,25 @@ class _SunBlock extends StatelessWidget {
   const _SunBlock({required this.icon, required this.label, required this.value, required this.primary, required this.text, required this.secondary});
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
     decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(14)),
-    child: Row(children: [
-      Icon(icon, size: 18, color: primary), const SizedBox(width: 8),
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 2),
-        Text(value.isEmpty ? '--:--' : value, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w800)),
-      ])),
-    ]),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 18, color: primary),
+        const SizedBox(width: 7),
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 2),
+              Text(value.isEmpty ? '--:--' : value, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w800)),
+            ],
+          ),
+        ),
+      ],
+    ),
   );
 }
