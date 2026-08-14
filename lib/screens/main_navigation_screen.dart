@@ -7,8 +7,8 @@ import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'localized_prayer_screen.dart';
+import 'localized_hadith_screen.dart';
 import 'quran_screen.dart';
-import 'hadith_screen.dart';
 import 'tools_screen.dart';
 import 'more_screen.dart';
 
@@ -45,10 +45,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   void _syncPrayerSettings(SettingsProvider settings) {
     final prayerController = context.read<PrayerController>();
-    prayerController.updateCalculationSettings(
-      calculationMethod: settings.calculationMethod,
-      madhhab: settings.madhhab,
-    );
+    prayerController.updateCalculationSettings(calculationMethod: settings.calculationMethod, madhhab: settings.madhhab);
     prayerController.updatePrayerAdjustments(settings.prayerAdjustments);
   }
 
@@ -64,7 +61,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       HomeScreen(onNavigateTab: _onNavigateTab),
       const LocalizedPrayerScreen(),
       const QuranScreen(),
-      const HadithScreen(),
+      const LocalizedHadithScreen(),
       const ToolsScreen(),
       const MoreScreen(),
     ];
@@ -72,10 +69,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: screens),
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: context.cardColor,
-          border: Border(top: BorderSide(color: context.borderColor, width: 0.5)),
-        ),
+        decoration: BoxDecoration(color: context.cardColor, border: Border(top: BorderSide(color: context.borderColor, width: 0.5))),
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: _onNavigateTab,
