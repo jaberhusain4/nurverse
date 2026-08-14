@@ -75,50 +75,50 @@ extension ThemeBuildContext on BuildContext {
 class AppTheme {
   // NurVerse premium typography system.
   // Normal app text is locked to 16sp.
-  // Titles/headings are deliberately restrained: 18-24sp.
+  // Headings are deliberately restrained for a clean mobile hierarchy.
   // Blue is reserved for headings/titles and important UI emphasis.
   // Body text stays neutral for comfortable reading.
   // Quran Arabic/translation controls remain feature-specific.
   static const TextTheme _lightTextTheme = TextTheme(
     displayLarge: TextStyle(
       color: AppColors.seaBlueDark,
-      fontSize: 24,
+      fontSize: 22,
       height: 1.25,
       fontWeight: FontWeight.w700,
     ),
     displayMedium: TextStyle(
       color: AppColors.seaBlueDark,
-      fontSize: 22,
+      fontSize: 21,
       height: 1.3,
       fontWeight: FontWeight.w700,
     ),
     displaySmall: TextStyle(
       color: AppColors.seaBlueDark,
-      fontSize: 21,
+      fontSize: 20,
       height: 1.3,
       fontWeight: FontWeight.w700,
     ),
     headlineLarge: TextStyle(
       color: AppColors.seaBlueDark,
-      fontSize: 22,
+      fontSize: 21,
       height: 1.3,
       fontWeight: FontWeight.w700,
     ),
     headlineMedium: TextStyle(
       color: AppColors.seaBlueDark,
-      fontSize: 20,
+      fontSize: 19,
       height: 1.35,
       fontWeight: FontWeight.w700,
     ),
     headlineSmall: TextStyle(
       color: AppColors.seaBlueDark,
-      fontSize: 19,
+      fontSize: 18,
       height: 1.35,
       fontWeight: FontWeight.w600,
     ),
     titleLarge: TextStyle(
       color: AppColors.seaBlueDark,
-      fontSize: 20,
+      fontSize: 19,
       height: 1.35,
       fontWeight: FontWeight.w700,
     ),
@@ -172,43 +172,43 @@ class AppTheme {
   static const TextTheme _darkTextTheme = TextTheme(
     displayLarge: TextStyle(
       color: AppColors.seaBlue,
-      fontSize: 24,
+      fontSize: 22,
       height: 1.25,
       fontWeight: FontWeight.w700,
     ),
     displayMedium: TextStyle(
       color: AppColors.seaBlue,
-      fontSize: 22,
+      fontSize: 21,
       height: 1.3,
       fontWeight: FontWeight.w700,
     ),
     displaySmall: TextStyle(
       color: AppColors.seaBlue,
-      fontSize: 21,
+      fontSize: 20,
       height: 1.3,
       fontWeight: FontWeight.w700,
     ),
     headlineLarge: TextStyle(
       color: AppColors.seaBlue,
-      fontSize: 22,
+      fontSize: 21,
       height: 1.3,
       fontWeight: FontWeight.w700,
     ),
     headlineMedium: TextStyle(
       color: AppColors.seaBlue,
-      fontSize: 20,
+      fontSize: 19,
       height: 1.35,
       fontWeight: FontWeight.w700,
     ),
     headlineSmall: TextStyle(
       color: AppColors.seaBlue,
-      fontSize: 19,
+      fontSize: 18,
       height: 1.35,
       fontWeight: FontWeight.w600,
     ),
     titleLarge: TextStyle(
       color: AppColors.seaBlue,
-      fontSize: 20,
+      fontSize: 19,
       height: 1.35,
       fontWeight: FontWeight.w700,
     ),
