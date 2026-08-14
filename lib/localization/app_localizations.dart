@@ -11,42 +11,24 @@ class AppLocalizations {
       _AppLocalizationsDelegate();
 
   static AppLocalizations of(BuildContext context) {
-    final result = Localizations.of<AppLocalizations>(
-      context,
-      AppLocalizations,
-    );
-
+    final result = Localizations.of<AppLocalizations>(context, AppLocalizations);
     if (result == null) {
-      throw FlutterError(
-        'AppLocalizations could not be found in the widget tree.',
-      );
+      throw FlutterError('AppLocalizations could not be found in the widget tree.');
     }
-
     return result;
   }
 
   bool get isBangla => locale.languageCode == 'bn';
 
-  String _text(String bn, String en) {
-    return isBangla ? bn : en;
-  }
-
-  // ===========================================================================
-  // APP
-  // ===========================================================================
+  String _text(String bn, String en) => isBangla ? bn : en;
 
   String get appName => 'NurVerse';
-
   String get home => _text('হোম', 'Home');
   String get prayer => _text('সালাত', 'Prayer');
   String get quran => _text('কুরআন', 'Quran');
   String get hadith => _text('হাদিস', 'Hadith');
   String get tools => _text('টুলস', 'Tools');
   String get more => _text('আরও', 'More');
-
-  // ===========================================================================
-  // COMMON
-  // ===========================================================================
 
   String get refresh => _text('রিফ্রেশ', 'Refresh');
   String get retry => _text('পুনরায় চেষ্টা করুন', 'Try Again');
@@ -57,96 +39,39 @@ class AppLocalizations {
   String get search => _text('অনুসন্ধান', 'Search');
   String get settings => _text('সেটিংস', 'Settings');
 
-  // ===========================================================================
-  // HOME
-  // ===========================================================================
-
   String get welcome => _text('আসসালামু আলাইকুম', 'Assalamu Alaikum');
-
   String get currentPrayer => _text('বর্তমান সালাত', 'Current Prayer');
-
   String get nextPrayer => _text('পরবর্তী সালাত', 'Next Prayer');
-
   String get prayerTime => _text('সালাতের সময়', 'Prayer Time');
-
   String get today => _text('আজ', 'Today');
-
   String get sunrise => _text('সূর্যোদয়', 'Sunrise');
-
   String get sunset => _text('সূর্যাস্ত', 'Sunset');
-
   String get location => _text('বর্তমান অবস্থান', 'Current Location');
 
-  // ===========================================================================
-  // PRAYER
-  // ===========================================================================
-
   String get todaysPrayer => _text('আজকের সালাত', 'Today’s Prayer');
-
-  String get fullPrayerSchedule =>
-      _text('প্রতিটি ওয়াক্তের পূর্ণ সময়সূচি', 'Complete prayer schedule');
-
+  String get fullPrayerSchedule => _text('প্রতিটি ওয়াক্তের পূর্ণ সময়সূচি', 'Complete prayer schedule');
   String get prayerTimes => _text('সালাতের সময়', 'Prayer Times');
-
   String get previousPrayer => _text('বিগত সালাত', 'Previous Prayer');
-
   String get current => _text('বর্তমান', 'Current');
-
   String get next => _text('পরবর্তী', 'Next');
-
   String get start => _text('শুরু', 'Start');
-
   String get end => _text('শেষ', 'End');
-
   String get jamaat => _text('জামাআত', 'Jama’ah');
-
-  String get currentLabel => _text('বর্তমান', 'Current');
-
   String get friday => _text('শুক্রবার', 'Friday');
-
-  String get importantTimes =>
-      _text('আজকের গুরুত্বপূর্ণ সময়', 'Important Times Today');
-
+  String get importantTimes => _text('আজকের গুরুত্বপূর্ণ সময়', 'Important Times Today');
   String get solarNoon => _text('যাওয়াল', 'Solar Noon');
-
   String get makruhTime => _text('মাকরূহ সময়', 'Makruh Time');
-
   String get prohibitedTime => _text('নিষিদ্ধ সময়', 'Prohibited Time');
-
-  String get naflAndOtherPrayers =>
-      _text('নফল ও অন্যান্য সালাত', 'Nafl & Other Prayers');
-
-  String get optionalWorshipTimes => _text(
-    'ঐচ্ছিক ইবাদতের গুরুত্বপূর্ণ সময়',
-    'Important times for optional worship',
-  );
-
+  String get naflAndOtherPrayers => _text('নফল ও অন্যান্য সালাত', 'Nafl & Other Prayers');
+  String get optionalWorshipTimes => _text('ঐচ্ছিক ইবাদতের গুরুত্বপূর্ণ সময়', 'Important times for optional worship');
   String get ishraq => _text('ইশরাক', 'Ishraq');
-
   String get duha => _text('চাশত / দুহা', 'Duha');
-
   String get awwabin => _text('আউওয়াবীন', 'Awwabin');
-
   String get tahajjud => _text('তাহাজ্জুদ', 'Tahajjud');
-
   String get prayerTracker => _text('আজকের সালাত ট্র্যাকার', 'Prayer Tracker');
-
-  String get markPrayers => _text(
-    'পড়া সালাতগুলো চিহ্নিত করুন',
-    'Mark the prayers you have performed',
-  );
-
-  String get prayerLoadError =>
-      _text('সালাতের তথ্য লোড করা যায়নি', 'Could not load prayer information');
-
-  String get prayerTimeNote => _text(
-    'সালাতের সময় স্থান, তারিখ ও হিসাব পদ্ধতির উপর নির্ভর করে পরিবর্তিত হতে পারে।',
-    'Prayer times may vary depending on location, date, and calculation method.',
-  );
-
-  // ===========================================================================
-  // FIVE DAILY PRAYERS
-  // ===========================================================================
+  String get markPrayers => _text('পড়া সালাতগুলো চিহ্নিত করুন', 'Mark the prayers you have performed');
+  String get prayerLoadError => _text('সালাতের তথ্য লোড করা যায়নি', 'Could not load prayer information');
+  String get prayerTimeNote => _text('সালাতের সময় স্থান, তারিখ ও হিসাব পদ্ধতির উপর নির্ভর করে পরিবর্তিত হতে পারে.', 'Prayer times may vary depending on location, date, and calculation method.');
 
   String get fajr => _text('ফজর', 'Fajr');
   String get dhuhr => _text('যোহর', 'Dhuhr');
@@ -155,117 +80,77 @@ class AppLocalizations {
   String get isha => _text('ইশা', 'Isha');
   String get jumuah => _text('জুমু‘আ', 'Jumu’ah');
 
-  // ===========================================================================
-  // TOOLS
-  // ===========================================================================
-
   String get qibla => _text('কিবলা', 'Qibla');
-
   String get tasbih => _text('তাসবিহ', 'Tasbih');
-
   String get asmaUlHusna => _text('আসমাউল হুসনা', 'Asma ul Husna');
-
-  String get manzil => _text('মানযিল', 'Manzil');
-
   String get ruqyah => _text('রুকইয়াহ', 'Ruqyah');
-
   String get zakatCalculator => _text('যাকাত ক্যালকুলেটর', 'Zakat Calculator');
-
-  String get islamicCalendar =>
-      _text('ইসলামিক ক্যালেন্ডার', 'Islamic Calendar');
-
+  String get islamicCalendar => _text('ইসলামিক ক্যালেন্ডার', 'Islamic Calendar');
   String get nearbyMosque => _text('কাছের মসজিদ', 'Nearby Mosque');
-
   String get islamicBooks => _text('ইসলামিক বই', 'Islamic Books');
 
-  // ===========================================================================
-  // CONTENT
-  // ===========================================================================
-
   String get dailyAyah => _text('আজকের আয়াত', 'Ayah of the Day');
-
   String get dailyHadith => _text('আজকের হাদিস', 'Hadith of the Day');
-
   String get dailyDua => _text('আজকের দোয়া', 'Dua of the Day');
-
-  String get continueReading =>
-      _text('কুরআন পড়া চালিয়ে যান', 'Continue Reading');
-
+  String get continueReading => _text('কুরআন পড়া চালিয়ে যান', 'Continue Reading');
   String get lastRead => _text('সর্বশেষ পড়া', 'Last Read');
-
   String get seeAll => _text('সব দেখুন', 'See All');
 
-  // ===========================================================================
-  // SETTINGS
-  // ===========================================================================
-
   String get language => _text('ভাষা', 'Language');
-
   String get theme => _text('থিম', 'Theme');
-
   String get lightTheme => _text('লাইট', 'Light');
-
   String get darkTheme => _text('ডার্ক', 'Dark');
-
-  String get amoledTheme => _text('AMOLED', 'AMOLED');
-
+  String get amoledTheme => 'AMOLED';
   String get systemTheme => _text('সিস্টেম', 'System');
-
   String get bangla => _text('বাংলা', 'Bangla');
-
   String get english => _text('ইংরেজি', 'English');
 
-  // ===========================================================================
-  // MESSAGES
-  // ===========================================================================
-
-  String get locationUnavailable =>
-      _text('অবস্থান পাওয়া যায়নি', 'Location unavailable');
-
+  String get locationUnavailable => _text('অবস্থান পাওয়া যায়নি', 'Location unavailable');
   String get noData => _text('কোনো তথ্য পাওয়া যায়নি', 'No data available');
-
-  String get somethingWentWrong =>
-      _text('কিছু একটা সমস্যা হয়েছে', 'Something went wrong');
-
+  String get somethingWentWrong => _text('কিছু একটা সমস্যা হয়েছে', 'Something went wrong');
   String get loading => _text('লোড হচ্ছে...', 'Loading...');
 
-  // ===========================================================================
-  // DYNAMIC TEXT
-  // ===========================================================================
+  String get islamicTools => _text('ইসলামিক টুলস', 'Islamic Tools');
+  String get worshipAndPractice => _text('ইবাদত ও আমল', 'Worship & Practice');
+  String get dailyWorshipTools => _text('দৈনন্দিন ইবাদতের প্রয়োজনীয় সরঞ্জাম', 'Essential tools for daily worship');
+  String get dua => _text("দু'আ", 'Dua');
+  String get duaSubtitle => _text('দু‘আ ও মুনাজাত', 'Dua and supplication');
+  String get tasbihSubtitle => _text('যিকির গণনা ও আমল', 'Dhikr counting and practice');
+  String get ruqyahSubtitle => _text('কুরআন ও সহিহ দু‘আ', 'Quran and authentic duas');
+  String get names99 => _text('আল্লাহর ৯৯ নাম', '99 Names of Allah');
+  String get quranAndHadith => _text('কুরআন ও হাদিস', 'Quran & Hadith');
+  String get readingAudioSavedKnowledge => _text('পাঠ, শ্রবণ ও সংরক্ষিত জ্ঞান', 'Reading, audio and saved knowledge');
+  String get audioQuran => _text('অডিও কুরআন', 'Audio Quran');
+  String get audioQuranSubtitle => _text('কুরআন তিলাওয়াত শুনুন', 'Listen to Quran recitation');
+  String get savedHadith => _text('সংরক্ষিত হাদিস', 'Saved Hadith');
+  String get savedHadithSubtitle => _text('আপনার পছন্দের হাদিস', 'Your favorite hadith');
+  String get islamicBooksSubtitle => _text('অনলাইন জ্ঞানভাণ্ডার', 'Islamic knowledge library');
+  String get timeAndDirection => _text('সময় ও দিকনির্দেশনা', 'Time & Direction');
+  String get islamicTimeDateQibla => _text('ইসলামিক সময়, তারিখ ও কিবলা', 'Islamic time, date and Qibla');
+  String get qiblaSubtitle => _text('কাবার দিক নির্ণয়', 'Find the direction of the Kaaba');
+  String get calendar => _text('ক্যালেন্ডার', 'Calendar');
+  String get calendarSubtitle => _text('হিজরি ও ইসলামিক তারিখ', 'Hijri and Islamic dates');
+  String get islamicCalculations => _text('ইসলামিক হিসাব', 'Islamic Calculations');
+  String get financialWorshipCalculations => _text('আর্থিক ইবাদতের প্রয়োজনীয় হিসাব', 'Essential calculations for financial worship');
+  String get zakatCalculatorSubtitle => _text('যাকাতের হিসাব করুন', 'Calculate your Zakat');
+  String get toolsHeroTitle => _text('আপনার ইসলামিক টুলস', 'Your Islamic Tools');
+  String get toolsHeroSubtitle => _text('ইবাদত, জ্ঞান ও দৈনন্দিন প্রয়োজন—সব এক জায়গায়।', 'Worship, knowledge and daily needs—all in one place.');
 
-  String prayerStartsAt(String time) {
-    return _text('শুরু হবে $time', 'Starts at $time');
-  }
-
-  String prayerEndsAt(String time) {
-    return _text('শেষ হবে $time', 'Ends at $time');
-  }
-
-  String nextPrayerAt(String name, String time) {
-    return _text('পরবর্তী: $name • $time', 'Next: $name • $time');
-  }
-
-  String remaining(String value) {
-    return _text('$value বাকি', '$value remaining');
-  }
+  String prayerStartsAt(String time) => _text('শুরু হবে $time', 'Starts at $time');
+  String prayerEndsAt(String time) => _text('শেষ হবে $time', 'Ends at $time');
+  String nextPrayerAt(String name, String time) => _text('পরবর্তী: $name • $time', 'Next: $name • $time');
+  String remaining(String value) => _text('$value বাকি', '$value remaining');
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) {
-    return locale.languageCode == 'bn' || locale.languageCode == 'en';
-  }
+  bool isSupported(Locale locale) => locale.languageCode == 'bn' || locale.languageCode == 'en';
 
   @override
-  Future<AppLocalizations> load(Locale locale) async {
-    return AppLocalizations(locale);
-  }
+  Future<AppLocalizations> load(Locale locale) async => AppLocalizations(locale);
 
   @override
-  bool shouldReload(_AppLocalizationsDelegate old) {
-    return false;
-  }
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
