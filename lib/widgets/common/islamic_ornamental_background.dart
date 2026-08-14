@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+/// Reusable, subtle Islamic calligraphy-inspired overlay for app screens.
+/// It contains no readable Qur'an/Arabic text; all marks are abstract ornament.
 class IslamicOrnamentalBackground extends StatelessWidget {
   const IslamicOrnamentalBackground({super.key, required this.child});
 
@@ -9,6 +11,9 @@ class IslamicOrnamentalBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final opacity = theme.brightness == Brightness.dark ? 0.055 : 0.028;
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -16,8 +21,9 @@ class IslamicOrnamentalBackground extends StatelessWidget {
         IgnorePointer(
           child: RepaintBoundary(
             child: CustomPaint(
-              painter: _IslamicCalligraphyPainter(
-                color: Theme.of(context).colorScheme.primary,
+              painter: _AbstractArabicOverlayPainter(
+                color: theme.colorScheme.primary,
+                opacity: opacity,
               ),
             ),
           ),
@@ -27,106 +33,80 @@ class IslamicOrnamentalBackground extends StatelessWidget {
   }
 }
 
-class _IslamicCalligraphyPainter extends CustomPainter {
-  const _IslamicCalligraphyPainter({required this.color});
+class _AbstractArabicOverlayPainter extends CustomPainter {
+  const _AbstractArabicOverlayPainter({
+    required this.color,
+    required this.opacity,
+  });
 
   final Color color;
+  final double opacity;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withOpacity(0.055)
+    final c = Offset(size.width * .78, size.height * .18);
+    final s = math.min(size.width, size.height) / 430.0;
+
+    final fine = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 1.15;
+      ..strokeWidth = 1.2 * s
+      ..color = color.withValues(alpha: opacity);
 
-    final center = Offset(size.width * 0.82, size.height * 0.18);
-    final radius = math.min(size.width, size.height) * 0.34;
+    final bold = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = 4.2 * s
+      ..color = color.withValues(alpha: opacity * 1.18);
 
-    _drawCalligraphicMedallion(canvas, center, radius, paint);
-    _drawFlowingStrokes(canvas, size, paint);
-    _drawDots(canvas, center, radius);
+    for (var i = 0; i < 5; i++) {
+      final y = c.dy - 125 * s + i * 58 * s;
+      final path = Path()
+        ..moveTo(c.dx - 205 * s, y)
+        ..cubicTo(c.dx - 125 * s, y - 38 * s, c.dx - 58 * s, y + 38 * s, c.dx + 8 * s, y)
+        ..cubicTo(c.dx + 74 * s, y - 38 * s, c.dx + 132 * s, y + 34 * s, c.dx + 205 * s, y - 6 * s);
+      canvas.drawPath(path, i == 2 ? bold : fine);
+    }
+
+    for (var i = 0; i < 7; i++) {
+      final x = c.dx - 150 * s + i * 50 * s;
+      final path = Path()
+        ..moveTo(x, c.dy - 142 * s)
+        ..cubicTo(x - 15 * s, c.dy - 58 * s, x + 16 * s, c.dy - 10 * s, x - 2 * s, c.dy + 88 * s)
+        ..cubicTo(x - 10 * s, c.dy + 108 * s, x + 20 * s, c.dy + 116 * s, x + 36 * s, c.dy + 92 * s);
+      canvas.drawPath(path, fine);
+    }
+
+    for (var i = 0; i < 18; i++) {
+      final a = -1.5 + i * .145;
+      final r = (155 + (i % 4) * 16) * s;
+      final p = c + Offset(math.cos(a) * r, math.sin(a) * r * .66);
+      _leaf(canvas, p, a + 1.0, 12 * s, fine);
+    }
+
+    for (var i = 0; i < 48; i++) {
+      final a = -1.52 + i * .12;
+      final r = (118 + (i % 5) * 18) * s;
+      final p = c + Offset(math.cos(a) * r, math.sin(a) * r * .65);
+      canvas.drawCircle(p, (i % 8 == 0 ? 1.5 : .65) * s, Paint()..color = color.withValues(alpha: opacity * .9));
+    }
   }
 
-  void _drawCalligraphicMedallion(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    Paint paint,
-  ) {
-    for (var i = 0; i < 3; i++) {
-      canvas.drawCircle(center, radius * (1 - i * 0.105), paint);
-    }
-
-    final path = Path();
-    for (var i = 0; i <= 160; i++) {
-      final t = i / 160 * math.pi * 2;
-      final r = radius * (0.58 + 0.075 * math.sin(5 * t));
-      final p = Offset(
-        center.dx + r * math.cos(t),
-        center.dy + r * math.sin(t),
-      );
-      if (i == 0) {
-        path.moveTo(p.dx, p.dy);
-      } else {
-        path.lineTo(p.dx, p.dy);
-      }
-    }
+  void _leaf(Canvas canvas, Offset c, double angle, double length, Paint paint) {
+    final tip = c + Offset(math.cos(angle) * length, math.sin(angle) * length);
+    final side = length * .42;
+    final a = c + Offset(math.cos(angle + math.pi / 2) * side, math.sin(angle + math.pi / 2) * side);
+    final b = c + Offset(math.cos(angle - math.pi / 2) * side, math.sin(angle - math.pi / 2) * side);
+    final path = Path()
+      ..moveTo(c.dx, c.dy)
+      ..quadraticBezierTo(a.dx, a.dy, tip.dx, tip.dy)
+      ..quadraticBezierTo(b.dx, b.dy, c.dx, c.dy);
     canvas.drawPath(path, paint);
   }
 
-  void _drawFlowingStrokes(Canvas canvas, Size size, Paint paint) {
-    final paths = [
-      Path()
-        ..moveTo(size.width * 0.43, size.height * 0.07)
-        ..cubicTo(size.width * 0.56, size.height * 0.015,
-            size.width * 0.68, size.height * 0.10, size.width * 0.82, size.height * 0.055)
-        ..cubicTo(size.width * 0.91, size.height * 0.025,
-            size.width * 0.96, size.height * 0.10, size.width, size.height * 0.075),
-      Path()
-        ..moveTo(size.width * 0.55, size.height * 0.22)
-        ..cubicTo(size.width * 0.64, size.height * 0.16,
-            size.width * 0.72, size.height * 0.27, size.width * 0.84, size.height * 0.19)
-        ..cubicTo(size.width * 0.91, size.height * 0.145,
-            size.width * 0.96, size.height * 0.24, size.width, size.height * 0.21),
-      Path()
-        ..moveTo(size.width * 0.62, size.height * 0.30)
-        ..cubicTo(size.width * 0.71, size.height * 0.24,
-            size.width * 0.78, size.height * 0.35, size.width * 0.90, size.height * 0.29),
-    ];
-
-    for (final path in paths) {
-      canvas.drawPath(path, paint);
-    }
-
-    for (var i = 0; i < 4; i++) {
-      final x = size.width * (0.66 + i * 0.075);
-      final path = Path()
-        ..moveTo(x, size.height * 0.035)
-        ..cubicTo(x - size.width * 0.025, size.height * 0.10,
-            x + size.width * 0.025, size.height * 0.15, x - size.width * 0.008, size.height * 0.205);
-      canvas.drawPath(path, paint);
-    }
-  }
-
-  void _drawDots(Canvas canvas, Offset center, double radius) {
-    final dotPaint = Paint()
-      ..color = color.withOpacity(0.07)
-      ..style = PaintingStyle.fill;
-
-    for (var i = 0; i < 13; i++) {
-      final t = i / 12 * math.pi * 1.65 + 0.35;
-      final r = radius * (0.66 + (i.isEven ? 0.035 : 0));
-      canvas.drawCircle(
-        Offset(center.dx + r * math.cos(t), center.dy + r * math.sin(t)),
-        i % 3 == 0 ? 2.0 : 1.25,
-        dotPaint,
-      );
-    }
-  }
-
   @override
-  bool shouldRepaint(covariant _IslamicCalligraphyPainter oldDelegate) =>
-      oldDelegate.color != color;
+  bool shouldRepaint(covariant _AbstractArabicOverlayPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.opacity != opacity;
 }
