@@ -47,7 +47,10 @@ class PrayerTimelineCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   _label(bn: 'আজকের সালাত', en: "Today's Prayers", ar: 'صلوات اليوم'),
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               Text(
