@@ -221,7 +221,10 @@ class TopHeader extends StatelessWidget {
       builder: (context, snapshot) {
         final user = snapshot.data;
 
-        return Column(
+        return Align(
+          heightFactor: 0.96,
+          alignment: Alignment.topLeft,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -249,7 +252,7 @@ class TopHeader extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 1),
+                      const SizedBox(height: 0),
                       Text(
                         subtitle,
                         maxLines: 1,
@@ -277,7 +280,7 @@ class TopHeader extends StatelessWidget {
                 _profileButton(context, language, user),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -292,7 +295,7 @@ class TopHeader extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 0),
                       Text(
                         localizedGreeting,
                         style: theme.textTheme.bodyMedium?.copyWith(
@@ -321,6 +324,7 @@ class TopHeader extends StatelessWidget {
               ],
             ),
           ],
+        ),
         );
       },
     );
