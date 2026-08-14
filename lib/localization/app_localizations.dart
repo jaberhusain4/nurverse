@@ -2,24 +2,17 @@ import 'package:flutter/material.dart';
 
 class AppLocalizations {
   final Locale locale;
-
   const AppLocalizations(this.locale);
-
   static const supportedLocales = [Locale('bn'), Locale('en')];
-
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   static AppLocalizations of(BuildContext context) {
     final result = Localizations.of<AppLocalizations>(context, AppLocalizations);
-    if (result == null) {
-      throw FlutterError('AppLocalizations could not be found in the widget tree.');
-    }
+    if (result == null) throw FlutterError('AppLocalizations could not be found in the widget tree.');
     return result;
   }
 
   bool get isBangla => locale.languageCode == 'bn';
-
   String _text(String bn, String en) => isBangla ? bn : en;
 
   String get appName => 'NurVerse';
@@ -29,7 +22,6 @@ class AppLocalizations {
   String get hadith => _text('হাদিস', 'Hadith');
   String get tools => _text('টুলস', 'Tools');
   String get more => _text('আরও', 'More');
-
   String get refresh => _text('রিফ্রেশ', 'Refresh');
   String get retry => _text('পুনরায় চেষ্টা করুন', 'Try Again');
   String get cancel => _text('বাতিল', 'Cancel');
@@ -47,7 +39,6 @@ class AppLocalizations {
   String get sunrise => _text('সূর্যোদয়', 'Sunrise');
   String get sunset => _text('সূর্যাস্ত', 'Sunset');
   String get location => _text('বর্তমান অবস্থান', 'Current Location');
-
   String get todaysPrayer => _text('আজকের সালাত', 'Today’s Prayer');
   String get fullPrayerSchedule => _text('প্রতিটি ওয়াক্তের পূর্ণ সময়সূচি', 'Complete prayer schedule');
   String get prayerTimes => _text('সালাতের সময়', 'Prayer Times');
@@ -71,8 +62,7 @@ class AppLocalizations {
   String get prayerTracker => _text('আজকের সালাত ট্র্যাকার', 'Prayer Tracker');
   String get markPrayers => _text('পড়া সালাতগুলো চিহ্নিত করুন', 'Mark the prayers you have performed');
   String get prayerLoadError => _text('সালাতের তথ্য লোড করা যায়নি', 'Could not load prayer information');
-  String get prayerTimeNote => _text('সালাতের সময় স্থান, তারিখ ও হিসাব পদ্ধতির উপর নির্ভর করে পরিবর্তিত হতে পারে.', 'Prayer times may vary depending on location, date, and calculation method.');
-
+  String get prayerTimeNote => _text('সালাতের সময় স্থান, তারিখ ও হিসাব পদ্ধতির উপর নির্ভর করে পরিবর্তিত হতে পারে।', 'Prayer times may vary depending on location, date, and calculation method.');
   String get fajr => _text('ফজর', 'Fajr');
   String get dhuhr => _text('যোহর', 'Dhuhr');
   String get asr => _text('আসর', 'Asr');
@@ -88,14 +78,12 @@ class AppLocalizations {
   String get islamicCalendar => _text('ইসলামিক ক্যালেন্ডার', 'Islamic Calendar');
   String get nearbyMosque => _text('কাছের মসজিদ', 'Nearby Mosque');
   String get islamicBooks => _text('ইসলামিক বই', 'Islamic Books');
-
   String get dailyAyah => _text('আজকের আয়াত', 'Ayah of the Day');
   String get dailyHadith => _text('আজকের হাদিস', 'Hadith of the Day');
   String get dailyDua => _text('আজকের দোয়া', 'Dua of the Day');
   String get continueReading => _text('কুরআন পড়া চালিয়ে যান', 'Continue Reading');
   String get lastRead => _text('সর্বশেষ পড়া', 'Last Read');
   String get seeAll => _text('সব দেখুন', 'See All');
-
   String get language => _text('ভাষা', 'Language');
   String get theme => _text('থিম', 'Theme');
   String get lightTheme => _text('লাইট', 'Light');
@@ -104,7 +92,6 @@ class AppLocalizations {
   String get systemTheme => _text('সিস্টেম', 'System');
   String get bangla => _text('বাংলা', 'Bangla');
   String get english => _text('ইংরেজি', 'English');
-
   String get locationUnavailable => _text('অবস্থান পাওয়া যায়নি', 'Location unavailable');
   String get noData => _text('কোনো তথ্য পাওয়া যায়নি', 'No data available');
   String get somethingWentWrong => _text('কিছু একটা সমস্যা হয়েছে', 'Something went wrong');
@@ -136,6 +123,18 @@ class AppLocalizations {
   String get toolsHeroTitle => _text('আপনার ইসলামিক টুলস', 'Your Islamic Tools');
   String get toolsHeroSubtitle => _text('ইবাদত, জ্ঞান ও দৈনন্দিন প্রয়োজন—সব এক জায়গায়।', 'Worship, knowledge and daily needs—all in one place.');
 
+  String get alQuran => _text('আল-কুরআন', 'Al-Quran');
+  String get quranSubtitle => _text('হাফেজি পাঠ, অনুধাবন এবং তিলাওয়াত — তিনটি আলাদা অভিজ্ঞতা।', 'Hifzi reading, understanding and recitation — three distinct experiences.');
+  String get hafeziQuran => _text('হাফেজি কুরআন', 'Hafezi Quran');
+  String get hafeziSubtitle => _text('১৫ লাইনের অফলাইন হাফেজি/ইন্দো-পাক স্টাইল মুসহাফ।', '15-line offline Hafezi/Indo-Pak style Mushaf.');
+  String get fifteenLinesOffline => _text('১৫ লাইন • অফলাইন', '15 lines • Offline');
+  String get onudhabonQuran => _text('অনুধাবন কুরআন', 'Onudhabon Quran');
+  String get onudhabonSubtitle => _text('আরবি আয়াত, বাংলা অনুবাদ এবং বাংলা তাফসির/ব্যাখ্যা।', 'Arabic verses, Bengali translation and Bengali tafsir/explanation.');
+  String get translationTafsir => _text('অনুবাদ + তাফসির', 'Translation + Tafsir');
+  String get audioQuranMode => _text('অডিও কুরআন', 'Audio Quran');
+  String get audioQuranModeSubtitle => _text('সূরা অনুযায়ী তিলাওয়াত, ক্বারী নির্বাচন, seek এবং offline download।', 'Surah-based recitation, reciter selection, seek and offline download.');
+  String get audioOfflineCache => _text('অডিও • অফলাইন ক্যাশ', 'Audio • Offline Cache');
+
   String prayerStartsAt(String time) => _text('শুরু হবে $time', 'Starts at $time');
   String prayerEndsAt(String time) => _text('শেষ হবে $time', 'Ends at $time');
   String nextPrayerAt(String name, String time) => _text('পরবর্তী: $name • $time', 'Next: $name • $time');
@@ -144,13 +143,10 @@ class AppLocalizations {
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
-
   @override
   bool isSupported(Locale locale) => locale.languageCode == 'bn' || locale.languageCode == 'en';
-
   @override
   Future<AppLocalizations> load(Locale locale) async => AppLocalizations(locale);
-
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
