@@ -8,20 +8,22 @@ class AppColors {
   static const Color softAqua = Color(0xFF7DD3FC);
 
   static const Color backgroundLight = Color(0xFFF4F8FC);
-  static const Color cardLight = Colors.white;
-  static const Color borderLight = Color(0x140EA5E9);
+  // Global premium glass-card surface. The transparency is intentional so the
+  // Islamic calligraphic artwork remains visible underneath every card.
+  static const Color cardLight = Color(0xD9FFFFFF);
+  static const Color borderLight = Color(0x260EA5E9);
   static const Color textPrimaryLight = Color(0xFF111827);
   static const Color textSecondaryLight = Color(0xFF4B5563);
 
   static const Color backgroundDark = Color(0xFF07141F);
-  static const Color cardDark = Color(0xFF112535);
-  static const Color borderDark = Color(0x220EA5E9);
+  static const Color cardDark = Color(0xB8112535);
+  static const Color borderDark = Color(0x300EA5E9);
   static const Color textPrimaryDark = Color(0xFFFFFFFF);
   static const Color textSecondaryDark = Color(0xFFE5EDF5);
 
   static const Color amoledBackground = Colors.black;
-  static const Color amoledCard = Color(0xFF0B0B0B);
-  static const Color amoledBorder = Color(0x220EA5E9);
+  static const Color amoledCard = Color(0xA60B0B0B);
+  static const Color amoledBorder = Color(0x300EA5E9);
 
   static const Color primary = seaBlue;
   static const Color textPrimary = textPrimaryLight;
@@ -80,183 +82,39 @@ class AppTheme {
   // Body text stays neutral for comfortable reading.
   // Quran Arabic/translation controls remain feature-specific.
   static const TextTheme _lightTextTheme = TextTheme(
-    displayLarge: TextStyle(
-      color: AppColors.seaBlueDark,
-      fontSize: 22,
-      height: 1.25,
-      fontWeight: FontWeight.w700,
-    ),
-    displayMedium: TextStyle(
-      color: AppColors.seaBlueDark,
-      fontSize: 21,
-      height: 1.3,
-      fontWeight: FontWeight.w700,
-    ),
-    displaySmall: TextStyle(
-      color: AppColors.seaBlueDark,
-      fontSize: 20,
-      height: 1.3,
-      fontWeight: FontWeight.w700,
-    ),
-    headlineLarge: TextStyle(
-      color: AppColors.seaBlueDark,
-      fontSize: 21,
-      height: 1.3,
-      fontWeight: FontWeight.w700,
-    ),
-    headlineMedium: TextStyle(
-      color: AppColors.seaBlueDark,
-      fontSize: 19,
-      height: 1.35,
-      fontWeight: FontWeight.w700,
-    ),
-    headlineSmall: TextStyle(
-      color: AppColors.seaBlueDark,
-      fontSize: 18,
-      height: 1.35,
-      fontWeight: FontWeight.w600,
-    ),
-    titleLarge: TextStyle(
-      color: AppColors.seaBlueDark,
-      fontSize: 19,
-      height: 1.35,
-      fontWeight: FontWeight.w700,
-    ),
-    titleMedium: TextStyle(
-      color: AppColors.seaBlueDark,
-      fontSize: 18,
-      height: 1.4,
-      fontWeight: FontWeight.w600,
-    ),
-    titleSmall: TextStyle(
-      color: AppColors.seaBlueDark,
-      fontSize: 17,
-      height: 1.4,
-      fontWeight: FontWeight.w600,
-    ),
-    bodyLarge: TextStyle(
-      color: AppColors.textPrimaryLight,
-      fontSize: 16,
-      height: 1.5,
-    ),
-    bodyMedium: TextStyle(
-      color: AppColors.textPrimaryLight,
-      fontSize: 16,
-      height: 1.5,
-    ),
-    bodySmall: TextStyle(
-      color: AppColors.textPrimaryLight,
-      fontSize: 16,
-      height: 1.5,
-    ),
-    labelLarge: TextStyle(
-      color: AppColors.textPrimaryLight,
-      fontSize: 16,
-      height: 1.4,
-      fontWeight: FontWeight.w500,
-    ),
-    labelMedium: TextStyle(
-      color: AppColors.textPrimaryLight,
-      fontSize: 16,
-      height: 1.4,
-      fontWeight: FontWeight.w500,
-    ),
-    labelSmall: TextStyle(
-      color: AppColors.textPrimaryLight,
-      fontSize: 16,
-      height: 1.4,
-      fontWeight: FontWeight.w500,
-    ),
+    displayLarge: TextStyle(color: AppColors.seaBlueDark, fontSize: 22, height: 1.25, fontWeight: FontWeight.w700),
+    displayMedium: TextStyle(color: AppColors.seaBlueDark, fontSize: 21, height: 1.3, fontWeight: FontWeight.w700),
+    displaySmall: TextStyle(color: AppColors.seaBlueDark, fontSize: 20, height: 1.3, fontWeight: FontWeight.w700),
+    headlineLarge: TextStyle(color: AppColors.seaBlueDark, fontSize: 21, height: 1.3, fontWeight: FontWeight.w700),
+    headlineMedium: TextStyle(color: AppColors.seaBlueDark, fontSize: 19, height: 1.35, fontWeight: FontWeight.w700),
+    headlineSmall: TextStyle(color: AppColors.seaBlueDark, fontSize: 18, height: 1.35, fontWeight: FontWeight.w600),
+    titleLarge: TextStyle(color: AppColors.seaBlueDark, fontSize: 19, height: 1.35, fontWeight: FontWeight.w700),
+    titleMedium: TextStyle(color: AppColors.seaBlueDark, fontSize: 18, height: 1.4, fontWeight: FontWeight.w600),
+    titleSmall: TextStyle(color: AppColors.seaBlueDark, fontSize: 17, height: 1.4, fontWeight: FontWeight.w600),
+    bodyLarge: TextStyle(color: AppColors.textPrimaryLight, fontSize: 16, height: 1.5),
+    bodyMedium: TextStyle(color: AppColors.textPrimaryLight, fontSize: 16, height: 1.5),
+    bodySmall: TextStyle(color: AppColors.textPrimaryLight, fontSize: 16, height: 1.5),
+    labelLarge: TextStyle(color: AppColors.textPrimaryLight, fontSize: 16, height: 1.4, fontWeight: FontWeight.w500),
+    labelMedium: TextStyle(color: AppColors.textPrimaryLight, fontSize: 16, height: 1.4, fontWeight: FontWeight.w500),
+    labelSmall: TextStyle(color: AppColors.textPrimaryLight, fontSize: 16, height: 1.4, fontWeight: FontWeight.w500),
   );
 
   static const TextTheme _darkTextTheme = TextTheme(
-    displayLarge: TextStyle(
-      color: AppColors.seaBlue,
-      fontSize: 22,
-      height: 1.25,
-      fontWeight: FontWeight.w700,
-    ),
-    displayMedium: TextStyle(
-      color: AppColors.seaBlue,
-      fontSize: 21,
-      height: 1.3,
-      fontWeight: FontWeight.w700,
-    ),
-    displaySmall: TextStyle(
-      color: AppColors.seaBlue,
-      fontSize: 20,
-      height: 1.3,
-      fontWeight: FontWeight.w700,
-    ),
-    headlineLarge: TextStyle(
-      color: AppColors.seaBlue,
-      fontSize: 21,
-      height: 1.3,
-      fontWeight: FontWeight.w700,
-    ),
-    headlineMedium: TextStyle(
-      color: AppColors.seaBlue,
-      fontSize: 19,
-      height: 1.35,
-      fontWeight: FontWeight.w700,
-    ),
-    headlineSmall: TextStyle(
-      color: AppColors.seaBlue,
-      fontSize: 18,
-      height: 1.35,
-      fontWeight: FontWeight.w600,
-    ),
-    titleLarge: TextStyle(
-      color: AppColors.seaBlue,
-      fontSize: 19,
-      height: 1.35,
-      fontWeight: FontWeight.w700,
-    ),
-    titleMedium: TextStyle(
-      color: AppColors.seaBlue,
-      fontSize: 18,
-      height: 1.4,
-      fontWeight: FontWeight.w600,
-    ),
-    titleSmall: TextStyle(
-      color: AppColors.seaBlue,
-      fontSize: 17,
-      height: 1.4,
-      fontWeight: FontWeight.w600,
-    ),
-    bodyLarge: TextStyle(
-      color: AppColors.textPrimaryDark,
-      fontSize: 16,
-      height: 1.5,
-    ),
-    bodyMedium: TextStyle(
-      color: AppColors.textPrimaryDark,
-      fontSize: 16,
-      height: 1.5,
-    ),
-    bodySmall: TextStyle(
-      color: AppColors.textPrimaryDark,
-      fontSize: 16,
-      height: 1.5,
-    ),
-    labelLarge: TextStyle(
-      color: AppColors.textPrimaryDark,
-      fontSize: 16,
-      height: 1.4,
-      fontWeight: FontWeight.w500,
-    ),
-    labelMedium: TextStyle(
-      color: AppColors.textPrimaryDark,
-      fontSize: 16,
-      height: 1.4,
-      fontWeight: FontWeight.w500,
-    ),
-    labelSmall: TextStyle(
-      color: AppColors.textPrimaryDark,
-      fontSize: 16,
-      height: 1.4,
-      fontWeight: FontWeight.w500,
-    ),
+    displayLarge: TextStyle(color: AppColors.seaBlue, fontSize: 22, height: 1.25, fontWeight: FontWeight.w700),
+    displayMedium: TextStyle(color: AppColors.seaBlue, fontSize: 21, height: 1.3, fontWeight: FontWeight.w700),
+    displaySmall: TextStyle(color: AppColors.seaBlue, fontSize: 20, height: 1.3, fontWeight: FontWeight.w700),
+    headlineLarge: TextStyle(color: AppColors.seaBlue, fontSize: 21, height: 1.3, fontWeight: FontWeight.w700),
+    headlineMedium: TextStyle(color: AppColors.seaBlue, fontSize: 19, height: 1.35, fontWeight: FontWeight.w700),
+    headlineSmall: TextStyle(color: AppColors.seaBlue, fontSize: 18, height: 1.35, fontWeight: FontWeight.w600),
+    titleLarge: TextStyle(color: AppColors.seaBlue, fontSize: 19, height: 1.35, fontWeight: FontWeight.w700),
+    titleMedium: TextStyle(color: AppColors.seaBlue, fontSize: 18, height: 1.4, fontWeight: FontWeight.w600),
+    titleSmall: TextStyle(color: AppColors.seaBlue, fontSize: 17, height: 1.4, fontWeight: FontWeight.w600),
+    bodyLarge: TextStyle(color: AppColors.textPrimaryDark, fontSize: 16, height: 1.5),
+    bodyMedium: TextStyle(color: AppColors.textPrimaryDark, fontSize: 16, height: 1.5),
+    bodySmall: TextStyle(color: AppColors.textPrimaryDark, fontSize: 16, height: 1.5),
+    labelLarge: TextStyle(color: AppColors.textPrimaryDark, fontSize: 16, height: 1.4, fontWeight: FontWeight.w500),
+    labelMedium: TextStyle(color: AppColors.textPrimaryDark, fontSize: 16, height: 1.4, fontWeight: FontWeight.w500),
+    labelSmall: TextStyle(color: AppColors.textPrimaryDark, fontSize: 16, height: 1.4, fontWeight: FontWeight.w500),
   );
 
   static ThemeData _theme({
@@ -296,12 +154,7 @@ class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         iconTheme: IconThemeData(color: primary),
-        titleTextStyle: TextStyle(
-          color: primary,
-          fontSize: 20,
-          height: 1.3,
-          fontWeight: FontWeight.w700,
-        ),
+        titleTextStyle: TextStyle(color: primary, fontSize: 20, height: 1.3, fontWeight: FontWeight.w700),
       ),
       cardTheme: CardThemeData(
         color: card,
@@ -339,11 +192,7 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: card,
-        contentTextStyle: TextStyle(
-          color: textPrimary,
-          fontSize: 16,
-          height: 1.5,
-        ),
+        contentTextStyle: TextStyle(color: textPrimary, fontSize: 16, height: 1.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
