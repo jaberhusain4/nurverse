@@ -97,7 +97,6 @@ class NurVerseApp extends StatelessWidget {
 
           final ThemeData baseTheme = Theme.of(context);
           final TextTheme textTheme = baseTheme.textTheme;
-          final TextStyle? normalBody = textTheme.bodyMedium;
           final TextStyle? normalLabel = textTheme.labelLarge;
           final TextTheme effectiveTextTheme = boldText.isBold
               ? textTheme.copyWith(
@@ -197,8 +196,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final SettingsProvider settings = context.watch<SettingsProvider>();
-    final bool isBangla = settings.isBangla;
+    final AppLocalizations l10n = AppLocalizations.of(context);
 
     final List<Widget> screens = [
       HomeScreen(onNavigateTab: _onNavigateTab),
@@ -232,32 +230,32 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             BottomNavigationBarItem(
               icon: const Icon(Icons.home_outlined),
               activeIcon: const Icon(Icons.home),
-              label: isBangla ? 'হোম' : 'Home',
+              label: l10n.home,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.mosque_outlined),
               activeIcon: const Icon(Icons.mosque),
-              label: isBangla ? 'সালাত' : 'Prayer',
+              label: l10n.prayer,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.menu_book_outlined),
               activeIcon: const Icon(Icons.menu_book),
-              label: isBangla ? 'কুরআন' : 'Quran',
+              label: l10n.quran,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.auto_stories_outlined),
               activeIcon: const Icon(Icons.auto_stories),
-              label: isBangla ? 'হাদিস' : 'Hadith',
+              label: l10n.hadith,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.grid_view_outlined),
               activeIcon: const Icon(Icons.grid_view),
-              label: isBangla ? 'টুলস' : 'Tools',
+              label: l10n.tools,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.more_horiz_outlined),
               activeIcon: const Icon(Icons.more_horiz),
-              label: isBangla ? 'আরও' : 'More',
+              label: l10n.more,
             ),
           ],
         ),
