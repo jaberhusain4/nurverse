@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../localization/app_localizations.dart';
 import '../theme/app_theme.dart';
 import 'quran/audio_quran_screen.dart';
 import 'quran/hafezi_quran_screen.dart';
@@ -10,62 +11,37 @@ class QuranScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 30),
         children: [
-          Text(
-            'আল-কুরআন',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
+          Text(l10n.alQuran, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
-          Text(
-            'হাফেজি পাঠ, অনুধাবন এবং তিলাওয়াত — তিনটি আলাদা অভিজ্ঞতা।',
-            style: TextStyle(color: context.secondaryTextColor),
-          ),
+          Text(l10n.quranSubtitle, style: TextStyle(color: context.secondaryTextColor)),
           const SizedBox(height: 20),
           _QuranModeCard(
             icon: Icons.menu_book_rounded,
-            title: 'Hafezi Quran',
-            subtitle: '১৫ লাইনের অফলাইন হাফেজি/ইন্দো-পাক স্টাইল মুসহাফ।',
-            badge: '15 লাইন • Offline',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const HafeziQuranScreen(),
-                ),
-              );
-            },
+            title: l10n.hafeziQuran,
+            subtitle: l10n.hafeziSubtitle,
+            badge: l10n.fifteenLinesOffline,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HafeziQuranScreen())),
           ),
           const SizedBox(height: 14),
           _QuranModeCard(
             icon: Icons.auto_stories_rounded,
-            title: 'Onudhabon Quran',
-            subtitle: 'আরবি আয়াত, বাংলা অনুবাদ এবং বাংলা তাফসির/ব্যাখ্যা।',
-            badge: 'Translation + Tafsir',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const OnudhabonQuranScreen(),
-                ),
-              );
-            },
+            title: l10n.onudhabonQuran,
+            subtitle: l10n.onudhabonSubtitle,
+            badge: l10n.translationTafsir,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const OnudhabonQuranScreen())),
           ),
           const SizedBox(height: 14),
           _QuranModeCard(
             icon: Icons.headphones_rounded,
-            title: 'Audio Quran',
-            subtitle: 'সূরা অনুযায়ী তিলাওয়াত, ক্বারী নির্বাচন, seek এবং offline download।',
-            badge: 'Audio • Offline Cache',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const AudioQuranScreen(),
-                ),
-              );
-            },
+            title: l10n.audioQuranMode,
+            subtitle: l10n.audioQuranModeSubtitle,
+            badge: l10n.audioOfflineCache,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AudioQuranScreen())),
           ),
         ],
       ),
@@ -80,18 +56,11 @@ class _QuranModeCard extends StatelessWidget {
   final String? badge;
   final VoidCallback onTap;
 
-  const _QuranModeCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.badge,
-    required this.onTap,
-  });
+  const _QuranModeCard({required this.icon, required this.title, required this.subtitle, required this.badge, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
-
     return Material(
       color: context.cardColor,
       borderRadius: BorderRadius.circular(24),
@@ -105,10 +74,7 @@ class _QuranModeCard extends StatelessWidget {
               Container(
                 width: 56,
                 height: 56,
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: .10),
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: primary.withValues(alpha: .10), shape: BoxShape.circle),
                 child: Icon(icon, color: primary, size: 28),
               ),
               const SizedBox(width: 16),
@@ -116,51 +82,22 @@ class _QuranModeCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+                    Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 6),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        height: 1.45,
-                        color: context.secondaryTextColor,
-                      ),
-                    ),
+                    Text(subtitle, style: TextStyle(fontSize: 12.5, height: 1.45, color: context.secondaryTextColor)),
                     if (badge != null) ...[
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: primary.withValues(alpha: .08),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          badge!,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: primary,
-                          ),
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(color: primary.withValues(alpha: .08), borderRadius: BorderRadius.circular(20)),
+                        child: Text(badge!, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: primary)),
                       ),
                     ],
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: context.secondaryTextColor,
-              ),
+              Icon(Icons.chevron_right_rounded, color: context.secondaryTextColor),
             ],
           ),
         ),
