@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+
 import '../../models/daily_content_model.dart';
+import '../../theme/app_theme.dart';
 
 class DailyContentCard extends StatelessWidget {
   final DailyContentModel content;
+  final String languageCode;
   final IconData icon;
   final Color iconColor;
   final VoidCallback? onBookmark;
@@ -11,11 +14,31 @@ class DailyContentCard extends StatelessWidget {
   const DailyContentCard({
     super.key,
     required this.content,
+    required this.languageCode,
     required this.icon,
     required this.iconColor,
     this.onBookmark,
     this.onShare,
   });
+
+  String get _title {
+    if (languageCode == 'en') {
+      switch (content.type) {
+        case DailyContentType.ayah:
+          return 'Today’s Ayah';
+        case DailyContentType.hadith:
+          return 'Today’s Hadith';
+        case DailyContentType.dua:
+          return 'Today’s Dua';
+      }
+    }
+    return content.title;
+  }
+
+  String get _body => languageCode == 'en' ? content.english : content.bangla;
+
+  String get _reference =>
+      languageCode == 'en' ? content.englishReference : content.reference;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +74,7 @@ class DailyContentCard extends StatelessWidget {
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
-                  content.title,
+                  _title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall?.copyWith(
@@ -90,7 +113,7 @@ class DailyContentCard extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Text(
-            content.bangla,
+            _body,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 15.5,
               height: 1.48,
@@ -98,7 +121,7 @@ class DailyContentCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            content.reference,
+            _reference,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.hintColor,
               fontSize: 13,
