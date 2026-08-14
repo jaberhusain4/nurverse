@@ -165,7 +165,7 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: text,
-                        fontSize: 14.5,
+                        fontSize: 14,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -209,13 +209,13 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
                   _label(bn: 'সময় বাকি', en: 'Time left', ar: 'الوقت المتبقي'),
                   style: TextStyle(color: secondary, fontSize: 12, fontWeight: FontWeight.w700),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Flexible(
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
                       remainingTime.isEmpty ? '--:--:--' : remainingTime,
-                      style: TextStyle(color: text, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: .4),
+                      style: TextStyle(color: text, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: .4),
                     ),
                   ),
                 ),
@@ -225,11 +225,21 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
           const SizedBox(height: 9),
           Row(
             children: [
-              Expanded(child: _TimeLabel(label: _label(bn: 'শুরু', en: 'Start', ar: 'البداية'), time: currentPrayerTime, color: secondary)),
+              Expanded(
+                child: _TimeLabel(
+                  label: _label(bn: 'শুরু', en: 'Start', ar: 'البداية'),
+                  time: currentPrayerTime,
+                  color: secondary,
+                ),
+              ),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
-                  child: _TimeLabel(label: _label(bn: 'শেষ', en: 'End', ar: 'النهاية'), time: nextPrayerTime, color: secondary),
+                  child: _TimeLabel(
+                    label: _label(bn: 'শেষ', en: 'End', ar: 'النهاية'),
+                    time: nextPrayerTime,
+                    color: secondary,
+                  ),
                 ),
               ),
             ],
@@ -254,21 +264,23 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
           ),
           const SizedBox(height: 9),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(Icons.bolt_rounded, size: 17, color: primary),
               const SizedBox(width: 5),
               Expanded(
                 child: Text(
                   _awalText(awal),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: text, fontSize: 12.5, fontWeight: FontWeight.w700),
+                  softWrap: true,
+                  maxLines: 2,
+                  overflow: TextOverflow.visible,
+                  style: TextStyle(color: text, fontSize: 12.5, fontWeight: FontWeight.w700, height: 1.3),
                 ),
               ),
               if (awal != null && awal.active) ...[
-                const SizedBox(width: 6),
-                Flexible(
+                const SizedBox(width: 8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 86),
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerRight,
@@ -393,8 +405,15 @@ class _TimeLabel extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('$label  ', style: TextStyle(color: color, fontSize: 11)),
-        Text(time.isEmpty ? '--:--' : time, style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w800)),
+        Text('$label  ', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+        Flexible(
+          child: Text(
+            time.isEmpty ? '--:--' : time,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w800),
+          ),
+        ),
       ],
     );
   }
