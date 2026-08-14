@@ -21,19 +21,21 @@ class DailyContentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final glassCard = theme.cardColor.withValues(alpha: isDark ? .58 : .70);
+    final primary = theme.colorScheme.primary;
 
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 9),
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: glassCard,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0x220288D1)),
+        border: Border.all(color: primary.withValues(alpha: .10)),
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withValues(alpha: .24)
+                ? Colors.black.withValues(alpha: .18)
                 : Colors.black.withValues(alpha: .035),
             blurRadius: 10,
             offset: const Offset(0, 4),
