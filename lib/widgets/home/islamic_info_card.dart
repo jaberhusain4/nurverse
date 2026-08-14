@@ -36,6 +36,12 @@ class IslamicInfoCard extends StatelessWidget {
     }
   }
 
+  String _loadingLocation() => _label(
+        bn: 'লোকেশন লোড হচ্ছে...',
+        en: 'Loading location...',
+        ar: 'جارٍ تحميل الموقع...',
+      );
+
   String _hijriBanglaDate() {
     try {
       final h = HijriCalendar.now();
@@ -51,8 +57,11 @@ class IslamicInfoCard extends StatelessWidget {
 
   String _normalizeLocation(String value) {
     final raw = value.trim();
-    if (raw.isEmpty || raw == 'লোকেশন লোড হচ্ছে...') return raw;
+    if (raw.isEmpty) return _loadingLocation();
     final lower = raw.toLowerCase();
+    if (lower == 'লোকেশন লোড হচ্ছে...' || lower == 'loading location...' || lower == 'جارٍ تحميل الموقع...') {
+      return _loadingLocation();
+    }
     if (lower.contains('mirpur')) return 'Mirpur, Dhaka, Bangladesh';
     final sector = RegExp(r'(?:sector|সেক্টর)\s*[- ]?(\d+)', caseSensitive: false).firstMatch(raw);
     if (sector != null && lower.contains('uttara')) return 'Uttara Sector ${sector.group(1)}, Dhaka, Bangladesh';
@@ -85,12 +94,12 @@ class IslamicInfoCard extends StatelessWidget {
               const SizedBox(width: 9),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(_normalizeLocation(location), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w800)),
+                  Text(_normalizeLocation(location), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 2),
-                  Text(_label(bn: 'আজকের তথ্য', en: 'Today', ar: 'اليوم'), style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
+                  Text(_label(bn: 'আজকের তথ্য', en: 'Today', ar: 'اليوم'), style: TextStyle(color: secondary, fontSize: 13, fontWeight: FontWeight.w600)),
                 ]),
               ),
-              if (onRefresh != null) IconButton(tooltip: _label(bn: 'রিফ্রেশ', en: 'Refresh', ar: 'تحديث'), onPressed: onRefresh, visualDensity: VisualDensity.compact, icon: Icon(Icons.refresh_rounded, size: 18, color: primary)),
+              if (onRefresh != null) IconButton(tooltip: _label(bn: 'রিফ্রেশ', en: 'Refresh', ar: 'تحديث'), onPressed: onRefresh, visualDensity: VisualDensity.compact, icon: Icon(Icons.refresh_rounded, size: 19, color: primary)),
             ],
           ),
           const SizedBox(height: 11),
@@ -129,9 +138,9 @@ class _DateBlock extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
         decoration: BoxDecoration(color: primary.withValues(alpha: .035), borderRadius: BorderRadius.circular(13)),
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
+          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 13, fontWeight: FontWeight.w600)),
           const SizedBox(height: 3),
-          Text(value, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 12.5, fontWeight: FontWeight.w800)),
+          Text(value, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 13.5, fontWeight: FontWeight.w800)),
         ]),
       );
 }
@@ -153,30 +162,15 @@ class _SunBlock extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            Positioned(
-              left: 14,
-              child: Icon(icon, size: 19, color: primary),
-            ),
+            Positioned(left: 14, child: Icon(icon, size: 19, color: primary)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 42, vertical: 8),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600),
-                  ),
+                  Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 13, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
-                  Text(
-                    value.isEmpty ? '--:--' : value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w800),
-                  ),
+                  Text(value.isEmpty ? '--:--' : value, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 13.5, fontWeight: FontWeight.w800)),
                 ],
               ),
             ),
