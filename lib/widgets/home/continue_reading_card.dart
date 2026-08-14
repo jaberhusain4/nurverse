@@ -22,12 +22,9 @@ class ContinueReadingCard extends StatelessWidget {
 
   String _label({required String bn, required String en, required String ar}) {
     switch (languageCode) {
-      case 'en':
-        return en;
-      case 'ar':
-        return ar;
-      default:
-        return bn;
+      case 'en': return en;
+      case 'ar': return ar;
+      default: return bn;
     }
   }
 
