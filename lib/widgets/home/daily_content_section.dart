@@ -10,42 +10,28 @@ class DailyContentSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     final primary = theme.colorScheme.primary;
-
     final secondary = context.secondaryTextColor;
-
-    // ============================================================
-    // REAL DAILY CONTENT
-    // ============================================================
-
     final ayah = DailyContentService.getTodayAyah();
-
     final hadith = DailyContentService.getTodayHadith();
-
     final dua = DailyContentService.getTodayDua();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ==========================================================
-        // SECTION HEADER
-        // ==========================================================
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
                 color: primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.auto_awesome_rounded, color: primary, size: 20),
+              child: Icon(Icons.auto_awesome_rounded, color: primary, size: 18),
             ),
-
-            const SizedBox(width: 10),
-
+            const SizedBox(width: 9),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,15 +39,16 @@ class DailyContentSection extends StatelessWidget {
                   Text(
                     'Daily Inspiration',
                     style: theme.textTheme.titleMedium?.copyWith(
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
                     'আজকের আয়াত, হাদিস ও দোয়া',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: secondary,
-                      fontSize: 10,
+                      fontSize: 12,
                     ),
                   ),
                 ],
@@ -69,35 +56,10 @@ class DailyContentSection extends StatelessWidget {
             ),
           ],
         ),
-
-        const SizedBox(height: 14),
-
-        // ==========================================================
-        // AYAH
-        // ==========================================================
-        DailyContentCard(
-          content: ayah,
-          icon: Icons.auto_stories_rounded,
-          iconColor: primary,
-        ),
-
-        // ==========================================================
-        // HADITH
-        // ==========================================================
-        DailyContentCard(
-          content: hadith,
-          icon: Icons.menu_book_rounded,
-          iconColor: primary,
-        ),
-
-        // ==========================================================
-        // DUA
-        // ==========================================================
-        DailyContentCard(
-          content: dua,
-          icon: Icons.favorite_rounded,
-          iconColor: primary,
-        ),
+        const SizedBox(height: 11),
+        DailyContentCard(content: ayah, icon: Icons.auto_stories_rounded, iconColor: primary),
+        DailyContentCard(content: hadith, icon: Icons.menu_book_rounded, iconColor: primary),
+        DailyContentCard(content: dua, icon: Icons.favorite_rounded, iconColor: primary),
       ],
     );
   }
