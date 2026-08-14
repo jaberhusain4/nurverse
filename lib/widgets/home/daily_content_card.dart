@@ -24,19 +24,19 @@ class DailyContentCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+      margin: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0x220288D1)),
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withValues(alpha: .28)
-                : Colors.black.withValues(alpha: .045),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
+                ? Colors.black.withValues(alpha: .24)
+                : Colors.black.withValues(alpha: .035),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -45,14 +45,15 @@ class DailyContentCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, color: iconColor, size: 20),
-              const SizedBox(width: 8),
+              Icon(icon, color: iconColor, size: 19),
+              const SizedBox(width: 7),
               Expanded(
                 child: Text(
                   content.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall?.copyWith(
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -62,39 +63,43 @@ class DailyContentCard extends StatelessWidget {
                   onPressed: onBookmark,
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  icon: const Icon(Icons.bookmark_border_rounded, size: 20),
+                  constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+                  icon: const Icon(Icons.bookmark_border_rounded, size: 19),
                 ),
               if (onShare != null)
                 IconButton(
                   onPressed: onShare,
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  icon: const Icon(Icons.share_outlined, size: 20),
+                  constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+                  icon: const Icon(Icons.share_outlined, size: 19),
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           SelectableText(
             content.arabic,
             textAlign: TextAlign.right,
             style: const TextStyle(
               fontFamily: 'Amiri',
-              fontSize: 21,
-              height: 1.8,
+              fontSize: 19,
+              height: 1.65,
             ),
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: 7),
           Text(
             content.bangla,
-            style: theme.textTheme.bodyMedium?.copyWith(height: 1.55),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: 15.5,
+              height: 1.48,
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             content.reference,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.hintColor,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
           ),
