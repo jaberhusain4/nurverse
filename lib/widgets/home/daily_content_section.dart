@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../localization/app_localizations.dart';
+import '../../localization/app_localizations_x.dart';
 import '../../services/daily_content_service.dart';
 import '../../theme/app_theme.dart';
 import 'daily_content_card.dart';
@@ -9,6 +11,7 @@ class DailyContentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final secondary = context.secondaryTextColor;
@@ -37,7 +40,7 @@ class DailyContentSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Daily Inspiration',
+                    l10n.tr('দৈনিক অনুপ্রেরণা', 'Daily Inspiration'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -45,7 +48,7 @@ class DailyContentSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    'আজকের আয়াত, হাদিস ও দোয়া',
+                    l10n.tr('আজকের আয়াত, হাদিস ও দোয়া', 'Today’s Ayah, Hadith & Dua'),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: secondary,
                       fontSize: 12,
