@@ -14,6 +14,7 @@ class AppLocalizations {
 
   bool get isBangla => locale.languageCode == 'bn';
   String _text(String bn, String en) => isBangla ? bn : en;
+  String tr(String bn, String en) => _text(bn, en);
 
   String get appName => 'NurVerse';
   String get home => _text('হোম', 'Home');
@@ -45,6 +46,8 @@ class AppLocalizations {
   String get previousPrayer => _text('বিগত সালাত', 'Previous Prayer');
   String get current => _text('বর্তমান', 'Current');
   String get next => _text('পরবর্তী', 'Next');
+  String get completed => _text('সম্পন্ন', 'Completed');
+  String get noPrayerWindow => _text('ওয়াক্ত নেই', 'No prayer window');
   String get start => _text('শুরু', 'Start');
   String get end => _text('শেষ', 'End');
   String get jamaat => _text('জামাআত', 'Jama’ah');
