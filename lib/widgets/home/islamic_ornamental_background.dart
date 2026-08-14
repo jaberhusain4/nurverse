@@ -6,11 +6,9 @@ import '../../theme/app_theme.dart';
 
 /// A lightweight, fully offline Islamic ornamental background for Home.
 ///
-/// The ornament is inspired by classical Arabic calligraphic flow,
-/// arabesque curves, crescent-and-lantern motifs, and geometric framing.
-/// It uses abstract calligraphic strokes rather than readable religious text,
-/// so it adds historical Islamic character without introducing copied verses
-/// or competing with the actual Home content.
+/// The ornament follows the same subtle composition as the original Home
+/// background, but replaces the geometric corner lattice with abstract,
+/// historical Arabic-calligraphy-inspired flowing ornament.
 class IslamicOrnamentalBackground extends StatelessWidget {
   const IslamicOrnamentalBackground({super.key});
 
@@ -57,7 +55,7 @@ class _IslamicOrnamentalPainter extends CustomPainter {
     _paintLantern(canvas, size, stronger);
     _paintCrescent(canvas, size, stronger);
     _paintPalm(canvas, size, soft);
-    _paintCornerGeometry(canvas, size, base);
+    _paintCornerCalligraphy(canvas, size, base, soft, stronger);
   }
 
   void _paintCalligraphicMedallion(
@@ -82,13 +80,10 @@ class _IslamicOrnamentalPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round
       ..color = line;
 
-    // Soft circular medallion framing, echoing classical manuscript seals.
     for (var ring = 1; ring <= 3; ring++) {
       canvas.drawCircle(center, radius * ring / 3, ring == 2 ? bold : fine);
     }
 
-    // Abstract Arabic-calligraphy-inspired composition. These are deliberately
-    // non-literal flowing strokes rather than readable Arabic text.
     final main = Path()
       ..moveTo(center.dx - radius * 0.76, center.dy + radius * 0.20)
       ..cubicTo(
@@ -157,10 +152,10 @@ class _IslamicOrnamentalPainter extends CustomPainter {
         center.dx + radius * 0.49,
         center.dy - radius * 0.02,
         center.dx + radius * 0.70,
-        center.dy + radius * 0.02);
+        center.dy + radius * 0.02,
+      );
     canvas.drawPath(upper, fine);
 
-    // Long horizontal flourish, characteristic of flowing Arabic lettering.
     final flourish = Path()
       ..moveTo(center.dx - radius * 0.80, center.dy + radius * 0.48)
       ..cubicTo(
@@ -177,17 +172,16 @@ class _IslamicOrnamentalPainter extends CustomPainter {
         center.dx + radius * 0.78,
         center.dy + radius * 0.34,
         center.dx + radius * 0.82,
-        center.dy + radius * 0.24);
+        center.dy + radius * 0.24,
+      );
     canvas.drawPath(flourish, bold);
 
-    // Small diacritic-like decorative marks; not Arabic letters.
     for (var i = 0; i < 5; i++) {
       final x = center.dx - radius * 0.52 + i * radius * 0.25;
       final y = center.dy - radius * 0.58 + (i.isEven ? 0 : radius * 0.04);
       canvas.drawCircle(Offset(x, y), radius * 0.018, fine);
     }
 
-    // Outer arabesque leaves around the medallion.
     for (var i = 0; i < 8; i++) {
       final angle = -math.pi * 0.92 + i * math.pi * 0.26;
       final start = center + Offset(
@@ -324,30 +318,135 @@ class _IslamicOrnamentalPainter extends CustomPainter {
     }
   }
 
-  void _paintCornerGeometry(Canvas canvas, Size size, Color line) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.70
-      ..color = line;
-    final rect = Rect.fromLTWH(
-      size.width * 0.68,
+  /// Replaces the old geometric lattice in the same top-right area with
+  /// flowing calligraphic ornament. The composition remains intentionally
+  /// sparse so the Home content stays readable.
+  void _paintCornerCalligraphy(
+    Canvas canvas,
+    Size size,
+    Color base,
+    Color soft,
+    Color stronger,
+  ) {
+    final area = Rect.fromLTWH(
+      size.width * 0.66,
       0,
-      size.width * 0.32,
-      size.height * 0.34,
+      size.width * 0.34,
+      size.height * 0.35,
     );
-    const step = 22.0;
-    for (var x = rect.left; x <= rect.right; x += step) {
-      canvas.drawLine(
-        Offset(x, rect.top),
-        Offset(x - rect.height, rect.bottom),
-        paint,
-      );
-      canvas.drawLine(
-        Offset(x, rect.top),
-        Offset(x + rect.height, rect.bottom),
-        paint,
-      );
+
+    final fine = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.78
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = soft;
+    final main = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.05
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = stronger;
+
+    // Long horizontal baseline-like flourishes, inspired by classical Arabic
+    // calligraphic compositions rather than literal written words.
+    for (var row = 0; row < 5; row++) {
+      final y = area.top + area.height * (0.12 + row * 0.19);
+      final path = Path()
+        ..moveTo(area.left - area.width * 0.08, y)
+        ..cubicTo(
+          area.left + area.width * 0.10,
+          y - area.height * 0.12,
+          area.left + area.width * 0.20,
+          y + area.height * 0.10,
+          area.left + area.width * 0.34,
+          y - area.height * 0.02,
+        )
+        ..cubicTo(
+          area.left + area.width * 0.48,
+          y - area.height * 0.14,
+          area.left + area.width * 0.60,
+          y + area.height * 0.10,
+          area.right + area.width * 0.05,
+          y - area.height * 0.03,
+        );
+      canvas.drawPath(path, row == 2 ? main : fine);
     }
+
+    // Vertical calligraphic stems and sweeping hooks.
+    for (var column = 0; column < 4; column++) {
+      final x = area.left + area.width * (0.10 + column * 0.25);
+      final stem = Path()
+        ..moveTo(x, area.top + area.height * 0.04)
+        ..cubicTo(
+          x - area.width * 0.07,
+          area.top + area.height * 0.16,
+          x + area.width * 0.06,
+          area.top + area.height * 0.28,
+          x - area.width * 0.01,
+          area.top + area.height * 0.42,
+        )
+        ..cubicTo(
+          x - area.width * 0.08,
+          area.top + area.height * 0.56,
+          x + area.width * 0.08,
+          area.top + area.height * 0.67,
+          x + area.width * 0.02,
+          area.bottom + area.height * 0.04,
+        );
+      canvas.drawPath(stem, column == 1 ? main : fine);
+
+      final hook = Path()
+        ..moveTo(x - area.width * 0.01, area.top + area.height * 0.48)
+        ..cubicTo(
+          x + area.width * 0.08,
+          area.top + area.height * 0.40,
+          x + area.width * 0.13,
+          area.top + area.height * 0.48,
+          x + area.width * 0.18,
+          area.top + area.height * 0.44,
+        );
+      canvas.drawPath(hook, fine);
+    }
+
+    // Small dot clusters evoke calligraphic diacritics without forming text.
+    for (var i = 0; i < 7; i++) {
+      final x = area.left + area.width * (0.08 + (i % 4) * 0.24);
+      final y = area.top + area.height * (0.07 + (i ~/ 4) * 0.18);
+      canvas.drawCircle(Offset(x, y), 1.0, fine);
+    }
+
+    // A very soft sweeping flourish ties the corner ornament to the medallion.
+    final flourish = Path()
+      ..moveTo(area.left - area.width * 0.05, area.bottom - area.height * 0.06)
+      ..cubicTo(
+        area.left + area.width * 0.22,
+        area.bottom - area.height * 0.20,
+        area.left + area.width * 0.54,
+        area.bottom + area.height * 0.02,
+        area.right + area.width * 0.04,
+        area.bottom - area.height * 0.14,
+      );
+    canvas.drawPath(flourish, fine);
+
+    // Keep a tiny amount of the original blue framing character without
+    // recreating the old diamond/grid pattern.
+    final accent = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.55
+      ..color = base;
+    canvas.drawArc(
+      Rect.fromLTWH(
+        area.left - area.width * 0.18,
+        area.top - area.height * 0.28,
+        area.width * 0.75,
+        area.height * 0.75,
+      ),
+      0.18,
+      1.20,
+      false,
+      accent,
+    );
   }
 
   @override
