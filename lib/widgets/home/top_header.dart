@@ -253,7 +253,15 @@ class TopHeader extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 2),
-                      Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: context.secondaryTextColor)),
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: context.secondaryTextColor,
+                          fontSize: 14,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -280,16 +288,38 @@ class TopHeader extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(assalamuAlaikum, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        assalamuAlaikum,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                       const SizedBox(height: 3),
-                      Text(localizedGreeting, style: theme.textTheme.bodyMedium?.copyWith(color: context.secondaryTextColor)),
+                      Text(
+                        localizedGreeting,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: 15,
+                          color: context.secondaryTextColor,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
                   decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(14)),
-                  child: Text(currentTime, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      currentTime,
+                      maxLines: 1,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
