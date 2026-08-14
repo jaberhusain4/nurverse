@@ -54,13 +54,13 @@ class QuickActionCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    fontSize: 11,
+                    fontSize: 14,
                   ),
                 ),
                 if (subtitle != null) ...[
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 3),
                   Text(
                     subtitle!,
                     maxLines: 1,
@@ -68,7 +68,7 @@ class QuickActionCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: context.secondaryTextColor,
-                      fontSize: 8.5,
+                      fontSize: 13,
                     ),
                   ),
                 ],
