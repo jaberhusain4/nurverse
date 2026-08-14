@@ -183,6 +183,7 @@ class PrayerController extends ChangeNotifier {
     final DateTime maghrib = times['Maghrib']!;
     final DateTime isha = times['Isha']!;
     final DateTime tomorrowFajr = _tomorrowPrayerTime(now, PrayerField.fajr);
+
     _ishraqStart = sunrise.add(const Duration(minutes: 15));
     _ishraqEnd = dhuhr.subtract(const Duration(minutes: 10));
     _duhaStart = sunrise.add(const Duration(minutes: 15));
@@ -191,20 +192,38 @@ class PrayerController extends ChangeNotifier {
     _awwwabinEnd = isha;
     _tahajjudStart = _calculateTahajjudStart(now: now, todayIsha: isha, tomorrowFajr: tomorrowFajr);
     _tahajjudEnd = tomorrowFajr;
+
     final DateTime sunriseProhibitedEnd = sunrise.add(const Duration(minutes: 15));
     final DateTime zawalStart = dhuhr.subtract(const Duration(minutes: 10));
     final DateTime sunsetStart = maghrib.subtract(const Duration(minutes: 15));
-    _prohibitedStart = null; _prohibitedEnd = null;
-    if (!now.isBefore(sunrise) && now.isBefore(sunriseProhibitedEnd)) { _prohibitedStart = sunrise; _prohibitedEnd = sunriseProhibitedEnd; }
-    else if (!now.isBefore(zawalStart) && now.isBefore(dhuhr)) { _prohibitedStart = zawalStart; _prohibitedEnd = dhuhr; }
-    else if (!now.isBefore(sunsetStart) && now.isBefore(maghrib)) { _prohibitedStart = sunsetStart; _prohibitedEnd = maghrib; }
-    final DateTime morningMakruhStart = sunrise.subtract(const Duration(minutes: 15));
-    final DateTime zawalMakruhEnd = dhuhr.add(const Duration(minutes: 5));
-    final DateTime eveningMakruhEnd = maghrib.add(const Duration(minutes: 15));
-    _makruhStart = null; _makruhEnd = null;
-    if (!now.isBefore(morningMakruhStart) && now.isBefore(sunriseProhibitedEnd)) { _makruhStart = morningMakruhStart; _makruhEnd = sunriseProhibitedEnd; }
-    else if (!now.isBefore(zawalStart) && now.isBefore(zawalMakruhEnd)) { _makruhStart = zawalStart; _makruhEnd = zawalMakruhEnd; }
-    else if (!now.isBefore(sunsetStart) && now.isBefore(eveningMakruhEnd)) { _makruhStart = sunsetStart; _makruhEnd = eveningMakruhEnd; }
+    final List<List<DateTime>> prohibitedWindows = [
+      [sunrise, sunriseProhibitedEnd],
+      [zawalStart, dhuhr],
+      [sunsetStart, maghrib],
+    ];
+    final List<List<DateTime>> makruhWindows = [
+      [sunrise.subtract(const Duration(minutes: 15)), sunriseProhibitedEnd],
+      [zawalStart, dhuhr.add(const Duration(minutes: 5))],
+      [sunsetStart, maghrib.add(const Duration(minutes: 15))],
+    ];
+    final List<DateTime>? prohibited = _selectCurrentOrNextWindow(prohibitedWindows, now);
+    final List<DateTime>? makruh = _selectCurrentOrNextWindow(makruhWindows, now);
+    _prohibitedStart = prohibited?[0];
+    _prohibitedEnd = prohibited?[1];
+    _makruhStart = makruh?[0];
+    _makruhEnd = makruh?[1];
+  }
+
+  List<DateTime>? _selectCurrentOrNextWindow(List<List<DateTime>> windows, DateTime now) {
+    for (final window in windows) {
+      final DateTime start = window[0];
+      final DateTime end = window[1];
+      if (!now.isBefore(start) && now.isBefore(end)) return [start, end];
+    }
+    for (final window in windows) {
+      if (now.isBefore(window[0])) return [window[0], window[1]];
+    }
+    return null;
   }
 
   void _buildPrayerList({required Map<String, DateTime> times, required DateTime now}) {
@@ -243,7 +262,38 @@ class PrayerController extends ChangeNotifier {
   void _clearCurrentPrayer() { for (final prayer in _prayers) prayer['isCurrent'] = false; }
   void _updateRemainingTime({required Map<String, DateTime> times, required DateTime now}) { DateTime target; if (now.isBefore(times['Fajr']!)) target = times['Fajr']!; else if (now.isBefore(times['Dhuhr']!)) target = times['Dhuhr']!; else if (now.isBefore(times['Asr']!)) target = times['Asr']!; else if (now.isBefore(times['Maghrib']!)) target = times['Maghrib']!; else if (now.isBefore(times['Isha']!)) target = times['Isha']!; else target = now.isBefore(_tahajjudStart!) ? _tahajjudStart! : _tahajjudEnd!; _timeRemainingForNextPrayer = _formatDuration(target.difference(now)); }
   void _updatePrayerProgress({required Map<String, DateTime> times, required DateTime now}) { DateTime? start; DateTime? end; if (!now.isBefore(times['Fajr']!) && now.isBefore(times['Sunrise']!)) { start = times['Fajr']; end = times['Sunrise']; } else if (!now.isBefore(times['Dhuhr']!) && now.isBefore(times['Asr']!)) { start = times['Dhuhr']; end = times['Asr']; } else if (!now.isBefore(times['Asr']!) && now.isBefore(times['Maghrib']!)) { start = times['Asr']; end = times['Maghrib']; } else if (!now.isBefore(times['Maghrib']!) && now.isBefore(times['Isha']!)) { start = times['Maghrib']; end = times['Isha']; } else if (!now.isBefore(times['Isha']!)) { start = times['Isha']; end = _tahajjudEnd; } if (start == null || end == null) { _prayerProgress = 0.0; return; } final int totalSeconds = end.difference(start).inSeconds; final int elapsedSeconds = now.difference(start).inSeconds; _prayerProgress = totalSeconds <= 0 ? 0.0 : (elapsedSeconds / totalSeconds).clamp(0.0, 1.0); }
-  void _updateDailyTimeInformation({required Map<String, DateTime> times, required DateTime now}) { final DateTime sunrise = times['Sunrise']!; final DateTime dhuhr = times['Dhuhr']!; final DateTime sunset = times['Maghrib']!; final DateTime sunriseProhibitedEnd = sunrise.add(const Duration(minutes: 15)); final DateTime zawalStart = dhuhr.subtract(const Duration(minutes: 10)); final DateTime sunsetStart = sunset.subtract(const Duration(minutes: 15)); if (!now.isBefore(sunrise) && now.isBefore(sunriseProhibitedEnd)) _prohibitedTimeText = 'সূর্যোদয়ের সময় — নামাজ আদায় থেকে বিরত থাকুন'; else if (!now.isBefore(zawalStart) && now.isBefore(dhuhr)) _prohibitedTimeText = 'জাওয়ালের সময় — নামাজ আদায় থেকে বিরত থাকুন'; else if (!now.isBefore(sunsetStart) && now.isBefore(sunset)) _prohibitedTimeText = 'সূর্যাস্তের সময় — নামাজ আদায় থেকে বিরত থাকুন'; else _prohibitedTimeText = 'বর্তমানে কোনো নিষিদ্ধ সময় নেই'; final DateTime morningMakruhStart = sunrise.subtract(const Duration(minutes: 15)); final DateTime zawalMakruhEnd = dhuhr.add(const Duration(minutes: 5)); final DateTime eveningMakruhEnd = sunset.add(const Duration(minutes: 15)); if (!now.isBefore(morningMakruhStart) && now.isBefore(sunriseProhibitedEnd)) { _makruhStart = morningMakruhStart; _makruhEnd = sunriseProhibitedEnd; _makruhTimeText = 'সূর্যোদয়ের আশেপাশের মাকরূহ সময়'; } else if (!now.isBefore(zawalStart) && now.isBefore(zawalMakruhEnd)) { _makruhStart = zawalStart; _makruhEnd = zawalMakruhEnd; _makruhTimeText = 'জাওয়ালের আশেপাশের মাকরূহ সময়'; } else if (!now.isBefore(sunsetStart) && now.isBefore(eveningMakruhEnd)) { _makruhStart = sunsetStart; _makruhEnd = eveningMakruhEnd; _makruhTimeText = 'সূর্যাস্তের আশেপাশের মাকরূহ সময়'; } else { _makruhStart = null; _makruhEnd = null; _makruhTimeText = 'বর্তমানে কোনো বিশেষ মাকরূহ সময় নেই'; } }
+  void _updateDailyTimeInformation({required Map<String, DateTime> times, required DateTime now}) {
+    final DateTime sunrise = times['Sunrise']!;
+    final DateTime dhuhr = times['Dhuhr']!;
+    final DateTime sunset = times['Maghrib']!;
+    final DateTime sunriseProhibitedEnd = sunrise.add(const Duration(minutes: 15));
+    final DateTime zawalStart = dhuhr.subtract(const Duration(minutes: 10));
+    final DateTime sunsetStart = sunset.subtract(const Duration(minutes: 15));
+    final List<DateTime> prohibited = _prohibitedStart != null && _prohibitedEnd != null ? [_prohibitedStart!, _prohibitedEnd!] : [];
+    if (prohibited.isEmpty) {
+      _prohibitedTimeText = 'আজ আর কোনো নিষিদ্ধ সময় নেই';
+    } else if (!now.isBefore(prohibited[0]) && now.isBefore(prohibited[1])) {
+      if (prohibited[0] == sunrise) _prohibitedTimeText = 'সূর্যোদয়ের সময় — নামাজ আদায় থেকে বিরত থাকুন';
+      else if (prohibited[0] == zawalStart) _prohibitedTimeText = 'জাওয়ালের সময় — নামাজ আদায় থেকে বিরত থাকুন';
+      else _prohibitedTimeText = 'সূর্যাস্তের সময় — নামাজ আদায় থেকে বিরত থাকুন';
+    } else {
+      if (prohibited[0] == sunrise) _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: সূর্যোদয়';
+      else if (prohibited[0] == zawalStart) _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: জাওয়াল';
+      else _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: সূর্যাস্ত';
+    }
+    final List<DateTime> makruh = _makruhStart != null && _makruhEnd != null ? [_makruhStart!, _makruhEnd!] : [];
+    if (makruh.isEmpty) {
+      _makruhTimeText = 'আজ আর কোনো বিশেষ মাকরূহ সময় নেই';
+    } else if (!now.isBefore(makruh[0]) && now.isBefore(makruh[1])) {
+      if (makruh[0] == sunrise.subtract(const Duration(minutes: 15))) _makruhTimeText = 'সূর্যোদয়ের আশেপাশের মাকরূহ সময়';
+      else if (makruh[0] == zawalStart) _makruhTimeText = 'জাওয়ালের আশেপাশের মাকরূহ সময়';
+      else _makruhTimeText = 'সূর্যাস্তের আশেপাশের মাকরূহ সময়';
+    } else {
+      if (makruh[0] == sunrise.subtract(const Duration(minutes: 15))) _makruhTimeText = 'পরবর্তী মাকরূহ সময়: সূর্যোদয়';
+      else if (makruh[0] == zawalStart) _makruhTimeText = 'পরবর্তী মাকরূহ সময়: জাওয়াল';
+      else _makruhTimeText = 'পরবর্তী মাকরূহ সময়: সূর্যাস্ত';
+    }
+  }
   DateTime _calculateTahajjudStart({required DateTime now, required DateTime todayIsha, required DateTime tomorrowFajr}) { final Duration nightDuration = tomorrowFajr.difference(todayIsha); if (nightDuration.isNegative || nightDuration.inSeconds <= 0) return tomorrowFajr; final Duration lastThird = Duration(milliseconds: (nightDuration.inMilliseconds / 3).round()); return tomorrowFajr.subtract(lastThird); }
   String _windowText(DateTime? start, DateTime? end) => start == null || end == null ? '--:--' : '${_formatTime(start)} – ${_formatTime(end)}';
   DateTime _tomorrowPrayerTime(DateTime now, PrayerField field) { final Position? position = _position; if (position == null) return _fallbackPrayerTime(now, field); final DateTime tomorrow = DateTime(now.year, now.month, now.day + 1); final PrayerTimes tomorrowTimes = _prayerEngine.getPrayerTimes(position: position, date: tomorrow, config: _calculationConfig); switch (field) { case PrayerField.fajr: return _applyPrayerAdjustment('Fajr', _safeTime(tomorrowTimes.fajr, DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 5))); case PrayerField.sunrise: return _safeTime(tomorrowTimes.sunrise, DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 6)); case PrayerField.dhuhr: return _applyPrayerAdjustment('Dhuhr', _safeTime(tomorrowTimes.dhuhr, DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 12))); case PrayerField.asr: return _applyPrayerAdjustment('Asr', _safeTime(tomorrowTimes.asr, DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 16))); case PrayerField.maghrib: return _applyPrayerAdjustment('Maghrib', _safeTime(tomorrowTimes.maghrib, DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 18))); case PrayerField.isha: return _applyPrayerAdjustment('Isha', _safeTime(tomorrowTimes.isha, DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 20))); } }
