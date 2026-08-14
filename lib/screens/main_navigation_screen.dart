@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/prayer_controller.dart';
+import '../localization/app_localizations.dart';
 import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
@@ -25,14 +26,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    final SettingsProvider settings = context.read<SettingsProvider>();
-
+    final settings = context.read<SettingsProvider>();
     if (_settingsProvider != settings) {
       _settingsProvider?.removeListener(_onSettingsChanged);
       _settingsProvider = settings;
       _settingsProvider!.addListener(_onSettingsChanged);
-
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || _settingsProvider != settings) return;
         _syncPrayerSettings(settings);
@@ -46,28 +44,23 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _syncPrayerSettings(SettingsProvider settings) {
-    final PrayerController prayerController = context.read<PrayerController>();
-
+    final prayerController = context.read<PrayerController>();
     prayerController.updateCalculationSettings(
       calculationMethod: settings.calculationMethod,
       madhhab: settings.madhhab,
     );
-
     prayerController.updatePrayerAdjustments(settings.prayerAdjustments);
   }
 
   void _onNavigateTab(int index) {
-    if (index < 0 || index > 5) return;
-    if (_selectedIndex == index) return;
+    if (index < 0 || index > 5 || _selectedIndex == index) return;
     setState(() => _selectedIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
-    final SettingsProvider settings = context.watch<SettingsProvider>();
-    final bool isBangla = settings.isBangla;
-
-    final List<Widget> screens = [
+    final l10n = AppLocalizations.of(context);
+    final screens = <Widget>[
       HomeScreen(onNavigateTab: _onNavigateTab),
       const PrayerScreen(),
       const QuranScreen(),
@@ -81,9 +74,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: context.cardColor,
-          border: Border(
-            top: BorderSide(color: context.borderColor, width: 0.5),
-          ),
+          border: Border(top: BorderSide(color: context.borderColor, width: 0.5)),
         ),
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
@@ -96,36 +87,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           unselectedFontSize: 11,
           elevation: 0,
           items: [
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.home_outlined),
-              activeIcon: const Icon(Icons.home),
-              label: isBangla ? 'হোম' : 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.mosque_outlined),
-              activeIcon: const Icon(Icons.mosque),
-              label: isBangla ? 'সালাত' : 'Prayer',
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.menu_book_outlined),
-              activeIcon: const Icon(Icons.menu_book),
-              label: isBangla ? 'কুরআন' : 'Quran',
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.auto_stories_outlined),
-              activeIcon: const Icon(Icons.auto_stories),
-              label: isBangla ? 'হাদিস' : 'Hadith',
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.grid_view_outlined),
-              activeIcon: const Icon(Icons.grid_view),
-              label: isBangla ? 'টুলস' : 'Tools',
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.more_horiz_outlined),
-              activeIcon: const Icon(Icons.more_horiz),
-              label: isBangla ? 'আরও' : 'More',
-            ),
+            BottomNavigationBarItem(icon: const Icon(Icons.home_outlined), activeIcon: const Icon(Icons.home), label: l10n.home),
+            BottomNavigationBarItem(icon: const Icon(Icons.mosque_outlined), activeIcon: const Icon(Icons.mosque), label: l10n.prayer),
+            BottomNavigationBarItem(icon: const Icon(Icons.menu_book_outlined), activeIcon: const Icon(Icons.menu_book), label: l10n.quran),
+            BottomNavigationBarItem(icon: const Icon(Icons.auto_stories_outlined), activeIcon: const Icon(Icons.auto_stories), label: l10n.hadith),
+            BottomNavigationBarItem(icon: const Icon(Icons.grid_view_outlined), activeIcon: const Icon(Icons.grid_view), label: l10n.tools),
+            BottomNavigationBarItem(icon: const Icon(Icons.more_horiz_outlined), activeIcon: const Icon(Icons.more_horiz), label: l10n.more),
           ],
         ),
       ),
