@@ -14,7 +14,7 @@ class LiveClockCard extends StatelessWidget {
 
     return Center(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF102A43) : Colors.white,
           borderRadius: BorderRadius.circular(30),
@@ -30,13 +30,19 @@ class LiveClockCard extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.access_time_rounded, color: seaBlue, size: 18),
-            const SizedBox(width: 8),
-            Text(
-              currentTime,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                letterSpacing: .5,
+            const Icon(Icons.access_time_rounded, color: seaBlue, size: 17),
+            const SizedBox(width: 7),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  currentTime,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: .4,
+                  ),
+                ),
               ),
             ),
           ],
