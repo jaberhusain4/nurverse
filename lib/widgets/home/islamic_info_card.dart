@@ -27,9 +27,12 @@ class IslamicInfoCard extends StatelessWidget {
 
   String _label({required String bn, required String en, required String ar}) {
     switch (languageCode) {
-      case 'en': return en;
-      case 'ar': return ar;
-      default: return bn;
+      case 'en':
+        return en;
+      case 'ar':
+        return ar;
+      default:
+        return bn;
     }
   }
 
@@ -115,45 +118,57 @@ class IslamicInfoCard extends StatelessWidget {
 }
 
 class _DateBlock extends StatelessWidget {
-  final String label, value; final Color primary, text, secondary;
+  final String label, value;
+  final Color primary, text, secondary;
+
   const _DateBlock({required this.label, required this.value, required this.primary, required this.text, required this.secondary});
+
   @override
   Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minHeight: 54),
-    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
-    decoration: BoxDecoration(color: primary.withValues(alpha: .035), borderRadius: BorderRadius.circular(13)),
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
-      const SizedBox(height: 3),
-      Text(value, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 12.5, fontWeight: FontWeight.w800)),
-    ]),
-  );
+        constraints: const BoxConstraints(minHeight: 54),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
+        decoration: BoxDecoration(color: primary.withValues(alpha: .035), borderRadius: BorderRadius.circular(13)),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 3),
+          Text(value, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 12.5, fontWeight: FontWeight.w800)),
+        ]),
+      );
 }
 
 class _SunBlock extends StatelessWidget {
-  final IconData icon; final String label, value; final Color primary, text, secondary;
+  final IconData icon;
+  final String label, value;
+  final Color primary, text, secondary;
+
   const _SunBlock({required this.icon, required this.label, required this.value, required this.primary, required this.text, required this.secondary});
+
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-    decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(14)),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, size: 18, color: primary),
-        const SizedBox(width: 7),
-        Flexible(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 2),
-              Text(value.isEmpty ? '--:--' : value, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w800)),
-            ],
-          ),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 8),
+        decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(14)),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 1),
+              child: Icon(icon, size: 18, color: primary),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text(value.isEmpty ? '--:--' : value, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w800)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 22),
+          ],
         ),
-      ],
-    ),
-  );
+      );
 }
