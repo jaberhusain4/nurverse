@@ -1,0 +1,53 @@
+name: Fix countdown moon orientation
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mirror right crescent and remove temporary workflow
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('lib/widgets/common/current_prayer_premium_card.dart')
+          text = path.read_text(encoding='utf-8')
+
+          old = '''                  Icon(\n                    Icons.nightlight_round,\n                    size: 16,\n                    color: primary.withValues(alpha: .55),\n                  ),\n'''
+          new = '''                  Transform.scale(\n                    scaleX: -1,\n                    child: Icon(\n                      Icons.nightlight_round,\n                      size: 16,\n                      color: primary.withValues(alpha: .55),\n                    ),\n                  ),\n'''
+
+          marker = '''          Positioned(\n            right: 9,\n            top: 0,\n            bottom: 0,\n            child: Center(\n              child: Row(\n                mainAxisSize: MainAxisSize.min,\n'''
+          start = text.find(marker)
+          if start < 0:
+              raise SystemExit('Right moon block not found')
+
+          block_end = text.find('''              ),\n            ),\n          ),\n          Center(''', start)
+          if block_end < 0:
+              raise SystemExit('Right moon block end not found')
+
+          block = text[start:block_end]
+          if 'Transform.scale(' not in block:
+              if old not in block:
+                  raise SystemExit('Right moon icon not found')
+              block = block.replace(old, new, 1)
+              text = text[:start] + block + text[block_end:]
+              path.write_text(text, encoding='utf-8')
+
+          workflow = Path('.github/workflows/fix-right-moon.yml')
+          workflow.unlink()
+
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/widgets/common/current_prayer_premium_card.dart .github/workflows/fix-right-moon.yml
+          git diff --cached --quiet || git commit -m "Mirror right crescent in prayer countdown"
+          git push
