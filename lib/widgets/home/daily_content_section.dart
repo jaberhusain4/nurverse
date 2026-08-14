@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../localization/app_localizations.dart';
 import '../../localization/app_localizations_x.dart';
@@ -62,9 +63,24 @@ class DailyContentSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 11),
-        DailyContentCard(content: ayah, languageCode: languageCode, icon: Icons.auto_stories_rounded, iconColor: primary),
-        DailyContentCard(content: hadith, languageCode: languageCode, icon: Icons.menu_book_rounded, iconColor: primary),
-        DailyContentCard(content: dua, languageCode: languageCode, icon: Icons.favorite_rounded, iconColor: primary),
+        DailyContentCard(
+          content: ayah,
+          languageCode: languageCode,
+          icon: Icons.auto_stories_rounded,
+          iconColor: primary,
+        ),
+        DailyContentCard(
+          content: hadith,
+          languageCode: languageCode,
+          icon: Icons.menu_book_rounded,
+          iconColor: primary,
+        ),
+        DailyContentCard(
+          content: dua,
+          languageCode: languageCode,
+          icon: Icons.favorite_rounded,
+          iconColor: primary,
+        ),
       ],
     );
   }
