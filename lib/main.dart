@@ -197,6 +197,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = AppLocalizations.of(context);
+    final SettingsProvider settings = context.watch<SettingsProvider>();
 
     final List<Widget> screens = [
       HomeScreen(onNavigateTab: _onNavigateTab),
@@ -208,7 +209,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ];
 
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: screens),
+      body: IndexedStack(
+        key: ValueKey<String>('language-${settings.languageCode}'),
+        index: _selectedIndex,
+        children: screens,
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: context.cardColor,
