@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../localization/app_localizations.dart';
 import '../../services/makruh_time_service.dart';
 import '../../theme/app_theme.dart';
 import '../common_widgets.dart';
@@ -13,10 +14,9 @@ class MakruhStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final Color color = info.isMakruh ? AppColors.warning : AppColors.success;
-
-    final IconData icon =
-        info.isMakruh ? Icons.warning_amber_rounded : Icons.check_circle;
+    final IconData icon = info.isMakruh ? Icons.warning_amber_rounded : Icons.check_circle;
 
     return AppCard(
       child: Row(
@@ -33,27 +33,20 @@ class MakruhStatusCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Makruh Time",
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: context.primaryTextColor,
-                  ),
+                  l10n.tr('মাকরূহের সময়', 'Makruh Time'),
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: context.primaryTextColor),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   info.isMakruh
-                      ? "${info.name} time is currently active."
-                      : "This is not a Makruh time.",
-                  style: TextStyle(
-                    color: context.secondaryTextColor,
-                    height: 1.4,
-                  ),
+                      ? l10n.tr('${info.name} সময়টি বর্তমানে চলছে।', '${info.name} time is currently active.')
+                      : l10n.tr('এটি মাকরূহের সময় নয়।', 'This is not a Makruh time.'),
+                  style: TextStyle(color: context.secondaryTextColor, height: 1.4),
                 ),
               ],
             ),
           ),
-          AppBadge(text: info.isMakruh ? "ACTIVE" : "CLEAR", color: color),
+          AppBadge(text: info.isMakruh ? l10n.tr('চলছে', 'ACTIVE') : l10n.tr('স্বাভাবিক', 'CLEAR'), color: color),
         ],
       ),
     );
