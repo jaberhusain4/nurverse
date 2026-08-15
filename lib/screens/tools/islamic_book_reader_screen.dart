@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pdfx/pdfx.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../../localization/app_localizations.dart';
 
 class IslamicBookReaderScreen extends StatefulWidget {
   final String title;
@@ -29,7 +30,7 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
   PdfControllerPinch? _pdfController;
   bool _loading = true;
   bool _hasError = false;
-  String _errorMessage = 'বইটি এখন লোড করা যাচ্ছে না।';
+  String _errorMessage = '';
   int _progress = 0;
 
   static const _userAgent =
@@ -52,9 +53,7 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
     try {
       final file = File(widget.localFilePath!);
       if (!await file.exists()) throw Exception('File not found');
-      final controller = PdfControllerPinch(
-        document: PdfDocument.openFile(file.path),
-      );
+      final controller = PdfControllerPinch(document: PdfDocument.openFile(file.path));
       if (!mounted) {
         controller.dispose();
         return;
@@ -67,29 +66,23 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
       });
     } catch (_) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _loading = false;
         _hasError = true;
-        _errorMessage = 'ডাউনলোড করা বইটি খোলা যাচ্ছে না।';
+        _errorMessage = l10n.tr('ডাউনলোড করা বইটি খোলা যাচ্ছে না।', 'The downloaded book could not be opened.');
       });
     }
   }
 
   Future<void> _loadPdf() async {
     try {
-      final response = await http.get(
-        Uri.parse(widget.url),
-        headers: {'User-Agent': _userAgent},
-      );
+      final response = await http.get(Uri.parse(widget.url), headers: {'User-Agent': _userAgent});
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception('HTTP ${response.statusCode}');
       }
-
       final bytes = Uint8List.fromList(response.bodyBytes);
-      final controller = PdfControllerPinch(
-        document: PdfDocument.openData(bytes),
-      );
-
+      final controller = PdfControllerPinch(document: PdfDocument.openData(bytes));
       if (!mounted) {
         controller.dispose();
         return;
@@ -102,11 +95,11 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
       });
     } catch (_) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _loading = false;
         _hasError = true;
-        _errorMessage =
-            'বইটির PDF পাওয়া যাচ্ছে না। ইন্টারনেট সংযোগ পরীক্ষা করুন।';
+        _errorMessage = l10n.tr('বইটির PDF পাওয়া যাচ্ছে না। ইন্টারনেট সংযোগ পরীক্ষা করুন।', 'The book PDF could not be found. Please check your internet connection.');
       });
     }
   }
@@ -148,10 +141,11 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
           onHttpError: (error) {
             final status = error.response?.statusCode;
             if (status == null || status < 400 || !mounted) return;
+            final l10n = AppLocalizations.of(context);
             setState(() {
               _loading = false;
               _hasError = true;
-              _errorMessage = 'অনলাইন উৎস থেকে বইটি পাওয়া যাচ্ছে না ($status)।';
+              _errorMessage = l10n.tr('অনলাইন উৎস থেকে বইটি পাওয়া যাচ্ছে না ($status)।', 'The book is unavailable from the online source ($status).');
             });
           },
         ),
@@ -161,9 +155,10 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
   }
 
   String _friendlyError(int code) {
-    if (code == -2) return 'ইন্টারনেট সংযোগ বা ওয়েবসাইটে পৌঁছাতে সমস্যা হচ্ছে।';
-    if (code == -6) return 'এই অনলাইন বইটি বর্তমানে পাওয়া যাচ্ছে না।';
-    return 'বইটি এখন লোড করা যাচ্ছে না। আবার চেষ্টা করুন।';
+    final l10n = AppLocalizations.of(context);
+    if (code == -2) return l10n.tr('ইন্টারনেট সংযোগ বা ওয়েবসাইটে পৌঁছাতে সমস্যা হচ্ছে।', 'There is a problem connecting to the internet or website.');
+    if (code == -6) return l10n.tr('এই অনলাইন বইটি বর্তমানে পাওয়া যাচ্ছে না।', 'This online book is currently unavailable.');
+    return l10n.tr('বইটি এখন লোড করা যাচ্ছে না। আবার চেষ্টা করুন।', 'The book cannot be loaded right now. Please try again.');
   }
 
   Future<void> _reload() async {
@@ -194,17 +189,18 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          tooltip: 'ফিরে যান',
+          tooltip: l10n.tr('ফিরে যান', 'Back'),
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           IconButton(
-            tooltip: 'রিফ্রেশ',
+            tooltip: l10n.tr('রিফ্রেশ', 'Refresh'),
             onPressed: _reload,
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -212,21 +208,17 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
         bottom: _loading && _progress < 100
             ? PreferredSize(
                 preferredSize: const Size.fromHeight(2),
-                child: LinearProgressIndicator(
-                  value: _progress == 0 ? null : _progress / 100,
-                ),
+                child: LinearProgressIndicator(value: _progress == 0 ? null : _progress / 100),
               )
             : null,
       ),
-      body: _hasError
-          ? _ReaderError(message: _errorMessage, onRetry: _reload)
-          : _buildBody(),
+      body: _hasError ? _ReaderError(message: _errorMessage, onRetry: _reload) : _buildBody(),
     );
   }
 
   Widget _buildBody() {
-    if ((widget.isPdf || widget.localFilePath != null) &&
-        _pdfController != null) {
+    final l10n = AppLocalizations.of(context);
+    if ((widget.isPdf || widget.localFilePath != null) && _pdfController != null) {
       return Stack(
         children: [
           PdfViewPinch(
@@ -237,12 +229,10 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
             padding: 8,
             builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
               options: const DefaultBuilderOptions(),
-              documentLoaderBuilder: (_) =>
-                  const Center(child: CircularProgressIndicator()),
-              pageLoaderBuilder: (_) =>
-                  const Center(child: CircularProgressIndicator()),
+              documentLoaderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+              pageLoaderBuilder: (_) => const Center(child: CircularProgressIndicator()),
               errorBuilder: (_, __) => _ReaderError(
-                message: 'PDF পড়া যাচ্ছে না। আবার চেষ্টা করুন।',
+                message: l10n.tr('PDF পড়া যাচ্ছে না। আবার চেষ্টা করুন।', 'The PDF cannot be read. Please try again.'),
                 onRetry: _reload,
               ),
             ),
@@ -254,31 +244,18 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor.withValues(alpha: 0.94),
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(
-                    blurRadius: 10,
-                    offset: Offset(0, 3),
-                  ),
-                ],
+                boxShadow: const [BoxShadow(blurRadius: 10, offset: Offset(0, 3))],
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 7,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 child: PdfPageNumber(
                   controller: _pdfController!,
-                  builder: (_, loadingState, page, pagesCount) {
-                    return Text(
-                      loadingState == PdfLoadingState.success
-                          ? '$page / ${pagesCount ?? 0}'
-                          : 'লোড হচ্ছে…',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    );
-                  },
+                  builder: (_, loadingState, page, pagesCount) => Text(
+                    loadingState == PdfLoadingState.success
+                        ? '$page / ${pagesCount ?? 0}'
+                        : l10n.tr('লোড হচ্ছে…', 'Loading…'),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ),
@@ -286,13 +263,11 @@ class _IslamicBookReaderScreenState extends State<IslamicBookReaderScreen> {
         ],
       );
     }
-
     if (_webController != null) {
       return Stack(
         children: [
           WebViewWidget(controller: _webController!),
-          if (_loading && _progress == 0)
-            const Center(child: CircularProgressIndicator()),
+          if (_loading && _progress == 0) const Center(child: CircularProgressIndicator()),
         ],
       );
     }
@@ -308,6 +283,7 @@ class _ReaderError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ColoredBox(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: Center(
@@ -320,17 +296,14 @@ class _ReaderError extends StatelessWidget {
               children: [
                 const Icon(Icons.menu_book_rounded, size: 44),
                 const SizedBox(height: 14),
-                const Text(
-                  'বইটি খোলা যাচ্ছে না',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                ),
+                Text(l10n.tr('বইটি খোলা যাচ্ছে না', 'Unable to open book'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 8),
                 Text(message, textAlign: TextAlign.center),
                 const SizedBox(height: 18),
                 FilledButton.icon(
                   onPressed: onRetry,
                   icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('আবার চেষ্টা করুন'),
+                  label: Text(l10n.tr('আবার চেষ্টা করুন', 'Try again')),
                 ),
               ],
             ),
