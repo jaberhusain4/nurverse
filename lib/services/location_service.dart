@@ -25,16 +25,9 @@ class LocationService {
     return permission;
   }
 
-  // Offline-first position resolution.
-  //
-  // Once NurVerse has obtained a valid position at least once, the coordinates
-  // are persisted locally. If Location Services are later turned OFF, those
-  // saved coordinates remain sufficient for adhan's fully local calculations.
   Future<Position> getCurrentPosition() async {
     final cached = await getPersistedPosition();
 
-    // When Location Services are disabled, never block the core prayer engine
-    // if NurVerse already has a previously saved position.
     final enabled = await isLocationEnabled();
     if (!enabled) {
       if (cached != null) return cached;
@@ -63,8 +56,6 @@ class LocationService {
     try {
       return await _getFreshPosition();
     } catch (_) {
-      // GPS/network-assisted location may fail temporarily. A previously
-      // saved position is still valid enough to calculate prayer times.
       if (cached != null) return cached;
       rethrow;
     }
@@ -116,7 +107,7 @@ class LocationService {
         position.timestamp.millisecondsSinceEpoch,
       );
     } catch (_) {
-      // Local caching is an optimization. Never let it break prayer times.
+      // Local caching must never break prayer calculations.
     }
   }
 
@@ -165,7 +156,7 @@ class LocationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_addressKey, address);
     } catch (_) {
-      // Never let address caching break prayer calculations.
+      // Address caching must never break prayer calculations.
     }
   }
 
@@ -209,7 +200,6 @@ class LocationService {
       final subLocality = place.subLocality?.trim() ?? '';
       final locality = place.locality?.trim() ?? '';
       final district = place.subAdministrativeArea?.trim() ?? '';
-      final administrativeArea = place.administrativeArea?.trim() ?? '';
       final country = place.country?.trim() ?? '';
 
       final parts = <String>[];
@@ -230,7 +220,6 @@ class LocationService {
       addIfUnique(subLocality);
       addIfUnique(locality);
       addIfUnique(district);
-      addIfUnique(administrativeArea);
       addIfUnique(country);
 
       if (parts.isEmpty) {
@@ -241,8 +230,6 @@ class LocationService {
       await _saveAddress(address);
       return address;
     } catch (_) {
-      // Reverse geocoding may require platform/network services. The cached
-      // human-readable address keeps the UI useful while fully offline.
       return getPersistedAddress();
     }
   }
