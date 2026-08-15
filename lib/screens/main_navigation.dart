@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../localization/app_localizations.dart';
 import 'dua_screen.dart';
 import 'home_screen.dart';
 import 'prayer_screen.dart';
@@ -14,21 +15,27 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  static const List<Widget> _pages = <Widget>[
-    HomeScreen(),
-    PrayerScreen(),
-    QuranScreen(),
-    DuaScreen(),
-    SettingsScreen(),
-  ];
-
   int _selectedIndex = 0;
+  String? _lastLanguageCode;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (_lastLanguageCode != languageCode) {
+      _lastLanguageCode = languageCode;
+    }
+
+    final pages = <Widget>[
+      HomeScreen(key: ValueKey('home-$languageCode')),
+      PrayerScreen(key: ValueKey('prayer-$languageCode')),
+      QuranScreen(key: ValueKey('quran-$languageCode')),
+      DuaScreen(key: ValueKey('dua-$languageCode')),
+      SettingsScreen(key: ValueKey('settings-$languageCode')),
+    ];
+
     return Scaffold(
-      // Keeps every tab mounted, preserving scroll position and loaded data.
-      body: IndexedStack(index: _selectedIndex, children: _pages),
+      body: IndexedStack(index: _selectedIndex, children: pages),
       bottomNavigationBar: NavigationBar(
         height: 72,
         elevation: 3,
@@ -38,31 +45,31 @@ class _MainNavigationState extends State<MainNavigation> {
         onDestinationSelected: (index) {
           setState(() => _selectedIndex = index);
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'Home',
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home_rounded),
+            label: l10n.home,
           ),
           NavigationDestination(
-            icon: Icon(Icons.mosque_outlined),
-            selectedIcon: Icon(Icons.mosque_rounded),
-            label: 'Prayer',
+            icon: const Icon(Icons.mosque_outlined),
+            selectedIcon: const Icon(Icons.mosque_rounded),
+            label: l10n.prayer,
           ),
           NavigationDestination(
-            icon: Icon(Icons.menu_book_outlined),
-            selectedIcon: Icon(Icons.menu_book_rounded),
-            label: 'Quran',
+            icon: const Icon(Icons.menu_book_outlined),
+            selectedIcon: const Icon(Icons.menu_book_rounded),
+            label: l10n.quran,
           ),
           NavigationDestination(
-            icon: Icon(Icons.volunteer_activism_outlined),
-            selectedIcon: Icon(Icons.volunteer_activism_rounded),
-            label: 'Dua',
+            icon: const Icon(Icons.volunteer_activism_outlined),
+            selectedIcon: const Icon(Icons.volunteer_activism_rounded),
+            label: l10n.dua,
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings),
+            label: l10n.settings,
           ),
         ],
       ),
