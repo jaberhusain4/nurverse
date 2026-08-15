@@ -140,7 +140,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
   Widget _buildPlayer(BuildContext context, QuranSurah? current) {
     final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
-    final title = current?.banglaName ?? current?.transliteration ?? l10n.tr('সূরা', 'Surah');
+    final title = l10n.isBangla ? (current?.banglaName ?? current?.transliteration ?? l10n.tr('সূরা', 'Surah')) : (current?.transliteration ?? l10n.tr('সূরা', 'Surah'));
     return Material(
       color: context.cardColor,
       child: Padding(
@@ -156,7 +156,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
             PopupMenuButton<QuranReciter>(
               tooltip: l10n.tr('ক্বারী নির্বাচন', 'Select reciter'),
               onSelected: _changeReciter,
-              itemBuilder: (_) => [for (final reciter in kReciters) PopupMenuItem<QuranReciter>(value: reciter, child: Text(reciter.nameBn))],
+              itemBuilder: (_) => [for (final reciter in kReciters) PopupMenuItem<QuranReciter>(value: reciter, child: Text(reciter.nameBn)),],
               icon: const Icon(Icons.person_outline_rounded),
             ),
           ]),
@@ -228,8 +228,8 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
           decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(17), border: Border.all(color: selected ? primary.withValues(alpha: .28) : primary.withValues(alpha: .06))),
           child: ListTile(
             onTap: () => _selectSurah(surah.number),
-            leading: CircleAvatar(backgroundColor: primary.withValues(alpha: .10), foregroundColor: primary, child: Text(_bnNumber(surah.number), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800))),
-            title: Text(surah.banglaName ?? surah.transliteration, style: const TextStyle(fontWeight: FontWeight.w800)),
+            leading: CircleAvatar(backgroundColor: primary.withValues(alpha: .10), foregroundColor: primary, child: Text(l10n.isBangla ? _bnNumber(surah.number) : surah.number.toString(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800))),
+            title: Text(l10n.isBangla ? (surah.banglaName ?? surah.transliteration) : surah.transliteration, style: const TextStyle(fontWeight: FontWeight.w800)),
             subtitle: Text('${surah.transliteration} • ${surah.totalVerses} ${l10n.tr('আয়াত', 'verses')}'),
             trailing: Icon(selected ? Icons.equalizer_rounded : Icons.play_circle_outline_rounded, color: selected ? primary : context.secondaryTextColor),
           ),
