@@ -10,11 +10,12 @@ class DuaVoiceSettingsService {
   static Future<String> getVoiceGender() async {
     final prefs = await SharedPreferences.getInstance();
     final value = prefs.getString(_key);
-    return value == male ? male : female;
+    // Male is the NurVerse default. Existing saved preferences are preserved.
+    return value == female ? female : male;
   }
 
   static Future<void> setVoiceGender(String value) async {
-    final gender = value == male ? male : female;
+    final gender = value == female ? female : male;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, gender);
   }
@@ -26,10 +27,6 @@ class DuaVoiceSettingsService {
     await tts.setSpeechRate(0.42);
     await tts.setVolume(1.0);
 
-    // Android's flutter_tts voice metadata does not expose gender. When the
-    // installed engine provides a gender-labelled Arabic voice, prefer it.
-    // Otherwise use a natural pitch profile as a reliable device-independent
-    // fallback so the user's Male/Female preference still has an effect.
     Map<String, String>? nativeVoice;
     try {
       final rawVoices = await tts.getVoices;
@@ -59,7 +56,7 @@ class DuaVoiceSettingsService {
         await tts.setVoice(nativeVoice);
       }
     } catch (_) {
-      // Pitch fallback below remains available.
+      // Pitch fallback remains available.
     }
 
     await tts.setPitch(gender == male ? 0.78 : 1.12);
