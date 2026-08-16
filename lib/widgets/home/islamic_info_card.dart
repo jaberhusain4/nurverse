@@ -12,6 +12,7 @@ class IslamicInfoCard extends StatelessWidget {
   final String sunset;
   final String languageCode;
   final VoidCallback? onRefresh;
+  final bool compactLocation;
 
   const IslamicInfoCard({
     super.key,
@@ -23,6 +24,7 @@ class IslamicInfoCard extends StatelessWidget {
     required this.sunset,
     this.languageCode = 'bn',
     this.onRefresh,
+    this.compactLocation = false,
   });
 
   String _label({required String bn, required String en, required String ar}) {
@@ -76,6 +78,10 @@ class IslamicInfoCard extends StatelessWidget {
     final primary = theme.colorScheme.primary;
     final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary = context.secondaryTextColor;
+    final locationIconSize = compactLocation ? 17.0 : 18.0;
+    final locationIconBox = compactLocation ? 34.0 : 36.0;
+    final locationFontSize = compactLocation ? 12.5 : 14.0;
+    final todayFontSize = compactLocation ? 11.5 : 13.0;
 
     return Container(
       width: double.infinity,
@@ -90,13 +96,13 @@ class IslamicInfoCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(width: 36, height: 36, decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(11)), child: Icon(Icons.location_on_rounded, color: primary, size: 18)),
+              Container(width: locationIconBox, height: locationIconBox, decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(11)), child: Icon(Icons.location_on_rounded, color: primary, size: locationIconSize)),
               const SizedBox(width: 9),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(_normalizeLocation(location), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800)),
+                  Text(_normalizeLocation(location), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 2),
-                  Text(_label(bn: 'আজকের তথ্য', en: 'Today', ar: 'اليوم'), style: TextStyle(color: secondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                  Text(_label(bn: 'আজকের তথ্য', en: 'Today', ar: 'اليوم'), style: TextStyle(color: secondary, fontSize: todayFontSize, fontWeight: FontWeight.w600)),
                 ]),
               ),
               if (onRefresh != null) IconButton(tooltip: _label(bn: 'রিফ্রেশ', en: 'Refresh', ar: 'تحديث'), onPressed: onRefresh, visualDensity: VisualDensity.compact, icon: Icon(Icons.refresh_rounded, size: 19, color: primary)),
