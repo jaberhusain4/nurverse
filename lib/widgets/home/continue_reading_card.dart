@@ -73,9 +73,9 @@ class ContinueReadingCard extends StatelessWidget {
                       children: [
                         Text(
                           _label(
-                            bn: 'অনুধাবন কুরআন পড়া চালিয়ে যান',
-                            en: 'Continue Reading Onudhabon',
-                            ar: 'تابع القراءة من قرآن الفهم',
+                            bn: 'কুরআন পড়া চালিয়ে যান',
+                            en: 'Continue Reading Quran',
+                            ar: 'تابع قراءة القرآن',
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -88,9 +88,9 @@ class ContinueReadingCard extends StatelessWidget {
                         const SizedBox(height: 3),
                         Text(
                           _label(
-                            bn: 'অনুধাবন কুরআন থেকে পড়া চালিয়ে যান',
-                            en: 'Continue from your Onudhabon Quran reading',
-                            ar: 'تابع القراءة من قرآن الفهم',
+                            bn: 'পড়া এখান থেকে চালিয়ে যান',
+                            en: 'Continue from here',
+                            ar: 'تابع القراءة من هنا',
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -174,13 +174,13 @@ class ContinueReadingCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     _label(
-                      bn: 'আবার শুরু করুন',
-                      en: 'Resume reading',
-                      ar: 'استئناف القراءة',
+                      bn: 'অনুধাবন শুরু করুন',
+                      en: 'Start Onudhabon',
+                      ar: 'ابدأ قرآن الفهم',
                     ),
                     style: TextStyle(
                       color: primary,
-                      fontSize: 13,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
