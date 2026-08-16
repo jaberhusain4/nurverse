@@ -14,7 +14,7 @@ class DateOverviewCard extends StatelessWidget {
 
   const DateOverviewCard({super.key, required this.englishDate, required this.hijriDate, required this.sunInfo});
 
-  Widget _dateItem(BuildContext context, {required String label, required String value, required IconData icon, bool compactValue = false}) {
+  Widget _dateItem(BuildContext context, {required String label, required String value, required IconData icon}) {
     final theme = Theme.of(context);
     return Expanded(
       child: Column(
@@ -23,7 +23,7 @@ class DateOverviewCard extends StatelessWidget {
           const SizedBox(height: 7),
           Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(fontSize: 13, color: context.secondaryTextColor, fontWeight: FontWeight.w600)),
           const SizedBox(height: 3),
-          Text(value, textAlign: TextAlign.center, maxLines: 2, softWrap: true, overflow: TextOverflow.visible, style: theme.textTheme.bodySmall?.copyWith(fontSize: compactValue ? 11.5 : 13, height: 1.15, fontWeight: FontWeight.bold, color: context.primaryTextColor)),
+          Text(value, textAlign: TextAlign.center, maxLines: 2, softWrap: true, overflow: TextOverflow.visible, style: theme.textTheme.bodySmall?.copyWith(fontSize: 11.5, height: 1.15, fontWeight: FontWeight.w600, color: context.primaryTextColor)),
         ],
       ),
     );
@@ -74,7 +74,7 @@ class DateOverviewCard extends StatelessWidget {
             _divider(context),
             _dateItem(context, icon: Icons.event_rounded, label: l10n.tr('ইংরেজি', 'Gregorian'), value: englishDate),
             _divider(context),
-            _dateItem(context, icon: Icons.brightness_2_rounded, label: l10n.tr('হিজরি', 'Hijri'), value: hijriDate, compactValue: true),
+            _dateItem(context, icon: Icons.brightness_2_rounded, label: l10n.tr('হিজরি', 'Hijri'), value: hijriDate),
           ]),
           const SizedBox(height: 16),
           Container(height: 1, color: AppColors.seaBlue.withValues(alpha: .08)),
