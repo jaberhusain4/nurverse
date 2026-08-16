@@ -33,7 +33,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
   DateTime? _sunDate;
   SunTimeInfo? _sunTimeInfo;
 
-  final Map<String, bool> _tracker = {
+  final Map<String, bool> _tracker = <String, bool>{
     'Fajr': false,
     'Dhuhr': false,
     'Asr': false,
@@ -41,38 +41,53 @@ class _PrayerScreenState extends State<PrayerScreen> {
     'Isha': false,
   };
 
-  String _prayerName(AppLocalizations l10n, String value) {
-    const names = <String, String>{
-      'Fajr': 'ফজর',
-      'Dhuhr': 'যোহর',
-      'Jumuah': 'জুমু‘আ',
-      'Asr': 'আসর',
-      'Maghrib': 'মাগরিব',
-      'Isha': 'ইশা',
-      'Ishraq': 'ইশরাক',
-      'Duha': 'চাশত / দুহা',
-      'Awwabin': 'আউওয়াবীন',
-      'Tahajjud': 'তাহাজ্জুদ',
-    };
-    final bn = names[value];
-    return bn == null ? value : l10n.tr(bn, value);
+  String _label(String languageCode, String bn, String en, String ar) {
+    if (languageCode == 'en') return en;
+    if (languageCode == 'ar') return ar;
+    return bn;
   }
 
-  String _status(AppLocalizations l10n, String value) {
-    if (value.isEmpty) return value;
-    const translations = <String, String>{
-      'ফজরের সময় শুরু হতে চলেছে': 'Fajr time is about to begin',
-      'ফজরের ওয়াক্ত চলছে': 'Fajr time is active',
-      'পরবর্তী সালাত: জুমু‘আ': 'Next prayer: Jumu’ah',
-      'পরবর্তী সালাত: যোহর': 'Next prayer: Dhuhr',
-      'জুমু‘আর ওয়াক্ত চলছে': 'Jumu’ah time is active',
-      'যোহরের ওয়াক্ত চলছে': 'Dhuhr time is active',
-      'আসরের ওয়াক্ত চলছে': 'Asr time is active',
-      'মাগরিবের ওয়াক্ত চলছে': 'Maghrib time is active',
-      'ইশার ওয়াক্ত চলছে': 'Isha time is active',
+  String _prayerName(AppLocalizations l10n, String value) {
+    const names = <String, List<String>>{
+      'Fajr': <String>['ফজর', 'Fajr', 'الفجر'],
+      'Dhuhr': <String>['যোহর', 'Dhuhr', 'الظهر'],
+      'Jumuah': <String>['জুমু‘আ', 'Jumu’ah', 'الجمعة'],
+      'Asr': <String>['আসর', 'Asr', 'العصر'],
+      'Maghrib': <String>['মাগরিব', 'Maghrib', 'المغرب'],
+      'Isha': <String>['ইশা', 'Isha', 'العشاء'],
+      'Ishraq': <String>['ইশরাক', 'Ishraq', 'الإشراق'],
+      'Duha': <String>['চাশত / দুহা', 'Duha', 'الضحى'],
+      'Awwabin': <String>['আউওয়াবীন', 'Awwabin', 'الأوابين'],
+      'Tahajjud': <String>['তাহাজ্জুদ', 'Tahajjud', 'التهجد'],
     };
-    final en = translations[value];
-    return en == null ? value : l10n.tr(value, en);
+
+    final entry = names[value];
+    if (entry != null) return _label(settingsLanguage, entry[0], entry[1], entry[2]);
+
+    for (final item in names.values) {
+      if (item.contains(value)) return _label(settingsLanguage, item[0], item[1], item[2]);
+    }
+    return l10n.tr(value, value);
+  }
+
+  String settingsLanguage = 'bn';
+
+  String _status(AppLocalizations l10n, String value, String languageCode) {
+    if (value.isEmpty) return value;
+    const translations = <String, List<String>>{
+      'ফজরের সময় শুরু হতে চলেছে': <String>['ফজরের সময় শুরু হতে চলেছে', 'Fajr time is about to begin', 'سيبدأ وقت الفجر قريبًا'],
+      'ফজরের ওয়াক্ত চলছে': <String>['ফজরের ওয়াক্ত চলছে', 'Fajr time is active', 'وقت الفجر جارٍ'],
+      'পরবর্তী সালাত: জুমু‘আ': <String>['পরবর্তী সালাত: জুমু‘আ', 'Next prayer: Jumu’ah', 'الصلاة التالية: الجمعة'],
+      'পরবর্তী সালাত: যোহর': <String>['পরবর্তী সালাত: যোহর', 'Next prayer: Dhuhr', 'الصلاة التالية: الظهر'],
+      'জুমু‘আর ওয়াক্ত চলছে': <String>['জুমু‘আর ওয়াক্ত চলছে', 'Jumu’ah time is active', 'وقت الجمعة جارٍ'],
+      'যোহরের ওয়াক্ত চলছে': <String>['যোহরের ওয়াক্ত চলছে', 'Dhuhr time is active', 'وقت الظهر جارٍ'],
+      'আসরের ওয়াক্ত চলছে': <String>['আসরের ওয়াক্ত চলছে', 'Asr time is active', 'وقت العصر جارٍ'],
+      'মাগরিবের ওয়াক্ত চলছে': <String>['মাগরিবের ওয়াক্ত চলছে', 'Maghrib time is active', 'وقت المغرب جارٍ'],
+      'ইশার ওয়াক্ত চলছে': <String>['ইশার ওয়াক্ত চলছে', 'Isha time is active', 'وقت العشاء جارٍ'],
+    };
+    final entry = translations[value];
+    if (entry == null) return l10n.tr(value, value);
+    return _label(languageCode, entry[0], entry[1], entry[2]);
   }
 
   String _greeting(String languageCode) {
@@ -82,9 +97,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
       if (hour < 18) return 'Good Afternoon';
       return 'Good Evening';
     }
-    if (languageCode == 'ar') {
-      return hour < 12 ? 'صباح الخير' : 'مساء الخير';
-    }
+    if (languageCode == 'ar') return hour < 12 ? 'صباح الخير' : 'مساء الخير';
     if (hour < 12) return 'শুভ সকাল';
     if (hour < 15) return 'শুভ দুপুর';
     if (hour < 18) return 'শুভ বিকেল';
@@ -103,29 +116,17 @@ class _PrayerScreenState extends State<PrayerScreen> {
   String _hijriDate(String languageCode) {
     try {
       final h = HijriCalendar.now();
-      const bnMonths = <String>[
-        'মুহররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি',
-        'জুমাদিউল আউয়াল', 'জুমাদিউস সানি', 'রজব', 'শাবান',
-        'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ',
-      ];
-      const enMonths = <String>[
-        'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
-        'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Sha’ban',
-        'Ramadan', 'Shawwal', 'Dhul-Qadah', 'Dhul-Hijjah',
-      ];
-      const arMonths = <String>[
-        'محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر',
-        'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان',
-        'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة',
-      ];
+      const bnMonths = <String>['মুহররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি', 'জুমাদিউল আউয়াল', 'জুমাদিউস সানি', 'রজব', 'শাবান', 'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ'];
+      const enMonths = <String>['Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani', 'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Sha’ban', 'Ramadan', 'Shawwal', 'Dhul-Qadah', 'Dhul-Hijjah'];
+      const arMonths = <String>['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
       const bnDigits = <String>['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-      String toBnDigits(int value) => value.toString().split('').map((d) => bnDigits[int.parse(d)]).join();
+      String bnNumber(int value) => value.toString().split('').map((d) => bnDigits[int.parse(d)]).join();
       final index = (h.hMonth - 1).clamp(0, 11);
       if (languageCode == 'en') return '${h.hDay} ${enMonths[index]} ${h.hYear} AH';
       if (languageCode == 'ar') return '${h.hDay} ${arMonths[index]} ${h.hYear} هـ';
-      return '${toBnDigits(h.hDay)} ${bnMonths[index]} ${toBnDigits(h.hYear)} হিজরি';
+      return '${bnNumber(h.hDay)} ${bnMonths[index]} ${bnNumber(h.hYear)} হিজরি';
     } catch (_) {
-      return languageCode == 'en' ? 'Hijri date unavailable' : 'হিজরি তারিখ পাওয়া যায়নি';
+      return _label(languageCode, 'হিজরি তারিখ পাওয়া যায়নি', 'Hijri date unavailable', 'التاريخ الهجري غير متاح');
     }
   }
 
@@ -133,20 +134,14 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final now = DateTime.now();
     final year = now.year;
     final starts = <DateTime>[
-      DateTime(year, 4, 14), DateTime(year, 5, 15), DateTime(year, 6, 15),
-      DateTime(year, 7, 16), DateTime(year, 8, 16), DateTime(year, 9, 16),
-      DateTime(year, 10, 16), DateTime(year, 11, 15), DateTime(year, 12, 15),
-      DateTime(year + 1, 1, 15), DateTime(year + 1, 2, 13), DateTime(year + 1, 3, 15),
+      DateTime(year, 4, 14), DateTime(year, 5, 15), DateTime(year, 6, 15), DateTime(year, 7, 16),
+      DateTime(year, 8, 16), DateTime(year, 9, 16), DateTime(year, 10, 16), DateTime(year, 11, 15),
+      DateTime(year, 12, 15), DateTime(year + 1, 1, 15), DateTime(year + 1, 2, 13), DateTime(year + 1, 3, 15),
     ];
-    const months = <String>[
-      'বৈশাখ', 'জ্যৈষ্ঠ', 'আষাঢ়', 'শ্রাবণ', 'ভাদ্র', 'আশ্বিন',
-      'কার্তিক', 'অগ্রহায়ণ', 'পৌষ', 'মাঘ', 'ফাল্গুন', 'চৈত্র',
-    ];
+    const months = <String>['বৈশাখ', 'জ্যৈষ্ঠ', 'আষাঢ়', 'শ্রাবণ', 'ভাদ্র', 'আশ্বিন', 'কার্তিক', 'অগ্রহায়ণ', 'পৌষ', 'মাঘ', 'ফাল্গুন', 'চৈত্র'];
     var index = -1;
     for (var i = 0; i < starts.length; i++) {
-      if (!now.isBefore(starts[i])) {
-        index = i;
-      }
+      if (!now.isBefore(starts[i])) index = i;
     }
     if (index < 0) index = 11;
     final start = starts[index];
@@ -158,10 +153,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final position = controller.position;
     if (position == null) return null;
     final now = DateTime.now();
-    final sameDay = _sunDate != null &&
-        _sunDate!.year == now.year &&
-        _sunDate!.month == now.month &&
-        _sunDate!.day == now.day;
+    final sameDay = _sunDate?.year == now.year && _sunDate?.month == now.month && _sunDate?.day == now.day;
     final sameLocation = _sunLatitude == position.latitude && _sunLongitude == position.longitude;
     if (_sunTimeInfo == null || !sameDay || !sameLocation) {
       _sunLatitude = position.latitude;
@@ -180,16 +172,22 @@ class _PrayerScreenState extends State<PrayerScreen> {
   String _currentJamaatKey(String prayer) {
     switch (prayer) {
       case 'ফজর':
+      case 'Fajr':
         return 'Fajr';
       case 'যোহর':
       case "জুমু'আ":
       case 'জুমু‘আ':
+      case 'Dhuhr':
+      case 'Jumuah':
         return 'Dhuhr';
       case 'আসর':
+      case 'Asr':
         return 'Asr';
       case 'মাগরিব':
+      case 'Maghrib':
         return 'Maghrib';
       case 'ইশা':
+      case 'Isha':
         return 'Isha';
       default:
         return '';
@@ -199,9 +197,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
   Future<void> _openJamaatSettings() async {
     final controller = context.read<PrayerController>();
     JamaatService.configureDefaultsFromPrayerList(controller.prayers);
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const JamaatSettingsScreen()),
-    );
+    await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const JamaatSettingsScreen()));
     if (mounted) setState(() {});
   }
 
@@ -220,11 +216,16 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final languageCode = settings.languageCode;
+    settingsLanguage = languageCode;
     final sunTimes = _sunTimes(controller);
 
     JamaatService.configureDefaultsFromPrayerList(controller.prayers);
     final jamaatKey = _currentJamaatKey(controller.currentPrayer);
     final currentJamaat = jamaatKey.isEmpty ? '--:--' : JamaatService.get(jamaatKey);
+
+    final currentPrayer = _prayerName(l10n, controller.currentPrayer);
+    final previousPrayer = _prayerName(l10n, controller.previousPrayer);
+    final nextPrayer = _prayerName(l10n, controller.nextPrayer.isEmpty ? controller.nextPrayerName : controller.nextPrayer);
 
     return Scaffold(
       body: Stack(
@@ -248,16 +249,16 @@ class _PrayerScreenState extends State<PrayerScreen> {
                     ),
                     const SizedBox(height: 14),
                     CurrentPrayerPremiumCard(
-                      previousPrayer: controller.previousPrayer,
+                      previousPrayer: previousPrayer,
                       previousPrayerTime: controller.previousPrayerTime,
-                      currentPrayer: controller.currentPrayer,
+                      currentPrayer: currentPrayer,
                       currentPrayerTime: controller.currentPrayerTime,
-                      nextPrayer: controller.nextPrayer,
+                      nextPrayer: nextPrayer,
                       nextPrayerTime: controller.nextPrayerTime,
                       remainingTime: controller.timeRemainingForNextPrayer,
                       progress: controller.prayerProgress,
                       iqamahTime: currentJamaat,
-                      status: _status(l10n, controller.prayerStatus),
+                      status: _status(l10n, controller.prayerStatus, languageCode),
                       languageCode: languageCode,
                       onJamaatTap: _openJamaatSettings,
                     ),
@@ -277,7 +278,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
                     const SizedBox(height: 16),
                     _sectionHeader(context, primary, Icons.mosque_outlined, l10n.todaysPrayer),
                     const SizedBox(height: 9),
-                    _prayerSchedule(context, l10n, controller, primary),
+                    _prayerSchedule(context, l10n, controller, primary, languageCode),
                     const SizedBox(height: 16),
                     _sectionHeader(context, primary, Icons.wb_sunny_outlined, l10n.importantTimes),
                     const SizedBox(height: 9),
@@ -285,11 +286,11 @@ class _PrayerScreenState extends State<PrayerScreen> {
                     const SizedBox(height: 16),
                     _sectionHeader(context, primary, Icons.nightlight_round, l10n.naflAndOtherPrayers),
                     const SizedBox(height: 9),
-                    _naflTimes(context, l10n, controller, primary),
+                    _naflTimes(context, controller, primary, languageCode),
                     const SizedBox(height: 16),
                     _sectionHeader(context, primary, Icons.check_circle_outline_rounded, l10n.prayerTracker),
                     const SizedBox(height: 9),
-                    _trackerCard(context, l10n, primary),
+                    _trackerCard(context, l10n, primary, languageCode),
                     const SizedBox(height: 12),
                     Text(
                       l10n.prayerTimeNote,
@@ -315,18 +316,14 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(icon, color: primary, size: 20),
+        Icon(icon, color: primary, size: 18),
         const SizedBox(width: 7),
         Expanded(
           child: Text(
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              height: 1.15,
-            ),
+            style: theme.textTheme.titleMedium?.copyWith(fontSize: 15, fontWeight: FontWeight.w800, height: 1.15),
           ),
         ),
       ],
@@ -340,33 +337,33 @@ class _PrayerScreenState extends State<PrayerScreen> {
       padding: padding,
       decoration: BoxDecoration(
         color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: primary.withValues(alpha: .06)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: primary.withValues(alpha: .055)),
       ),
       child: child,
     );
   }
 
-  Widget _prayerSchedule(BuildContext context, AppLocalizations l10n, PrayerController controller, Color primary) {
+  Widget _prayerSchedule(BuildContext context, AppLocalizations l10n, PrayerController controller, Color primary, String languageCode) {
     final theme = Theme.of(context);
     final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary = theme.textTheme.bodySmall?.color?.withValues(alpha: .68) ?? theme.colorScheme.onSurface.withValues(alpha: .68);
-    final items = controller.prayers.where((p) => p['category'] == 'obligatory').toList();
+    final items = controller.prayers.where((p) => p['category'] == 'obligatory').toList(growable: false);
 
     return _card(
       context,
       primary,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       child: Column(
         children: [
           for (var i = 0; i < items.length; i++)
-            _prayerRow(context, l10n, items[i], primary, text, secondary, i < items.length - 1),
+            _prayerRow(context, l10n, items[i], primary, text, secondary, languageCode, i < items.length - 1),
         ],
       ),
     );
   }
 
-  Widget _prayerRow(BuildContext context, AppLocalizations l10n, Map<String, dynamic> data, Color primary, Color text, Color secondary, bool divider) {
+  Widget _prayerRow(BuildContext context, AppLocalizations l10n, Map<String, dynamic> data, Color primary, Color text, Color secondary, String languageCode, bool divider) {
     final current = data['isCurrent'] == true;
     final name = _prayerName(l10n, data['name']?.toString() ?? '');
     final start = data['start']?.toString() ?? '--:--';
@@ -379,69 +376,37 @@ class _PrayerScreenState extends State<PrayerScreen> {
           child: Row(
             children: [
               Container(
-                width: 34,
-                height: 34,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
-                  color: current ? primary.withValues(alpha: .12) : primary.withValues(alpha: .05),
+                  color: current ? primary.withValues(alpha: .11) : primary.withValues(alpha: .045),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  current ? Icons.mosque_rounded : Icons.access_time_rounded,
-                  color: current ? primary : secondary,
-                  size: 19,
-                ),
+                child: Icon(current ? Icons.mosque_rounded : Icons.access_time_rounded, color: current ? primary : secondary, size: 18),
               ),
               const SizedBox(width: 9),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: current ? primary : text,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w800,
-                        height: 1.15,
-                      ),
-                    ),
+                    Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: current ? primary : text, fontSize: 12, fontWeight: FontWeight.w800, height: 1.15)),
                     const SizedBox(height: 2),
-                    Text(
-                      start,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: secondary,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
-                        height: 1.1,
-                      ),
-                    ),
+                    Text(start, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 10, fontWeight: FontWeight.w600, height: 1.1)),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
               ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 48, maxWidth: 72),
+                constraints: const BoxConstraints(minWidth: 48, maxWidth: 82),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      l10n.jamaat,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: secondary, fontSize: 9.5, height: 1.1),
-                    ),
+                    Text(l10n.jamaat, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 9, height: 1.1)),
                     const SizedBox(height: 2),
                     FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text(
-                        jamaat,
-                        maxLines: 1,
-                        style: TextStyle(color: primary, fontSize: 11, fontWeight: FontWeight.w800, height: 1.1),
-                      ),
+                      alignment: Alignment.centerRight,
+                      child: Text(jamaat, maxLines: 1, style: TextStyle(color: primary, fontSize: 10.5, fontWeight: FontWeight.w800, height: 1.1)),
                     ),
                   ],
                 ),
@@ -472,28 +437,18 @@ class _PrayerScreenState extends State<PrayerScreen> {
     return _card(
       context,
       primary,
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 10),
       child: Column(
         children: [
-          Icon(icon, size: 19, color: primary),
+          Icon(icon, size: 18, color: primary),
           const SizedBox(height: 5),
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: text.withValues(alpha: .78), fontSize: 9.5, fontWeight: FontWeight.w600, height: 1.1),
-          ),
+          Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text.withValues(alpha: .78), fontSize: 9, fontWeight: FontWeight.w600, height: 1.1)),
           const SizedBox(height: 3),
           SizedBox(
             width: double.infinity,
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(
-                value,
-                maxLines: 1,
-                style: TextStyle(color: text, fontSize: 10.5, fontWeight: FontWeight.w800, height: 1.1),
-              ),
+              child: Text(value, maxLines: 1, style: TextStyle(color: text, fontSize: 10.5, fontWeight: FontWeight.w800, height: 1.1)),
             ),
           ),
         ],
@@ -501,16 +456,16 @@ class _PrayerScreenState extends State<PrayerScreen> {
     );
   }
 
-  Widget _naflTimes(BuildContext context, AppLocalizations l10n, PrayerController controller, Color primary) {
+  Widget _naflTimes(BuildContext context, PrayerController controller, Color primary, String languageCode) {
     final theme = Theme.of(context);
     final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary = theme.textTheme.bodySmall?.color?.withValues(alpha: .68) ?? theme.colorScheme.onSurface.withValues(alpha: .68);
-    final nafl = controller.prayers.where((p) => p['category'] == 'nafl').toList();
+    final nafl = controller.prayers.where((p) => p['category'] == 'nafl').toList(growable: false);
 
     return _card(
       context,
       primary,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       child: Column(
         children: [
           for (var i = 0; i < nafl.length; i++) ...[
@@ -521,31 +476,19 @@ class _PrayerScreenState extends State<PrayerScreen> {
                   Container(
                     width: 30,
                     height: 30,
-                    decoration: BoxDecoration(
-                      color: primary.withValues(alpha: .05),
-                      borderRadius: BorderRadius.circular(9),
-                    ),
-                    child: Icon(Icons.nightlight_round, size: 17, color: primary),
+                    decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(9)),
+                    child: Icon(Icons.nightlight_round, size: 16, color: primary),
                   ),
                   const SizedBox(width: 9),
                   Expanded(
-                    child: Text(
-                      _prayerName(l10n, nafl[i]['name']?.toString() ?? ''),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: text, fontSize: 11.5, fontWeight: FontWeight.w700, height: 1.15),
-                    ),
+                    child: Text(_prayerName(AppLocalizations.of(context), nafl[i]['name']?.toString() ?? ''), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 11, fontWeight: FontWeight.w700, height: 1.15)),
                   ),
                   const SizedBox(width: 8),
                   Flexible(
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerRight,
-                      child: Text(
-                        '${nafl[i]['start'] ?? '--:--'} – ${nafl[i]['end'] ?? '--:--'}',
-                        maxLines: 1,
-                        style: TextStyle(color: primary, fontSize: 10.5, fontWeight: FontWeight.w700, height: 1.1),
-                      ),
+                      child: Text('${nafl[i]['start'] ?? '--:--'} – ${nafl[i]['end'] ?? '--:--'}', maxLines: 1, style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.w700, height: 1.1)),
                     ),
                   ),
                 ],
@@ -558,10 +501,10 @@ class _PrayerScreenState extends State<PrayerScreen> {
     );
   }
 
-  Widget _trackerCard(BuildContext context, AppLocalizations l10n, Color primary) {
+  Widget _trackerCard(BuildContext context, AppLocalizations l10n, Color primary, String languageCode) {
     final theme = Theme.of(context);
     final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
-    const names = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    const names = <String>['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
     return _card(
       context,
@@ -569,13 +512,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
       padding: const EdgeInsets.fromLTRB(10, 11, 10, 10),
       child: Column(
         children: [
-          Text(
-            l10n.markPrayers,
-            maxLines: 2,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: text.withValues(alpha: .78), fontSize: 10.5, fontWeight: FontWeight.w600, height: 1.2),
-          ),
+          Text(l10n.markPrayers, maxLines: 2, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: TextStyle(color: text.withValues(alpha: .78), fontSize: 10, fontWeight: FontWeight.w600, height: 1.2)),
           const SizedBox(height: 9),
           Row(
             children: [
@@ -588,19 +525,9 @@ class _PrayerScreenState extends State<PrayerScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 2),
                       child: Column(
                         children: [
-                          Icon(
-                            (_tracker[name] ?? false) ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                            color: (_tracker[name] ?? false) ? primary : theme.disabledColor,
-                            size: 21,
-                          ),
+                          Icon((_tracker[name] ?? false) ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, color: (_tracker[name] ?? false) ? primary : theme.disabledColor, size: 20),
                           const SizedBox(height: 4),
-                          Text(
-                            _prayerName(AppLocalizations.of(context), name),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: text, fontSize: 9.5, fontWeight: FontWeight.w700, height: 1.1),
-                          ),
+                          Text(_prayerName(l10n, name), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 9, fontWeight: FontWeight.w700, height: 1.1)),
                         ],
                       ),
                     ),
