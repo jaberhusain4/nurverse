@@ -12,7 +12,7 @@ class DuaVoiceSettingsService {
   static Future<String> getVoiceGender() async {
     final prefs = await SharedPreferences.getInstance();
     final value = prefs.getString(_key);
-    // Male is the NurVerse default. Existing female preference is preserved.
+    // Male is the NurVerse default. Preserve an explicitly saved female choice.
     return value == female ? female : male;
   }
 
@@ -22,111 +22,147 @@ class DuaVoiceSettingsService {
     await prefs.setString(_key, gender);
   }
 
-  /// Applies a real device voice when the platform exposes one.
-  ///
-  /// Android/Google TTS exposes Arabic voice identifiers such as:
-  ///   ar-xa-x-ard-local  -> male
-  ///   ar-xa-x-are-local  -> male
-  ///   ar-xa-x-arc-local  -> female
-  ///   ar-xa-x-arz-local  -> female
-  ///
-  /// We deliberately do NOT use pitch as a gender substitute. If a requested
-  /// gender voice is unavailable on the device, the engine's Arabic default is
-  /// used at neutral pitch rather than pretending that a female voice is male.
-  static Future<void> apply(FlutterTts tts) async {
+  static String _normalizeLocale(String value) =>
+      value.toLowerCase().replaceAll('_', '-');
+
+  static String _normalizeName(String value) => value.toLowerCase().trim();
+
+  static List<Map<String, String>> _voiceMaps(dynamic rawVoices) {
+    if (rawVoices is! List) return const [];
+
+    return rawVoices.whereType<Map>().map((voice) {
+      return Map<String, String>.from(
+        voice.map(
+          (key, value) => MapEntry(key.toString(), value.toString()),
+        ),
+      );
+    }).toList();
+  }
+
+  static bool _isArabic(Map<String, String> voice) {
+    final locale = _normalizeLocale(voice['locale'] ?? '');
+    return locale == 'ar-xa' ||
+        locale == 'ar-sa' ||
+        locale.startsWith('ar-');
+  }
+
+  static bool _hasFeature(Map<String, String> voice, String feature) {
+    final features = (voice['features'] ?? '').toLowerCase();
+    return features.contains(feature);
+  }
+
+  static Map<String, String>? _findAndroidVoice(
+    List<Map<String, String>> voices,
+    String gender,
+  ) {
+    final maleNames = <String>[
+      'ar-xa-x-ard-local',
+      'ar-xa-x-are-local',
+      'ar-xa-x-ard-network',
+      'ar-xa-x-are-network',
+    ];
+    final femaleNames = <String>[
+      'ar-xa-x-arc-local',
+      'ar-xa-x-arz-local',
+      'ar-xa-x-arc-network',
+      'ar-xa-x-arz-network',
+    ];
+    final exactNames = gender == male ? maleNames : femaleNames;
+
+    // 1. Prefer the known Google Arabic voice identifiers. These are
+    //    gender-specific and are not inferred from pitch.
+    for (final wanted in exactNames) {
+      for (final voice in voices) {
+        if (_normalizeName(voice['name'] ?? '') == wanted) {
+          return voice;
+        }
+      }
+    }
+
+    // 2. Some TTS engines expose gender in Voice.features. Prefer that over
+    //    guessing from an arbitrary voice name.
+    final featureMatch = voices.where((voice) {
+      if (gender == male) return _hasFeature(voice, 'male');
+      return _hasFeature(voice, 'female');
+    }).toList();
+    if (featureMatch.isNotEmpty) return featureMatch.first;
+
+    // 3. Google Android voice names use the final voice code to distinguish
+    //    these Arabic voices. Keep this only as a last identifier-based check.
+    final suffixes = gender == male
+        ? const ['-ard-local', '-are-local', '-ard-network', '-are-network']
+        : const ['-arc-local', '-arz-local', '-arc-network', '-arz-network'];
+
+    for (final suffix in suffixes) {
+      for (final voice in voices) {
+        final name = _normalizeName(voice['name'] ?? '');
+        if (name.startsWith('ar-xa-x-') && name.endsWith(suffix)) {
+          return voice;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  static Future<bool> apply(FlutterTts tts) async {
     final gender = await getVoiceGender();
 
-    await tts.setLanguage('ar-SA');
+    await tts.stop();
     await tts.setSpeechRate(0.42);
     await tts.setVolume(1.0);
+    // Never use pitch to simulate gender.
     await tts.setPitch(1.0);
 
     try {
       if (Platform.isAndroid) {
-        final rawVoices = await tts.getVoices;
-        final voices = rawVoices
-            .whereType<Map>()
-            .map(
-              (voice) => Map<String, String>.from(
-                voice.map(
-                  (key, value) => MapEntry(key.toString(), value.toString()),
-                ),
-              ),
-            )
-            .where(
-              (voice) =>
-                  (voice['locale'] ?? '').toLowerCase().replaceAll('_', '-') ==
-                  'ar-xa',
-            )
+        final voices = _voiceMaps(await tts.getVoices)
+            .where(_isArabic)
             .toList();
 
-        final maleNames = <String>[
-          'ar-xa-x-ard-local',
-          'ar-xa-x-are-local',
-        ];
-        final femaleNames = <String>[
-          'ar-xa-x-arc-local',
-          'ar-xa-x-arz-local',
-        ];
-        final candidates = gender == male ? maleNames : femaleNames;
-
-        for (final candidate in candidates) {
-          Map<String, String>? match;
-          for (final voice in voices) {
-            final name = (voice['name'] ?? '').toLowerCase();
-            if (name == candidate) {
-              match = voice;
-              break;
-            }
+        final match = _findAndroidVoice(voices, gender);
+        if (match != null) {
+          await tts.setVoice(match);
+          // Keep the locale consistent with the selected Arabic voice.
+          final locale = match['locale'];
+          if (locale != null && locale.isNotEmpty) {
+            await tts.setLanguage(locale);
+          } else {
+            await tts.setLanguage('ar-XA');
           }
-          if (match != null) {
-            await tts.setVoice(match);
-            return;
-          }
+          return true;
         }
 
-        // Some Android engines expose the exact voice name but a slightly
-        // different locale string. Match the voice name only as a secondary
-        // check; the identifier itself is gender-specific.
-        for (final candidate in candidates) {
-          final match = voices.cast<Map<String, String>?>().firstWhere(
-            (voice) => (voice?['name'] ?? '').toLowerCase() == candidate,
-            orElse: () => null,
-          );
-          if (match != null) {
-            await tts.setVoice(match);
-            return;
-          }
-        }
-      } else {
-        // iOS/macOS expose gender metadata through flutter_tts. Use it when
-        // available instead of guessing from voice names.
-        final rawVoices = await tts.getVoices;
-        final voices = rawVoices
-            .whereType<Map>()
-            .map(
-              (voice) => Map<String, String>.from(
-                voice.map(
-                  (key, value) => MapEntry(key.toString(), value.toString()),
-                ),
-              ),
-            )
-            .where(
-              (voice) =>
-                  (voice['locale'] ?? '').toLowerCase().startsWith('ar'),
-            )
-            .toList();
+        // Do not silently fall back to the other gender. That was the reason
+        // both options could sound identical on devices without a selected
+        // voice. Returning false lets the caller know a real gendered voice
+        // was not available from the current TTS engine.
+        await tts.setLanguage('ar-XA');
+        return false;
+      }
 
-        final wanted = gender == male ? 'male' : 'female';
-        for (final voice in voices) {
-          if ((voice['gender'] ?? '').toLowerCase() == wanted) {
-            await tts.setVoice(voice);
-            return;
+      // iOS/macOS can expose gender through the voice metadata. Use it when
+      // available and never change pitch to imitate a gender.
+      final voices = _voiceMaps(await tts.getVoices)
+          .where((voice) => _isArabic(voice))
+          .toList();
+      final wanted = gender == male ? 'male' : 'female';
+
+      for (final voice in voices) {
+        if ((voice['gender'] ?? '').toLowerCase() == wanted) {
+          await tts.setVoice(voice);
+          final locale = voice['locale'];
+          if (locale != null && locale.isNotEmpty) {
+            await tts.setLanguage(locale);
           }
+          return true;
         }
       }
     } catch (_) {
-      // Keep the device's Arabic default voice at neutral pitch.
+      // Keep the engine stable; callers can treat false as unavailable.
     }
+
+    await tts.setLanguage('ar-XA');
+    return false;
   }
 }
