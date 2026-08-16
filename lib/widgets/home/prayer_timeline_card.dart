@@ -74,9 +74,9 @@ class _PrayerItem extends StatelessWidget {
         else
           Icon(Icons.check_circle_outline_rounded, size: 12, color: secondary.withValues(alpha: .55)),
         const SizedBox(height: 4),
-        SizedBox(width: double.infinity, child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.center, child: Text(name, maxLines: 1, style: TextStyle(color: isCurrent ? primary : text, fontSize: 10.5, fontWeight: FontWeight.w800, height: 1.1)))),
+        SizedBox(width: double.infinity, child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.center, child: Text(name, maxLines: 1, style: TextStyle(color: isCurrent ? primary : text, fontSize: 12, fontWeight: FontWeight.w700, height: 1.1)))),
         const SizedBox(height: 3),
-        SizedBox(width: double.infinity, child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.center, child: Text(start, maxLines: 1, style: TextStyle(color: isCurrent ? primary : secondary, fontSize: 10, fontWeight: FontWeight.w700, height: 1.1)))),
+        SizedBox(width: double.infinity, child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.center, child: Text(start, maxLines: 1, style: TextStyle(color: isCurrent ? primary : secondary, fontSize: 10.5, fontWeight: FontWeight.w700, height: 1.1)))),
       ]),
     );
   }
