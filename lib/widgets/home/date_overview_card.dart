@@ -23,7 +23,7 @@ class DateOverviewCard extends StatelessWidget {
           const SizedBox(height: 7),
           Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(fontSize: 13, color: context.secondaryTextColor, fontWeight: FontWeight.w600)),
           const SizedBox(height: 3),
-          Text(value, textAlign: TextAlign.center, maxLines: 2, softWrap: true, overflow: TextOverflow.visible, style: theme.textTheme.bodySmall?.copyWith(fontSize: 11.5, height: 1.15, fontWeight: FontWeight.w600, color: context.primaryTextColor)),
+          Text(value, textAlign: TextAlign.center, maxLines: 2, softWrap: true, overflow: TextOverflow.visible, style: theme.textTheme.bodySmall?.copyWith(fontSize: 10.5, height: 1.15, fontWeight: FontWeight.w500, color: context.primaryTextColor)),
         ],
       ),
     );
