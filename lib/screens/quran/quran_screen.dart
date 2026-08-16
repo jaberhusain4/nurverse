@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
 import 'hafezi_quran_screen.dart';
+import 'onudhabon_quran_screen.dart';
 
 class QuranScreen extends StatelessWidget {
   const QuranScreen({super.key});
@@ -18,52 +19,37 @@ class QuranScreen extends StatelessWidget {
               context,
             ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
           ),
-
           const SizedBox(height: 6),
-
           Text(
             'দুইভাবে কুরআন পড়ুন — হিফজ ও অনুধাবন।',
             style: TextStyle(color: context.secondaryTextColor),
           ),
-
           const SizedBox(height: 20),
-
-          /// ======================================================
-          /// HAFEZI QURAN
-          /// ======================================================
           _QuranModeCard(
             icon: Icons.menu_book_rounded,
             title: 'Hafezi Quran',
             subtitle: '১৫ লাইনের অফলাইন হাফেজি/ইন্দো-পাক স্টাইল মুসহাফ',
             badge: '15 লাইন',
-            onTap:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const HafeziQuranScreen()),
-                ),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const HafeziQuranScreen()),
+            ),
           ),
-
           const SizedBox(height: 14),
-
-          /// ======================================================
-          /// ONUDHABON QURAN
-          /// ======================================================
           _QuranModeCard(
             icon: Icons.auto_stories_rounded,
             title: 'Onudhabon Quran',
             subtitle: 'সূরা, আয়াত, বাংলা অনুবাদ ও অনুধাবনভিত্তিক পাঠ',
-            badge: 'পরবর্তী ধাপ',
-            enabled: false,
-            onTap: () {},
+            badge: 'চালিয়ে যান',
+            enabled: true,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const OnudhabonQuranScreen()),
+            ),
           ),
         ],
       ),
     );
   }
 }
-
-/// ============================================================
-/// QURAN MODE CARD
-/// ============================================================
 
 class _QuranModeCard extends StatelessWidget {
   final IconData icon;
@@ -105,16 +91,13 @@ class _QuranModeCard extends StatelessWidget {
                 ),
                 child: Icon(
                   icon,
-                  color:
-                      enabled
-                          ? AppColors.seaBlueDark
-                          : context.secondaryTextColor,
+                  color: enabled
+                      ? AppColors.seaBlueDark
+                      : context.secondaryTextColor,
                   size: 28,
                 ),
               ),
-
               const SizedBox(width: 16),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,9 +109,7 @@ class _QuranModeCard extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-
                     const SizedBox(height: 6),
-
                     Text(
                       subtitle,
                       style: TextStyle(
@@ -137,7 +118,6 @@ class _QuranModeCard extends StatelessWidget {
                         color: context.secondaryTextColor,
                       ),
                     ),
-
                     if (badge != null) ...[
                       const SizedBox(height: 8),
                       Container(
@@ -162,9 +142,7 @@ class _QuranModeCard extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(width: 8),
-
               Icon(
                 Icons.chevron_right_rounded,
                 color: context.secondaryTextColor,
