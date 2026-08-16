@@ -8,9 +8,12 @@ class PrayerTimelineCard extends StatelessWidget {
 
   String _label({required String bn, required String en, required String ar}) {
     switch (languageCode) {
-      case 'en': return en;
-      case 'ar': return ar;
-      default: return bn;
+      case 'en':
+        return en;
+      case 'ar':
+        return ar;
+      default:
+        return bn;
     }
   }
 
@@ -25,25 +28,71 @@ class PrayerTimelineCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
-      decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: primary.withValues(alpha: .055))),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Icon(Icons.schedule_rounded, color: primary, size: 19),
-          const SizedBox(width: 8),
-          Expanded(child: Text(_label(bn: 'আজকের সালাত', en: "Today's Prayers", ar: 'صلوات اليوم'), style: theme.textTheme.titleSmall?.copyWith(fontSize: 16, fontWeight: FontWeight.w700, height: 1.15))),
-          Text(_label(bn: '৫ ওয়াক্ত', en: '5 prayers', ar: 'خمس صلوات'), style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600)),
-        ]),
-        const SizedBox(height: 12),
-        if (items.length == 5)
-          Row(children: [
-            for (var i = 0; i < items.length; i++) ...[
-              Expanded(child: _PrayerItem(data: items[i], languageCode: languageCode, primary: primary, text: text, secondary: secondary)),
-              if (i != items.length - 1) const SizedBox(width: 4),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: primary.withValues(alpha: .055)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.schedule_rounded, color: primary, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _label(bn: 'আজকের সালাত', en: "Today's Prayers", ar: 'صلوات اليوم'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    height: 1.15,
+                  ),
+                ),
+              ),
+              Text(
+                _label(bn: '৫ ওয়াক্ত', en: '5 prayers', ar: 'خمس صلوات'),
+                style: TextStyle(
+                  color: secondary,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
-          ])
-        else
-          Center(child: Text(_label(bn: 'সালাতের সময় প্রস্তুত হচ্ছে...', en: 'Preparing prayer times...', ar: 'جارٍ تجهيز أوقات الصلاة...'), style: TextStyle(color: secondary, fontSize: 11.5))),
-      ]),
+          ),
+          const SizedBox(height: 12),
+          if (items.length == 5)
+            Row(
+              children: [
+                for (var i = 0; i < items.length; i++) ...[
+                  Expanded(
+                    child: _PrayerItem(
+                      data: items[i],
+                      languageCode: languageCode,
+                      primary: primary,
+                      text: text,
+                      secondary: secondary,
+                    ),
+                  ),
+                  if (i != items.length - 1) const SizedBox(width: 5),
+                ],
+              ],
+            )
+          else
+            Center(
+              child: Text(
+                _label(
+                  bn: 'সালাতের সময় প্রস্তুত হচ্ছে...',
+                  en: 'Preparing prayer times...',
+                  ar: 'جارٍ تجهيز أوقات الصلاة...',
+                ),
+                style: TextStyle(color: secondary, fontSize: 12),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -55,29 +104,92 @@ class _PrayerItem extends StatelessWidget {
   final Color text;
   final Color secondary;
 
-  const _PrayerItem({required this.data, required this.languageCode, required this.primary, required this.text, required this.secondary});
+  const _PrayerItem({
+    required this.data,
+    required this.languageCode,
+    required this.primary,
+    required this.text,
+    required this.secondary,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isCurrent = data['isCurrent'] == true;
-    final name = languageCode == 'en' ? (data['name']?.toString() ?? '--') : languageCode == 'ar' ? (data['nameAr']?.toString() ?? '--') : (data['nameBn']?.toString() ?? '--');
+    final name = languageCode == 'en'
+        ? (data['name']?.toString() ?? '--')
+        : languageCode == 'ar'
+            ? (data['nameAr']?.toString() ?? '--')
+            : (data['nameBn']?.toString() ?? '--');
     final start = data['start']?.toString() ?? '--:--';
-    final background = isCurrent ? primary.withValues(alpha: .10) : primary.withValues(alpha: .035);
+    final background = isCurrent
+        ? primary.withValues(alpha: .10)
+        : primary.withValues(alpha: .035);
 
     return Container(
-      constraints: const BoxConstraints(minHeight: 70),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 7),
-      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(14), border: Border.all(color: isCurrent ? primary.withValues(alpha: .16) : primary.withValues(alpha: .035))),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        if (isCurrent)
-          Container(width: 6, height: 6, decoration: BoxDecoration(color: primary, shape: BoxShape.circle))
-        else
-          Icon(Icons.check_circle_outline_rounded, size: 12, color: secondary.withValues(alpha: .55)),
-        const SizedBox(height: 4),
-        SizedBox(width: double.infinity, child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.center, child: Text(name, maxLines: 1, style: TextStyle(color: isCurrent ? primary : text, fontSize: 10.5, fontWeight: FontWeight.w800, height: 1.1)))),
-        const SizedBox(height: 3),
-        SizedBox(width: double.infinity, child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.center, child: Text(start, maxLines: 1, style: TextStyle(color: isCurrent ? primary : secondary, fontSize: 10, fontWeight: FontWeight.w700, height: 1.1)))),
-      ]),
+      constraints: const BoxConstraints(minHeight: 76),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isCurrent
+              ? primary.withValues(alpha: .16)
+              : primary.withValues(alpha: .035),
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (isCurrent)
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(color: primary, shape: BoxShape.circle),
+            )
+          else
+            Icon(
+              Icons.check_circle_outline_rounded,
+              size: 14,
+              color: secondary.withValues(alpha: .55),
+            ),
+          const SizedBox(height: 5),
+          SizedBox(
+            width: double.infinity,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.center,
+              child: Text(
+                name,
+                maxLines: 1,
+                style: TextStyle(
+                  color: isCurrent ? primary : text,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  height: 1.1,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          SizedBox(
+            width: double.infinity,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.center,
+              child: Text(
+                start,
+                maxLines: 1,
+                style: TextStyle(
+                  color: isCurrent ? primary : secondary,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  height: 1.1,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
