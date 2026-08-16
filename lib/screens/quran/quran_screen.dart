@@ -1,14 +1,52 @@
 import 'package:flutter/material.dart';
 
+import '../../services/last_read_service.dart';
 import '../../theme/app_theme.dart';
 import 'hafezi_quran_screen.dart';
 import 'onudhabon_quran_screen.dart';
 
-class QuranScreen extends StatelessWidget {
+class QuranScreen extends StatefulWidget {
   const QuranScreen({super.key});
 
   @override
+  State<QuranScreen> createState() => _QuranScreenState();
+}
+
+class _QuranScreenState extends State<QuranScreen> {
+  bool _loadingLastRead = true;
+  bool _hasOnudhabonLastRead = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastRead();
+  }
+
+  Future<void> _loadLastRead() async {
+    final lastRead = await LastReadService.getLastRead();
+    if (!mounted) return;
+    setState(() {
+      _hasOnudhabonLastRead = lastRead?['mode'] == 'onudhabon' &&
+          lastRead?['surahNumber'] is int &&
+          lastRead?['ayahNumber'] is int;
+      _loadingLastRead = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_loadingLastRead) {
+      return const SafeArea(
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Home-এর "কুরআন পড়া চালিয়ে যান" card Quran tab-এ নিয়ে এলে,
+    // saved Onudhabon position থেকেই reader খুলবে।
+    if (_hasOnudhabonLastRead) {
+      return const OnudhabonQuranScreen();
+    }
+
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
