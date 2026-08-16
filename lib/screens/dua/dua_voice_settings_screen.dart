@@ -12,9 +12,10 @@ class DuaVoiceSettingsScreen extends StatefulWidget {
 
 class _DuaVoiceSettingsScreenState extends State<DuaVoiceSettingsScreen> {
   final FlutterTts _tts = FlutterTts();
-  String _selected = DuaVoiceSettingsService.female;
+  String _selected = DuaVoiceSettingsService.male;
   bool _loading = true;
   bool _playing = false;
+  String? _error;
 
   @override
   void initState() {
@@ -27,9 +28,14 @@ class _DuaVoiceSettingsScreenState extends State<DuaVoiceSettingsScreen> {
       if (mounted) setState(() => _playing = false);
     });
     _tts.setErrorHandler((_) {
-      if (mounted) setState(() => _playing = false);
+      if (mounted) setState(() {
+        _playing = false;
+        _error = _bangla ? 'এই কণ্ঠটি চালু করা যায়নি।' : 'This voice could not be started.';
+      });
     });
   }
+
+  bool get _bangla => Localizations.localeOf(context).languageCode == 'bn';
 
   Future<void> _load() async {
     final value = await DuaVoiceSettingsService.getVoiceGender();
@@ -43,9 +49,16 @@ class _DuaVoiceSettingsScreenState extends State<DuaVoiceSettingsScreen> {
   Future<void> _select(String value) async {
     await _tts.stop();
     await DuaVoiceSettingsService.setVoiceGender(value);
-    await DuaVoiceSettingsService.apply(_tts);
+    final available = await DuaVoiceSettingsService.apply(_tts);
     if (!mounted) return;
-    setState(() => _selected = value);
+    setState(() {
+      _selected = value;
+      _error = available
+          ? null
+          : (_bangla
+                ? 'এই ডিভাইসে নির্বাচিত ${value == DuaVoiceSettingsService.male ? 'পুরুষ' : 'নারী'} Arabic voice পাওয়া যায়নি।'
+                : 'The selected ${value == DuaVoiceSettingsService.male ? 'male' : 'female'} Arabic voice is not available on this device.');
+    });
   }
 
   Future<void> _preview() async {
@@ -55,8 +68,22 @@ class _DuaVoiceSettingsScreenState extends State<DuaVoiceSettingsScreen> {
       return;
     }
 
-    await DuaVoiceSettingsService.apply(_tts);
-    if (mounted) setState(() => _playing = true);
+    final available = await DuaVoiceSettingsService.apply(_tts);
+    if (!available) {
+      if (mounted) {
+        setState(() {
+          _error = _bangla
+              ? 'এই ডিভাইসে নির্বাচিত Arabic voice ইনস্টল নেই। ফোনের Text-to-speech settings থেকে Arabic voice data ইনস্টল করুন।'
+              : 'The selected Arabic voice is not installed. Install Arabic voice data from the phone Text-to-speech settings.';
+        });
+      }
+      return;
+    }
+
+    if (mounted) setState(() {
+      _playing = true;
+      _error = null;
+    });
     await _tts.speak('رَبِّ زِدْنِي عِلْمًا');
   }
 
@@ -80,37 +107,27 @@ class _DuaVoiceSettingsScreenState extends State<DuaVoiceSettingsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isBangla ? 'দুআর অডিও' : 'Dua Audio'),
-      ),
+      appBar: AppBar(title: Text(isBangla ? 'দুআর অডিও' : 'Dua Audio')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 30),
         children: [
           Text(
             isBangla ? 'দুআ শোনার কণ্ঠ' : 'Dua Audio Voice',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              fontSize: 20,
-            ),
+            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, fontSize: 20),
           ),
           const SizedBox(height: 6),
           Text(
             isBangla
-                ? 'আপনার পছন্দের পুরুষ বা নারী কণ্ঠ নির্বাচন করুন। নির্বাচিত কণ্ঠ সব দুআর অডিওতে ব্যবহার হবে।'
-                : 'Choose a male or female voice. Your choice will be used for dua audio throughout NurVerse.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              height: 1.55,
-              fontSize: 14,
-            ),
+                ? 'পুরুষ বা নারী—আপনার পছন্দের প্রকৃত Arabic TTS কণ্ঠ নির্বাচন করুন।'
+                : 'Choose the actual Arabic TTS voice you want to use: male or female.',
+            style: theme.textTheme.bodyMedium?.copyWith(height: 1.55, fontSize: 14),
           ),
           const SizedBox(height: 18),
           _VoiceOptionCard(
             selected: _selected == DuaVoiceSettingsService.male,
             icon: Icons.record_voice_over_rounded,
             title: isBangla ? 'পুরুষ কণ্ঠ' : 'Male voice',
-            subtitle: isBangla
-                ? 'পুরুষ কণ্ঠে দুআ শুনুন'
-                : 'Listen to duas with a male voice',
+            subtitle: isBangla ? 'প্রকৃত পুরুষ Arabic TTS voice' : 'Actual male Arabic TTS voice',
             primary: primary,
             onTap: () => _select(DuaVoiceSettingsService.male),
           ),
@@ -119,12 +136,21 @@ class _DuaVoiceSettingsScreenState extends State<DuaVoiceSettingsScreen> {
             selected: _selected == DuaVoiceSettingsService.female,
             icon: Icons.record_voice_over_outlined,
             title: isBangla ? 'নারী কণ্ঠ' : 'Female voice',
-            subtitle: isBangla
-                ? 'নারী কণ্ঠে দুআ শুনুন'
-                : 'Listen to duas with a female voice',
+            subtitle: isBangla ? 'প্রকৃত নারী Arabic TTS voice' : 'Actual female Arabic TTS voice',
             primary: primary,
             onTap: () => _select(DuaVoiceSettingsService.female),
           ),
+          if (_error != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(13),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.error.withValues(alpha: .08),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(_error!, style: theme.textTheme.bodySmall?.copyWith(height: 1.45)),
+            ),
+          ],
           const SizedBox(height: 22),
           OutlinedButton.icon(
             onPressed: _preview,
@@ -132,9 +158,7 @@ class _DuaVoiceSettingsScreenState extends State<DuaVoiceSettingsScreen> {
             label: Text(isBangla ? 'নির্বাচিত কণ্ঠ শুনুন' : 'Preview selected voice'),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
             ),
           ),
           const SizedBox(height: 18),
@@ -146,12 +170,9 @@ class _DuaVoiceSettingsScreenState extends State<DuaVoiceSettingsScreen> {
             ),
             child: Text(
               isBangla
-                  ? 'নোট: ফোনের TTS engine যদি আলাদা পুরুষ/নারী Arabic voice দেয়, NurVerse সেটি ব্যবহার করবে। অন্যথায় device-compatible pitch profile ব্যবহার করে পছন্দের কণ্ঠের অনুভূতি বজায় রাখা হবে।'
-                  : 'Note: If your phone TTS engine provides separate Arabic male/female voices, NurVerse will use them. Otherwise a device-compatible pitch profile is used as a fallback.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                height: 1.5,
-                fontSize: 12.5,
-              ),
+                  ? 'NurVerse কোনো voice-কে pitch পরিবর্তন করে অন্য gender হিসেবে দেখাবে না। ডিভাইসে প্রকৃত voice না থাকলে সেটি unavailable দেখাবে।'
+                  : 'NurVerse never changes pitch to imitate another gender. If the real voice is unavailable on the device, it will be reported as unavailable.',
+              style: theme.textTheme.bodySmall?.copyWith(height: 1.5, fontSize: 12.5),
             ),
           ),
         ],
@@ -188,14 +209,10 @@ class _VoiceOptionCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
-            color: selected
-                ? primary.withValues(alpha: 0.08)
-                : theme.cardColor,
+            color: selected ? primary.withValues(alpha: 0.08) : theme.cardColor,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: selected
-                  ? primary.withValues(alpha: 0.45)
-                  : primary.withValues(alpha: 0.08),
+              color: selected ? primary.withValues(alpha: 0.45) : primary.withValues(alpha: 0.08),
               width: selected ? 1.4 : 1,
             ),
           ),
@@ -204,10 +221,7 @@ class _VoiceOptionCard extends StatelessWidget {
               Container(
                 width: 46,
                 height: 46,
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.10),
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: primary.withValues(alpha: 0.10), shape: BoxShape.circle),
                 child: Icon(icon, color: primary, size: 24),
               ),
               const SizedBox(width: 13),
@@ -215,28 +229,14 @@ class _VoiceOptionCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                      ),
-                    ),
+                    Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, fontSize: 16)),
                     const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 12.5,
-                        height: 1.35,
-                      ),
-                    ),
+                    Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(fontSize: 12.5, height: 1.35)),
                   ],
                 ),
               ),
               Icon(
-                selected
-                    ? Icons.radio_button_checked_rounded
-                    : Icons.radio_button_off_rounded,
+                selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
                 color: selected ? primary : theme.hintColor,
               ),
             ],
