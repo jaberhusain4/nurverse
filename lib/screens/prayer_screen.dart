@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:hijri/hijri_calendar.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
 import '../controllers/prayer_controller.dart';
 import '../localization/app_localizations.dart';
 import '../providers/settings_provider.dart';
+import '../services/date_service.dart';
 import '../services/jamaat_service.dart';
+import '../services/sun_time_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/current_prayer_premium_card.dart';
 import '../widgets/home/islamic_info_card.dart';
@@ -27,6 +29,11 @@ class _PrayerScreenState extends State<PrayerScreen> {
   Timer? _clockTimer;
   String _currentTime = '';
 
+  double? _sunLatitude;
+  double? _sunLongitude;
+  DateTime? _sunDate;
+  SunTimeInfo? _sunTimeInfo;
+
   final Map<String, bool> _tracker = {
     'Fajr': false,
     'Dhuhr': false,
@@ -36,7 +43,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
   };
 
   String _prayerName(AppLocalizations l10n, String value) {
-    const english = {
+    const names = {
       'Fajr': 'ফজর',
       'Dhuhr': 'যোহর',
       'Jumuah': 'জুমু‘আ',
@@ -48,12 +55,12 @@ class _PrayerScreenState extends State<PrayerScreen> {
       'Awwabin': 'আউওয়াবীন',
       'Tahajjud': 'তাহাজ্জুদ',
     };
-    return english.containsKey(value) ? l10n.tr(english[value]!, value) : value;
+    return names.containsKey(value) ? l10n.tr(names[value]!, value) : value;
   }
 
   String _status(AppLocalizations l10n, String value) {
     if (value.isEmpty) return value;
-    const english = {
+    const translations = {
       'ফজরের সময় শুরু হতে চলেছে': 'Fajr time is about to begin',
       'ফজরের ওয়াক্ত চলছে': 'Fajr time is active',
       'পরবর্তী সালাত: জুমু‘আ': 'Next prayer: Jumu’ah',
@@ -63,9 +70,8 @@ class _PrayerScreenState extends State<PrayerScreen> {
       'আসরের ওয়াক্ত চলছে': 'Asr time is active',
       'মাগরিবের ওয়াক্ত চলছে': 'Maghrib time is active',
       'ইশার ওয়াক্ত চলছে': 'Isha time is active',
-      'ইশার ওয়াক্ত চলছে': 'Isha time is active',
     };
-    return english.containsKey(value) ? l10n.tr(value, english[value]!) : value;
+    return translations.containsKey(value) ? l10n.tr(value, translations[value]!) : value;
   }
 
   String _greeting(String languageCode) {
@@ -91,31 +97,95 @@ class _PrayerScreenState extends State<PrayerScreen> {
     setState(() => _currentTime = value);
   }
 
-  String _englishDate() => DateFormat('EEEE, d MMMM yyyy', 'en').format(DateTime.now());
-
-  String _banglaDate() {
+  String _hijriDate(String languageCode) {
     try {
-      final now = DateTime.now();
-      const weekdays = ['সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার', 'রবিবার'];
-      const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
-      return '${weekdays[now.weekday - 1]}, ${now.day} ${months[now.month - 1]} ${now.year}';
+      final h = HijriCalendar.now();
+      const bnMonths = <String>[
+        'মুহররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি',
+        'জুমাদিউল আউয়াল', 'জুমাদিউস সানি', 'রজব', 'শাবান',
+        'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ',
+      ];
+      const enMonths = <String>[
+        'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
+        'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Sha’ban',
+        'Ramadan', 'Shawwal', 'Dhul-Qadah', 'Dhul-Hijjah',
+      ];
+      const arMonths = <String>[
+        'محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر',
+        'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان',
+        'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة',
+      ];
+      const bnDigits = <String>['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+      String toBnDigits(int value) => value.toString().split('').map((d) => bnDigits[int.parse(d)]).join();
+      final index = (h.hMonth - 1).clamp(0, 11);
+
+      if (languageCode == 'en') return '${h.hDay} ${enMonths[index]} ${h.hYear} AH';
+      if (languageCode == 'ar') return '${h.hDay} ${arMonths[index]} ${h.hYear} هـ';
+      return '${toBnDigits(h.hDay)} ${bnMonths[index]} ${toBnDigits(h.hYear)} হিজরি';
     } catch (_) {
-      return '';
+      return languageCode == 'en' ? 'Hijri date unavailable' : 'হিজরি তারিখ পাওয়া যায়নি';
     }
   }
 
-  String _hijriDate(AppLocalizations l10n) {
-    try {
-      final h = HijriCalendar.now();
-      const bn = ['মুহররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি', 'জুমাদিউল আউয়াল', 'জুমাদিউস সানি', 'রজব', 'শাবান', 'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ'];
-      const en = ['Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani', 'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Sha’ban', 'Ramadan', 'Shawwal', 'Dhul-Qadah', 'Dhul-Hijjah'];
-      const ar = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
-      final i = (h.hMonth - 1).clamp(0, 11);
-      if (l10n.isBangla) return '${h.hDay} ${bn[i]} ${h.hYear} হিজরি';
-      if (l10n.locale.languageCode == 'ar') return '${h.hDay} ${ar[i]} ${h.hYear} هـ';
-      return '${h.hDay} ${en[i]} ${h.hYear} AH';
-    } catch (_) {
-      return l10n.tr('হিজরি তারিখ পাওয়া যায়নি', 'Hijri date unavailable');
+  String _banglaDate() {
+    final now = DateTime.now();
+    final year = now.year;
+    final starts = <DateTime>[
+      DateTime(year, 4, 14), DateTime(year, 5, 15), DateTime(year, 6, 15),
+      DateTime(year, 7, 16), DateTime(year, 8, 16), DateTime(year, 9, 16),
+      DateTime(year, 10, 16), DateTime(year, 11, 15), DateTime(year, 12, 15),
+      DateTime(year + 1, 1, 15), DateTime(year + 1, 2, 13), DateTime(year + 1, 3, 15),
+    ];
+    const months = <String>[
+      'বৈশাখ', 'জ্যৈষ্ঠ', 'আষাঢ়', 'শ্রাবণ', 'ভাদ্র', 'আশ্বিন',
+      'কার্তিক', 'অগ্রহায়ণ', 'পৌষ', 'মাঘ', 'ফাল্গুন', 'চৈত্র',
+    ];
+    var index = -1;
+    for (var i = 0; i < starts.length; i++) {
+      if (!now.isBefore(starts[i])) index = i;
+    }
+    if (index < 0) index = 11;
+    final start = starts[index];
+    final banglaYear = now.month > 4 || (now.month == 4 && now.day >= 14) ? year - 593 : year - 594;
+    return '${now.difference(start).inDays + 1} ${months[index]} $banglaYear';
+  }
+
+  SunTimeInfo? _sunTimes(PrayerController controller) {
+    final position = controller.position;
+    if (position == null) return null;
+    final now = DateTime.now();
+    final sameDay = _sunDate != null && _sunDate!.year == now.year && _sunDate!.month == now.month && _sunDate!.day == now.day;
+    final sameLocation = _sunLatitude == position.latitude && _sunLongitude == position.longitude;
+    if (_sunTimeInfo == null || !sameDay || !sameLocation) {
+      _sunLatitude = position.latitude;
+      _sunLongitude = position.longitude;
+      _sunDate = now;
+      _sunTimeInfo = const SunTimeService().getSunTimes(
+        position,
+        date: null,
+        method: controller.calculationMethod,
+        madhab: controller.madhhab,
+      );
+    }
+    return _sunTimeInfo;
+  }
+
+  String _currentJamaatKey(String prayer) {
+    switch (prayer) {
+      case 'ফজর':
+        return 'Fajr';
+      case 'যোহর':
+      case "জুমু'আ":
+      case 'জুমু‘আ':
+        return 'Dhuhr';
+      case 'আসর':
+        return 'Asr';
+      case 'মাগরিব':
+        return 'Maghrib';
+      case 'ইশা':
+        return 'Isha';
+      default:
+        return '';
     }
   }
 
@@ -141,14 +211,17 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final languageCode = settings.languageCode;
+    final sunTimes = _sunTimes(controller);
 
     JamaatService.configureDefaultsFromPrayerList(controller.prayers);
+    final jamaatKey = _currentJamaatKey(controller.currentPrayer);
+    final currentJamaat = jamaatKey.isEmpty ? '--:--' : JamaatService.get(jamaatKey);
 
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const IslamicOrnamentalBackground(),
+          const Positioned.fill(child: IslamicOrnamentalBackground()),
           SafeArea(
             child: RefreshIndicator(
               onRefresh: controller.refreshPrayerTimes,
@@ -156,18 +229,23 @@ class _PrayerScreenState extends State<PrayerScreen> {
                 physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
                 children: [
-                  TopHeader(greeting: _greeting(languageCode), currentTime: _currentTime),
+                  TopHeader(
+                    greeting: _greeting(languageCode),
+                    currentTime: _currentTime,
+                    onNotificationTap: () {},
+                    onProfileTap: () {},
+                  ),
                   const SizedBox(height: 14),
                   CurrentPrayerPremiumCard(
-                    previousPrayer: _prayerName(l10n, controller.previousPrayer),
+                    previousPrayer: controller.previousPrayer,
                     previousPrayerTime: controller.previousPrayerTime,
-                    currentPrayer: _prayerName(l10n, controller.currentPrayer),
+                    currentPrayer: controller.currentPrayer,
                     currentPrayerTime: controller.currentPrayerTime,
-                    nextPrayer: _prayerName(l10n, controller.nextPrayerName),
+                    nextPrayer: controller.nextPrayer,
                     nextPrayerTime: controller.nextPrayerTime,
                     remainingTime: controller.timeRemainingForNextPrayer,
                     progress: controller.prayerProgress,
-                    iqamahTime: controller.currentIqamahTime,
+                    iqamahTime: currentJamaat,
                     status: _status(l10n, controller.prayerStatus),
                     languageCode: languageCode,
                     onJamaatTap: _openJamaatSettings,
@@ -177,11 +255,11 @@ class _PrayerScreenState extends State<PrayerScreen> {
                   const SizedBox(height: 10),
                   IslamicInfoCard(
                     location: controller.currentLocationName,
-                    englishDate: _englishDate(),
+                    englishDate: DateService.englishDate(),
                     banglaDate: _banglaDate(),
-                    hijriDate: _hijriDate(l10n),
-                    sunrise: controller.sunriseTime,
-                    sunset: controller.sunsetTime,
+                    hijriDate: _hijriDate(languageCode),
+                    sunrise: sunTimes?.sunriseString ?? controller.sunriseTime,
+                    sunset: sunTimes?.sunsetString ?? controller.sunsetTime,
                     languageCode: languageCode,
                     onRefresh: controller.refreshLocation,
                   ),
@@ -192,7 +270,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
                   const SizedBox(height: 16),
                   _sectionHeader(context, l10n, Icons.wb_sunny_outlined, l10n.importantTimes),
                   const SizedBox(height: 8),
-                  _importantTimes(context, l10n, controller, primary),
+                  _importantTimes(context, l10n, controller, primary, sunTimes),
                   const SizedBox(height: 16),
                   _sectionHeader(context, l10n, Icons.nightlight_round, l10n.naflAndOtherPrayers),
                   const SizedBox(height: 8),
@@ -200,9 +278,15 @@ class _PrayerScreenState extends State<PrayerScreen> {
                   const SizedBox(height: 16),
                   _sectionHeader(context, l10n, Icons.check_circle_outline_rounded, l10n.prayerTracker),
                   const SizedBox(height: 8),
-                  _trackerCard(context, l10n, controller, primary),
+                  _trackerCard(context, l10n, primary),
                   const SizedBox(height: 12),
-                  Text(l10n.prayerTimeNote, style: theme.textTheme.bodySmall?.copyWith(color: theme.textTheme.bodySmall?.color?.withValues(alpha: .62), height: 1.45)),
+                  Text(
+                    l10n.prayerTimeNote,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: .62),
+                      height: 1.45,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -215,7 +299,13 @@ class _PrayerScreenState extends State<PrayerScreen> {
   Widget _sectionHeader(BuildContext context, AppLocalizations l10n, IconData icon, String title) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    return Row(children: [Icon(icon, color: primary, size: 18), const SizedBox(width: 8), Expanded(child: Text(title, style: theme.textTheme.titleSmall?.copyWith(fontSize: 16, fontWeight: FontWeight.w700)))]);
+    return Row(
+      children: [
+        Icon(icon, color: primary, size: 18),
+        const SizedBox(width: 8),
+        Expanded(child: Text(title, style: theme.textTheme.titleSmall?.copyWith(fontSize: 16, fontWeight: FontWeight.w700))),
+      ],
+    );
   }
 
   Widget _prayerSchedule(BuildContext context, AppLocalizations l10n, PrayerController controller, Color primary) {
@@ -225,50 +315,150 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final items = controller.prayers.where((p) => p['category'] == 'obligatory').toList();
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: primary.withValues(alpha: .055))),
-      child: Column(children: [for (var i = 0; i < items.length; i++) _prayerRow(context, l10n, items[i], primary, text, secondary, i != items.length - 1)]),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: primary.withValues(alpha: .055)),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < items.length; i++)
+            _prayerRow(context, l10n, items[i], primary, text, secondary, i != items.length - 1),
+        ],
+      ),
     );
   }
 
   Widget _prayerRow(BuildContext context, AppLocalizations l10n, Map<String, dynamic> data, Color primary, Color text, Color secondary, bool divider) {
     final current = data['isCurrent'] == true;
     final name = _prayerName(l10n, data['name']?.toString() ?? '');
-    return Column(children: [
-      Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Row(children: [
-        Container(width: 34, height: 34, decoration: BoxDecoration(color: current ? primary.withValues(alpha: .12) : primary.withValues(alpha: .05), borderRadius: BorderRadius.circular(11)), child: Icon(current ? Icons.mosque_rounded : Icons.access_time_rounded, color: current ? primary : secondary, size: 18)),
-        const SizedBox(width: 10),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(name, style: TextStyle(color: current ? primary : text, fontSize: 13, fontWeight: FontWeight.w800)), const SizedBox(height: 2), Text(data['start']?.toString() ?? '--:--', style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600))])),
-        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(l10n.jamaat, style: TextStyle(color: secondary, fontSize: 9)), Text(data['jamaat']?.toString() ?? '--:--', style: TextStyle(color: primary, fontSize: 11, fontWeight: FontWeight.w800))]),
-      ])),
-      if (divider) Divider(height: 1, color: primary.withValues(alpha: .05)),
-    ]);
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: current ? primary.withValues(alpha: .12) : primary.withValues(alpha: .05),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(current ? Icons.mosque_rounded : Icons.access_time_rounded, color: current ? primary : secondary, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name, style: TextStyle(color: current ? primary : text, fontSize: 13, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(data['start']?.toString() ?? '--:--', style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(l10n.jamaat, style: TextStyle(color: secondary, fontSize: 9)),
+                  Text(data['jamaat']?.toString() ?? '--:--', style: TextStyle(color: primary, fontSize: 11, fontWeight: FontWeight.w800)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        if (divider) Divider(height: 1, color: primary.withValues(alpha: .05)),
+      ],
+    );
   }
 
-  Widget _importantTimes(BuildContext context, AppLocalizations l10n, PrayerController controller, Color primary) {
-    return Row(children: [
-      Expanded(child: _infoMiniCard(context, Icons.wb_sunny_outlined, l10n.sunrise, controller.sunriseTime, primary)),
-      const SizedBox(width: 8),
-      Expanded(child: _infoMiniCard(context, Icons.brightness_5_outlined, l10n.solarNoon, controller.solarNoonTime, primary)),
-      const SizedBox(width: 8),
-      Expanded(child: _infoMiniCard(context, Icons.nights_stay_outlined, l10n.sunset, controller.sunsetTime, primary)),
-    ]);
+  Widget _importantTimes(BuildContext context, AppLocalizations l10n, PrayerController controller, Color primary, SunTimeInfo? sunTimes) {
+    return Row(
+      children: [
+        Expanded(child: _infoMiniCard(context, Icons.wb_sunny_outlined, l10n.sunrise, sunTimes?.sunriseString ?? controller.sunriseTime, primary)),
+        const SizedBox(width: 8),
+        Expanded(child: _infoMiniCard(context, Icons.brightness_5_outlined, l10n.solarNoon, controller.solarNoonTime, primary)),
+        const SizedBox(width: 8),
+        Expanded(child: _infoMiniCard(context, Icons.nights_stay_outlined, l10n.sunset, sunTimes?.sunsetString ?? controller.sunsetTime, primary)),
+      ],
+    );
   }
 
   Widget _infoMiniCard(BuildContext context, IconData icon, String title, String value, Color primary) {
     final theme = Theme.of(context);
-    return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11), decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(16), border: Border.all(color: primary.withValues(alpha: .05))), child: Column(children: [Icon(icon, size: 17, color: primary), const SizedBox(height: 5), Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(fontSize: 9, fontWeight: FontWeight.w600)), const SizedBox(height: 2), Text(value, style: theme.textTheme.bodySmall?.copyWith(fontSize: 10, fontWeight: FontWeight.w800))]));
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: primary.withValues(alpha: .05)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 17, color: primary),
+          const SizedBox(height: 5),
+          Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(fontSize: 9, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 2),
+          Text(value, style: theme.textTheme.bodySmall?.copyWith(fontSize: 10, fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
   }
 
   Widget _naflTimes(BuildContext context, AppLocalizations l10n, PrayerController controller, Color primary) {
     final theme = Theme.of(context);
     final nafl = controller.prayers.where((p) => p['category'] == 'nafl').toList();
-    return Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: primary.withValues(alpha: .055))), child: Column(children: [for (final item in nafl) Padding(padding: const EdgeInsets.symmetric(vertical: 7), child: Row(children: [Expanded(child: Text(_prayerName(l10n, item['name']?.toString() ?? ''), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)), Text('${item['start'] ?? '--:--'}  –  ${item['end'] ?? '--:--'}', style: TextStyle(color: primary, fontSize: 10.5, fontWeight: FontWeight.w700))]))]));
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: primary.withValues(alpha: .055))),
+      child: Column(
+        children: [
+          for (final item in nafl)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 7),
+              child: Row(
+                children: [
+                  Expanded(child: Text(_prayerName(l10n, item['name']?.toString() ?? ''), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700))),
+                  Text('${item['start'] ?? '--:--'}  –  ${item['end'] ?? '--:--'}', style: TextStyle(color: primary, fontSize: 10.5, fontWeight: FontWeight.w700)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
-  Widget _trackerCard(BuildContext context, AppLocalizations l10n, PrayerController controller, Color primary) {
+  Widget _trackerCard(BuildContext context, AppLocalizations l10n, Color primary) {
     final theme = Theme.of(context);
-    final names = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-    return Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: primary.withValues(alpha: .055))), child: Column(children: [Text(l10n.markPrayers, style: theme.textTheme.bodySmall?.copyWith(fontSize: 10.5, fontWeight: FontWeight.w600)), const SizedBox(height: 9), Row(children: [for (final name in names) Expanded(child: GestureDetector(onTap: () => setState(() => _tracker[name] = !(_tracker[name] ?? false)), child: Column(children: [Icon((_tracker[name] ?? false) ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, color: (_tracker[name] ?? false) ? primary : theme.disabledColor, size: 22), const SizedBox(height: 4), Text(_prayerName(l10n, name), style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700))])))]),]));
+    const names = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: primary.withValues(alpha: .055))),
+      child: Column(
+        children: [
+          Text(l10n.markPrayers, style: theme.textTheme.bodySmall?.copyWith(fontSize: 10.5, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 9),
+          Row(
+            children: [
+              for (final name in names)
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _tracker[name] = !(_tracker[name] ?? false)),
+                    child: Column(
+                      children: [
+                        Icon((_tracker[name] ?? false) ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, color: (_tracker[name] ?? false) ? primary : theme.disabledColor, size: 22),
+                        const SizedBox(height: 4),
+                        Text(_prayerName(AppLocalizations.of(context), name), style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
