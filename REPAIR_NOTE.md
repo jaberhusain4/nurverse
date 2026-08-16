@@ -1,1 +1,0 @@
-Temporary repair marker for the Salat screen work. Home screen structure remains unchanged.
