@@ -4,6 +4,8 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../data/dua_data.dart';
 import '../../localization/app_localizations.dart';
+import '../../services/dua_voice_settings_service.dart';
+import 'dua_voice_settings_screen.dart';
 
 class DuaScreen extends StatefulWidget {
   const DuaScreen({super.key});
@@ -57,6 +59,13 @@ class _DuaScreenState extends State<DuaScreen> {
       appBar: AppBar(
         title: Text(l10n.tr("দুআ ও জিকির", 'Dua & Dhikr'), style: const TextStyle(fontWeight: FontWeight.w800)),
         centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: l10n.tr('দুআর অডিও সেটিংস', 'Dua audio settings'),
+            icon: const Icon(Icons.record_voice_over_rounded),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DuaVoiceSettingsScreen())),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
@@ -184,10 +193,7 @@ class _DuaCategoryScreenState extends State<DuaCategoryScreen> {
   }
 
   Future<void> _configureTts() async {
-    await _tts.setLanguage('ar-SA');
-    await _tts.setSpeechRate(0.42);
-    await _tts.setPitch(1.0);
-    await _tts.setVolume(1.0);
+    await DuaVoiceSettingsService.apply(_tts);
     _tts.setCompletionHandler(() { if (mounted) setState(() => _playingIndex = null); });
     _tts.setCancelHandler(() { if (mounted) setState(() => _playingIndex = null); });
     _tts.setErrorHandler((_) { if (mounted) setState(() => _playingIndex = null); });
@@ -200,6 +206,7 @@ class _DuaCategoryScreenState extends State<DuaCategoryScreen> {
       return;
     }
     await _tts.stop();
+    await DuaVoiceSettingsService.apply(_tts);
     if (mounted) setState(() => _playingIndex = index);
     await _tts.speak(text);
   }
@@ -217,7 +224,13 @@ class _DuaCategoryScreenState extends State<DuaCategoryScreen> {
     final primary = theme.colorScheme.primary;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.isBangla ? widget.category.titleBn : widget.category.titleEn, style: const TextStyle(fontWeight: FontWeight.w800))),
+      appBar: AppBar(title: Text(l10n.isBangla ? widget.category.titleBn : widget.category.titleEn, style: const TextStyle(fontWeight: FontWeight.w800)), actions: [
+        IconButton(
+          tooltip: l10n.tr('দুআর অডিও সেটিংস', 'Dua audio settings'),
+          icon: const Icon(Icons.record_voice_over_rounded),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DuaVoiceSettingsScreen())),
+        ),
+      ]),
       body: ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
         physics: const BouncingScrollPhysics(),
@@ -278,10 +291,7 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
   }
 
   Future<void> _configureTts() async {
-    await _tts.setLanguage('ar-SA');
-    await _tts.setSpeechRate(0.42);
-    await _tts.setPitch(1.0);
-    await _tts.setVolume(1.0);
+    await DuaVoiceSettingsService.apply(_tts);
     _tts.setCompletionHandler(() { if (mounted) setState(() => _playing = false); });
     _tts.setCancelHandler(() { if (mounted) setState(() => _playing = false); });
     _tts.setErrorHandler((_) { if (mounted) setState(() => _playing = false); });
@@ -294,6 +304,7 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
       return;
     }
     await _tts.stop();
+    await DuaVoiceSettingsService.apply(_tts);
     if (mounted) setState(() => _playing = true);
     await _tts.speak(widget.text);
   }
