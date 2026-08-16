@@ -101,108 +101,39 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
         border: Border.all(color: primary.withValues(alpha: .10)),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: .035), blurRadius: 16, offset: const Offset(0, 7))],
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(child: _ContextPrayer(label: _label(bn: 'পূর্ববর্তী', en: 'Previous', ar: 'السابق'), prayer: previousPrayer.isEmpty ? '--' : previousPrayer, time: previousPrayerTime, icon: Icons.history_rounded, color: secondary, text: text)),
-              const SizedBox(width: 5),
-              Expanded(
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.mosque_rounded, size: 13, color: primary),
-                        const SizedBox(width: 3),
-                        Flexible(child: Text(_label(bn: 'বর্তমান', en: 'Current', ar: 'الحالية'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: primary.withValues(alpha: .82), fontSize: 10, fontWeight: FontWeight.w700))),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(current, maxLines: 1, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w900)),
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    FittedBox(fit: BoxFit.scaleDown, child: Text(currentPrayerTime.isEmpty ? '--:--' : currentPrayerTime, maxLines: 1, style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.w800))),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 5),
-              Expanded(child: _ContextPrayer(label: _label(bn: 'পরবর্তী', en: 'Next', ar: 'التالي'), prayer: nextPrayer.isEmpty ? '--' : nextPrayer, time: nextPrayerTime, icon: Icons.arrow_forward_rounded, color: secondary, text: text)),
-            ],
-          ),
-          const SizedBox(height: 9),
-          _RemainingTimePanel(label: _label(bn: 'সময় বাকি', en: 'Time left', ar: 'الوقت المتبقي'), value: remainingTime.isEmpty ? '--:--:--' : remainingTime, primary: primary, text: text, secondary: secondary),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(child: _TimeLabel(label: _label(bn: 'শুরু', en: 'Start', ar: 'البداية'), time: currentPrayerTime, color: secondary)),
-              const SizedBox(width: 8),
-              Expanded(child: Align(alignment: Alignment.centerRight, child: _TimeLabel(label: _label(bn: 'শেষ', en: 'End', ar: 'النهاية'), time: nextPrayerTime, color: secondary))),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Row(
-            children: [
-              Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: safeProgress, minHeight: 5, backgroundColor: primary.withValues(alpha: .09), valueColor: AlwaysStoppedAnimation<Color>(primary)))),
-              const SizedBox(width: 7),
-              Text('$percentage%', style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.w800)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.bolt_rounded, size: 15, color: primary),
-              const SizedBox(width: 5),
-              Expanded(child: Text(_awalText(awal), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 10.5, fontWeight: FontWeight.w700, height: 1.25))),
-              if (awal != null && awal.active) ...[
-                const SizedBox(width: 6),
-                Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text('${_formatRemaining(awal.remaining)} ${_label(bn: 'বাকি', en: 'left', ar: 'متبقي')}', maxLines: 1, style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.w800)))),
-              ],
-            ],
-          ),
-          if (status.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.info_outline_rounded, size: 14, color: secondary),
-                const SizedBox(width: 5),
-                Expanded(child: Text(status, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600, height: 1.25))),
-              ],
-            ),
-          ],
-          const SizedBox(height: 7),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onJamaatTap,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
-                decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(12)),
-                child: Row(
-                  children: [
-                    Icon(Icons.groups_rounded, size: 15, color: primary),
-                    const SizedBox(width: 6),
-                    Text(_label(bn: 'জামাআত', en: 'Jamaat', ar: 'الجماعة'), style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w700)),
-                    const Spacer(),
-                    Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: Text(iqamahTime.isEmpty ? '--:--' : iqamahTime, maxLines: 1, style: TextStyle(color: text, fontSize: 11, fontWeight: FontWeight.w800)))),
-                    const SizedBox(width: 3),
-                    Icon(Icons.chevron_right_rounded, size: 16, color: secondary),
-                  ],
-                ),
-              ),
-            ),
-          ),
+      child: Column(children: [
+        Row(children: [
+          Expanded(child: _ContextPrayer(label: _label(bn: 'পূর্ববর্তী', en: 'Previous', ar: 'السابق'), prayer: previousPrayer.isEmpty ? '--' : previousPrayer, time: previousPrayerTime, icon: Icons.history_rounded, color: secondary, text: text)),
+          const SizedBox(width: 5),
+          Expanded(child: Column(children: [
+            Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.mosque_rounded, size: 15, color: primary), const SizedBox(width: 4), Flexible(child: Text(_label(bn: 'বর্তমান', en: 'Current', ar: 'الحالية'), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: primary.withValues(alpha: .82), fontSize: 11, fontWeight: FontWeight.w700)))]),
+            const SizedBox(height: 3),
+            SizedBox(width: double.infinity, child: FittedBox(fit: BoxFit.scaleDown, child: Text(current, maxLines: 1, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w900)))),
+            const SizedBox(height: 2),
+            FittedBox(fit: BoxFit.scaleDown, child: Text(currentPrayerTime.isEmpty ? '--:--' : currentPrayerTime, maxLines: 1, style: TextStyle(color: primary, fontSize: 11.5, fontWeight: FontWeight.w800))),
+          ])),
+          const SizedBox(width: 5),
+          Expanded(child: _ContextPrayer(label: _label(bn: 'পরবর্তী', en: 'Next', ar: 'التالي'), prayer: nextPrayer.isEmpty ? '--' : nextPrayer, time: nextPrayerTime, icon: Icons.arrow_forward_rounded, color: secondary, text: text)),
+        ]),
+        const SizedBox(height: 9),
+        _RemainingTimePanel(label: _label(bn: 'সময় বাকি', en: 'Time left', ar: 'الوقت المتبقي'), value: remainingTime.isEmpty ? '--:--:--' : remainingTime, primary: primary, text: text, secondary: secondary),
+        const SizedBox(height: 9),
+        Row(children: [
+          Expanded(child: _TimeLabel(label: _label(bn: 'শুরু', en: 'Start', ar: 'البداية'), time: currentPrayerTime, color: secondary, icon: Icons.play_arrow_rounded)),
+          const SizedBox(width: 10),
+          Expanded(child: Align(alignment: Alignment.centerRight, child: _TimeLabel(label: _label(bn: 'শেষ', en: 'End', ar: 'النهاية'), time: nextPrayerTime, color: secondary, icon: Icons.stop_rounded))),
+        ]),
+        const SizedBox(height: 6),
+        Row(children: [Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: safeProgress, minHeight: 5, backgroundColor: primary.withValues(alpha: .09), valueColor: AlwaysStoppedAnimation<Color>(primary)))), const SizedBox(width: 7), Text('$percentage%', style: TextStyle(color: primary, fontSize: 10.5, fontWeight: FontWeight.w800))]),
+        const SizedBox(height: 8),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(Icons.bolt_rounded, size: 16, color: primary), const SizedBox(width: 5), Expanded(child: Text(_awalText(awal), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 10.5, fontWeight: FontWeight.w700, height: 1.25))), if (awal != null && awal.active) ...[const SizedBox(width: 6), Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text('${_formatRemaining(awal.remaining)} ${_label(bn: 'বাকি', en: 'left', ar: 'متبقي')}', maxLines: 1, style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.w800))))]),
+        if (status.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(Icons.info_outline_rounded, size: 15, color: secondary), const SizedBox(width: 5), Expanded(child: Text(status, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600, height: 1.25)))])
         ],
-      ),
+        const SizedBox(height: 8),
+        Material(color: Colors.transparent, child: InkWell(onTap: onJamaatTap, borderRadius: BorderRadius.circular(12), child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(12)), child: Row(children: [Icon(Icons.groups_rounded, size: 18, color: primary), const SizedBox(width: 7), Text(_label(bn: 'জামাআত', en: 'Jamaat', ar: 'الجماعة'), style: TextStyle(color: secondary, fontSize: 12, fontWeight: FontWeight.w700)), const Spacer(), Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: Text(iqamahTime.isEmpty ? '--:--' : iqamahTime, maxLines: 1, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w800)))), const SizedBox(width: 4), Icon(Icons.chevron_right_rounded, size: 17, color: secondary)])))),
+      ]),
     );
   }
 
@@ -224,33 +155,7 @@ class _RemainingTimePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 44,
-      width: double.infinity,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(color: primary.withValues(alpha: .035), borderRadius: BorderRadius.circular(14), border: Border.all(color: primary.withValues(alpha: .10))),
-      child: Stack(
-        children: [
-          Positioned.fill(child: CustomPaint(painter: _IslamicPatternPainter(color: primary.withValues(alpha: .055)))),
-          Positioned(left: 8, top: 0, bottom: 0, child: Center(child: Icon(Icons.nightlight_round, size: 15, color: primary.withValues(alpha: .50)))),
-          Positioned(right: 8, top: 0, bottom: 0, child: Center(child: Transform.scale(scaleX: -1, child: Icon(Icons.nightlight_round, size: 15, color: primary.withValues(alpha: .50))))),
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 34),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: RichText(
-                  text: TextSpan(children: [
-                    TextSpan(text: '$label  ', style: TextStyle(color: secondary, fontSize: 12.5, fontWeight: FontWeight.w700, height: 1)),
-                    TextSpan(text: value, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: .15, height: 1)),
-                  ]),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return Container(height: 44, width: double.infinity, clipBehavior: Clip.antiAlias, decoration: BoxDecoration(color: primary.withValues(alpha: .035), borderRadius: BorderRadius.circular(14), border: Border.all(color: primary.withValues(alpha: .10))), child: Stack(children: [Positioned.fill(child: CustomPaint(painter: _IslamicPatternPainter(color: primary.withValues(alpha: .055)))), Positioned(left: 8, top: 0, bottom: 0, child: Center(child: Icon(Icons.nightlight_round, size: 16, color: primary.withValues(alpha: .50)))), Positioned(right: 8, top: 0, bottom: 0, child: Center(child: Transform.scale(scaleX: -1, child: Icon(Icons.nightlight_round, size: 16, color: primary.withValues(alpha: .50))))), Positioned.fill(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 34), child: FittedBox(fit: BoxFit.scaleDown, child: RichText(text: TextSpan(children: [TextSpan(text: '$label  ', style: TextStyle(color: secondary, fontSize: 13, fontWeight: FontWeight.w700, height: 1)), TextSpan(text: value, style: TextStyle(color: text, fontSize: 14.5, fontWeight: FontWeight.w800, letterSpacing: .15, height: 1))]))))]));
   }
 }
 
@@ -269,11 +174,7 @@ class _IslamicPatternPainter extends CustomPainter {
         for (var i = 0; i < 8; i++) {
           final angle = (i * math.pi / 4) - math.pi / 8;
           final point = center + Offset(math.cos(angle) * 6, math.sin(angle) * 6);
-          if (i == 0) {
-            path.moveTo(point.dx, point.dy);
-          } else {
-            path.lineTo(point.dx, point.dy);
-          }
+          if (i == 0) path.moveTo(point.dx, point.dy); else path.lineTo(point.dx, point.dy);
         }
         path.close();
         canvas.drawPath(path, paint);
@@ -297,17 +198,7 @@ class _ContextPrayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, size: 13, color: color),
-        const SizedBox(height: 2),
-        Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 1),
-        SizedBox(width: double.infinity, child: FittedBox(fit: BoxFit.scaleDown, child: Text(prayer, maxLines: 1, style: TextStyle(color: text, fontSize: 12, fontWeight: FontWeight.w800)))),
-        const SizedBox(height: 1),
-        FittedBox(fit: BoxFit.scaleDown, child: Text(time.isEmpty ? '--:--' : time, maxLines: 1, style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w700))),
-      ],
-    );
+    return Column(children: [Icon(icon, size: 15, color: color), const SizedBox(height: 3), Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w600)), const SizedBox(height: 2), SizedBox(width: double.infinity, child: FittedBox(fit: BoxFit.scaleDown, child: Text(prayer, maxLines: 1, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w800)))), const SizedBox(height: 2), FittedBox(fit: BoxFit.scaleDown, child: Text(time.isEmpty ? '--:--' : time, maxLines: 1, style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w700)))]);
   }
 }
 
@@ -315,18 +206,13 @@ class _TimeLabel extends StatelessWidget {
   final String label;
   final String time;
   final Color color;
+  final IconData icon;
 
-  const _TimeLabel({required this.label, required this.time, required this.color});
+  const _TimeLabel({required this.label, required this.time, required this.color, required this.icon});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Flexible(child: Text('$label  ', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w600))),
-        Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: Text(time.isEmpty ? '--:--' : time, maxLines: 1, style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w800)))),
-      ],
-    );
+    return Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 17, color: color), const SizedBox(width: 5), Flexible(child: Text('$label  ', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w600))), Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: Text(time.isEmpty ? '--:--' : time, maxLines: 1, style: TextStyle(color: color, fontSize: 12.5, fontWeight: FontWeight.w800))))]);
   }
 }
 
