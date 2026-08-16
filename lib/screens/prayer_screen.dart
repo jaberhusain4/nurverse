@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:hijri/hijri_calendar.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/prayer_controller.dart';
-import '../localization/app_localizations.dart';
+import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/common/current_prayer_premium_card.dart';
+import '../widgets/home/islamic_info_card.dart';
+import '../widgets/home/islamic_ornamental_background.dart';
+import '../widgets/home/prayer_timeline_card.dart';
 
 class PrayerScreen extends StatefulWidget {
   const PrayerScreen({super.key});
@@ -13,1289 +19,387 @@ class PrayerScreen extends StatefulWidget {
 }
 
 class _PrayerScreenState extends State<PrayerScreen> {
-  final Map<String, bool> _prayerTracker = {
-    'ফজর': false,
-    'যোহর': false,
-    'আসর': false,
-    'মাগরিব': false,
-    'ইশা': false,
-    "জুমু'আ": false,
+  final Map<String, bool> _tracker = {
+    'Fajr': false,
+    'Dhuhr': false,
+    'Asr': false,
+    'Maghrib': false,
+    'Isha': false,
   };
 
-  String _prayerLabel(AppLocalizations l10n, String value) {
+  String _label(String languageCode, String bn, String en, [String? ar]) {
+    if (languageCode == 'en') return en;
+    if (languageCode == 'ar') return ar ?? en;
+    return bn;
+  }
+
+  String _prayerName(String languageCode, String value) {
     switch (value.trim().toLowerCase()) {
-      case 'ফজর':
       case 'fajr':
-        return l10n.fajr;
-      case 'যোহর':
+      case 'ফজর':
+        return _label(languageCode, 'ফজর', 'Fajr', 'الفجر');
       case 'dhuhr':
-        return l10n.dhuhr;
-      case 'আসর':
+      case 'যোহর':
+        return _label(languageCode, 'যোহর', 'Dhuhr', 'الظهر');
       case 'asr':
-        return l10n.asr;
-      case 'মাগরিব':
+      case 'আসর':
+        return _label(languageCode, 'আসর', 'Asr', 'العصر');
       case 'maghrib':
-        return l10n.maghrib;
-      case 'ইশা':
+      case 'মাগরিব':
+        return _label(languageCode, 'মাগরিব', 'Maghrib', 'المغرب');
       case 'isha':
-        return l10n.isha;
-      case "জুমু'আ":
-      case 'জুমু‘আ':
+      case 'ইশা':
+        return _label(languageCode, 'ইশা', 'Isha', 'العشاء');
       case 'jumuah':
-      case 'jumu’ah':
-        return l10n.jumuah;
-      case 'তাহাজ্জুদ':
-      case 'tahajjud':
-        return l10n.tahajjud;
-      case 'ইশরাক':
-      case 'ishraq':
-        return l10n.ishraq;
-      case 'চাশত / দুহা':
-      case 'দুহা':
-      case 'duha':
-        return l10n.duha;
-      case 'আউওয়াবীন':
-      case 'awwabin':
-        return l10n.awwabin;
-      case 'ওয়াক্ত নেই':
-      case 'none':
-        return l10n.noPrayerWindow;
+      case "জুমু'আ":
+        return _label(languageCode, "জুমু'আ", 'Jumu’ah', 'الجمعة');
       default:
         return value;
     }
   }
 
-  String _localizedStatus(AppLocalizations l10n, String value) {
-    const translations = <String, String>{
-      'ইশার ওয়াক্ত চলছে': 'Isha time is ongoing',
-      'ফজরের সময় শুরু হতে চলেছে': 'Fajr time is about to begin',
-      'ফজরের ওয়াক্ত চলছে': 'Fajr time is ongoing',
-      'ফজরের ওয়াক্ত শেষ হয়েছে': 'Fajr time has ended',
-      'ইশা শেষ হয়েছে': 'Isha has ended',
-      'ফজর শেষ হয়েছে': 'Fajr has ended',
-      "জুমু'আর ওয়াক্ত চলছে": 'Jumu’ah time is ongoing',
-      'যোহরের ওয়াক্ত চলছে': 'Dhuhr time is ongoing',
-      'আসরের ওয়াক্ত চলছে': 'Asr time is ongoing',
-      'আসর শেষ হয়েছে': 'Asr has ended',
-      'মাগরিবের ওয়াক্ত চলছে': 'Maghrib time is ongoing',
-      'মাগরিব শেষ হয়েছে': 'Maghrib has ended',
-      'লোকেশন পাওয়া গেলে সালাতের সময় দেখানো হবে':
-          'Prayer times will be shown when a location is available',
-      'লোকেশন পাওয়া গেলে সময় দেখানো হবে':
-          'Times will be shown when a location is available',
-      'সালাতের সময় গণনা করা হচ্ছে...': 'Calculating prayer times...',
+  String _status(String languageCode, String value) {
+    const map = <String, List<String>>{
+      'ইশার ওয়াক্ত চলছে': ['Isha time is ongoing', 'وقت العشاء جارٍ'],
+      'ফজরের সময় শুরু হতে চলেছে': ['Fajr time is about to begin', 'سيبدأ وقت الفجر قريبًا'],
+      'ফজরের ওয়াক্ত চলছে': ['Fajr time is ongoing', 'وقت الفجر جارٍ'],
+      'ফজরের ওয়াক্ত শেষ হয়েছে': ['Fajr time has ended', 'انتهى وقت الفجر'],
+      'ইশা শেষ হয়েছে': ['Isha has ended', 'انتهى وقت العشاء'],
+      'ফজর শেষ হয়েছে': ['Fajr has ended', 'انتهى الفجر'],
+      "জুমু'আর ওয়াক্ত চলছে": ['Jumu’ah time is ongoing', 'وقت الجمعة جارٍ'],
+      'যোহরের ওয়াক্ত চলছে': ['Dhuhr time is ongoing', 'وقت الظهر جارٍ'],
+      'আসরের ওয়াক্ত চলছে': ['Asr time is ongoing', 'وقت العصر جارٍ'],
+      'আসর শেষ হয়েছে': ['Asr has ended', 'انتهى العصر'],
+      'মাগরিবের ওয়াক্ত চলছে': ['Maghrib time is ongoing', 'وقت المغرب جارٍ'],
+      'মাগরিব শেষ হয়েছে': ['Maghrib has ended', 'انتهى المغرب'],
+      'সালাতের সময় গণনা করা হচ্ছে...': ['Calculating prayer times...', 'جارٍ حساب أوقات الصلاة...'],
     };
-    final english = translations[value];
-    return english == null ? value : l10n.tr(value, english);
+    final item = map[value];
+    if (item == null) return value;
+    return _label(languageCode, value, item[0], item[1]);
   }
 
-  String _localizedSpecialTime(AppLocalizations l10n, String value) {
-    const translations = <String, String>{
-      'আজ আর কোনো নিষিদ্ধ সময় নেই': 'No more prohibited time today',
-      'সূর্যোদয়ের সময় — নামাজ আদায় থেকে বিরত থাকুন':
-          'Sunrise period — refrain from prayer',
-      'জাওয়ালের সময় — নামাজ আদায় থেকে বিরত থাকুন':
-          'Zawal period — refrain from prayer',
-      'সূর্যাস্তের সময় — নামাজ আদায় থেকে বিরত থাকুন':
-          'Sunset period — refrain from prayer',
-      'পরবর্তী নিষিদ্ধ সময়: সূর্যোদয়': 'Next prohibited time: Sunrise',
-      'পরবর্তী নিষিদ্ধ সময়: জাওয়াল': 'Next prohibited time: Zawal',
-      'পরবর্তী নিষিদ্ধ সময়: সূর্যাস্ত': 'Next prohibited time: Sunset',
-      'আজ আর কোনো বিশেষ মাকরূহ সময় নেই':
-          'No more special Makruh time today',
-      'সূর্যোদয়ের আশেপাশের মাকরূহ সময়':
-          'Makruh period around sunrise',
-      'জাওয়ালের আশেপাশের মাকরূহ সময়':
-          'Makruh period around Zawal',
-      'সূর্যাস্তের আশেপাশের মাকরূহ সময়':
-          'Makruh period around sunset',
-      'পরবর্তী মাকরূহ সময়: সূর্যোদয়': 'Next Makruh time: Sunrise',
-      'পরবর্তী মাকরূহ সময়: জাওয়াল': 'Next Makruh time: Zawal',
-      'পরবর্তী মাকরূহ সময়: সূর্যাস্ত': 'Next Makruh time: Sunset',
-      'সময় গণনা করা হচ্ছে...': 'Calculating time...',
+  String _special(String languageCode, String value) {
+    const map = <String, List<String>>{
+      'সময় গণনা করা হচ্ছে...': ['Calculating time...', 'جارٍ حساب الوقت...'],
+      'আজ আর কোনো নিষিদ্ধ সময় নেই': ['No more prohibited time today', 'لا يوجد وقت نهي آخر اليوم'],
+      'সূর্যোদয়ের সময় — নামাজ আদায় থেকে বিরত থাকুন': ['Sunrise period — refrain from prayer', 'وقت الشروق — تجنب الصلاة'],
+      'জাওয়ালের সময় — নামাজ আদায় থেকে বিরত থাকুন': ['Zawal period — refrain from prayer', 'وقت الزوال — تجنب الصلاة'],
+      'সূর্যাস্তের সময় — নামাজ আদায় থেকে বিরত থাকুন': ['Sunset period — refrain from prayer', 'وقت الغروب — تجنب الصلاة'],
+      'পরবর্তী নিষিদ্ধ সময়: সূর্যোদয়': ['Next prohibited time: Sunrise', 'وقت النهي التالي: الشروق'],
+      'পরবর্তী নিষিদ্ধ সময়: জাওয়াল': ['Next prohibited time: Zawal', 'وقت النهي التالي: الزوال'],
+      'পরবর্তী নিষিদ্ধ সময়: সূর্যাস্ত': ['Next prohibited time: Sunset', 'وقت النهي التالي: الغروب'],
+      'আজ আর কোনো বিশেষ মাকরূহ সময় নেই': ['No more special Makruh time today', 'لا يوجد وقت مكروه آخر اليوم'],
+      'সূর্যোদয়ের আশেপাশের মাকরূহ সময়': ['Makruh period around sunrise', 'وقت مكروه حول الشروق'],
+      'জাওয়ালের আশেপাশের মাকরূহ সময়': ['Makruh period around Zawal', 'وقت مكروه حول الزوال'],
+      'সূর্যাস্তের আশেপাশের মাকরূহ সময়': ['Makruh period around sunset', 'وقت مكروه حول الغروب'],
+      'পরবর্তী মাকরূহ সময়: সূর্যোদয়': ['Next Makruh time: Sunrise', 'وقت المكروه التالي: الشروق'],
+      'পরবর্তী মাকরূহ সময়: জাওয়াল': ['Next Makruh time: Zawal', 'وقت المكروه التالي: الزوال'],
+      'পরবর্তী মাকরূহ সময়: সূর্যাস্ত': ['Next Makruh time: Sunset', 'وقت المكروه التالي: الغروب'],
     };
-    final english = translations[value];
-    return english == null ? value : l10n.tr(value, english);
+    final item = map[value];
+    if (item == null) return value;
+    return _label(languageCode, value, item[0], item[1]);
   }
 
-  String _localizedLocation(AppLocalizations l10n, String value) {
-    switch (value) {
-      case 'লোকেশন লোড হচ্ছে...':
-        return l10n.tr(value, 'Loading location...');
-      case 'লোকেশন পাওয়া যায়নি':
-        return l10n.locationUnavailable;
-      case 'লোকেশন সার্ভিস বন্ধ আছে':
-        return l10n.tr(value, 'Location service is disabled');
-      case 'লোকেশন পারমিশন দেওয়া হয়নি':
-        return l10n.tr(value, 'Location permission was not granted');
-      default:
-        return value;
+  String _englishDate() => DateFormat('EEEE, d MMMM yyyy', 'en').format(DateTime.now());
+
+  String _banglaDate() {
+    final now = DateTime.now();
+    const months = ['বৈশাখ', 'জ্যৈষ্ঠ', 'আষাঢ়', 'শ্রাবণ', 'ভাদ্র', 'আশ্বিন', 'কার্তিক', 'অগ্রহায়ণ', 'পৌষ', 'মাঘ', 'ফাল্গুন', 'চৈত্র'];
+    final starts = <DateTime>[
+      DateTime(now.year, 4, 14), DateTime(now.year, 5, 15), DateTime(now.year, 6, 15), DateTime(now.year, 7, 16),
+      DateTime(now.year, 8, 16), DateTime(now.year, 9, 16), DateTime(now.year, 10, 16), DateTime(now.year, 11, 15),
+      DateTime(now.year, 12, 15), DateTime(now.year + 1, 1, 15), DateTime(now.year + 1, 2, 13), DateTime(now.year + 1, 3, 15),
+    ];
+    var index = -1;
+    for (var i = 0; i < starts.length; i++) {
+      if (!now.isBefore(starts[i])) index = i;
+    }
+    if (index < 0) index = 11;
+    final year = now.month > 4 || (now.month == 4 && now.day >= 14) ? now.year - 593 : now.year - 594;
+    return '${now.difference(starts[index]).inDays + 1} ${months[index]} $year';
+  }
+
+  String _hijriDate(String languageCode) {
+    try {
+      final h = HijriCalendar.now();
+      const bn = ['মুহররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি', 'জুমাদিউল আউয়াল', 'জুমাদিউস সানি', 'রজব', 'শাবান', 'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ'];
+      const en = ['Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani', 'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Sha’ban', 'Ramadan', 'Shawwal', 'Dhul-Qadah', 'Dhul-Hijjah'];
+      const ar = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
+      final i = (h.hMonth - 1).clamp(0, 11);
+      if (languageCode == 'en') return '${h.hDay} ${en[i]} ${h.hYear} AH';
+      if (languageCode == 'ar') return '${h.hDay} ${ar[i]} ${h.hYear} هـ';
+      return '${h.hDay} ${bn[i]} ${h.hYear} হিজরি';
+    } catch (_) {
+      return _label(languageCode, 'হিজরি তারিখ পাওয়া যায়নি', 'Hijri date unavailable', 'التاريخ الهجري غير متاح');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
+    final settings = context.watch<SettingsProvider>();
     final controller = context.watch<PrayerController>();
+    final languageCode = settings.languageCode;
+    final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    final isFriday = DateTime.now().weekday == DateTime.friday;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
+        elevation: 0,
         title: Text(
-          l10n.prayer,
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          _label(languageCode, 'সালাত', 'Prayer', 'الصلاة'),
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         centerTitle: true,
-        elevation: 0,
         actions: [
           IconButton(
-            tooltip: l10n.location,
-            onPressed: () => _showLocation(context, controller),
+            tooltip: _label(languageCode, 'লোকেশন', 'Location', 'الموقع'),
+            onPressed: controller.loading ? null : controller.refreshLocation,
             icon: Icon(Icons.location_on_outlined, color: primary),
           ),
           IconButton(
-            tooltip: l10n.refresh,
+            tooltip: _label(languageCode, 'রিফ্রেশ', 'Refresh', 'تحديث'),
             onPressed: controller.loading ? null : controller.refreshPrayerTimes,
             icon: Icon(Icons.refresh_rounded, color: primary),
           ),
         ],
       ),
-      body: controller.loading
-          ? Center(child: CircularProgressIndicator(color: primary))
-          : controller.error != null
-              ? _buildErrorState(context, controller)
-              : RefreshIndicator(
-                  color: primary,
-                  onRefresh: controller.refreshPrayerTimes,
-                  child: ListView(
-                    physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics(),
-                    ),
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-                    children: [
-                      _buildLocationCard(context, controller.currentLocationName),
-                      const SizedBox(height: 14),
-                      _buildCurrentPrayerCard(context, controller, isFriday),
-                      const SizedBox(height: 14),
-                      _buildPrayerTimeSummary(context, controller),
-                      const SizedBox(height: 14),
-                      _buildDailyTimeCard(context, controller),
-                      const SizedBox(height: 22),
-                      _buildSectionTitle(
-                        context,
-                        l10n.todaysPrayer,
-                        l10n.fullPrayerSchedule,
-                        Icons.mosque_outlined,
-                      ),
-                      const SizedBox(height: 10),
-                      _buildPrayerSchedule(context, controller),
-                      const SizedBox(height: 22),
-                      _buildSectionTitle(
-                        context,
-                        l10n.naflAndOtherPrayers,
-                        l10n.optionalWorshipTimes,
-                        Icons.auto_awesome_outlined,
-                      ),
-                      const SizedBox(height: 10),
-                      _buildNaflSection(context, controller),
-                      const SizedBox(height: 22),
-                      _buildSectionTitle(
-                        context,
-                        l10n.prayerTracker,
-                        l10n.markPrayers,
-                        Icons.check_circle_outline_rounded,
-                      ),
-                      const SizedBox(height: 10),
-                      _buildPrayerTracker(context, isFriday),
-                      const SizedBox(height: 20),
-                      _buildFooterNote(context),
-                    ],
-                  ),
-                ),
-    );
-  }
-
-  Widget _buildLocationCard(BuildContext context, String location) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final primary = theme.colorScheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: primary.withValues(alpha: .08)),
-      ),
-      child: Row(
+      body: Stack(
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: .10),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.location_on_rounded, color: primary, size: 20),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.location,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontSize: 14,
-                    color: context.secondaryTextColor,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _localizedLocation(l10n, location),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCurrentPrayerCard(
-    BuildContext context,
-    PrayerController controller,
-    bool isFriday,
-  ) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final primary = theme.colorScheme.primary;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: primary.withValues(alpha: .10)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: .10),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Icon(Icons.mosque_rounded, color: primary, size: 24),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.currentPrayer,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 14,
-                        color: context.secondaryTextColor,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _prayerLabel(l10n, controller.currentPrayer),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isFriday)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: primary.withValues(alpha: .10),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    l10n.friday,
-                    style: TextStyle(
+          const Positioned.fill(child: IslamicOrnamentalBackground()),
+          controller.loading
+              ? Center(child: CircularProgressIndicator(color: primary))
+              : controller.error != null
+                  ? _errorState(context, controller, languageCode)
+                  : RefreshIndicator(
                       color: primary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      onRefresh: controller.refreshPrayerTimes,
+                      child: ListView(
+                        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                        padding: const EdgeInsets.fromLTRB(14, 8, 14, 30),
+                        children: [
+                          IslamicInfoCard(
+                            location: controller.currentLocationName,
+                            englishDate: _englishDate(),
+                            banglaDate: _banglaDate(),
+                            hijriDate: _hijriDate(languageCode),
+                            sunrise: controller.sunriseTime,
+                            sunset: controller.sunsetTime,
+                            languageCode: languageCode,
+                            onRefresh: controller.refreshPrayerTimes,
+                          ),
+                          const SizedBox(height: 10),
+                          CurrentPrayerPremiumCard(
+                            previousPrayer: _prayerName(languageCode, controller.previousPrayer),
+                            previousPrayerTime: controller.previousPrayerTime,
+                            currentPrayer: _prayerName(languageCode, controller.currentPrayer),
+                            currentPrayerTime: controller.currentPrayerStart,
+                            nextPrayer: _prayerName(languageCode, controller.nextPrayerName),
+                            nextPrayerTime: controller.nextPrayerTime,
+                            remainingTime: controller.timeRemainingForNextPrayer,
+                            progress: controller.prayerProgress,
+                            iqamahTime: controller.currentIqamahTime,
+                            status: _status(languageCode, controller.prayerStatus),
+                            languageCode: languageCode,
+                          ),
+                          const SizedBox(height: 10),
+                          PrayerTimelineCard(prayers: controller.prayers, languageCode: languageCode),
+                          const SizedBox(height: 16),
+                          _sectionHeader(context, languageCode, Icons.mosque_outlined, 'আজকের সালাত', "Today's Prayers", 'صلوات اليوم'),
+                          const SizedBox(height: 8),
+                          _scheduleCard(context, controller, languageCode),
+                          const SizedBox(height: 16),
+                          _sectionHeader(context, languageCode, Icons.auto_awesome_outlined, 'নফল ও বিশেষ সময়', 'Nafl & Special Times', 'النوافل والأوقات الخاصة'),
+                          const SizedBox(height: 8),
+                          _specialTimesCard(context, controller, languageCode),
+                          const SizedBox(height: 16),
+                          _sectionHeader(context, languageCode, Icons.warning_amber_rounded, 'নিষিদ্ধ ও মাকরূহ সময়', 'Prohibited & Makruh Times', 'أوقات النهي والكراهة'),
+                          const SizedBox(height: 8),
+                          _restrictionCard(context, controller, languageCode),
+                          const SizedBox(height: 16),
+                          _sectionHeader(context, languageCode, Icons.check_circle_outline_rounded, 'সালাত ট্র্যাকার', 'Prayer Tracker', 'متابعة الصلاة'),
+                          const SizedBox(height: 8),
+                          _trackerCard(context, controller, languageCode),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: _buildMiniInfo(
-                  context,
-                  icon: Icons.play_arrow_rounded,
-                  title: l10n.start,
-                  value: controller.currentPrayerStart,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildMiniInfo(
-                  context,
-                  icon: Icons.stop_rounded,
-                  title: l10n.end,
-                  value: controller.currentPrayerEnd,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildMiniInfo(
-                  context,
-                  icon: Icons.groups_rounded,
-                  title: l10n.jamaat,
-                  value: controller.currentIqamahTime,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: LinearProgressIndicator(
-              value: controller.prayerProgress.clamp(0.0, 1.0).toDouble(),
-              minHeight: 8,
-              backgroundColor: primary.withValues(alpha: .10),
-              valueColor: AlwaysStoppedAnimation<Color>(primary),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Icon(Icons.timelapse_rounded, size: 18, color: primary),
-              const SizedBox(width: 7),
-              Expanded(
-                child: Text(
-                  _localizedStatus(l10n, controller.prayerStatus),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 15),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: .06),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.schedule_rounded, size: 19, color: primary),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: Text(
-                    l10n.nextPrayerAt(
-                      _prayerLabel(l10n, controller.nextPrayerName),
-                      controller.nextPrayerTime,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    controller.timeRemainingForNextPrayer,
-                    maxLines: 1,
-                    textAlign: TextAlign.end,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
-                      color: context.secondaryTextColor,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildPrayerTimeSummary(
-    BuildContext context,
-    PrayerController controller,
-  ) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final primary = theme.colorScheme.primary;
-    return Container(
-      padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: primary.withValues(alpha: .08)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(Icons.access_time_rounded, color: primary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                l10n.prayerTimes,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTimeBox(
-                  context,
-                  l10n.previousPrayer,
-                  controller.previousPrayer,
-                  controller.previousPrayerTime,
-                  Icons.history_rounded,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildTimeBox(
-                  context,
-                  l10n.current,
-                  controller.currentPrayer,
-                  controller.currentPrayerStart,
-                  Icons.mosque_outlined,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildTimeBox(
-                  context,
-                  l10n.next,
-                  controller.nextPrayerName,
-                  controller.nextPrayerTime,
-                  Icons.arrow_forward_rounded,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDailyTimeCard(
-    BuildContext context,
-    PrayerController controller,
-  ) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final primary = theme.colorScheme.primary;
-    return Container(
-      padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: primary.withValues(alpha: .08)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(Icons.wb_twilight_rounded, color: primary, size: 21),
-              const SizedBox(width: 8),
-              Text(
-                l10n.importantTimes,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _buildDailyTimeItem(
-                  context,
-                  Icons.wb_sunny_outlined,
-                  l10n.sunrise,
-                  controller.sunriseTime,
-                  primary,
-                ),
-              ),
-              _verticalDivider(context),
-              Expanded(
-                child: _buildDailyTimeItem(
-                  context,
-                  Icons.light_mode_outlined,
-                  l10n.solarNoon,
-                  controller.solarNoonTime,
-                  primary,
-                ),
-              ),
-              _verticalDivider(context),
-              Expanded(
-                child: _buildDailyTimeItem(
-                  context,
-                  Icons.nights_stay_outlined,
-                  l10n.sunset,
-                  controller.sunsetTime,
-                  primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          _buildSpecialTimeRow(
-            context,
-            Icons.warning_amber_rounded,
-            l10n.makruhTime,
-            controller.makruhTimeText,
-            Colors.orange,
-            controller.makruhStart,
-            controller.makruhEnd,
-          ),
-          const SizedBox(height: 8),
-          _buildSpecialTimeRow(
-            context,
-            Icons.block_rounded,
-            l10n.prohibitedTime,
-            controller.prohibitedTimeText,
-            Colors.redAccent,
-            controller.prohibitedStart,
-            controller.prohibitedEnd,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(
-    BuildContext context,
-    String title,
-    String subtitle,
-    IconData icon,
-  ) {
+  Widget _sectionHeader(BuildContext context, String languageCode, IconData icon, String bn, String en, String ar) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     return Row(
       children: [
         Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: primary.withValues(alpha: .10),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: primary, size: 20),
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(11)),
+          child: Icon(icon, color: primary, size: 18),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 9),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: context.secondaryTextColor,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
+          child: Text(_label(languageCode, bn, en, ar), style: theme.textTheme.titleSmall?.copyWith(fontSize: 15.5, fontWeight: FontWeight.w800)),
         ),
       ],
     );
   }
 
-  Widget _buildPrayerSchedule(
-    BuildContext context,
-    PrayerController controller,
-  ) {
-    final prayers = controller.prayers;
-    return Container(
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: .08),
-        ),
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < prayers.length; i++) ...[
-            _buildPrayerRow(context, controller, prayers[i]),
-            if (i != prayers.length - 1)
-              Divider(
-                height: 1,
-                color: Theme.of(context).dividerColor.withValues(alpha: .5),
-              ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPrayerRow(
-    BuildContext context,
-    PrayerController controller,
-    Map<String, dynamic> prayer,
-  ) {
+  Widget _card(BuildContext context, Widget child, {EdgeInsets padding = const EdgeInsets.all(14)}) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
     final primary = theme.colorScheme.primary;
-    final rawName = prayer['name']?.toString() ?? '';
-    final name = _prayerLabel(l10n, rawName);
-    final time = prayer['start']?.toString() ?? prayer['time']?.toString() ?? '--:--';
-    final jamaat = prayer['jamaat']?.toString() ?? '--:--';
-    final isCurrent = _normalize(rawName) == _normalize(controller.currentPrayer);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: isCurrent
-                  ? primary.withValues(alpha: .12)
-                  : primary.withValues(alpha: .06),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(_prayerIcon(rawName), color: primary, size: 20),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  isCurrent ? l10n.current : l10n.start,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: context.secondaryTextColor,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            time,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                l10n.jamaat,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: context.secondaryTextColor,
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                jamaat,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNaflSection(
-    BuildContext context,
-    PrayerController controller,
-  ) {
-    final l10n = AppLocalizations.of(context);
-    final items = <_NaflItem>[
-      _NaflItem(
-        l10n.ishraq,
-        controller.ishraqTime,
-        controller.ishraqStart,
-        controller.ishraqEnd,
-        Icons.wb_sunny_outlined,
-      ),
-      _NaflItem(
-        l10n.duha,
-        controller.duhaTime,
-        controller.duhaStart,
-        controller.duhaEnd,
-        Icons.wb_twilight_rounded,
-      ),
-      _NaflItem(
-        l10n.awwabin,
-        controller.awwabinTime,
-        controller.awwabinStart,
-        controller.awwabinEnd,
-        Icons.nights_stay_outlined,
-      ),
-      _NaflItem(
-        l10n.tahajjud,
-        controller.tahajjudTime,
-        controller.tahajjudStart,
-        controller.tahajjudEnd,
-        Icons.bedtime_outlined,
-      ),
-    ];
-    return Column(
-      children: [
-        for (var i = 0; i < items.length; i++) ...[
-          _buildNaflCard(context, items[i]),
-          if (i != items.length - 1) const SizedBox(height: 9),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildNaflCard(BuildContext context, _NaflItem item) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final primary = theme.colorScheme.primary;
-    final now = DateTime.now();
-    final hasWindow = item.start != null && item.end != null && item.end!.isAfter(item.start!);
-    final active = hasWindow && !now.isBefore(item.start!) && now.isBefore(item.end!);
-    final upcoming = hasWindow && now.isBefore(item.start!);
-    final status = !hasWindow
-        ? l10n.completed
-        : active
-            ? l10n.current
-            : upcoming
-                ? l10n.next
-                : l10n.completed;
-    final DateTime? target = upcoming ? item.start : item.end;
-    final timer = target == null
-        ? ''
-        : _formatDuration(
-            target.difference(now).isNegative
-                ? Duration.zero
-                : target.difference(now),
-          );
-    final window = item.window.isNotEmpty
-        ? item.window
-        : '${_formatDateTime(item.start)} – ${_formatDateTime(item.end)}';
-
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: active
-              ? primary.withValues(alpha: .22)
-              : primary.withValues(alpha: .08),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: .10),
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: Icon(item.icon, color: primary, size: 21),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  window,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontSize: 14,
-                    color: context.secondaryTextColor,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  status,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 14,
-                    color: active ? primary : context.secondaryTextColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (target != null) ...[
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  _formatDateTime(target),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (timer.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    timer,
-                    maxLines: 1,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
-                      color: primary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPrayerTracker(BuildContext context, bool isFriday) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final primary = theme.colorScheme.primary;
-    final entries = isFriday
-        ? _prayerTracker.keys.toList()
-        : _prayerTracker.keys.where((key) => key != "জুমু'আ").toList();
-    return Container(
-      padding: const EdgeInsets.all(14),
+      width: double.infinity,
+      padding: padding,
       decoration: BoxDecoration(
         color: context.cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: primary.withValues(alpha: .08)),
+        border: Border.all(color: primary.withValues(alpha: .055)),
       ),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          for (final name in entries)
-            FilterChip(
-              label: Text(
-                _prayerLabel(l10n, name),
-                style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
-              ),
-              selected: _prayerTracker[name] ?? false,
-              onSelected: (value) => setState(() => _prayerTracker[name] = value),
-              selectedColor: primary.withValues(alpha: .14),
-            ),
-        ],
-      ),
+      child: child,
     );
   }
 
-  Widget _buildFooterNote(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Text(
-        l10n.tr(
-          'সালাতের সময় স্থানীয় অবস্থান ও নির্বাচিত হিসাব পদ্ধতির ভিত্তিতে গণনা করা হয়।',
-          'Prayer times are calculated from your location and selected calculation method.',
-        ),
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: context.secondaryTextColor,
-              fontSize: 13,
-            ),
-      ),
-    );
-  }
-
-  Widget _buildMiniInfo(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
+  Widget _scheduleCard(BuildContext context, PrayerController controller, String languageCode) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 16, color: primary),
-            const SizedBox(width: 5),
-            Flexible(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 13,
-                  color: context.secondaryTextColor,
-                ),
-              ),
-            ),
+    final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
+    final secondary = context.secondaryTextColor;
+    if (controller.prayers.isEmpty) {
+      return _card(context, Center(child: Text(_label(languageCode, 'সালাতের সময় প্রস্তুত হচ্ছে...', 'Preparing prayer times...', 'جارٍ تجهيز أوقات الصلاة...'), style: TextStyle(color: secondary, fontSize: 12))));
+    }
+    return _card(
+      context,
+      Column(
+        children: [
+          for (var i = 0; i < controller.prayers.length; i++) ...[
+            _scheduleRow(context, controller.prayers[i], languageCode, primary, text, secondary),
+            if (i != controller.prayers.length - 1) Divider(height: 18, color: primary.withValues(alpha: .06)),
           ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTimeBox(
-    BuildContext context,
-    String label,
-    String prayer,
-    String time,
-    IconData icon,
-  ) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final primary = theme.colorScheme.primary;
-    final displayPrayer = _prayerLabel(l10n, prayer);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
-      decoration: BoxDecoration(
-        color: primary.withValues(alpha: .05),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 17, color: primary),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 12,
-              color: context.secondaryTextColor,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            displayPrayer,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            time.isEmpty ? '--:--' : time,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 13,
-              color: primary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildDailyTimeItem(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String time,
-    Color primary,
-  ) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        Icon(icon, color: primary, size: 20),
-        const SizedBox(height: 5),
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            fontSize: 13,
-            color: context.secondaryTextColor,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          time,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _verticalDivider(BuildContext context) {
+  Widget _scheduleRow(BuildContext context, Map<String, dynamic> item, String languageCode, Color primary, Color text, Color secondary) {
+    final isCurrent = item['isCurrent'] == true;
+    final name = languageCode == 'en' ? (item['name']?.toString() ?? '--') : languageCode == 'ar' ? (item['nameAr']?.toString() ?? '--') : (item['nameBn']?.toString() ?? '--');
+    final start = item['start']?.toString() ?? '--:--';
+    final end = item['end']?.toString() ?? '--:--';
+    final jamaat = item['jamaat']?.toString() ?? '--:--';
     return Container(
-      width: 1,
-      height: 44,
-      color: Theme.of(context).dividerColor.withValues(alpha: .5),
-    );
-  }
-
-  Widget _buildSpecialTimeRow(
-    BuildContext context,
-    IconData icon,
-    String title,
-    String text,
-    Color accent,
-    DateTime? start,
-    DateTime? end,
-  ) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final hasWindow = start != null && end != null;
-    final localized = _localizedSpecialTime(l10n, text);
-    final range = hasWindow
-        ? '${_formatDateTime(start)} – ${_formatDateTime(end)}'
-        : '';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: .06),
-        borderRadius: BorderRadius.circular(14),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(color: isCurrent ? primary.withValues(alpha: .07) : Colors.transparent, borderRadius: BorderRadius.circular(14)),
       child: Row(
         children: [
-          Icon(icon, size: 19, color: accent),
-          const SizedBox(width: 9),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  localized,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 13,
-                    color: context.secondaryTextColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (range.isNotEmpty) ...[
-            const SizedBox(width: 8),
-            Text(
-              range,
-              textAlign: TextAlign.end,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+          Container(width: 38, height: 38, decoration: BoxDecoration(color: primary.withValues(alpha: isCurrent ? .12 : .06), borderRadius: BorderRadius.circular(12)), child: Icon(isCurrent ? Icons.mosque_rounded : Icons.schedule_rounded, color: primary, size: 19)),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(name, style: TextStyle(color: isCurrent ? primary : text, fontSize: 14, fontWeight: FontWeight.w800)), const SizedBox(height: 2), Text('$start  •  $end', style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w600))])),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(_label(languageCode, 'জামাত', 'Jamaat', 'الجماعة'), style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600)), const SizedBox(height: 2), Text(jamaat, style: TextStyle(color: text, fontSize: 12.5, fontWeight: FontWeight.w800))]),
         ],
       ),
     );
   }
 
-  Widget _buildErrorState(BuildContext context, PrayerController controller) {
+  Widget _specialTimesCard(BuildContext context, PrayerController controller, String languageCode) {
+    final items = <Map<String, String>>[
+      {'bn': 'ইশরাক', 'en': 'Ishraq', 'ar': 'الإشراق', 'value': controller.ishraqTime},
+      {'bn': 'চাশত / দুহা', 'en': 'Chasht / Duha', 'ar': 'الضحى', 'value': controller.duhaTime},
+      {'bn': 'আউওয়াবীন', 'en': 'Awwabin', 'ar': 'الأوابين', 'value': controller.awwabinTime},
+      {'bn': 'তাহাজ্জুদ', 'en': 'Tahajjud', 'ar': 'التهجد', 'value': controller.tahajjudTime},
+    ];
+    return _card(context, Column(children: [for (var i = 0; i < items.length; i++) ...[_valueRow(context, languageCode, Icons.auto_awesome_rounded, items[i]['bn']!, items[i]['en']!, items[i]['ar']!, items[i]['value']!), if (i != items.length - 1) const SizedBox(height: 8)]]));
+  }
+
+  Widget _restrictionCard(BuildContext context, PrayerController controller, String languageCode) {
+    return _card(
+      context,
+      Column(
+        children: [
+          _restrictionRow(context, languageCode, Icons.block_rounded, 'নিষিদ্ধ সময়', 'Prohibited time', 'وقت النهي', _special(languageCode, controller.prohibitedTimeText)),
+          const SizedBox(height: 8),
+          _restrictionRow(context, languageCode, Icons.warning_amber_rounded, 'মাকরূহ সময়', 'Makruh time', 'وقت الكراهة', _special(languageCode, controller.makruhTimeText)),
+        ],
+      ),
+    );
+  }
+
+  Widget _restrictionRow(BuildContext context, String languageCode, IconData icon, String bn, String en, String ar, String value) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(14)),
+      child: Row(children: [Icon(icon, color: primary, size: 19), const SizedBox(width: 9), Expanded(child: Text(_label(languageCode, bn, en, ar), style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12.5, fontWeight: FontWeight.w800))), const SizedBox(width: 8), Flexible(child: Text(value, textAlign: TextAlign.end, style: theme.textTheme.bodySmall?.copyWith(fontSize: 11.5, fontWeight: FontWeight.w700)))],),
+    );
+  }
+
+  Widget _valueRow(BuildContext context, String languageCode, IconData icon, String bn, String en, String ar, String value) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(14)),
+      child: Row(children: [Container(width: 32, height: 32, decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: primary, size: 17)), const SizedBox(width: 9), Expanded(child: Text(_label(languageCode, bn, en, ar), style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w800))), Text(value.isEmpty ? '--:--' : value, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12.5, fontWeight: FontWeight.w800))],),
+    );
+  }
+
+  Widget _trackerCard(BuildContext context, PrayerController controller, String languageCode) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final names = <String, List<String>>{
+      'Fajr': ['ফজর', 'Fajr', 'الفجر'],
+      'Dhuhr': ['যোহর', 'Dhuhr', 'الظهر'],
+      'Asr': ['আসর', 'Asr', 'العصر'],
+      'Maghrib': ['মাগরিব', 'Maghrib', 'المغرب'],
+      'Isha': ['ইশা', 'Isha', 'العشاء'],
+    };
+    return _card(
+      context,
+      Column(children: [
+        for (final key in names.keys) CheckboxListTile(
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          value: _tracker[key],
+          activeColor: primary,
+          title: Text(_label(languageCode, names[key]![0], names[key]![1], names[key]![2]), style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13.5, fontWeight: FontWeight.w700)),
+          subtitle: Text(_jamaatFor(controller, key), style: theme.textTheme.bodySmall?.copyWith(fontSize: 10.5)),
+          onChanged: (value) => setState(() => _tracker[key] = value ?? false),
+        ),
+      ]),
+    );
+  }
+
+  String _jamaatFor(PrayerController controller, String key) {
+    for (final item in controller.prayers) {
+      if (item['name']?.toString() == key) return item['jamaat']?.toString() ?? '--:--';
+    }
+    return '--:--';
+  }
+
+  Widget _errorState(BuildContext context, PrayerController controller, String languageCode) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline_rounded, size: 52, color: primary),
+        child: _card(
+          context,
+          Column(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.location_off_rounded, size: 42, color: primary),
             const SizedBox(height: 12),
-            Text(
-              _localizedStatus(
-                AppLocalizations.of(context),
-                controller.currentLocationName,
-              ),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(fontSize: 15),
-            ),
-            const SizedBox(height: 14),
-            FilledButton.icon(
-              onPressed: controller.refreshPrayerTimes,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(AppLocalizations.of(context).refresh),
-            ),
-          ],
+            Text(_label(languageCode, 'সালাতের সময় লোড করা যায়নি', 'Could not load prayer times', 'تعذر تحميل أوقات الصلاة'), textAlign: TextAlign.center, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 7),
+            Text(controller.currentLocationName, textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
+            const SizedBox(height: 15),
+            FilledButton.icon(onPressed: controller.refreshPrayerTimes, icon: const Icon(Icons.refresh_rounded), label: Text(_label(languageCode, 'আবার চেষ্টা করুন', 'Try again', 'حاول مرة أخرى'))),
+          ]),
         ),
       ),
     );
   }
-
-  void _showLocation(BuildContext context, PrayerController controller) {
-    final l10n = AppLocalizations.of(context);
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.location),
-        content: Text(_localizedLocation(l10n, controller.currentLocationName)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              controller.refreshLocation();
-            },
-            child: Text(l10n.refresh),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _normalize(String value) {
-    return value
-        .trim()
-        .toLowerCase()
-        .replaceAll('জুমু‘আ', "জুমু'আ")
-        .replaceAll('jumu’ah', 'jumuah');
-  }
-
-  IconData _prayerIcon(String value) {
-    switch (_normalize(value)) {
-      case 'ফজর':
-      case 'fajr':
-        return Icons.wb_twilight_outlined;
-      case 'যোহর':
-      case 'dhuhr':
-        return Icons.wb_sunny_outlined;
-      case 'আসর':
-      case 'asr':
-        return Icons.light_mode_outlined;
-      case 'মাগরিব':
-      case 'maghrib':
-        return Icons.wb_twilight_rounded;
-      case 'ইশা':
-      case 'isha':
-        return Icons.nights_stay_outlined;
-      default:
-        return Icons.mosque_outlined;
-    }
-  }
-
-  String _formatDateTime(DateTime? value) {
-    if (value == null) return '--:--';
-    final hour = value.hour.toString().padLeft(2, '0');
-    final minute = value.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
-  String _formatDuration(Duration duration) {
-    final hours = duration.inHours.toString().padLeft(2, '0');
-    final minutes = (duration.inMinutes % 60).toString().padLeft(2, '0');
-    final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
-    return '$hours:$minutes:$seconds';
-  }
-}
-
-class _NaflItem {
-  final String name;
-  final String window;
-  final DateTime? start;
-  final DateTime? end;
-  final IconData icon;
-
-  const _NaflItem(this.name, this.window, this.start, this.end, this.icon);
 }
