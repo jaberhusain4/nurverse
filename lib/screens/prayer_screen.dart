@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/prayer_controller.dart';
+import '../localization/app_localizations.dart';
 import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/current_prayer_premium_card.dart';
@@ -27,79 +28,69 @@ class _PrayerScreenState extends State<PrayerScreen> {
     'Isha': false,
   };
 
-  String _label(String languageCode, String bn, String en, [String? ar]) {
-    if (languageCode == 'en') return en;
-    if (languageCode == 'ar') return ar ?? en;
-    return bn;
-  }
-
-  String _prayerName(String languageCode, String value) {
+  String _prayerName(AppLocalizations l10n, String value) {
     switch (value.trim().toLowerCase()) {
       case 'fajr':
       case 'ফজর':
-        return _label(languageCode, 'ফজর', 'Fajr', 'الفجر');
+        return l10n.fajr;
       case 'dhuhr':
       case 'যোহর':
-        return _label(languageCode, 'যোহর', 'Dhuhr', 'الظهر');
+        return l10n.dhuhr;
       case 'asr':
       case 'আসর':
-        return _label(languageCode, 'আসর', 'Asr', 'العصر');
+        return l10n.asr;
       case 'maghrib':
       case 'মাগরিব':
-        return _label(languageCode, 'মাগরিব', 'Maghrib', 'المغرب');
+        return l10n.maghrib;
       case 'isha':
       case 'ইশা':
-        return _label(languageCode, 'ইশা', 'Isha', 'العشاء');
+        return l10n.isha;
       case 'jumuah':
       case "জুমু'আ":
-        return _label(languageCode, "জুমু'আ", 'Jumu’ah', 'الجمعة');
+        return l10n.jumuah;
       default:
         return value;
     }
   }
 
-  String _status(String languageCode, String value) {
-    const map = <String, List<String>>{
-      'ইশার ওয়াক্ত চলছে': ['Isha time is ongoing', 'وقت العشاء جارٍ'],
-      'ফজরের সময় শুরু হতে চলেছে': ['Fajr time is about to begin', 'سيبدأ وقت الفجر قريبًا'],
-      'ফজরের ওয়াক্ত চলছে': ['Fajr time is ongoing', 'وقت الفجر جارٍ'],
-      'ফজরের ওয়াক্ত শেষ হয়েছে': ['Fajr time has ended', 'انتهى وقت الفجر'],
-      'ইশা শেষ হয়েছে': ['Isha has ended', 'انتهى وقت العشاء'],
-      'ফজর শেষ হয়েছে': ['Fajr has ended', 'انتهى الفجر'],
-      "জুমু'আর ওয়াক্ত চলছে": ['Jumu’ah time is ongoing', 'وقت الجمعة جارٍ'],
-      'যোহরের ওয়াক্ত চলছে': ['Dhuhr time is ongoing', 'وقت الظهر جارٍ'],
-      'আসরের ওয়াক্ত চলছে': ['Asr time is ongoing', 'وقت العصر جارٍ'],
-      'আসর শেষ হয়েছে': ['Asr has ended', 'انتهى العصر'],
-      'মাগরিবের ওয়াক্ত চলছে': ['Maghrib time is ongoing', 'وقت المغرب جارٍ'],
-      'মাগরিব শেষ হয়েছে': ['Maghrib has ended', 'انتهى المغرب'],
-      'সালাতের সময় গণনা করা হচ্ছে...': ['Calculating prayer times...', 'جارٍ حساب أوقات الصلاة...'],
+  String _status(AppLocalizations l10n, String value) {
+    const english = <String, String>{
+      'ইশার ওয়াক্ত চলছে': 'Isha time is ongoing',
+      'ফজরের সময় শুরু হতে চলেছে': 'Fajr time is about to begin',
+      'ফজরের ওয়াক্ত চলছে': 'Fajr time is ongoing',
+      'ফজরের ওয়াক্ত শেষ হয়েছে': 'Fajr time has ended',
+      'ইশা শেষ হয়েছে': 'Isha has ended',
+      'ফজর শেষ হয়েছে': 'Fajr has ended',
+      "জুমু'আর ওয়াক্ত চলছে": 'Jumu’ah time is ongoing',
+      'যোহরের ওয়াক্ত চলছে': 'Dhuhr time is ongoing',
+      'আসরের ওয়াক্ত চলছে': 'Asr time is ongoing',
+      'আসর শেষ হয়েছে': 'Asr has ended',
+      'মাগরিবের ওয়াক্ত চলছে': 'Maghrib time is ongoing',
+      'মাগরিব শেষ হয়েছে': 'Maghrib has ended',
+      'সালাতের সময় গণনা করা হচ্ছে...': 'Calculating prayer times...',
     };
-    final item = map[value];
-    if (item == null) return value;
-    return _label(languageCode, value, item[0], item[1]);
+    return english.containsKey(value) ? l10n.tr(value, english[value]!) : value;
   }
 
-  String _special(String languageCode, String value) {
-    const map = <String, List<String>>{
-      'সময় গণনা করা হচ্ছে...': ['Calculating time...', 'جارٍ حساب الوقت...'],
-      'আজ আর কোনো নিষিদ্ধ সময় নেই': ['No more prohibited time today', 'لا يوجد وقت نهي آخر اليوم'],
-      'সূর্যোদয়ের সময় — নামাজ আদায় থেকে বিরত থাকুন': ['Sunrise period — refrain from prayer', 'وقت الشروق — تجنب الصلاة'],
-      'জাওয়ালের সময় — নামাজ আদায় থেকে বিরত থাকুন': ['Zawal period — refrain from prayer', 'وقت الزوال — تجنب الصلاة'],
-      'সূর্যাস্তের সময় — নামাজ আদায় থেকে বিরত থাকুন': ['Sunset period — refrain from prayer', 'وقت الغروب — تجنب الصلاة'],
-      'পরবর্তী নিষিদ্ধ সময়: সূর্যোদয়': ['Next prohibited time: Sunrise', 'وقت النهي التالي: الشروق'],
-      'পরবর্তী নিষিদ্ধ সময়: জাওয়াল': ['Next prohibited time: Zawal', 'وقت النهي التالي: الزوال'],
-      'পরবর্তী নিষিদ্ধ সময়: সূর্যাস্ত': ['Next prohibited time: Sunset', 'وقت النهي التالي: الغروب'],
-      'আজ আর কোনো বিশেষ মাকরূহ সময় নেই': ['No more special Makruh time today', 'لا يوجد وقت مكروه آخر اليوم'],
-      'সূর্যোদয়ের আশেপাশের মাকরূহ সময়': ['Makruh period around sunrise', 'وقت مكروه حول الشروق'],
-      'জাওয়ালের আশেপাশের মাকরূহ সময়': ['Makruh period around Zawal', 'وقت مكروه حول الزوال'],
-      'সূর্যাস্তের আশেপাশের মাকরূহ সময়': ['Makruh period around sunset', 'وقت مكروه حول الغروب'],
-      'পরবর্তী মাকরূহ সময়: সূর্যোদয়': ['Next Makruh time: Sunrise', 'وقت المكروه التالي: الشروق'],
-      'পরবর্তী মাকরূহ সময়: জাওয়াল': ['Next Makruh time: Zawal', 'وقت المكروه التالي: الزوال'],
-      'পরবর্তী মাকরূহ সময়: সূর্যাস্ত': ['Next Makruh time: Sunset', 'وقت المكروه التالي: الغروب'],
+  String _special(AppLocalizations l10n, String value) {
+    const english = <String, String>{
+      'সময় গণনা করা হচ্ছে...': 'Calculating time...',
+      'আজ আর কোনো নিষিদ্ধ সময় নেই': 'No more prohibited time today',
+      'সূর্যোদয়ের সময় — নামাজ আদায় থেকে বিরত থাকুন': 'Sunrise period — refrain from prayer',
+      'জাওয়ালের সময় — নামাজ আদায় থেকে বিরত থাকুন': 'Zawal period — refrain from prayer',
+      'সূর্যাস্তের সময় — নামাজ আদায় থেকে বিরত থাকুন': 'Sunset period — refrain from prayer',
+      'পরবর্তী নিষিদ্ধ সময়: সূর্যোদয়': 'Next prohibited time: Sunrise',
+      'পরবর্তী নিষিদ্ধ সময়: জাওয়াল': 'Next prohibited time: Zawal',
+      'পরবর্তী নিষিদ্ধ সময়: সূর্যাস্ত': 'Next prohibited time: Sunset',
+      'আজ আর কোনো বিশেষ মাকরূহ সময় নেই': 'No more special Makruh time today',
+      'সূর্যোদয়ের আশেপাশের মাকরূহ সময়': 'Makruh period around sunrise',
+      'জাওয়ালের আশেপাশের মাকরূহ সময়': 'Makruh period around Zawal',
+      'সূর্যাস্তের আশেপাশের মাকরূহ সময়': 'Makruh period around sunset',
+      'পরবর্তী মাকরূহ সময়: সূর্যোদয়': 'Next Makruh time: Sunrise',
+      'পরবর্তী মাকরূহ সময়: জাওয়াল': 'Next Makruh time: Zawal',
+      'পরবর্তী মাকরূহ সময়: সূর্যাস্ত': 'Next Makruh time: Sunset',
     };
-    final item = map[value];
-    if (item == null) return value;
-    return _label(languageCode, value, item[0], item[1]);
+    return english.containsKey(value) ? l10n.tr(value, english[value]!) : value;
   }
 
   String _englishDate() => DateFormat('EEEE, d MMMM yyyy', 'en').format(DateTime.now());
@@ -121,26 +112,25 @@ class _PrayerScreenState extends State<PrayerScreen> {
     return '${now.difference(starts[index]).inDays + 1} ${months[index]} $year';
   }
 
-  String _hijriDate(String languageCode) {
+  String _hijriDate(AppLocalizations l10n) {
     try {
       final h = HijriCalendar.now();
       const bn = ['মুহররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি', 'জুমাদিউল আউয়াল', 'জুমাদিউস সানি', 'রজব', 'শাবান', 'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ'];
       const en = ['Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani', 'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Sha’ban', 'Ramadan', 'Shawwal', 'Dhul-Qadah', 'Dhul-Hijjah'];
-      const ar = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
       final i = (h.hMonth - 1).clamp(0, 11);
-      if (languageCode == 'en') return '${h.hDay} ${en[i]} ${h.hYear} AH';
-      if (languageCode == 'ar') return '${h.hDay} ${ar[i]} ${h.hYear} هـ';
-      return '${h.hDay} ${bn[i]} ${h.hYear} হিজরি';
+      final month = l10n.isBangla ? bn[i] : en[i];
+      final suffix = l10n.isBangla ? 'হিজরি' : 'AH';
+      return '${h.hDay} $month ${h.hYear} $suffix';
     } catch (_) {
-      return _label(languageCode, 'হিজরি তারিখ পাওয়া যায়নি', 'Hijri date unavailable', 'التاريخ الهجري غير متاح');
+      return l10n.tr('হিজরি তারিখ পাওয়া যায়নি', 'Hijri date unavailable');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final settings = context.watch<SettingsProvider>();
     final controller = context.watch<PrayerController>();
-    final languageCode = settings.languageCode;
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
 
@@ -148,19 +138,16 @@ class _PrayerScreenState extends State<PrayerScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
-        title: Text(
-          _label(languageCode, 'সালাত', 'Prayer', 'الصلاة'),
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        ),
+        title: Text(l10n.prayer, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
         centerTitle: true,
         actions: [
           IconButton(
-            tooltip: _label(languageCode, 'লোকেশন', 'Location', 'الموقع'),
+            tooltip: l10n.location,
             onPressed: controller.loading ? null : controller.refreshLocation,
             icon: Icon(Icons.location_on_outlined, color: primary),
           ),
           IconButton(
-            tooltip: _label(languageCode, 'রিফ্রেশ', 'Refresh', 'تحديث'),
+            tooltip: l10n.refresh,
             onPressed: controller.loading ? null : controller.refreshPrayerTimes,
             icon: Icon(Icons.refresh_rounded, color: primary),
           ),
@@ -172,7 +159,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
           controller.loading
               ? Center(child: CircularProgressIndicator(color: primary))
               : controller.error != null
-                  ? _errorState(context, controller, languageCode)
+                  ? _errorState(context, controller, l10n)
                   : RefreshIndicator(
                       color: primary,
                       onRefresh: controller.refreshPrayerTimes,
@@ -184,44 +171,44 @@ class _PrayerScreenState extends State<PrayerScreen> {
                             location: controller.currentLocationName,
                             englishDate: _englishDate(),
                             banglaDate: _banglaDate(),
-                            hijriDate: _hijriDate(languageCode),
+                            hijriDate: _hijriDate(l10n),
                             sunrise: controller.sunriseTime,
                             sunset: controller.sunsetTime,
-                            languageCode: languageCode,
+                            languageCode: settings.languageCode,
                             onRefresh: controller.refreshPrayerTimes,
                           ),
                           const SizedBox(height: 10),
                           CurrentPrayerPremiumCard(
-                            previousPrayer: _prayerName(languageCode, controller.previousPrayer),
+                            previousPrayer: _prayerName(l10n, controller.previousPrayer),
                             previousPrayerTime: controller.previousPrayerTime,
-                            currentPrayer: _prayerName(languageCode, controller.currentPrayer),
+                            currentPrayer: _prayerName(l10n, controller.currentPrayer),
                             currentPrayerTime: controller.currentPrayerStart,
-                            nextPrayer: _prayerName(languageCode, controller.nextPrayerName),
+                            nextPrayer: _prayerName(l10n, controller.nextPrayerName),
                             nextPrayerTime: controller.nextPrayerTime,
                             remainingTime: controller.timeRemainingForNextPrayer,
                             progress: controller.prayerProgress,
                             iqamahTime: controller.currentIqamahTime,
-                            status: _status(languageCode, controller.prayerStatus),
-                            languageCode: languageCode,
+                            status: _status(l10n, controller.prayerStatus),
+                            languageCode: settings.languageCode,
                           ),
                           const SizedBox(height: 10),
-                          PrayerTimelineCard(prayers: controller.prayers, languageCode: languageCode),
+                          PrayerTimelineCard(prayers: controller.prayers, languageCode: settings.languageCode),
                           const SizedBox(height: 16),
-                          _sectionHeader(context, languageCode, Icons.mosque_outlined, 'আজকের সালাত', "Today's Prayers", 'صلوات اليوم'),
+                          _sectionHeader(context, l10n, Icons.mosque_outlined, l10n.todaysPrayer),
                           const SizedBox(height: 8),
-                          _scheduleCard(context, controller, languageCode),
+                          _scheduleCard(context, controller, l10n),
                           const SizedBox(height: 16),
-                          _sectionHeader(context, languageCode, Icons.auto_awesome_outlined, 'নফল ও বিশেষ সময়', 'Nafl & Special Times', 'النوافل والأوقات الخاصة'),
+                          _sectionHeader(context, l10n, Icons.auto_awesome_outlined, l10n.naflAndOtherPrayers),
                           const SizedBox(height: 8),
-                          _specialTimesCard(context, controller, languageCode),
+                          _specialTimesCard(context, controller, l10n),
                           const SizedBox(height: 16),
-                          _sectionHeader(context, languageCode, Icons.warning_amber_rounded, 'নিষিদ্ধ ও মাকরূহ সময়', 'Prohibited & Makruh Times', 'أوقات النهي والكراهة'),
+                          _sectionHeader(context, l10n, Icons.warning_amber_rounded, '${l10n.prohibitedTime} & ${l10n.makruhTime}'),
                           const SizedBox(height: 8),
-                          _restrictionCard(context, controller, languageCode),
+                          _restrictionCard(context, controller, l10n),
                           const SizedBox(height: 16),
-                          _sectionHeader(context, languageCode, Icons.check_circle_outline_rounded, 'সালাত ট্র্যাকার', 'Prayer Tracker', 'متابعة الصلاة'),
+                          _sectionHeader(context, l10n, Icons.check_circle_outline_rounded, l10n.prayerTracker),
                           const SizedBox(height: 8),
-                          _trackerCard(context, controller, languageCode),
+                          _trackerCard(context, controller, l10n),
                         ],
                       ),
                     ),
@@ -230,7 +217,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
     );
   }
 
-  Widget _sectionHeader(BuildContext context, String languageCode, IconData icon, String bn, String en, String ar) {
+  Widget _sectionHeader(BuildContext context, AppLocalizations l10n, IconData icon, String title) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     return Row(
@@ -242,9 +229,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
           child: Icon(icon, color: primary, size: 18),
         ),
         const SizedBox(width: 9),
-        Expanded(
-          child: Text(_label(languageCode, bn, en, ar), style: theme.textTheme.titleSmall?.copyWith(fontSize: 15.5, fontWeight: FontWeight.w800)),
-        ),
+        Expanded(child: Text(title, style: theme.textTheme.titleSmall?.copyWith(fontSize: 15.5, fontWeight: FontWeight.w800))),
       ],
     );
   }
@@ -264,20 +249,20 @@ class _PrayerScreenState extends State<PrayerScreen> {
     );
   }
 
-  Widget _scheduleCard(BuildContext context, PrayerController controller, String languageCode) {
+  Widget _scheduleCard(BuildContext context, PrayerController controller, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary = context.secondaryTextColor;
     if (controller.prayers.isEmpty) {
-      return _card(context, Center(child: Text(_label(languageCode, 'সালাতের সময় প্রস্তুত হচ্ছে...', 'Preparing prayer times...', 'جارٍ تجهيز أوقات الصلاة...'), style: TextStyle(color: secondary, fontSize: 12))));
+      return _card(context, Center(child: Text(l10n.loading, style: TextStyle(color: secondary, fontSize: 12))));
     }
     return _card(
       context,
       Column(
         children: [
           for (var i = 0; i < controller.prayers.length; i++) ...[
-            _scheduleRow(context, controller.prayers[i], languageCode, primary, text, secondary),
+            _scheduleRow(controller.prayers[i], l10n, primary, text, secondary),
             if (i != controller.prayers.length - 1) Divider(height: 18, color: primary.withValues(alpha: .06)),
           ],
         ],
@@ -285,9 +270,10 @@ class _PrayerScreenState extends State<PrayerScreen> {
     );
   }
 
-  Widget _scheduleRow(BuildContext context, Map<String, dynamic> item, String languageCode, Color primary, Color text, Color secondary) {
+  Widget _scheduleRow(Map<String, dynamic> item, AppLocalizations l10n, Color primary, Color text, Color secondary) {
     final isCurrent = item['isCurrent'] == true;
-    final name = languageCode == 'en' ? (item['name']?.toString() ?? '--') : languageCode == 'ar' ? (item['nameAr']?.toString() ?? '--') : (item['nameBn']?.toString() ?? '--');
+    final rawName = item['name']?.toString() ?? '--';
+    final name = _prayerName(l10n, rawName);
     final start = item['start']?.toString() ?? '--:--';
     final end = item['end']?.toString() ?? '--:--';
     final jamaat = item['jamaat']?.toString() ?? '--:--';
@@ -299,77 +285,78 @@ class _PrayerScreenState extends State<PrayerScreen> {
           Container(width: 38, height: 38, decoration: BoxDecoration(color: primary.withValues(alpha: isCurrent ? .12 : .06), borderRadius: BorderRadius.circular(12)), child: Icon(isCurrent ? Icons.mosque_rounded : Icons.schedule_rounded, color: primary, size: 19)),
           const SizedBox(width: 10),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(name, style: TextStyle(color: isCurrent ? primary : text, fontSize: 14, fontWeight: FontWeight.w800)), const SizedBox(height: 2), Text('$start  •  $end', style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w600))])),
-          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(_label(languageCode, 'জামাত', 'Jamaat', 'الجماعة'), style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600)), const SizedBox(height: 2), Text(jamaat, style: TextStyle(color: text, fontSize: 12.5, fontWeight: FontWeight.w800))]),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(l10n.jamaat, style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600)), const SizedBox(height: 2), Text(jamaat, style: TextStyle(color: text, fontSize: 12.5, fontWeight: FontWeight.w800))]),
         ],
       ),
     );
   }
 
-  Widget _specialTimesCard(BuildContext context, PrayerController controller, String languageCode) {
-    final items = <Map<String, String>>[
-      {'bn': 'ইশরাক', 'en': 'Ishraq', 'ar': 'الإشراق', 'value': controller.ishraqTime},
-      {'bn': 'চাশত / দুহা', 'en': 'Chasht / Duha', 'ar': 'الضحى', 'value': controller.duhaTime},
-      {'bn': 'আউওয়াবীন', 'en': 'Awwabin', 'ar': 'الأوابين', 'value': controller.awwabinTime},
-      {'bn': 'তাহাজ্জুদ', 'en': 'Tahajjud', 'ar': 'التهجد', 'value': controller.tahajjudTime},
-    ];
-    return _card(context, Column(children: [for (var i = 0; i < items.length; i++) ...[_valueRow(context, languageCode, Icons.auto_awesome_rounded, items[i]['bn']!, items[i]['en']!, items[i]['ar']!, items[i]['value']!), if (i != items.length - 1) const SizedBox(height: 8)]]));
+  Widget _specialTimesCard(BuildContext context, PrayerController controller, AppLocalizations l10n) {
+    final items = <String, String>{
+      l10n.ishraq: controller.ishraqTime,
+      l10n.duha: controller.duhaTime,
+      l10n.awwabin: controller.awwabinTime,
+      l10n.tahajjud: controller.tahajjudTime,
+    };
+    return _card(context, Column(children: [for (var i = 0; i < items.length; i++) ...[_valueRow(context, items.keys.elementAt(i), items.values.elementAt(i)), if (i != items.length - 1) const SizedBox(height: 8)]]));
   }
 
-  Widget _restrictionCard(BuildContext context, PrayerController controller, String languageCode) {
+  Widget _restrictionCard(BuildContext context, PrayerController controller, AppLocalizations l10n) {
     return _card(
       context,
       Column(
         children: [
-          _restrictionRow(context, languageCode, Icons.block_rounded, 'নিষিদ্ধ সময়', 'Prohibited time', 'وقت النهي', _special(languageCode, controller.prohibitedTimeText)),
+          _restrictionRow(context, Icons.block_rounded, l10n.prohibitedTime, _special(l10n, controller.prohibitedTimeText)),
           const SizedBox(height: 8),
-          _restrictionRow(context, languageCode, Icons.warning_amber_rounded, 'মাকরূহ সময়', 'Makruh time', 'وقت الكراهة', _special(languageCode, controller.makruhTimeText)),
+          _restrictionRow(context, Icons.warning_amber_rounded, l10n.makruhTime, _special(l10n, controller.makruhTimeText)),
         ],
       ),
     );
   }
 
-  Widget _restrictionRow(BuildContext context, String languageCode, IconData icon, String bn, String en, String ar, String value) {
+  Widget _restrictionRow(BuildContext context, IconData icon, String title, String value) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(14)),
-      child: Row(children: [Icon(icon, color: primary, size: 19), const SizedBox(width: 9), Expanded(child: Text(_label(languageCode, bn, en, ar), style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12.5, fontWeight: FontWeight.w800))), const SizedBox(width: 8), Flexible(child: Text(value, textAlign: TextAlign.end, style: theme.textTheme.bodySmall?.copyWith(fontSize: 11.5, fontWeight: FontWeight.w700)))],),
+      child: Row(children: [Icon(icon, color: primary, size: 19), const SizedBox(width: 9), Expanded(child: Text(title, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12.5, fontWeight: FontWeight.w800))), const SizedBox(width: 8), Flexible(child: Text(value, textAlign: TextAlign.end, style: theme.textTheme.bodySmall?.copyWith(fontSize: 11.5, fontWeight: FontWeight.w700)))],),
     );
   }
 
-  Widget _valueRow(BuildContext context, String languageCode, IconData icon, String bn, String en, String ar, String value) {
+  Widget _valueRow(BuildContext context, String title, String value) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(14)),
-      child: Row(children: [Container(width: 32, height: 32, decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: primary, size: 17)), const SizedBox(width: 9), Expanded(child: Text(_label(languageCode, bn, en, ar), style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w800))), Text(value.isEmpty ? '--:--' : value, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12.5, fontWeight: FontWeight.w800))],),
+      child: Row(children: [Container(width: 32, height: 32, decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(10)), child: Icon(Icons.auto_awesome_rounded, color: primary, size: 17)), const SizedBox(width: 9), Expanded(child: Text(title, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w800))), Text(value.isEmpty ? '--:--' : value, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12.5, fontWeight: FontWeight.w800))],),
     );
   }
 
-  Widget _trackerCard(BuildContext context, PrayerController controller, String languageCode) {
+  Widget _trackerCard(BuildContext context, PrayerController controller, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    final names = <String, List<String>>{
-      'Fajr': ['ফজর', 'Fajr', 'الفجر'],
-      'Dhuhr': ['যোহর', 'Dhuhr', 'الظهر'],
-      'Asr': ['আসর', 'Asr', 'العصر'],
-      'Maghrib': ['মাগরিব', 'Maghrib', 'المغرب'],
-      'Isha': ['ইশা', 'Isha', 'العشاء'],
+    final names = <String, String>{
+      'Fajr': l10n.fajr,
+      'Dhuhr': l10n.dhuhr,
+      'Asr': l10n.asr,
+      'Maghrib': l10n.maghrib,
+      'Isha': l10n.isha,
     };
     return _card(
       context,
       Column(children: [
-        for (final key in names.keys) CheckboxListTile(
-          dense: true,
-          contentPadding: EdgeInsets.zero,
-          value: _tracker[key],
-          activeColor: primary,
-          title: Text(_label(languageCode, names[key]![0], names[key]![1], names[key]![2]), style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13.5, fontWeight: FontWeight.w700)),
-          subtitle: Text(_jamaatFor(controller, key), style: theme.textTheme.bodySmall?.copyWith(fontSize: 10.5)),
-          onChanged: (value) => setState(() => _tracker[key] = value ?? false),
-        ),
+        for (final entry in names.entries)
+          CheckboxListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            value: _tracker[entry.key],
+            activeColor: primary,
+            title: Text(entry.value, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13.5, fontWeight: FontWeight.w700)),
+            subtitle: Text(_jamaatFor(controller, entry.key), style: theme.textTheme.bodySmall?.copyWith(fontSize: 10.5)),
+            onChanged: (value) => setState(() => _tracker[entry.key] = value ?? false),
+          ),
       ]),
     );
   }
@@ -381,7 +368,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
     return '--:--';
   }
 
-  Widget _errorState(BuildContext context, PrayerController controller, String languageCode) {
+  Widget _errorState(BuildContext context, PrayerController controller, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     return Center(
@@ -392,11 +379,11 @@ class _PrayerScreenState extends State<PrayerScreen> {
           Column(mainAxisSize: MainAxisSize.min, children: [
             Icon(Icons.location_off_rounded, size: 42, color: primary),
             const SizedBox(height: 12),
-            Text(_label(languageCode, 'সালাতের সময় লোড করা যায়নি', 'Could not load prayer times', 'تعذر تحميل أوقات الصلاة'), textAlign: TextAlign.center, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            Text(l10n.prayerLoadError, textAlign: TextAlign.center, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 7),
             Text(controller.currentLocationName, textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
             const SizedBox(height: 15),
-            FilledButton.icon(onPressed: controller.refreshPrayerTimes, icon: const Icon(Icons.refresh_rounded), label: Text(_label(languageCode, 'আবার চেষ্টা করুন', 'Try again', 'حاول مرة أخرى'))),
+            FilledButton.icon(onPressed: controller.refreshPrayerTimes, icon: const Icon(Icons.refresh_rounded), label: Text(l10n.retry)),
           ]),
         ),
       ),
