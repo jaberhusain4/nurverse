@@ -58,7 +58,6 @@ class _PrayerScreenState extends State<PrayerScreen> {
       case 'awwabin':
         return l10n.awwabin;
       case 'ওয়াক্ত নেই':
-        return l10n.noPrayerWindow;
       case 'none':
         return l10n.noPrayerWindow;
       default:
@@ -245,7 +244,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(l10n.currentPrayer, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14, color: context.secondaryTextColor)),
             const SizedBox(height: 2),
-            Text(_prayerLabel(l10n, controller.currentPrayer), maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+            Text(_prayerLabel(l10n, controller.currentPrayer), maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium?.copyWith(fontSize: 20, fontWeight: FontWeight.w700)),
           ])),
           if (isFriday) Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: primary.withValues(alpha: .10), borderRadius: BorderRadius.circular(20)), child: Text(l10n.friday, style: TextStyle(color: primary, fontSize: 14, fontWeight: FontWeight.bold))),
         ]),
@@ -260,7 +259,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
         const SizedBox(height: 18),
         ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: controller.prayerProgress.clamp(0.0, 1.0), minHeight: 8, backgroundColor: primary.withValues(alpha: .10), valueColor: AlwaysStoppedAnimation<Color>(primary))),
         const SizedBox(height: 10),
-        Row(children: [Icon(Icons.timelapse_rounded, size: 18, color: primary), const SizedBox(width: 7), Expanded(child: Text(_localizedStatus(l10n, controller.prayerStatus), maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 15, fontWeight: FontWeight.w600)))]),
+        Row(children: [Icon(Icons.timelapse_rounded, size: 18, color: primary), const SizedBox(width: 7), Expanded(child: Text(_localizedStatus(l10n, controller.prayerStatus), maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14, fontWeight: FontWeight.w600)))]),
         const SizedBox(height: 15),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -268,7 +267,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
           child: Row(children: [
             Icon(Icons.schedule_rounded, size: 19, color: primary),
             const SizedBox(width: 9),
-            Expanded(child: Text(l10n.nextPrayerAt(_prayerLabel(l10n, controller.nextPrayerName), controller.nextPrayerTime), maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 15, fontWeight: FontWeight.w600))),
+            Expanded(child: Text(l10n.nextPrayerAt(_prayerLabel(l10n, controller.nextPrayerName), controller.nextPrayerTime), maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14, fontWeight: FontWeight.w600))),
             const SizedBox(width: 10),
             Flexible(fit: FlexFit.loose, child: Text(controller.timeRemainingForNextPrayer, maxLines: 1, textAlign: TextAlign.end, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14, color: context.secondaryTextColor, fontWeight: FontWeight.w700))),
           ]),
@@ -279,7 +278,25 @@ class _PrayerScreenState extends State<PrayerScreen> {
 
   Widget _buildPrayerTimeSummary(BuildContext context, PrayerController controller) {
     final theme = Theme.of(context); final l10n = AppLocalizations.of(context); final primary = theme.colorScheme.primary;
-    return Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(22), border: Border.all(color: primary.withValues(alpha: .08))), child: Column(children: [Row(children: [Icon(Icons.access_time_rounded, color: primary, size: 20), const SizedBox(width: 8), Text(l10n.prayerTimes, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 16)), const Spacer(), Flexible(child: Text('${l10n.next} ${_prayerLabel(l10n, controller.nextPrayerName)}', overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14, color: context.secondaryTextColor)))]), const SizedBox(height: 14), Row(children: [Expanded(child: _buildTimeBox(context, l10n.previousPrayer, controller.previousPrayer, controller.previousPrayerTime, Icons.history_rounded)), const SizedBox(width: 10), Expanded(child: _buildTimeBox(context, l10n.current, controller.currentPrayer, controller.currentPrayerStart, Icons.mosque_outlined)), const SizedBox(width: 10), Expanded(child: _buildTimeBox(context, l10n.next, controller.nextPrayerName, controller.nextPrayerTime, Icons.arrow_forward_rounded))]) ]));
+    return Container(
+      padding: const EdgeInsets.all(17),
+      decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(22), border: Border.all(color: primary.withValues(alpha: .08))),
+      child: Column(children: [
+        Row(children: [
+          Icon(Icons.access_time_rounded, color: primary, size: 20),
+          const SizedBox(width: 8),
+          Text(l10n.prayerTimes, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 16)),
+        ]),
+        const SizedBox(height: 14),
+        Row(children: [
+          Expanded(child: _buildTimeBox(context, l10n.previousPrayer, controller.previousPrayer, controller.previousPrayerTime, Icons.history_rounded)),
+          const SizedBox(width: 10),
+          Expanded(child: _buildTimeBox(context, l10n.current, controller.currentPrayer, controller.currentPrayerStart, Icons.mosque_outlined)),
+          const SizedBox(width: 10),
+          Expanded(child: _buildTimeBox(context, l10n.next, controller.nextPrayerName, controller.nextPrayerTime, Icons.arrow_forward_rounded)),
+        ]),
+      ]),
+    );
   }
 
   Widget _buildDailyTimeCard(BuildContext context, PrayerController controller) {
@@ -317,12 +334,14 @@ class _PrayerScreenState extends State<PrayerScreen> {
 
   Widget _buildNaflCard(BuildContext context, _NaflItem item) {
     final theme = Theme.of(context); final l10n = AppLocalizations.of(context); final primary = theme.colorScheme.primary; final now = DateTime.now();
-    final active = !now.isBefore(item.start) && now.isBefore(item.end);
-    final upcoming = now.isBefore(item.start);
-    final status = active ? l10n.current : upcoming ? l10n.next : l10n.completed;
+    final hasWindow = item.start != null && item.end != null && item.end!.isAfter(item.start!);
+    final active = hasWindow && !now.isBefore(item.start!) && now.isBefore(item.end!);
+    final upcoming = hasWindow && now.isBefore(item.start!);
+    final status = !hasWindow ? l10n.completed : active ? l10n.current : upcoming ? l10n.next : l10n.completed;
     final target = upcoming ? item.start : item.end;
-    final timer = _formatDuration(target.difference(now).isNegative ? Duration.zero : target.difference(now));
-    return Container(padding: const EdgeInsets.fromLTRB(14, 13, 14, 13), decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(18), border: Border.all(color: active ? primary.withValues(alpha: .22) : primary.withValues(alpha: .08))), child: Row(children: [Container(width: 42, height: 42, decoration: BoxDecoration(color: primary.withValues(alpha: .10), borderRadius: BorderRadius.circular(13)), child: Icon(item.icon, color: primary, size: 21)), const SizedBox(width: 11), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w800)), const SizedBox(height: 3), Text(item.window, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14, color: context.secondaryTextColor)), const SizedBox(height: 3), Text(status, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(fontSize: 14, color: active ? primary : context.secondaryTextColor, fontWeight: FontWeight.w700))])), const SizedBox(width: 10), Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(_formatTime(item.start), style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14, fontWeight: FontWeight.bold)), const SizedBox(height: 4), Text(timer, maxLines: 1, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14, color: primary, fontWeight: FontWeight.w800))]) ]));
+    final timer = target == null ? '' : _formatDuration(target.difference(now).isNegative ? Duration.zero : target.difference(now));
+    final window = hasWindow ? '${_formatTime(item.start!)} – ${_formatTime(item.end!)}' : item.window;
+    return Container(padding: const EdgeInsets.fromLTRB(14, 13, 14, 13), decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(18), border: Border.all(color: active ? primary.withValues(alpha: .22) : primary.withValues(alpha: .08))), child: Row(children: [Container(width: 42, height: 42, decoration: BoxDecoration(color: primary.withValues(alpha: .10), borderRadius: BorderRadius.circular(13)), child: Icon(item.icon, color: primary, size: 21)), const SizedBox(width: 11), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w800)), const SizedBox(height: 3), Text(window, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14, color: context.secondaryTextColor)), const SizedBox(height: 3), Text(status, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(fontSize: 14, color: active ? primary : context.secondaryTextColor, fontWeight: FontWeight.w700))])), if (target != null) ...[const SizedBox(width: 10), Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(_formatTime(target), style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14, fontWeight: FontWeight.bold)), if (timer.isNotEmpty) ...[const SizedBox(height: 4), Text(timer, maxLines: 1, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14, color: primary, fontWeight: FontWeight.w800))]])]]));
   }
 
   Widget _buildPrayerTracker(BuildContext context, bool isFriday) {
@@ -357,7 +376,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
 
   String _formatTime(DateTime value) { final hour = value.hour == 0 ? 12 : value.hour > 12 ? value.hour - 12 : value.hour; final minute = value.minute.toString().padLeft(2, '0'); final period = value.hour >= 12 ? 'PM' : 'AM'; return '$hour:$minute $period'; }
   String _formatDuration(Duration value) { final h = value.inHours; final m = value.inMinutes.remainder(60); final s = value.inSeconds.remainder(60); return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}'; }
-  String _normalize(String value) => value.toLowerCase().replaceAll(RegExp(r'[\s’‘\']'), '');
+  String _normalize(String value) => value.toLowerCase().replaceAll(RegExp(r"[\s’‘']"), '');
   IconData _prayerIcon(String name) { switch (_normalize(name)) { case 'fajr': case 'ফজর': return Icons.wb_twilight_outlined; case 'dhuhr': case 'যোহর': return Icons.wb_sunny_outlined; case 'asr': case 'আসর': return Icons.sunny_snowing; case 'maghrib': case 'মাগরিব': return Icons.nightlight_outlined; case 'isha': case 'ইশা': return Icons.dark_mode_outlined; case 'jumuah': case "জুমু'আ": return Icons.mosque_outlined; default: return Icons.access_time_rounded; } }
   void _showLocation(BuildContext context, String location) { final l10n = AppLocalizations.of(context); showDialog<void>(context: context, builder: (_) => AlertDialog(title: Text(l10n.location), content: Text(_localizedLocation(l10n, location)), actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.close))])); }
   Widget _buildErrorState(BuildContext context, PrayerController controller) { final theme = Theme.of(context); final l10n = AppLocalizations.of(context); final primary = theme.colorScheme.primary; return Center(child: Padding(padding: const EdgeInsets.all(28), child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.error_outline_rounded, size: 56, color: primary), const SizedBox(height: 12), Text(l10n.prayerLoadError, textAlign: TextAlign.center, style: theme.textTheme.titleMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.bold)), const SizedBox(height: 10), Text(controller.error!, textAlign: TextAlign.center, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14)), const SizedBox(height: 18), FilledButton.icon(onPressed: controller.refreshPrayerTimes, icon: const Icon(Icons.refresh_rounded), label: Text(l10n.retry))]))); }
@@ -366,8 +385,8 @@ class _PrayerScreenState extends State<PrayerScreen> {
 class _NaflItem {
   final String name;
   final String window;
-  final DateTime start;
-  final DateTime end;
+  final DateTime? start;
+  final DateTime? end;
   final IconData icon;
   const _NaflItem(this.name, this.window, this.start, this.end, this.icon);
 }
