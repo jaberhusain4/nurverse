@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:intl/intl.dart';
@@ -6,11 +8,14 @@ import 'package:provider/provider.dart';
 import '../controllers/prayer_controller.dart';
 import '../localization/app_localizations.dart';
 import '../providers/settings_provider.dart';
+import '../services/jamaat_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/current_prayer_premium_card.dart';
 import '../widgets/home/islamic_info_card.dart';
 import '../widgets/home/islamic_ornamental_background.dart';
 import '../widgets/home/prayer_timeline_card.dart';
+import '../widgets/home/top_header.dart';
+import 'prayer/jamaat_settings_screen.dart';
 
 class PrayerScreen extends StatefulWidget {
   const PrayerScreen({super.key});
@@ -20,6 +25,9 @@ class PrayerScreen extends StatefulWidget {
 }
 
 class _PrayerScreenState extends State<PrayerScreen> {
+  Timer? _clockTimer;
+  String _currentTime = '';
+
   final Map<String, bool> _tracker = {
     'Fajr': false,
     'Dhuhr': false,
@@ -93,6 +101,29 @@ class _PrayerScreenState extends State<PrayerScreen> {
     return english.containsKey(value) ? l10n.tr(value, english[value]!) : value;
   }
 
+  String _greeting(String languageCode) {
+    final hour = DateTime.now().hour;
+    if (languageCode == 'en') {
+      if (hour < 12) return 'Good Morning';
+      if (hour < 18) return 'Good Afternoon';
+      return 'Good Evening';
+    }
+    if (languageCode == 'ar') return hour < 12 ? 'صباح الخير' : 'مساء الخير';
+    if (hour < 12) return 'শুভ সকাল';
+    if (hour < 15) return 'শুভ দুপুর';
+    if (hour < 18) return 'শুভ বিকেল';
+    return 'শুভ সন্ধ্যা';
+  }
+
+  void _updateClock() {
+    final now = DateTime.now();
+    final period = now.hour >= 12 ? 'PM' : 'AM';
+    final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;
+    final value = '${hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')} $period';
+    if (_currentTime == value || !mounted) return;
+    setState(() => _currentTime = value);
+  }
+
   String _englishDate() => DateFormat('EEEE, d MMMM yyyy', 'en').format(DateTime.now());
 
   String _banglaDate() {
@@ -117,13 +148,28 @@ class _PrayerScreenState extends State<PrayerScreen> {
       final h = HijriCalendar.now();
       const bn = ['মুহররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি', 'জুমাদিউল আউয়াল', 'জুমাদিউস সানি', 'রজব', 'শাবান', 'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ'];
       const en = ['Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani', 'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Sha’ban', 'Ramadan', 'Shawwal', 'Dhul-Qadah', 'Dhul-Hijjah'];
+      const ar = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
       final i = (h.hMonth - 1).clamp(0, 11);
-      final month = l10n.isBangla ? bn[i] : en[i];
-      final suffix = l10n.isBangla ? 'হিজরি' : 'AH';
-      return '${h.hDay} $month ${h.hYear} $suffix';
+      if (l10n.isBangla) return '${h.hDay} ${bn[i]} ${h.hYear} হিজরি';
+      if (l10n.isArabic) return '${h.hDay} ${ar[i]} ${h.hYear} هـ';
+      return '${h.hDay} ${en[i]} ${h.hYear} AH';
     } catch (_) {
       return l10n.tr('হিজরি তারিখ পাওয়া যায়নি', 'Hijri date unavailable');
     }
+  }
+
+  Future<void> _openJamaatSettings() async {
+    final controller = context.read<PrayerController>();
+    JamaatService.configureDefaultsFromPrayerList(controller.prayers);
+    await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const JamaatSettingsScreen()));
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _updateClock();
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) => _updateClock());
   }
 
   @override
@@ -134,6 +180,8 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final languageCode = settings.languageCode;
+
+    JamaatService.configureDefaultsFromPrayerList(controller.prayers);
 
     return Scaffold(
       body: Stack(
@@ -152,13 +200,16 @@ class _PrayerScreenState extends State<PrayerScreen> {
                           physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
                           padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
                           children: [
-                            _screenHeader(context, l10n, controller),
+                            TopHeader(
+                              greeting: _greeting(languageCode),
+                              currentTime: _currentTime,
+                            ),
                             const SizedBox(height: 14),
                             CurrentPrayerPremiumCard(
                               previousPrayer: _prayerName(l10n, controller.previousPrayer),
                               previousPrayerTime: controller.previousPrayerTime,
                               currentPrayer: _prayerName(l10n, controller.currentPrayer),
-                              currentPrayerTime: controller.currentPrayerStart,
+                              currentPrayerTime: controller.currentPrayerTime,
                               nextPrayer: _prayerName(l10n, controller.nextPrayerName),
                               nextPrayerTime: controller.nextPrayerTime,
                               remainingTime: controller.timeRemainingForNextPrayer,
@@ -166,6 +217,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
                               iqamahTime: controller.currentIqamahTime,
                               status: _status(l10n, controller.prayerStatus),
                               languageCode: languageCode,
+                              onJamaatTap: _openJamaatSettings,
                             ),
                             const SizedBox(height: 10),
                             PrayerTimelineCard(prayers: controller.prayers, languageCode: languageCode),
@@ -178,7 +230,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
                               sunrise: controller.sunriseTime,
                               sunset: controller.sunsetTime,
                               languageCode: languageCode,
-                              onRefresh: controller.refreshPrayerTimes,
+                              onRefresh: controller.refreshLocation,
                             ),
                             const SizedBox(height: 16),
                             _sectionHeader(context, l10n, Icons.mosque_outlined, l10n.todaysPrayer),
@@ -202,35 +254,6 @@ class _PrayerScreenState extends State<PrayerScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _screenHeader(BuildContext context, AppLocalizations l10n, PrayerController controller) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.prayer, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-              const SizedBox(height: 3),
-              Text(l10n.todaysPrayer, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ),
-        IconButton(
-          tooltip: l10n.location,
-          onPressed: controller.loading ? null : controller.refreshLocation,
-          icon: Icon(Icons.location_on_outlined, color: primary, size: 22),
-        ),
-        IconButton(
-          tooltip: l10n.refresh,
-          onPressed: controller.loading ? null : controller.refreshPrayerTimes,
-          icon: Icon(Icons.refresh_rounded, color: primary, size: 22),
-        ),
-      ],
     );
   }
 
@@ -405,5 +428,11 @@ class _PrayerScreenState extends State<PrayerScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _clockTimer?.cancel();
+    super.dispose();
   }
 }
