@@ -133,87 +133,104 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final controller = context.watch<PrayerController>();
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
+    final languageCode = settings.languageCode;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        elevation: 0,
-        title: Text(l10n.prayer, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip: l10n.location,
-            onPressed: controller.loading ? null : controller.refreshLocation,
-            icon: Icon(Icons.location_on_outlined, color: primary),
-          ),
-          IconButton(
-            tooltip: l10n.refresh,
-            onPressed: controller.loading ? null : controller.refreshPrayerTimes,
-            icon: Icon(Icons.refresh_rounded, color: primary),
-          ),
-        ],
-      ),
       body: Stack(
+        fit: StackFit.expand,
         children: [
           const Positioned.fill(child: IslamicOrnamentalBackground()),
-          controller.loading
-              ? Center(child: CircularProgressIndicator(color: primary))
-              : controller.error != null
-                  ? _errorState(context, controller, l10n)
-                  : RefreshIndicator(
-                      color: primary,
-                      onRefresh: controller.refreshPrayerTimes,
-                      child: ListView(
-                        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                        padding: const EdgeInsets.fromLTRB(14, 8, 14, 30),
-                        children: [
-                          IslamicInfoCard(
-                            location: controller.currentLocationName,
-                            englishDate: _englishDate(),
-                            banglaDate: _banglaDate(),
-                            hijriDate: _hijriDate(l10n),
-                            sunrise: controller.sunriseTime,
-                            sunset: controller.sunsetTime,
-                            languageCode: settings.languageCode,
-                            onRefresh: controller.refreshPrayerTimes,
-                          ),
-                          const SizedBox(height: 10),
-                          CurrentPrayerPremiumCard(
-                            previousPrayer: _prayerName(l10n, controller.previousPrayer),
-                            previousPrayerTime: controller.previousPrayerTime,
-                            currentPrayer: _prayerName(l10n, controller.currentPrayer),
-                            currentPrayerTime: controller.currentPrayerStart,
-                            nextPrayer: _prayerName(l10n, controller.nextPrayerName),
-                            nextPrayerTime: controller.nextPrayerTime,
-                            remainingTime: controller.timeRemainingForNextPrayer,
-                            progress: controller.prayerProgress,
-                            iqamahTime: controller.currentIqamahTime,
-                            status: _status(l10n, controller.prayerStatus),
-                            languageCode: settings.languageCode,
-                          ),
-                          const SizedBox(height: 10),
-                          PrayerTimelineCard(prayers: controller.prayers, languageCode: settings.languageCode),
-                          const SizedBox(height: 16),
-                          _sectionHeader(context, l10n, Icons.mosque_outlined, l10n.todaysPrayer),
-                          const SizedBox(height: 8),
-                          _scheduleCard(context, controller, l10n),
-                          const SizedBox(height: 16),
-                          _sectionHeader(context, l10n, Icons.auto_awesome_outlined, l10n.naflAndOtherPrayers),
-                          const SizedBox(height: 8),
-                          _specialTimesCard(context, controller, l10n),
-                          const SizedBox(height: 16),
-                          _sectionHeader(context, l10n, Icons.warning_amber_rounded, '${l10n.prohibitedTime} & ${l10n.makruhTime}'),
-                          const SizedBox(height: 8),
-                          _restrictionCard(context, controller, l10n),
-                          const SizedBox(height: 16),
-                          _sectionHeader(context, l10n, Icons.check_circle_outline_rounded, l10n.prayerTracker),
-                          const SizedBox(height: 8),
-                          _trackerCard(context, controller, l10n),
-                        ],
+          SafeArea(
+            child: controller.loading
+                ? Center(child: CircularProgressIndicator(color: primary))
+                : controller.error != null
+                    ? _errorState(context, controller, l10n)
+                    : RefreshIndicator(
+                        color: primary,
+                        onRefresh: controller.refreshPrayerTimes,
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                          padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
+                          children: [
+                            _screenHeader(context, l10n, controller),
+                            const SizedBox(height: 14),
+                            CurrentPrayerPremiumCard(
+                              previousPrayer: _prayerName(l10n, controller.previousPrayer),
+                              previousPrayerTime: controller.previousPrayerTime,
+                              currentPrayer: _prayerName(l10n, controller.currentPrayer),
+                              currentPrayerTime: controller.currentPrayerStart,
+                              nextPrayer: _prayerName(l10n, controller.nextPrayerName),
+                              nextPrayerTime: controller.nextPrayerTime,
+                              remainingTime: controller.timeRemainingForNextPrayer,
+                              progress: controller.prayerProgress,
+                              iqamahTime: controller.currentIqamahTime,
+                              status: _status(l10n, controller.prayerStatus),
+                              languageCode: languageCode,
+                            ),
+                            const SizedBox(height: 10),
+                            PrayerTimelineCard(prayers: controller.prayers, languageCode: languageCode),
+                            const SizedBox(height: 10),
+                            IslamicInfoCard(
+                              location: controller.currentLocationName,
+                              englishDate: _englishDate(),
+                              banglaDate: _banglaDate(),
+                              hijriDate: _hijriDate(l10n),
+                              sunrise: controller.sunriseTime,
+                              sunset: controller.sunsetTime,
+                              languageCode: languageCode,
+                              onRefresh: controller.refreshPrayerTimes,
+                            ),
+                            const SizedBox(height: 16),
+                            _sectionHeader(context, l10n, Icons.mosque_outlined, l10n.todaysPrayer),
+                            const SizedBox(height: 9),
+                            _scheduleCard(context, controller, l10n),
+                            const SizedBox(height: 16),
+                            _sectionHeader(context, l10n, Icons.auto_awesome_outlined, l10n.naflAndOtherPrayers),
+                            const SizedBox(height: 9),
+                            _specialTimesCard(context, controller, l10n),
+                            const SizedBox(height: 16),
+                            _sectionHeader(context, l10n, Icons.warning_amber_rounded, '${l10n.prohibitedTime} & ${l10n.makruhTime}'),
+                            const SizedBox(height: 9),
+                            _restrictionCard(context, controller, l10n),
+                            const SizedBox(height: 16),
+                            _sectionHeader(context, l10n, Icons.check_circle_outline_rounded, l10n.prayerTracker),
+                            const SizedBox(height: 9),
+                            _trackerCard(context, controller, l10n),
+                          ],
+                        ),
                       ),
-                    ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _screenHeader(BuildContext context, AppLocalizations l10n, PrayerController controller) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.prayer, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 3),
+              Text(l10n.todaysPrayer, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+        IconButton(
+          tooltip: l10n.location,
+          onPressed: controller.loading ? null : controller.refreshLocation,
+          icon: Icon(Icons.location_on_outlined, color: primary, size: 22),
+        ),
+        IconButton(
+          tooltip: l10n.refresh,
+          onPressed: controller.loading ? null : controller.refreshPrayerTimes,
+          icon: Icon(Icons.refresh_rounded, color: primary, size: 22),
+        ),
+      ],
     );
   }
 
