@@ -19,7 +19,6 @@ import 'prayer/jamaat_settings_screen.dart';
 
 class PrayerScreen extends StatefulWidget {
   const PrayerScreen({super.key});
-
   @override
   State<PrayerScreen> createState() => _PrayerScreenState();
 }
@@ -237,13 +236,13 @@ class _PrayerScreenState extends State<PrayerScreen> {
   Widget _sectionHeader(BuildContext context, Color primary, IconData icon, String title) {
     final theme = Theme.of(context);
     return Row(children: [
-      Container(width: 34, height: 34, decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(11)), child: Icon(icon, color: primary, size: 18)),
-      const SizedBox(width: 9),
-      Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleSmall?.copyWith(fontSize: 15.5, fontWeight: FontWeight.w800, height: 1.15))),
+      Container(width: 38, height: 38, decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: primary, size: 20)),
+      const SizedBox(width: 10),
+      Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleSmall?.copyWith(fontSize: 16, fontWeight: FontWeight.w800, height: 1.2))),
     ]);
   }
 
-  Widget _card(BuildContext context, Color primary, {required Widget child, EdgeInsetsGeometry padding = const EdgeInsets.all(12)}) {
+  Widget _card(BuildContext context, Color primary, {required Widget child, EdgeInsetsGeometry padding = const EdgeInsets.all(14)}) {
     final theme = Theme.of(context);
     return Container(width: double.infinity, padding: padding, decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: primary.withValues(alpha: .055))), child: child);
   }
@@ -253,7 +252,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary = theme.textTheme.bodySmall?.color?.withValues(alpha: .68) ?? theme.colorScheme.onSurface.withValues(alpha: .68);
     final items = controller.prayers.where((p) => p['category'] == 'obligatory').toList(growable: false);
-    return _card(context, primary, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7), child: Column(children: [
+    return _card(context, primary, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), child: Column(children: [
       for (var i = 0; i < items.length; i++) _prayerRow(context, l10n, items[i], primary, text, secondary, languageCode, i < items.length - 1),
     ]));
   }
@@ -266,19 +265,20 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final jamaat = data['jamaat']?.toString() ?? '--:--';
     final icon = _prayerIcon(data['name']?.toString() ?? '');
     return Column(children: [
-      Padding(padding: const EdgeInsets.symmetric(vertical: 9), child: Row(children: [
-        Container(width: 40, height: 40, decoration: BoxDecoration(color: current ? primary.withValues(alpha: .11) : primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: current ? primary : secondary, size: 20)),
-        const SizedBox(width: 10),
+      Padding(padding: const EdgeInsets.symmetric(vertical: 11), child: Row(children: [
+        Container(width: 44, height: 44, decoration: BoxDecoration(color: current ? primary.withValues(alpha: .11) : primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(13)), child: Icon(icon, color: current ? primary : secondary, size: 22)),
+        const SizedBox(width: 11),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: current ? primary : text, fontSize: 13.5, fontWeight: FontWeight.w800, height: 1.15)),
-          const SizedBox(height: 4),
-          Row(children: [Icon(Icons.play_arrow_rounded, size: 15, color: secondary), const SizedBox(width: 3), Text(start, style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w700)), const SizedBox(width: 9), Icon(Icons.stop_rounded, size: 15, color: secondary), const SizedBox(width: 3), Text(end, style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w700))]),
+          Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: current ? primary : text, fontSize: 15, fontWeight: FontWeight.w800, height: 1.15)),
+          const SizedBox(height: 6),
+          Row(children: [Icon(Icons.play_arrow_rounded, size: 17, color: secondary), const SizedBox(width: 4), Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text(start, maxLines: 1, style: TextStyle(color: secondary, fontSize: 12.5, fontWeight: FontWeight.w700)))), const SizedBox(width: 12), Icon(Icons.stop_rounded, size: 17, color: secondary), const SizedBox(width: 4), Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text(end, maxLines: 1, style: TextStyle(color: secondary, fontSize: 12.5, fontWeight: FontWeight.w700)))),
+          ]),
         ])),
-        const SizedBox(width: 8),
-        ConstrainedBox(constraints: const BoxConstraints(minWidth: 68, maxWidth: 92), child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.groups_rounded, size: 16, color: primary), const SizedBox(width: 4), Flexible(child: Text(l10n.jamaat, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w700)))]),
-          const SizedBox(height: 3),
-          FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text(jamaat, maxLines: 1, style: TextStyle(color: primary, fontSize: 13, fontWeight: FontWeight.w800))),
+        const SizedBox(width: 10),
+        ConstrainedBox(constraints: const BoxConstraints(minWidth: 82, maxWidth: 105), child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.groups_rounded, size: 19, color: primary), const SizedBox(width: 5), Flexible(child: Text(l10n.jamaat, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 12, fontWeight: FontWeight.w700)))]),
+          const SizedBox(height: 4),
+          FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text(jamaat, maxLines: 1, style: TextStyle(color: primary, fontSize: 14, fontWeight: FontWeight.w800))),
         ])),
       ])),
       if (divider) Divider(height: 1, color: primary.withValues(alpha: .05)),
@@ -298,12 +298,12 @@ class _PrayerScreenState extends State<PrayerScreen> {
   Widget _infoMiniCard(BuildContext context, IconData icon, String title, String value, Color primary) {
     final theme = Theme.of(context);
     final text = theme.textTheme.bodySmall?.color ?? theme.colorScheme.onSurface;
-    return _card(context, primary, padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 11), child: Column(children: [
-      Icon(icon, size: 20, color: primary),
-      const SizedBox(height: 6),
-      Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text.withValues(alpha: .78), fontSize: 10.5, fontWeight: FontWeight.w600, height: 1.1)),
-      const SizedBox(height: 4),
-      SizedBox(width: double.infinity, child: FittedBox(fit: BoxFit.scaleDown, child: Text(value, maxLines: 1, style: TextStyle(color: text, fontSize: 12.5, fontWeight: FontWeight.w800, height: 1.1)))),
+    return _card(context, primary, padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 13), child: Column(children: [
+      Icon(icon, size: 23, color: primary),
+      const SizedBox(height: 7),
+      Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text.withValues(alpha: .78), fontSize: 11.5, fontWeight: FontWeight.w600, height: 1.1)),
+      const SizedBox(height: 5),
+      SizedBox(width: double.infinity, child: FittedBox(fit: BoxFit.scaleDown, child: Text(value, maxLines: 1, style: TextStyle(color: text, fontSize: 13.5, fontWeight: FontWeight.w800, height: 1.1)))),
     ]));
   }
 
@@ -312,14 +312,14 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary = theme.textTheme.bodySmall?.color?.withValues(alpha: .68) ?? theme.colorScheme.onSurface.withValues(alpha: .68);
     final nafl = controller.prayers.where((p) => p['category'] == 'nafl').toList(growable: false);
-    return _card(context, primary, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7), child: Column(children: [
+    return _card(context, primary, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), child: Column(children: [
       for (var i = 0; i < nafl.length; i++) ...[
-        Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Row(children: [
-          Container(width: 38, height: 38, decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(12)), child: Icon(_prayerIcon(nafl[i]['name']?.toString() ?? ''), size: 20, color: primary)),
+        Padding(padding: const EdgeInsets.symmetric(vertical: 10), child: Row(children: [
+          Container(width: 44, height: 44, decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(13)), child: Icon(_prayerIcon(nafl[i]['name']?.toString() ?? ''), size: 22, color: primary)),
+          const SizedBox(width: 11),
+          Expanded(child: Text(_prayerName(AppLocalizations.of(context), nafl[i]['name']?.toString() ?? '', languageCode), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 15, fontWeight: FontWeight.w800, height: 1.15))),
           const SizedBox(width: 10),
-          Expanded(child: Text(_prayerName(AppLocalizations.of(context), nafl[i]['name']?.toString() ?? '', languageCode), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13.5, fontWeight: FontWeight.w800, height: 1.15))),
-          const SizedBox(width: 8),
-          Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text('${nafl[i]['start'] ?? '--:--'} – ${nafl[i]['end'] ?? '--:--'}', maxLines: 1, style: TextStyle(color: primary, fontSize: 12.5, fontWeight: FontWeight.w800, height: 1.1)))),
+          Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text('${nafl[i]['start'] ?? '--:--'} – ${nafl[i]['end'] ?? '--:--'}', maxLines: 1, style: TextStyle(color: primary, fontSize: 13.5, fontWeight: FontWeight.w800, height: 1.1)))),
         ])),
         if (i < nafl.length - 1) Divider(height: 1, color: secondary.withValues(alpha: .10)),
       ],
@@ -330,13 +330,13 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final theme = Theme.of(context);
     final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     const names = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-    return _card(context, primary, padding: const EdgeInsets.fromLTRB(10, 12, 10, 11), child: Column(children: [
-      Text(l10n.markPrayers, maxLines: 2, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: TextStyle(color: text.withValues(alpha: .78), fontSize: 11, fontWeight: FontWeight.w600, height: 1.2)),
-      const SizedBox(height: 10),
+    return _card(context, primary, padding: const EdgeInsets.fromLTRB(12, 14, 12, 13), child: Column(children: [
+      Text(l10n.markPrayers, maxLines: 2, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: TextStyle(color: text.withValues(alpha: .78), fontSize: 12, fontWeight: FontWeight.w600, height: 1.2)),
+      const SizedBox(height: 11),
       Row(children: [for (final name in names) Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => setState(() => _tracker[name] = !(_tracker[name] ?? false)), child: Padding(padding: const EdgeInsets.symmetric(horizontal: 2), child: Column(children: [
-        Icon((_tracker[name] ?? false) ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, color: (_tracker[name] ?? false) ? primary : theme.disabledColor, size: 21),
-        const SizedBox(height: 5),
-        FittedBox(fit: BoxFit.scaleDown, child: Text(_prayerName(l10n, name, languageCode), maxLines: 1, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 10.5, fontWeight: FontWeight.w700, height: 1.1))),
+        Icon((_tracker[name] ?? false) ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, color: (_tracker[name] ?? false) ? primary : theme.disabledColor, size: 24),
+        const SizedBox(height: 6),
+        FittedBox(fit: BoxFit.scaleDown, child: Text(_prayerName(l10n, name, languageCode), maxLines: 1, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 11.5, fontWeight: FontWeight.w700, height: 1.1))),
       ]))))]),
     ]));
   }
