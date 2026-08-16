@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../data/dua_data.dart';
@@ -40,12 +41,18 @@ class _DuaScreenState extends State<DuaScreen> {
   String _subtitle(AppLocalizations l10n, DuaCategory category) =>
       l10n.isBangla ? category.subtitleBn : category.subtitleEn;
 
-  List<DuaCategory> _filtered(AppLocalizations l10n) {
+  List<DuaCategory> _filtered() {
     final query = _query.trim().toLowerCase();
     if (query.isEmpty) return duaCategories;
     return duaCategories.where((category) {
-      final categoryText = '${category.titleBn} ${category.titleEn} ${category.subtitleBn} ${category.subtitleEn}'.toLowerCase();
-      final itemText = category.items.map((item) => '${item.titleBn} ${item.titleEn} ${item.translationBn} ${item.translationEn}').join(' ').toLowerCase();
+      final categoryText =
+          '${category.titleBn} ${category.titleEn} ${category.subtitleBn} ${category.subtitleEn}'
+              .toLowerCase();
+      final itemText = category.items
+          .map((item) =>
+              '${item.titleBn} ${item.titleEn} ${item.translationBn} ${item.translationEn}')
+          .join(' ')
+          .toLowerCase();
       return categoryText.contains(query) || itemText.contains(query);
     }).toList();
   }
@@ -60,22 +67,15 @@ class _DuaScreenState extends State<DuaScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final categories = _filtered(l10n);
+    final categories = _filtered();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          l10n.tr("দু'আ ও জিকির", 'Dua & Dhikr'),
+          l10n.tr("دُعَا ও জিকির", 'Dua & Dhikr'),
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip: l10n.tr("সংরক্ষিত দু'আ", 'Saved Duas'),
-            icon: const Icon(Icons.bookmark_outline_rounded),
-            onPressed: () => _showInfo(context, l10n.tr('সংরক্ষিত দু\'আ', 'Saved Duas')),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
@@ -84,25 +84,25 @@ class _DuaScreenState extends State<DuaScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSearchBar(context, l10n),
+            const SizedBox(height: 18),
+            Text(
+              l10n.tr("আজকের গুরুত্বপূর্ণ দুআ", "Today's Important Dua"),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 9),
+            _buildDailyDuaCard(context, l10n),
             const SizedBox(height: 20),
             Text(
-              l10n.tr("আজকের গুরুত্বপূর্ণ দু'আ", "Today's Important Dua"),
+              l10n.tr("দুআ ও জিকিরের বিভাগ", 'Dua & Dhikr Categories'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                fontSize: 16,
+                fontSize: 15,
               ),
             ),
-            const SizedBox(height: 10),
-            _buildDailyDuaCard(context, l10n),
-            const SizedBox(height: 22),
-            Text(
-              l10n.tr("দু'আ ও জিকিরের বিভাগ", 'Dua & Dhikr Categories'),
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 9),
             if (categories.isEmpty)
               _buildEmptySearch(context, l10n)
             else
@@ -114,7 +114,7 @@ class _DuaScreenState extends State<DuaScreen> {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  mainAxisExtent: 142,
+                  mainAxisExtent: 150,
                 ),
                 itemBuilder: (context, index) => _buildCategoryCard(
                   context,
@@ -135,7 +135,7 @@ class _DuaScreenState extends State<DuaScreen> {
       controller: _searchController,
       onChanged: (value) => setState(() => _query = value),
       decoration: InputDecoration(
-        hintText: l10n.tr("দু'আ বা জিকির খুঁজুন...", 'Search Dua or Dhikr...'),
+        hintText: l10n.tr("দুআ বা জিকির খুঁজুন...", 'Search Dua or Dhikr...'),
         prefixIcon: const Icon(Icons.search_rounded),
         suffixIcon: _query.isEmpty
             ? null
@@ -148,7 +148,8 @@ class _DuaScreenState extends State<DuaScreen> {
               ),
         filled: true,
         fillColor: theme.cardColor,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(17),
           borderSide: BorderSide(color: primary.withValues(alpha: .08)),
@@ -180,18 +181,11 @@ class _DuaScreenState extends State<DuaScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(17, 16, 17, 12),
+      padding: const EdgeInsets.fromLTRB(17, 15, 13, 10),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: primary.withValues(alpha: .08)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .04),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,58 +203,43 @@ class _DuaScreenState extends State<DuaScreen> {
               const SizedBox(width: 11),
               Expanded(
                 child: Text(
-                  l10n.tr("আজকের দু'আ", 'Dua of the Day'),
+                  l10n.tr("আজকের দুআ", 'Dua of the Day'),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
                   ),
                 ),
               ),
+              DuaAudioButton(text: item.arabic, color: primary),
             ],
           ),
-          const SizedBox(height: 13),
+          const SizedBox(height: 11),
           Text(
             item.arabic,
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.right,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
-              fontSize: 23,
-              height: 1.75,
+              fontSize: 25,
+              height: 1.7,
             ),
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: 6),
           Text(
             translation,
             style: theme.textTheme.bodyMedium?.copyWith(
               height: 1.55,
-              fontSize: 13,
+              fontSize: 14,
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  item.reference,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
-                  ),
-                ),
-              ),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                tooltip: l10n.tr('শেয়ার', 'Share'),
-                onPressed: () => SharePlus.instance.share(
-                  ShareParams(
-                    text: '${item.arabic}\n\n$translation\n\n${item.reference}\n\nNurVerse',
-                  ),
-                ),
-                icon: const Icon(Icons.share_outlined, size: 20),
-              ),
-            ],
+          const SizedBox(height: 5),
+          Text(
+            item.reference,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: primary,
+              fontWeight: FontWeight.w700,
+              fontSize: 11.5,
+            ),
           ),
         ],
       ),
@@ -279,7 +258,11 @@ class _DuaScreenState extends State<DuaScreen> {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => _openCategory(context, category, l10n),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => DuaCategoryScreen(category: category),
+          ),
+        ),
         child: Container(
           padding: const EdgeInsets.fromLTRB(13, 12, 13, 11),
           decoration: BoxDecoration(
@@ -296,11 +279,7 @@ class _DuaScreenState extends State<DuaScreen> {
                   color: primary.withValues(alpha: .10),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  _iconFor(category.iconName),
-                  color: primary,
-                  size: 20,
-                ),
+                child: Icon(_iconFor(category.iconName), color: primary, size: 20),
               ),
               const SizedBox(height: 8),
               Text(
@@ -309,7 +288,7 @@ class _DuaScreenState extends State<DuaScreen> {
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w700,
-                  fontSize: 12.5,
+                  fontSize: 13.5,
                   height: 1.25,
                 ),
               ),
@@ -321,20 +300,20 @@ class _DuaScreenState extends State<DuaScreen> {
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.hintColor,
-                    fontSize: 10.5,
-                    height: 1.25,
+                    fontSize: 11.5,
+                    height: 1.3,
                   ),
                 ),
               ),
               Text(
                 l10n.isBangla
-                    ? '${category.items.length}টি দু\'আ ও যিকির'
+                    ? '${category.items.length}টি দুআ ও জিকির'
                     : '${category.items.length} duas & adhkar',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: primary,
-                  fontSize: 10.5,
+                  fontSize: 11,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -345,51 +324,67 @@ class _DuaScreenState extends State<DuaScreen> {
     );
   }
 
-  void _openCategory(
-    BuildContext context,
-    DuaCategory category,
-    AppLocalizations l10n,
-  ) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => DuaCategoryScreen(category: category),
-      ),
-    );
-  }
-
   Widget _buildEmptySearch(BuildContext context, AppLocalizations l10n) =>
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 35),
         child: Center(
           child: Text(
-            l10n.tr("কোনো দু'আ বা জিকির পাওয়া যায়নি", 'No Dua or Dhikr found'),
+            l10n.tr("কোনো দুআ বা জিকির পাওয়া যায়নি", 'No Dua or Dhikr found'),
             textAlign: TextAlign.center,
             style: TextStyle(color: Theme.of(context).hintColor),
           ),
         ),
       );
-
-  void _showInfo(BuildContext context, String title) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: const Text('সংরক্ষিত দু\'আর সুবিধাটি পরবর্তী ধাপে যুক্ত করা হবে।'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('ঠিক আছে'),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-class DuaCategoryScreen extends StatelessWidget {
+class DuaCategoryScreen extends StatefulWidget {
   final DuaCategory category;
 
   const DuaCategoryScreen({super.key, required this.category});
+
+  @override
+  State<DuaCategoryScreen> createState() => _DuaCategoryScreenState();
+}
+
+class _DuaCategoryScreenState extends State<DuaCategoryScreen> {
+  final FlutterTts _tts = FlutterTts();
+  int? _playingIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _tts.setLanguage('ar-SA');
+    _tts.setSpeechRate(0.42);
+    _tts.setPitch(1.0);
+    _tts.setVolume(1.0);
+    _tts.setCompletionHandler(() {
+      if (mounted) setState(() => _playingIndex = null);
+    });
+    _tts.setCancelHandler(() {
+      if (mounted) setState(() => _playingIndex = null);
+    });
+    _tts.setErrorHandler((_) {
+      if (mounted) setState(() => _playingIndex = null);
+    });
+  }
+
+  Future<void> _speak(int index, String text) async {
+    if (_playingIndex == index) {
+      await _tts.stop();
+      if (mounted) setState(() => _playingIndex = null);
+      return;
+    }
+    await _tts.stop();
+    if (mounted) setState(() => _playingIndex = index);
+    await _tts.speak(text);
+  }
+
+  @override
+  void dispose() {
+    _tts.stop();
+    _tts.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -400,21 +395,23 @@ class DuaCategoryScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          l10n.isBangla ? category.titleBn : category.titleEn,
+          l10n.isBangla ? widget.category.titleBn : widget.category.titleEn,
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
       body: ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
         physics: const BouncingScrollPhysics(),
-        itemCount: category.items.length,
+        itemCount: widget.category.items.length,
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
-          final item = category.items[index];
+          final item = widget.category.items[index];
           final translation = l10n.isBangla ? item.translationBn : item.translationEn;
           final title = l10n.isBangla ? item.titleBn : item.titleEn;
+          final playing = _playingIndex == index;
+
           return Container(
-            padding: const EdgeInsets.fromLTRB(16, 15, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 14, 13, 12),
             decoration: BoxDecoration(
               color: theme.cardColor,
               borderRadius: BorderRadius.circular(20),
@@ -431,12 +428,23 @@ class DuaCategoryScreen extends StatelessWidget {
                         title,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
-                          fontSize: 14,
+                          fontSize: 15,
                         ),
                       ),
                     ),
                     IconButton(
                       visualDensity: VisualDensity.compact,
+                      tooltip: l10n.tr('দুআ শুনুন', 'Listen to dua'),
+                      onPressed: () => _speak(index, item.arabic),
+                      icon: Icon(
+                        playing ? Icons.stop_circle_outlined : Icons.volume_up_outlined,
+                        size: 22,
+                        color: primary,
+                      ),
+                    ),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: l10n.tr('শেয়ার', 'Share'),
                       onPressed: () => SharePlus.instance.share(
                         ShareParams(
                           text: '${item.arabic}\n\n$translation\n\n${item.reference}\n\nNurVerse',
@@ -446,26 +454,26 @@ class DuaCategoryScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 5),
                 Text(
                   item.arabic,
                   textDirection: TextDirection.rtl,
                   textAlign: TextAlign.right,
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    fontSize: 23,
-                    height: 1.85,
+                    fontSize: 25,
+                    height: 1.8,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 9),
+                const SizedBox(height: 8),
                 Text(
                   translation,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    fontSize: 13,
+                    fontSize: 14,
                     height: 1.65,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 7),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -474,7 +482,7 @@ class DuaCategoryScreen extends StatelessWidget {
                         item.reference,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: primary,
-                          fontSize: 11,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w700,
                           height: 1.35,
                         ),
@@ -488,7 +496,7 @@ class DuaCategoryScreen extends StatelessWidget {
                           textAlign: TextAlign.end,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.hintColor,
-                            fontSize: 11,
+                            fontSize: 11.5,
                             height: 1.35,
                           ),
                         ),
@@ -500,6 +508,71 @@ class DuaCategoryScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class DuaAudioButton extends StatefulWidget {
+  final String text;
+  final Color color;
+
+  const DuaAudioButton({super.key, required this.text, required this.color});
+
+  @override
+  State<DuaAudioButton> createState() => _DuaAudioButtonState();
+}
+
+class _DuaAudioButtonState extends State<DuaAudioButton> {
+  final FlutterTts _tts = FlutterTts();
+  bool _playing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tts.setLanguage('ar-SA');
+    _tts.setSpeechRate(0.42);
+    _tts.setPitch(1.0);
+    _tts.setVolume(1.0);
+    _tts.setCompletionHandler(() {
+      if (mounted) setState(() => _playing = false);
+    });
+    _tts.setCancelHandler(() {
+      if (mounted) setState(() => _playing = false);
+    });
+    _tts.setErrorHandler((_) {
+      if (mounted) setState(() => _playing = false);
+    });
+  }
+
+  Future<void> _toggle() async {
+    if (_playing) {
+      await _tts.stop();
+      if (mounted) setState(() => _playing = false);
+      return;
+    }
+    await _tts.stop();
+    if (mounted) setState(() => _playing = true);
+    await _tts.speak(widget.text);
+  }
+
+  @override
+  void dispose() {
+    _tts.stop();
+    _tts.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      visualDensity: VisualDensity.compact,
+      tooltip: 'Listen',
+      onPressed: _toggle,
+      icon: Icon(
+        _playing ? Icons.stop_circle_outlined : Icons.volume_up_outlined,
+        color: widget.color,
+        size: 22,
       ),
     );
   }
