@@ -47,7 +47,10 @@ class IslamicInfoCard extends StatelessWidget {
   String _hijriBanglaDate() {
     try {
       final h = HijriCalendar.now();
-      const months = <String>['মুহররম','সফর','রবিউল আউয়াল','রবিউস সানি','জুমাদিউল আউয়াল','জুমাদিউস সানি','রজব','শাবান','রমজান','শাওয়াল','জিলকদ','জিলহজ'];
+      const months = <String>[
+        'মুহররম','সফর','রবিউল আউয়াল','রবিউস সানি','জুমাদিউল আউয়াল','জুমাদিউস সানি',
+        'রজব','শাবান','রমজান','শাওয়াল','জিলকদ','জিলহজ',
+      ];
       const digits = <String>['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
       String bnDigits(int value) => value.toString().split('').map((d) => digits[int.parse(d)]).join();
       final month = h.hMonth >= 1 && h.hMonth <= 12 ? months[h.hMonth - 1] : '';
@@ -96,16 +99,30 @@ class IslamicInfoCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(width: locationIconBox, height: locationIconBox, decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(11)), child: Icon(Icons.location_on_rounded, color: primary, size: locationIconSize)),
+              Container(
+                width: locationIconBox,
+                height: locationIconBox,
+                decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(11)),
+                child: Icon(Icons.location_on_rounded, color: primary, size: locationIconSize),
+              ),
               const SizedBox(width: 9),
               Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(_normalizeLocation(location), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 2),
-                  Text(_label(bn: 'আজকের তথ্য', en: 'Today', ar: 'اليوم'), style: TextStyle(color: secondary, fontSize: todayFontSize, fontWeight: FontWeight.w600)),
-                ]),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_normalizeLocation(location), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(_label(bn: 'আজকের তথ্য', en: 'Today', ar: 'اليوم'), style: TextStyle(color: secondary, fontSize: todayFontSize, fontWeight: FontWeight.w600)),
+                  ],
+                ),
               ),
-              if (onRefresh != null) IconButton(tooltip: _label(bn: 'রিফ্রেশ', en: 'Refresh', ar: 'تحديث'), onPressed: onRefresh, visualDensity: VisualDensity.compact, icon: Icon(Icons.refresh_rounded, size: 19, color: primary)),
+              if (onRefresh != null)
+                IconButton(
+                  tooltip: _label(bn: 'রিফ্রেশ', en: 'Refresh', ar: 'تحديث'),
+                  onPressed: onRefresh,
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(Icons.refresh_rounded, size: 19, color: primary),
+                ),
             ],
           ),
           const SizedBox(height: 11),
@@ -143,11 +160,14 @@ class _DateBlock extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 54),
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
         decoration: BoxDecoration(color: primary.withValues(alpha: .035), borderRadius: BorderRadius.circular(13)),
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 13, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 3),
-          Text(value, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 13.5, fontWeight: FontWeight.w800)),
-        ]),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 3),
+            Text(value, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 11.5, fontWeight: FontWeight.w700)),
+          ],
+        ),
       );
 }
 
@@ -161,10 +181,7 @@ class _SunBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         constraints: const BoxConstraints(minHeight: 64),
-        decoration: BoxDecoration(
-          color: primary.withValues(alpha: .045),
-          borderRadius: BorderRadius.circular(14),
-        ),
+        decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(14)),
         child: Stack(
           alignment: Alignment.center,
           children: [
