@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../data/dua_data.dart';
 import '../../localization/app_localizations.dart';
-import '../../services/dua_voice_settings_service.dart';
-import 'dua_voice_settings_screen.dart';
+import '../../services/dua_audio_service.dart';
 
 class DuaScreen extends StatefulWidget {
   const DuaScreen({super.key});
@@ -46,6 +44,7 @@ class _DuaScreenState extends State<DuaScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    DuaAudioService.stop();
     super.dispose();
   }
 
@@ -57,15 +56,8 @@ class _DuaScreenState extends State<DuaScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.tr("দুআ ও জিকির", 'Dua & Dhikr'), style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l10n.tr('দুআ ও জিকির', 'Dua & Dhikr'), style: const TextStyle(fontWeight: FontWeight.w800)),
         centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip: l10n.tr('দুআর অডিও সেটিংস', 'Dua audio settings'),
-            icon: const Icon(Icons.record_voice_over_rounded),
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DuaVoiceSettingsScreen())),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
@@ -104,7 +96,7 @@ class _DuaScreenState extends State<DuaScreen> {
       controller: _searchController,
       onChanged: (value) => setState(() => _query = value),
       decoration: InputDecoration(
-        hintText: l10n.tr("দুআ বা জিকির খুঁজুন...", 'Search Dua or Dhikr...'),
+        hintText: l10n.tr('দুআ বা জিকির খুঁজুন...', 'Search Dua or Dhikr...'),
         prefixIcon: const Icon(Icons.search_rounded),
         suffixIcon: _query.isEmpty ? null : IconButton(icon: const Icon(Icons.clear_rounded), onPressed: () { _searchController.clear(); setState(() => _query = ''); }),
         filled: true,
@@ -131,8 +123,8 @@ class _DuaScreenState extends State<DuaScreen> {
         Row(children: [
           Container(padding: const EdgeInsets.all(9), decoration: BoxDecoration(color: primary.withValues(alpha: .10), shape: BoxShape.circle), child: Icon(Icons.auto_awesome_rounded, color: primary)),
           const SizedBox(width: 11),
-          Expanded(child: Text(l10n.tr("আজকের দুআ", 'Dua of the Day'), style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800, fontSize: 14))),
-          DuaAudioButton(text: item.arabic, color: primary),
+          Expanded(child: Text(l10n.tr('আজকের দুআ', 'Dua of the Day'), style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800, fontSize: 14))),
+          DuaAudioButton(item: item, color: primary),
         ]),
         const SizedBox(height: 11),
         Text(item.arabic, textDirection: TextDirection.rtl, textAlign: TextAlign.right, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 25, height: 1.7)),
@@ -170,7 +162,7 @@ class _DuaScreenState extends State<DuaScreen> {
 
   Widget _buildEmptySearch(BuildContext context, AppLocalizations l10n) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 35),
-    child: Center(child: Text(l10n.tr("কোনো দুআ বা জিকির পাওয়া যায়নি", 'No Dua or Dhikr found'), textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).hintColor))),
+    child: Center(child: Text(l10n.tr('কোনো দুআ বা জিকির পাওয়া যায়নি', 'No Dua or Dhikr found'), textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).hintColor))),
   );
 }
 
@@ -183,37 +175,23 @@ class DuaCategoryScreen extends StatefulWidget {
 }
 
 class _DuaCategoryScreenState extends State<DuaCategoryScreen> {
-  final FlutterTts _tts = FlutterTts();
   int? _playingIndex;
 
-  @override
-  void initState() {
-    super.initState();
-    _configureTts();
-  }
-
-  Future<void> _configureTts() async {
-    await DuaVoiceSettingsService.apply(_tts);
-    _tts.setCompletionHandler(() { if (mounted) setState(() => _playingIndex = null); });
-    _tts.setCancelHandler(() { if (mounted) setState(() => _playingIndex = null); });
-    _tts.setErrorHandler((_) { if (mounted) setState(() => _playingIndex = null); });
-  }
-
-  Future<void> _speak(int index, String text) async {
-    if (_playingIndex == index) {
-      await _tts.stop();
-      if (mounted) setState(() => _playingIndex = null);
+  Future<void> _toggleAudio(int index, DuaItem item) async {
+    if (!DuaAudioService.hasAudio(item)) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.isBangla ? 'এই দুআর জন্য অনুমতিপ্রাপ্ত অডিও এখনো যুক্ত করা হয়নি।' : 'A redistribution-cleared recording is not bundled for this dua yet.')),
+      );
       return;
     }
-    await _tts.stop();
-    await DuaVoiceSettingsService.apply(_tts);
-    if (mounted) setState(() => _playingIndex = index);
-    await _tts.speak(text);
+    await DuaAudioService.toggle(item);
+    if (mounted) setState(() => _playingIndex = _playingIndex == index ? null : index);
   }
 
   @override
   void dispose() {
-    _tts.stop();
+    DuaAudioService.stop();
     super.dispose();
   }
 
@@ -224,13 +202,7 @@ class _DuaCategoryScreenState extends State<DuaCategoryScreen> {
     final primary = theme.colorScheme.primary;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.isBangla ? widget.category.titleBn : widget.category.titleEn, style: const TextStyle(fontWeight: FontWeight.w800)), actions: [
-        IconButton(
-          tooltip: l10n.tr('দুআর অডিও সেটিংস', 'Dua audio settings'),
-          icon: const Icon(Icons.record_voice_over_rounded),
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DuaVoiceSettingsScreen())),
-        ),
-      ]),
+      appBar: AppBar(title: Text(l10n.isBangla ? widget.category.titleBn : widget.category.titleEn, style: const TextStyle(fontWeight: FontWeight.w800))),
       body: ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
         physics: const BouncingScrollPhysics(),
@@ -241,6 +213,7 @@ class _DuaCategoryScreenState extends State<DuaCategoryScreen> {
           final translation = l10n.isBangla ? item.translationBn : item.translationEn;
           final title = l10n.isBangla ? item.titleBn : item.titleEn;
           final playing = _playingIndex == index;
+          final audioAvailable = DuaAudioService.hasAudio(item);
 
           return Container(
             padding: const EdgeInsets.fromLTRB(16, 14, 13, 12),
@@ -248,7 +221,12 @@ class _DuaCategoryScreenState extends State<DuaCategoryScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Expanded(child: Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800, fontSize: 15))),
-                IconButton(visualDensity: VisualDensity.compact, tooltip: l10n.tr('দুআ শুনুন', 'Listen to dua'), onPressed: () => _speak(index, item.arabic), icon: Icon(playing ? Icons.stop_circle_outlined : Icons.volume_up_outlined, size: 22, color: primary)),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: audioAvailable ? l10n.tr('দুআ শুনুন', 'Listen to dua') : l10n.tr('অডিও এখনো যুক্ত হয়নি', 'Audio not available yet'),
+                  onPressed: () => _toggleAudio(index, item),
+                  icon: Icon(playing ? Icons.stop_circle_outlined : Icons.volume_up_outlined, size: 22, color: audioAvailable ? primary : theme.disabledColor),
+                ),
                 IconButton(visualDensity: VisualDensity.compact, tooltip: l10n.tr('শেয়ার', 'Share'), onPressed: () => SharePlus.instance.share(ShareParams(text: '${item.arabic}\n\n$translation\n\n${item.reference}\n\nNurVerse')), icon: const Icon(Icons.share_outlined, size: 19)),
               ]),
               const SizedBox(height: 5),
@@ -271,55 +249,27 @@ class _DuaCategoryScreenState extends State<DuaCategoryScreen> {
   }
 }
 
-class DuaAudioButton extends StatefulWidget {
-  final String text;
+class DuaAudioButton extends StatelessWidget {
+  final DuaItem item;
   final Color color;
-  const DuaAudioButton({super.key, required this.text, required this.color});
+
+  const DuaAudioButton({super.key, required this.item, required this.color});
 
   @override
-  State<DuaAudioButton> createState() => _DuaAudioButtonState();
-}
-
-class _DuaAudioButtonState extends State<DuaAudioButton> {
-  final FlutterTts _tts = FlutterTts();
-  bool _playing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _configureTts();
+  Widget build(BuildContext context) {
+    final available = DuaAudioService.hasAudio(item);
+    return IconButton(
+      visualDensity: VisualDensity.compact,
+      tooltip: available ? 'Listen' : 'Audio not available yet',
+      onPressed: () async {
+        if (!available) {
+          final l10n = AppLocalizations.of(context);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.isBangla ? 'এই দুআর জন্য অনুমতিপ্রাপ্ত অডিও এখনো যুক্ত করা হয়নি।' : 'A redistribution-cleared recording is not bundled for this dua yet.')));
+          return;
+        }
+        await DuaAudioService.toggle(item);
+      },
+      icon: Icon(Icons.volume_up_outlined, color: available ? color : Theme.of(context).disabledColor, size: 22),
+    );
   }
-
-  Future<void> _configureTts() async {
-    await DuaVoiceSettingsService.apply(_tts);
-    _tts.setCompletionHandler(() { if (mounted) setState(() => _playing = false); });
-    _tts.setCancelHandler(() { if (mounted) setState(() => _playing = false); });
-    _tts.setErrorHandler((_) { if (mounted) setState(() => _playing = false); });
-  }
-
-  Future<void> _toggle() async {
-    if (_playing) {
-      await _tts.stop();
-      if (mounted) setState(() => _playing = false);
-      return;
-    }
-    await _tts.stop();
-    await DuaVoiceSettingsService.apply(_tts);
-    if (mounted) setState(() => _playing = true);
-    await _tts.speak(widget.text);
-  }
-
-  @override
-  void dispose() {
-    _tts.stop();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => IconButton(
-    visualDensity: VisualDensity.compact,
-    tooltip: 'Listen',
-    onPressed: _toggle,
-    icon: Icon(_playing ? Icons.stop_circle_outlined : Icons.volume_up_outlined, color: widget.color, size: 22),
-  );
 }
