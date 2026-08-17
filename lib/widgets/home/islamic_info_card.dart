@@ -24,7 +24,7 @@ class IslamicInfoCard extends StatelessWidget {
     required this.sunset,
     this.languageCode = 'bn',
     this.onRefresh,
-    this.compactLocation = true,
+    this.compactLocation = false,
   });
 
   String _label({required String bn, required String en, required String ar}) {
@@ -81,16 +81,14 @@ class IslamicInfoCard extends StatelessWidget {
     final primary = theme.colorScheme.primary;
     final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary = context.secondaryTextColor;
-    final locationIconSize = compactLocation ? 16.0 : 18.0;
-    final locationIconBox = compactLocation ? 32.0 : 36.0;
-    final locationFontSize = compactLocation ? 10.5 : 14.0;
+    final locationIconSize = compactLocation ? 17.0 : 18.0;
+    final locationIconBox = compactLocation ? 34.0 : 36.0;
+    final locationFontSize = compactLocation ? 12.5 : 14.0;
     final todayFontSize = compactLocation ? 11.5 : 13.0;
 
     return Container(
       width: double.infinity,
-      padding: compactLocation
-          ? const EdgeInsets.fromLTRB(10, 8, 10, 8)
-          : const EdgeInsets.fromLTRB(14, 13, 14, 13),
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
       decoration: BoxDecoration(
         color: context.cardColor,
         borderRadius: BorderRadius.circular(20),
@@ -104,66 +102,26 @@ class IslamicInfoCard extends StatelessWidget {
               Container(
                 width: locationIconBox,
                 height: locationIconBox,
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: .09),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.location_on_rounded,
-                  color: primary,
-                  size: locationIconSize,
-                ),
+                decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(11)),
+                child: Icon(Icons.location_on_rounded, color: primary, size: locationIconSize),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 9),
               Expanded(
-                child: compactLocation
-                    ? FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          _normalizeLocation(location),
-                          maxLines: 1,
-                          softWrap: false,
-                          style: TextStyle(
-                            color: text,
-                            fontSize: locationFontSize,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _normalizeLocation(location),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: text,
-                              fontSize: locationFontSize,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _label(bn: 'আজকের তথ্য', en: 'Today', ar: 'اليوم'),
-                            style: TextStyle(
-                              color: secondary,
-                              fontSize: todayFontSize,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_normalizeLocation(location), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(_label(bn: 'আজকের তথ্য', en: 'Today', ar: 'اليوم'), style: TextStyle(color: secondary, fontSize: todayFontSize, fontWeight: FontWeight.w600)),
+                  ],
+                ),
               ),
               if (onRefresh != null)
                 IconButton(
                   tooltip: _label(bn: 'রিফ্রেশ', en: 'Refresh', ar: 'تحديث'),
                   onPressed: onRefresh,
                   visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                  icon: Icon(Icons.refresh_rounded, size: 18, color: primary),
+                  icon: Icon(Icons.refresh_rounded, size: 19, color: primary),
                 ),
             ],
           ),
