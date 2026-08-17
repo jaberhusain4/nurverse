@@ -39,9 +39,11 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
     DuaAudioService.initialize();
     DuaAudioService.player.onPlayerStateChanged.listen((state) {
       if (!mounted) return;
+      // Avoid depending on the PlayerState enum name so this widget remains
+      // compatible with the installed audioplayers API version.
+      final isPlayingState = state.toString().endsWith('.playing');
       setState(() {
-        _playing = state == PlayerState.playing &&
-            DuaAudioService.isPlaying(widget.item);
+        _playing = isPlayingState && DuaAudioService.isPlaying(widget.item);
       });
     });
     DuaAudioService.player.onPlayerComplete.listen((_) {
