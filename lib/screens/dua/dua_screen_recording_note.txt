@@ -1,1 +1,0 @@
-Temporary recording controls are enabled in Dua screen for collecting the user's own recitations. Remove this marker after recordings are promoted to bundled audio assets.
