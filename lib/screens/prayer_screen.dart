@@ -207,7 +207,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
               const SizedBox(height: 10),
               PrayerTimelineCard(prayers: controller.prayers.where((p) => p['category'] == 'obligatory').toList(growable: false), languageCode: languageCode),
               const SizedBox(height: 10),
-              IslamicInfoCard(location: controller.currentLocationName, englishDate: DateService.englishDate(), banglaDate: _banglaDate(), hijriDate: _hijriDate(languageCode), sunrise: sunTimes?.sunriseString ?? controller.sunriseTime, sunset: sunTimes?.sunsetString ?? controller.sunsetTime, languageCode: languageCode, onRefresh: controller.refreshLocation),
+              IslamicInfoCard(location: controller.currentLocationName, englishDate: DateService.englishDate(), banglaDate: _banglaDate(), hijriDate: _hijriDate(languageCode), sunrise: sunTimes?.sunriseString ?? controller.sunriseTime, sunset: sunTimes?.sunsetString ?? controller.sunsetTime, languageCode: languageCode, onRefresh: controller.refreshLocation, compactLocation: true),
               const SizedBox(height: 16),
               _sectionHeader(context, primary, Icons.mosque_outlined, l10n.todaysPrayer),
               const SizedBox(height: 9),
