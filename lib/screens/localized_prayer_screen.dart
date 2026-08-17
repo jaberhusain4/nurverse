@@ -144,13 +144,24 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
           decoration: BoxDecoration(color: primary.withValues(alpha: .06), borderRadius: BorderRadius.circular(13)),
           child: Row(children: [
-            Icon(Icons.schedule_rounded, size: 18, color: primary),
-            const SizedBox(width: 7),
-            Expanded(child: Text('${l10n.nextLabel}: ${l10n.prayerName(c.nextPrayerName)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
-            const SizedBox(width: 6),
-            Text(c.nextPrayerTime, style: TextStyle(color: primary, fontSize: 13.5, fontWeight: FontWeight.w700)),
-            const SizedBox(width: 6),
-            Flexible(child: Text(c.timeRemainingForNextPrayer, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w600))),
+            Expanded(
+              flex: 4,
+              child: Row(children: [
+                Icon(Icons.schedule_rounded, size: 18, color: primary),
+                const SizedBox(width: 7),
+                Expanded(child: Text('${l10n.nextLabel}: ${l10n.prayerName(c.nextPrayerName)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+              ]),
+            ),
+            Expanded(
+              flex: 3,
+              child: Center(
+                child: Text(c.timeRemainingForNextPrayer, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w600)),
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Text(c.nextPrayerTime, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.end, style: TextStyle(color: primary, fontSize: 13.5, fontWeight: FontWeight.w700)),
+            ),
           ]),
         ),
       ]),
