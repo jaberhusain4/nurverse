@@ -80,13 +80,17 @@ class IslamicInfoCard extends StatelessWidget {
         Row(children: [
           Container(width: locationIconBox, height: locationIconBox, decoration: BoxDecoration(color: primary.withValues(alpha: .09), borderRadius: BorderRadius.circular(11)), child: Icon(Icons.location_on_rounded, color: primary, size: locationIconSize)),
           const SizedBox(width: 9),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            compactLocation
-                ? SizedBox(width: double.infinity, child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text(_normalizeLocation(location), maxLines: 1, softWrap: false, style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800))))
-                : Text(_normalizeLocation(location), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 2),
-            Text(_label(bn: 'আজকের তথ্য', en: 'Today', ar: 'اليوم'), style: TextStyle(color: secondary, fontSize: todayFontSize, fontWeight: FontWeight.w600)),
-          ])),
+          Expanded(child: compactLocation
+              ? Row(children: [
+                  Flexible(child: Text(_label(bn: 'বর্তমান অবস্থান', en: 'Current location', ar: 'الموقع الحالي'), maxLines: 1, softWrap: false, overflow: TextOverflow.clip, style: TextStyle(color: secondary, fontSize: todayFontSize, fontWeight: FontWeight.w600))),
+                  const SizedBox(width: 6),
+                  Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text(_normalizeLocation(location), maxLines: 1, softWrap: false, style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800)))),
+                ])
+              : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(_normalizeLocation(location), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 2),
+                  Text(_label(bn: 'আজকের তথ্য', en: 'Today', ar: 'اليوم'), style: TextStyle(color: secondary, fontSize: todayFontSize, fontWeight: FontWeight.w600)),
+                ])),
           if (onRefresh != null) IconButton(tooltip: _label(bn: 'রিফ্রেশ', en: 'Refresh', ar: 'تحديث'), onPressed: onRefresh, visualDensity: VisualDensity.compact, icon: Icon(Icons.refresh_rounded, size: 19, color: primary)),
         ]),
         const SizedBox(height: 11),
