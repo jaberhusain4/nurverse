@@ -9,12 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../data/dua_data.dart';
 
 /// Temporary voice-recording layer for collecting the user's own Dua recitations.
-///
-/// Each Dua gets a stable key derived from its English title and reference.
-/// Recordings are stored in the app's private documents directory and mapped
-/// through SharedPreferences, so a recording stays attached to the exact Dua.
-/// Once all recordings are collected, this temporary recording UI can be removed
-/// and the files can be promoted to bundled assets.
+/// Recordings are stored privately on the device and mapped to the exact Dua.
 class DuaAudioService {
   DuaAudioService._();
 
@@ -53,6 +48,12 @@ class DuaAudioService {
   }
 
   static bool isRecording(DuaItem item) => _recordingKey == keyFor(item);
+
+  static bool isPlaying(DuaItem item) =>
+      _currentKey == keyFor(item) && player.state == PlayerState.playing;
+
+  static bool isPaused(DuaItem item) =>
+      _currentKey == keyFor(item) && player.state == PlayerState.paused;
 
   static Future<bool> startRecording(DuaItem item) async {
     await initialize();
@@ -95,15 +96,17 @@ class DuaAudioService {
     await initialize();
     final key = keyFor(item);
     final path = _prefs!.getString('dua_recording_$key');
+
+    if (_currentKey == key) {
+      await player.stop();
+      _currentKey = null;
+    }
+
     if (path != null) {
       final file = File(path);
       if (file.existsSync()) await file.delete();
     }
     await _prefs!.remove('dua_recording_$key');
-    if (_currentKey == key) {
-      await player.stop();
-      _currentKey = null;
-    }
   }
 
   static Future<void> toggle(DuaItem item) async {
@@ -115,10 +118,19 @@ class DuaAudioService {
       await player.pause();
       return;
     }
+    if (_currentKey == key && player.state == PlayerState.paused) {
+      await player.resume();
+      return;
+    }
 
     await player.stop();
     _currentKey = key;
     await player.play(DeviceFileSource(path));
+  }
+
+  static Future<void> stopPlayback() async {
+    await player.stop();
+    _currentKey = null;
   }
 
   static Future<void> stop() async {
