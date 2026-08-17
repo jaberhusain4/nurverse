@@ -11,11 +11,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/dua_data.dart';
 
-/// Handles Dua audio using a free static distribution source and local cache.
+/// Handles Dua audio using Cloudflare R2 as the remote distribution source
+/// and the device filesystem as the offline cache.
 ///
 /// Final production flow:
-/// 1. A master recording is published as an `.m4a` file under assets/dua_audio.
-/// 2. The app downloads it once from the public GitHub raw URL.
+/// 1. A master recording is published as an `.m4a` object in the NurVerse R2 bucket.
+/// 2. The app downloads it once from the public R2 development URL.
 /// 3. The downloaded file is kept in the app's local cache.
 /// 4. Playback then works completely offline.
 class DuaAudioService {
@@ -27,8 +28,10 @@ class DuaAudioService {
   static String? _currentKey;
   static String? _recordingKey;
 
+  // Cloudflare R2 public development URL for the NurVerse audio bucket.
+  // Keep the bucket itself private; only published audio objects are exposed.
   static const String _audioBaseUrl =
-      'https://raw.githubusercontent.com/jaberhusain4/nurverse/main/assets/dua_audio';
+      'https://pub-3a011607dfb94b04a37360a09e98b263.r2.dev';
 
   static Future<void> initialize() async {
     _prefs ??= await SharedPreferences.getInstance();
@@ -63,8 +66,9 @@ class DuaAudioService {
   static bool isPaused(DuaItem item) =>
       _currentKey == keyFor(item) && player.state == PlayerState.paused;
 
+  /// Public R2 object URL for the published recording.
   static String remoteUrl(DuaItem item) =>
-      '$_audioBaseUrl/${keyFor(item)}.m4a';
+      '$_audioBaseUrl/dua_audio/${keyFor(item)}.m4a';
 
   static Future<String> _dir(String name) async {
     final root = await getApplicationDocumentsDirectory();
@@ -178,8 +182,8 @@ class DuaAudioService {
   }
 
   /// Shares all locally recorded Dua files through the Android/iOS share sheet.
-  /// This is intentionally file-based rather than Firebase-based so the master
-  /// recordings can be copied to a PC and prepared for free static hosting.
+  /// This is intentionally file-based so master recordings can be copied to a PC
+  /// and uploaded to the R2 bucket without Firebase being involved.
   static Future<int> exportRecordings(List<DuaItem> items) async {
     await initialize();
 
