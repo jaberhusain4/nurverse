@@ -24,7 +24,7 @@ class IslamicInfoCard extends StatelessWidget {
     required this.sunset,
     this.languageCode = 'bn',
     this.onRefresh,
-    this.compactLocation = false,
+    this.compactLocation = true,
   });
 
   String _label({required String bn, required String en, required String ar}) {
