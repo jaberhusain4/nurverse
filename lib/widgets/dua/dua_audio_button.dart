@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/dua_data.dart';
@@ -8,8 +9,8 @@ import '../../services/dua_audio_service.dart';
 
 /// Temporary recording control used while collecting the user's own Dua audio.
 ///
-/// States are intentionally explicit:
-/// - microphone + "Record" when no recording exists;
+/// States are explicit:
+/// - microphone + Record when no recording exists;
 /// - red REC indicator + elapsed time while recording;
 /// - play/pause + delete controls after a recording is saved.
 class DuaAudioButton extends StatefulWidget {
@@ -60,9 +61,7 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
     _recordingDuration = Duration.zero;
     _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      setState(() {
-        _recordingDuration += const Duration(seconds: 1);
-      });
+      setState(() => _recordingDuration += const Duration(seconds: 1));
     });
   }
 
@@ -84,38 +83,20 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
 
     try {
       if (DuaAudioService.isRecording(widget.item)) {
-        final path = await DuaAudioService.stopRecording(widget.item);
+        await DuaAudioService.stopRecording(widget.item);
         _stopTimer();
-        if (mounted) {
-          setState(() {});
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                path == null
-                    ? l10n.tr('রেকর্ডিং সংরক্ষণ করা যায়নি।', 'Recording could not be saved.')
-                    : l10n.tr('রেকর্ডিং সংরক্ষণ হয়েছে। এখন শুনে যাচাই করুন।', 'Recording saved. Play it back to check it.'),
-              ),
-            ),
-          );
-        }
-        return;
-      }
-
-      final started = await DuaAudioService.startRecording(widget.item);
-      if (started) {
+        if (mounted) setState(() {});
+      } else {
+        await DuaAudioService.startRecording(widget.item);
         _startTimer();
+        if (mounted) setState(() {});
       }
+    } catch (e) {
+      _stopTimer();
       if (mounted) {
-        setState(() {});
-        if (!started) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                l10n.tr('মাইক্রোফোনের অনুমতি দিন।', 'Please allow microphone access.'),
-              ),
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${l10n.isBangla ? 'রেকর্ডিং ব্যর্থ' : 'Recording failed'}: $e')),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -126,9 +107,16 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      await DuaAudioService.toggle(widget.item);
+      if (_playing) {
+        await DuaAudioService.pauseRecording(widget.item);
+      } else {
+        await DuaAudioService.playRecording(widget.item);
+      }
+    } catch (e) {
       if (mounted) {
-        setState(() => _playing = DuaAudioService.isPlaying(widget.item));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Audio playback failed: $e')),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -141,31 +129,36 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.tr('রেকর্ডিং মুছে ফেলবেন?', 'Delete recording?')),
+        title: Text(l10n.isBangla ? 'রেকর্ডিং মুছে ফেলবেন?' : 'Delete recording?'),
         content: Text(
-          l10n.tr(
-            'এই দুআর আপনার রেকর্ড করা অডিওটি মুছে যাবে।',
-            'Your recorded audio for this Dua will be deleted.',
-          ),
+          l10n.isBangla
+              ? 'এই Dua-এর নিজের রেকর্ড করা অডিওটি মুছে যাবে।'
+              : 'Your recorded audio for this Dua will be deleted.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.tr('বাতিল', 'Cancel')),
+            child: Text(l10n.isBangla ? 'না' : 'Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.tr('মুছে ফেলুন', 'Delete')),
+            child: Text(l10n.isBangla ? 'মুছে দিন' : 'Delete'),
           ),
         ],
       ),
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
     setState(() => _busy = true);
     try {
       await DuaAudioService.deleteRecording(widget.item);
       if (mounted) setState(() => _playing = false);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Delete failed: $e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -173,108 +166,90 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final recording = DuaAudioService.isRecording(widget.item);
-    final available = DuaAudioService.hasAudio(widget.item);
+    final hasRecording = DuaAudioService.hasRecording(widget.item);
 
     if (recording) {
-      return Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _busy ? null : _toggleRecording,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.redAccent.withValues(alpha: .10),
+              color: Colors.red.withValues(alpha: .10),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.redAccent.withValues(alpha: .35)),
+              border: Border.all(color: Colors.red.withValues(alpha: .30)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 9,
-                  height: 9,
-                  decoration: const BoxDecoration(
-                    color: Colors.redAccent,
-                    shape: BoxShape.circle,
-                  ),
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 5),
                 Text(
                   'REC ${_durationText(_recordingDuration)}',
-                  style: const TextStyle(
-                    color: Colors.redAccent,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                const Icon(Icons.stop_rounded, color: Colors.redAccent, size: 18),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (!available) {
-      return Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _busy ? null : _toggleRecording,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-            decoration: BoxDecoration(
-              color: widget.color.withValues(alpha: .08),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.mic_none_rounded, color: widget.color, size: 18),
-                const SizedBox(width: 5),
-                Text(
-                  AppLocalizations.of(context).tr('রেকর্ড', 'Record'),
-                  style: TextStyle(
-                    color: widget.color,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: const TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.w900),
                 ),
               ],
             ),
           ),
-        ),
+          const SizedBox(width: 6),
+          IconButton(
+            tooltip: l10n.isBangla ? 'রেকর্ডিং বন্ধ করুন' : 'Stop recording',
+            onPressed: _busy ? null : _toggleRecording,
+            icon: const Icon(Icons.stop_circle_rounded, color: Colors.red, size: 30),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+          ),
+        ],
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.only(left: 2),
-      child: Row(
+    if (hasRecording) {
+      return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            visualDensity: VisualDensity.compact,
             tooltip: _playing
-                ? AppLocalizations.of(context).tr('বিরতি', 'Pause')
-                : AppLocalizations.of(context).tr('শুনুন', 'Listen'),
+                ? (l10n.isBangla ? 'থামান' : 'Pause')
+                : (l10n.isBangla ? 'রেকর্ডিং শুনুন' : 'Play recording'),
             onPressed: _busy ? null : _togglePlayback,
             icon: Icon(
               _playing ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
               color: widget.color,
-              size: 24,
+              size: 30,
             ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
           ),
           IconButton(
-            visualDensity: VisualDensity.compact,
-            tooltip: AppLocalizations.of(context).tr('রেকর্ডিং মুছুন', 'Delete recording'),
+            tooltip: l10n.isBangla ? 'রেকর্ডিং মুছুন' : 'Delete recording',
             onPressed: _busy ? null : _deleteRecording,
-            icon: Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 21),
+            icon: Icon(Icons.delete_outline_rounded, color: Colors.red.shade400, size: 24),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          ),
+          IconButton(
+            tooltip: l10n.isBangla ? 'আবার রেকর্ড করুন' : 'Record again',
+            onPressed: _busy ? null : _toggleRecording,
+            icon: Icon(Icons.mic_rounded, color: widget.color, size: 23),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
         ],
-      ),
+      );
+    }
+
+    return IconButton(
+      tooltip: l10n.isBangla ? 'রেকর্ড করুন' : 'Record',
+      onPressed: _busy ? null : _toggleRecording,
+      icon: Icon(Icons.mic_rounded, color: widget.color, size: 26),
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
     );
   }
 }
