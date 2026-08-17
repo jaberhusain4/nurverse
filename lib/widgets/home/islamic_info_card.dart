@@ -82,9 +82,9 @@ class IslamicInfoCard extends StatelessWidget {
           const SizedBox(width: 9),
           Expanded(child: compactLocation
               ? Row(children: [
-                  Flexible(child: Text(_label(bn: 'বর্তমান অবস্থান', en: 'Current location', ar: 'الموقع الحالي'), maxLines: 1, softWrap: false, overflow: TextOverflow.clip, style: TextStyle(color: secondary, fontSize: todayFontSize, fontWeight: FontWeight.w600))),
+                  Text(_label(bn: 'বর্তমান অবস্থান', en: 'Current location', ar: 'الموقع الحالي'), maxLines: 1, softWrap: false, overflow: TextOverflow.clip, style: TextStyle(color: secondary, fontSize: todayFontSize, fontWeight: FontWeight.w600)),
                   const SizedBox(width: 6),
-                  Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text(_normalizeLocation(location), maxLines: 1, softWrap: false, style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800)))),
+                  Expanded(child: Align(alignment: Alignment.centerLeft, child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text(_normalizeLocation(location), maxLines: 1, softWrap: false, style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800)))),
                 ])
               : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(_normalizeLocation(location), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800)),
