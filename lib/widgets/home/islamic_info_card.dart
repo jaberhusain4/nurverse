@@ -110,7 +110,26 @@ class IslamicInfoCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_normalizeLocation(location), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800)),
+                    compactLocation
+                        ? SizedBox(
+                            width: double.infinity,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                _normalizeLocation(location),
+                                maxLines: 1,
+                                softWrap: false,
+                                style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                          )
+                        : Text(
+                            _normalizeLocation(location),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: text, fontSize: locationFontSize, fontWeight: FontWeight.w800),
+                          ),
                     const SizedBox(height: 2),
                     Text(_label(bn: 'আজকের তথ্য', en: 'Today', ar: 'اليوم'), style: TextStyle(color: secondary, fontSize: todayFontSize, fontWeight: FontWeight.w600)),
                   ],
