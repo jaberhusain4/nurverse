@@ -1,13 +1,12 @@
 import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/dua_data.dart';
 import '../../localization/app_localizations.dart';
 import '../../services/dua_audio_service.dart';
 
-/// Temporary recording control used while collecting the user's own Dua audio.
+/// Recording control used while collecting the user's own Dua audio.
 ///
 /// States are explicit:
 /// - microphone + Record when no recording exists;
@@ -37,13 +36,10 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
   void initState() {
     super.initState();
     DuaAudioService.initialize();
-    DuaAudioService.player.onPlayerStateChanged.listen((state) {
+    DuaAudioService.player.onPlayerStateChanged.listen((_) {
       if (!mounted) return;
-      // Avoid depending on the PlayerState enum name so this widget remains
-      // compatible with the installed audioplayers API version.
-      final isPlayingState = state.toString().endsWith('.playing');
       setState(() {
-        _playing = isPlayingState && DuaAudioService.isPlaying(widget.item);
+        _playing = DuaAudioService.isPlaying(widget.item);
       });
     });
     DuaAudioService.player.onPlayerComplete.listen((_) {
@@ -89,15 +85,31 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
         _stopTimer();
         if (mounted) setState(() {});
       } else {
-        await DuaAudioService.startRecording(widget.item);
-        _startTimer();
+        final started = await DuaAudioService.startRecording(widget.item);
+        if (started) {
+          _startTimer();
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.isBangla
+                    ? 'মাইক্রোফোন permission প্রয়োজন।'
+                    : 'Microphone permission is required.',
+              ),
+            ),
+          );
+        }
         if (mounted) setState(() {});
       }
     } catch (e) {
       _stopTimer();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.isBangla ? 'রেকর্ডিং ব্যর্থ' : 'Recording failed'}: $e')),
+          SnackBar(
+            content: Text(
+              '${l10n.isBangla ? 'রেকর্ডিং ব্যর্থ' : 'Recording failed'}: $e',
+            ),
+          ),
         );
       }
     } finally {
@@ -109,10 +121,11 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      if (_playing) {
-        await DuaAudioService.pauseRecording(widget.item);
-      } else {
-        await DuaAudioService.playRecording(widget.item);
+      await DuaAudioService.toggle(widget.item);
+      if (mounted) {
+        setState(() {
+          _playing = DuaAudioService.isPlaying(widget.item);
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -170,7 +183,7 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final recording = DuaAudioService.isRecording(widget.item);
-    final hasRecording = DuaAudioService.hasRecording(widget.item);
+    final hasRecording = DuaAudioService.hasAudio(widget.item);
 
     if (recording) {
       return Row(
@@ -189,12 +202,19 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
                 ),
                 const SizedBox(width: 5),
                 Text(
                   'REC ${_durationText(_recordingDuration)}',
-                  style: const TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.w900),
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
@@ -203,7 +223,11 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
           IconButton(
             tooltip: l10n.isBangla ? 'রেকর্ডিং বন্ধ করুন' : 'Stop recording',
             onPressed: _busy ? null : _toggleRecording,
-            icon: const Icon(Icons.stop_circle_rounded, color: Colors.red, size: 30),
+            icon: const Icon(
+              Icons.stop_circle_rounded,
+              color: Colors.red,
+              size: 30,
+            ),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
           ),
@@ -221,7 +245,9 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
                 : (l10n.isBangla ? 'রেকর্ডিং শুনুন' : 'Play recording'),
             onPressed: _busy ? null : _togglePlayback,
             icon: Icon(
-              _playing ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
+              _playing
+                  ? Icons.pause_circle_filled_rounded
+                  : Icons.play_circle_fill_rounded,
               color: widget.color,
               size: 30,
             ),
@@ -231,7 +257,11 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
           IconButton(
             tooltip: l10n.isBangla ? 'রেকর্ডিং মুছুন' : 'Delete recording',
             onPressed: _busy ? null : _deleteRecording,
-            icon: Icon(Icons.delete_outline_rounded, color: Colors.red.shade400, size: 24),
+            icon: Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.red.shade400,
+              size: 24,
+            ),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
