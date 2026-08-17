@@ -176,6 +176,12 @@ class _PrayerScreenState extends State<PrayerScreen> {
   }
 
   @override
+  void dispose() {
+    _clockTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final settings = context.watch<SettingsProvider>();
@@ -207,7 +213,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
               const SizedBox(height: 10),
               PrayerTimelineCard(prayers: controller.prayers.where((p) => p['category'] == 'obligatory').toList(growable: false), languageCode: languageCode),
               const SizedBox(height: 10),
-              IslamicInfoCard(location: controller.currentLocationName, englishDate: DateService.englishDate(), banglaDate: _banglaDate(), hijriDate: _hijriDate(languageCode), sunrise: sunTimes?.sunriseString ?? controller.sunriseTime, sunset: sunTimes?.sunsetString ?? controller.sunsetTime, languageCode: languageCode, onRefresh: controller.refreshLocation),
+              SalatLocationCard(location: controller.currentLocationName, onRefresh: controller.refreshLocation),
               const SizedBox(height: 16),
               _sectionHeader(context, primary, Icons.mosque_outlined, l10n.todaysPrayer),
               const SizedBox(height: 9),
@@ -319,46 +325,37 @@ class _PrayerScreenState extends State<PrayerScreen> {
           const SizedBox(width: 11),
           Expanded(child: Text(_prayerName(AppLocalizations.of(context), nafl[i]['name']?.toString() ?? '', languageCode), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 15, fontWeight: FontWeight.w800, height: 1.15))),
           const SizedBox(width: 10),
-          Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text('${nafl[i]['start'] ?? '--:--'} – ${nafl[i]['end'] ?? '--:--'}', maxLines: 1, style: TextStyle(color: primary, fontSize: 13.5, fontWeight: FontWeight.w800, height: 1.1)))),
+          FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text(nafl[i]['time']?.toString() ?? '--:--', maxLines: 1, style: TextStyle(color: secondary, fontSize: 13, fontWeight: FontWeight.w700))),
         ])),
-        if (i < nafl.length - 1) Divider(height: 1, color: secondary.withValues(alpha: .10)),
+        if (i < nafl.length - 1) Divider(height: 1, color: primary.withValues(alpha: .05)),
       ],
     ]));
   }
 
   Widget _trackerCard(BuildContext context, AppLocalizations l10n, Color primary, String languageCode) {
     final theme = Theme.of(context);
-    final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
-    const names = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-    return _card(context, primary, padding: const EdgeInsets.fromLTRB(12, 14, 12, 13), child: Column(children: [
-      Text(l10n.markPrayers, maxLines: 2, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: TextStyle(color: text.withValues(alpha: .78), fontSize: 12, fontWeight: FontWeight.w600, height: 1.2)),
-      const SizedBox(height: 11),
-      Row(children: [for (final name in names) Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => setState(() => _tracker[name] = !(_tracker[name] ?? false)), child: Padding(padding: const EdgeInsets.symmetric(horizontal: 2), child: Column(children: [
-        Icon((_tracker[name] ?? false) ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, color: (_tracker[name] ?? false) ? primary : theme.disabledColor, size: 24),
-        const SizedBox(height: 6),
-        FittedBox(fit: BoxFit.scaleDown, child: Text(_prayerName(l10n, name, languageCode), maxLines: 1, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 11.5, fontWeight: FontWeight.w700, height: 1.1))),
-      ]))))]),
+    final secondary = theme.textTheme.bodySmall?.color?.withValues(alpha: .68) ?? theme.colorScheme.onSurface.withValues(alpha: .68);
+    return _card(context, primary, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+      for (final key in _tracker.keys) GestureDetector(onTap: () => setState(() => _tracker[key] = !(_tracker[key] ?? false)), child: Column(children: [
+        AnimatedContainer(duration: const Duration(milliseconds: 180), width: 42, height: 42, decoration: BoxDecoration(shape: BoxShape.circle, color: _tracker[key] == true ? primary.withValues(alpha: .14) : secondary.withValues(alpha: .08)), child: Icon(_tracker[key] == true ? Icons.check_rounded : Icons.radio_button_unchecked_rounded, size: 21, color: _tracker[key] == true ? primary : secondary)),
+        const SizedBox(height: 5),
+        Text(_prayerName(l10n, key, languageCode), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: secondary)),
+      ])),
     ]));
   }
 
-  IconData _prayerIcon(String value) {
-    switch (value.toLowerCase()) {
-      case 'fajr': case 'ফজর': return Icons.wb_twilight_outlined;
-      case 'dhuhr': case 'jumuah': case 'যোহর': case 'জুমু‘আ': return Icons.wb_sunny_outlined;
-      case 'asr': case 'আসর': return Icons.light_mode_outlined;
-      case 'maghrib': case 'মাগরিব': return Icons.wb_twilight_rounded;
-      case 'isha': case 'ইশা': return Icons.nights_stay_outlined;
-      case 'ishraq': case 'ইশরাক': return Icons.wb_sunny_outlined;
-      case 'duha': case 'দুহা': return Icons.wb_twilight_outlined;
-      case 'awwabin': case 'আউওয়াবীন': return Icons.nightlight_outlined;
-      case 'tahajjud': case 'তাহাজ্জুদ': return Icons.bedtime_outlined;
+  IconData _prayerIcon(String name) {
+    switch (name) {
+      case 'Fajr': case 'ফজর': return Icons.wb_twilight_outlined;
+      case 'Dhuhr': case 'যোহর': case 'জুমু‘আ': return Icons.wb_sunny_outlined;
+      case 'Asr': case 'আসর': return Icons.brightness_5_outlined;
+      case 'Maghrib': case 'মাগরিব': return Icons.wb_twilight_outlined;
+      case 'Isha': case 'ইশা': return Icons.nights_stay_outlined;
+      case 'Ishraq': case 'ইশরাক': return Icons.wb_sunny_outlined;
+      case 'Duha': case 'চাশত / দুহা': return Icons.sunny_snowing;
+      case 'Awwabin': case 'আউওয়াবীন': return Icons.auto_awesome_outlined;
+      case 'Tahajjud': case 'তাহাজ্জুদ': return Icons.nightlight_round;
       default: return Icons.mosque_outlined;
     }
-  }
-
-  @override
-  void dispose() {
-    _clockTimer?.cancel();
-    super.dispose();
   }
 }
