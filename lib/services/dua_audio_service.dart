@@ -3,13 +3,15 @@ import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:crypto/crypto.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/dua_data.dart';
 
-/// Temporary voice-recording layer for collecting the user's own Dua recitations.
-/// Recordings are stored privately on the device and mapped to the exact Dua.
+/// Local voice-recording layer for collecting the user's own Dua recitations.
+/// Recordings stay in the app's private documents directory and are mapped to
+/// the exact Dua that was recorded.
 class DuaAudioService {
   DuaAudioService._();
 
@@ -55,17 +57,37 @@ class DuaAudioService {
   static bool isPaused(DuaItem item) =>
       _currentKey == keyFor(item) && player.state == PlayerState.paused;
 
+  /// Starts recording after explicitly requesting microphone permission.
+  /// This avoids silently returning false when Android has not granted the
+  /// dangerous RECORD_AUDIO permission at runtime yet.
   static Future<bool> startRecording(DuaItem item) async {
     await initialize();
+
     if (_recordingKey != null) return false;
+
+    final permission = await Permission.microphone.request();
+    if (!permission.isGranted) return false;
+
     if (!await recorder.hasPermission()) return false;
 
     final directory = await _recordingDirectory();
     final key = keyFor(item);
     final path = '$directory/$key.m4a';
 
+    // Stop any previous playback before opening the microphone.
     await player.stop();
     _currentKey = null;
+
+    // A previous recording of the same Dua is replaced by the new take.
+    final previousPath = _prefs!.getString('dua_recording_$key');
+    if (previousPath != null) {
+      final previousFile = File(previousPath);
+      if (previousFile.existsSync()) {
+        await previousFile.delete();
+      }
+      await _prefs!.remove('dua_recording_$key');
+    }
+
     await recorder.start(
       const RecordConfig(
         encoder: AudioEncoder.aacLc,
@@ -75,6 +97,7 @@ class DuaAudioService {
       ),
       path: path,
     );
+
     _recordingKey = key;
     return true;
   }
@@ -85,6 +108,7 @@ class DuaAudioService {
 
     final path = await recorder.stop();
     _recordingKey = null;
+
     if (path == null || path.isEmpty) return null;
 
     await initialize();
@@ -106,18 +130,22 @@ class DuaAudioService {
       final file = File(path);
       if (file.existsSync()) await file.delete();
     }
+
     await _prefs!.remove('dua_recording_$key');
   }
 
   static Future<void> toggle(DuaItem item) async {
+    await initialize();
     final path = recordedPath(item);
     if (path == null || !File(path).existsSync()) return;
 
     final key = keyFor(item);
+
     if (_currentKey == key && player.state == PlayerState.playing) {
       await player.pause();
       return;
     }
+
     if (_currentKey == key && player.state == PlayerState.paused) {
       await player.resume();
       return;
@@ -136,6 +164,7 @@ class DuaAudioService {
   static Future<void> stop() async {
     _currentKey = null;
     await player.stop();
+
     if (_recordingKey != null) {
       await recorder.stop();
       _recordingKey = null;
