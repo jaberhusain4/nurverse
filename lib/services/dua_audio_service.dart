@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/dua_data.dart';
@@ -174,6 +175,39 @@ class DuaAudioService {
       if (file.existsSync()) await file.delete();
     }
     await _prefs!.remove('dua_recording_$key');
+  }
+
+  /// Shares all locally recorded Dua files through the Android/iOS share sheet.
+  /// This is intentionally file-based rather than Firebase-based so the master
+  /// recordings can be copied to a PC and prepared for free static hosting.
+  static Future<int> exportRecordings(List<DuaItem> items) async {
+    await initialize();
+
+    final files = <XFile>[];
+    for (final item in items) {
+      final path = recordedPath(item);
+      if (path == null || path.isEmpty) continue;
+      final file = File(path);
+      if (!file.existsSync()) continue;
+      files.add(
+        XFile(
+          path,
+          name: '${keyFor(item)}.m4a',
+          mimeType: 'audio/mp4',
+        ),
+      );
+    }
+
+    if (files.isEmpty) return 0;
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: files,
+        title: 'NurVerse Dua Recordings',
+        text: 'NurVerse recorded Dua audio files',
+      ),
+    );
+    return files.length;
   }
 
   static Future<void> toggle(DuaItem item) async {
