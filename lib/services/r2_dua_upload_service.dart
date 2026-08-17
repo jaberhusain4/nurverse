@@ -8,10 +8,7 @@ import '../data/dua_data.dart';
 import 'dua_audio_service.dart';
 
 /// Owner-only uploader for publishing locally recorded Dua audio to Cloudflare R2.
-///
-/// Credentials are intentionally kept in memory only. They are never written to
-/// SharedPreferences, Firebase, or the APK. Use a restricted R2 API token that
-/// can write only to the NurVerse audio bucket.
+/// Credentials are kept in memory only and are never persisted in the app.
 class R2DuaUploadService {
   R2DuaUploadService._();
 
@@ -42,13 +39,12 @@ class R2DuaUploadService {
 
   static Future<bool> uploadOne(DuaItem item) async {
     if (!configured) return false;
+    await DuaAudioService.initialize();
 
     final localPath = DuaAudioService.recordedPath(item);
     if (localPath == null || localPath.isEmpty) return false;
-
     final file = File(localPath);
     if (!await file.exists()) return false;
-
     final bytes = await file.readAsBytes();
     if (bytes.isEmpty) return false;
 
@@ -59,11 +55,9 @@ class R2DuaUploadService {
     final amzDate = _amzDate(now);
     final dateStamp = _dateStamp(now);
     final credentialScope = '$dateStamp/$region/$service/aws4_request';
-
     final canonicalHeaders =
         'content-type:audio/mp4\nhost:$host\nx-amz-content-sha256:$payloadHash\nx-amz-date:$amzDate\n';
-    const signedHeaders =
-        'content-type;host;x-amz-content-sha256;x-amz-date';
+    const signedHeaders = 'content-type;host;x-amz-content-sha256;x-amz-date';
     final canonicalRequest = [
       'PUT',
       _canonicalPath(uri.path),
@@ -72,14 +66,12 @@ class R2DuaUploadService {
       signedHeaders,
       payloadHash,
     ].join('\n');
-
     final stringToSign = [
       'AWS4-HMAC-SHA256',
       amzDate,
       credentialScope,
       sha256.convert(utf8.encode(canonicalRequest)).toString(),
     ].join('\n');
-
     final signingKey = _signingKey(
       _secretAccessKey!,
       dateStamp,
@@ -87,7 +79,6 @@ class R2DuaUploadService {
       service,
     );
     final signature = _hexHmac(signingKey, stringToSign);
-
     final authorization =
         'AWS4-HMAC-SHA256 Credential=${_accessKeyId!}/$credentialScope, '
         'SignedHeaders=$signedHeaders, Signature=$signature';
@@ -117,6 +108,7 @@ class R2DuaUploadService {
     if (!configured) {
       return const UploadSummary(total: 0, uploaded: 0, failed: 0);
     }
+    await DuaAudioService.initialize();
 
     final candidates = <DuaItem>[];
     for (final item in items) {
@@ -157,10 +149,8 @@ class R2DuaUploadService {
     return '${value.year.toString().padLeft(4, '0')}${two(value.month)}${two(value.day)}';
   }
 
-  static String _canonicalPath(String path) => path
-      .split('/')
-      .map(Uri.encodeComponent)
-      .join('/');
+  static String _canonicalPath(String path) =>
+      path.split('/').map(Uri.encodeComponent).join('/');
 
   static List<int> _hmac(List<int> key, String value) =>
       Hmac(sha256, key).convert(utf8.encode(value)).bytes;
