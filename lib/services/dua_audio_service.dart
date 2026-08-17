@@ -13,12 +13,6 @@ import '../data/dua_data.dart';
 
 /// Handles Dua audio using Cloudflare R2 as the remote distribution source
 /// and the device filesystem as the offline cache.
-///
-/// Final production flow:
-/// 1. A master recording is published as an `.m4a` object in the NurVerse R2 bucket.
-/// 2. The app downloads it once from the public R2 development URL.
-/// 3. The downloaded file is kept in the app's local cache.
-/// 4. Playback then works completely offline.
 class DuaAudioService {
   DuaAudioService._();
 
@@ -28,10 +22,11 @@ class DuaAudioService {
   static String? _currentKey;
   static String? _recordingKey;
 
-  // Cloudflare R2 public development URL for the NurVerse audio bucket.
-  // Keep the bucket itself private; only published audio objects are exposed.
   static const String _audioBaseUrl =
       'https://pub-3a011607dfb94b04a37360a09e98b263.r2.dev';
+
+  /// Key of the Dua whose audio is currently playing/paused.
+  static String? get currentKey => _currentKey;
 
   static Future<void> initialize() async {
     _prefs ??= await SharedPreferences.getInstance();
@@ -66,7 +61,6 @@ class DuaAudioService {
   static bool isPaused(DuaItem item) =>
       _currentKey == keyFor(item) && player.state == PlayerState.paused;
 
-  /// Public R2 object URL for the published recording.
   static String remoteUrl(DuaItem item) =>
       '$_audioBaseUrl/dua_audio/${keyFor(item)}.m4a';
 
@@ -79,11 +73,8 @@ class DuaAudioService {
     return directory.path;
   }
 
-  /// Downloads the published recording into the device cache.
-  /// No Firebase service is involved.
   static Future<bool> download(DuaItem item) async {
     await initialize();
-
     final existing = cachedPath(item);
     if (existing != null && File(existing).existsSync()) return true;
 
@@ -92,10 +83,8 @@ class DuaAudioService {
       if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
         return false;
       }
-
       final path = '${await _dir('dua_audio_cache')}/${keyFor(item)}.m4a';
-      final file = File(path);
-      await file.writeAsBytes(response.bodyBytes, flush: true);
+      await File(path).writeAsBytes(response.bodyBytes, flush: true);
       await _prefs!.setString('dua_cached_${keyFor(item)}', path);
       return true;
     } catch (_) {
@@ -117,27 +106,21 @@ class DuaAudioService {
     return _play(item, path);
   }
 
-  // Development-only recording support. Final user UI can remove this later.
   static Future<bool> startRecording(DuaItem item) async {
     await initialize();
     if (_recordingKey != null) return false;
-
     final permission = await Permission.microphone.request();
     if (!permission.isGranted || !await recorder.hasPermission()) return false;
-
     final key = keyFor(item);
     final path = '${await _dir('dua_recordings')}/$key.m4a';
-
     await player.stop();
     _currentKey = null;
-
     final old = _prefs!.getString('dua_recording_$key');
     if (old != null) {
       final file = File(old);
       if (file.existsSync()) await file.delete();
       await _prefs!.remove('dua_recording_$key');
     }
-
     await recorder.start(
       const RecordConfig(
         encoder: AudioEncoder.aacLc,
@@ -154,11 +137,9 @@ class DuaAudioService {
   static Future<String?> stopRecording(DuaItem item) async {
     final key = keyFor(item);
     if (_recordingKey != key) return null;
-
     final path = await recorder.stop();
     _recordingKey = null;
     if (path == null || path.isEmpty) return null;
-
     await initialize();
     await _prefs!.setString('dua_recording_$key', path);
     return path;
@@ -168,12 +149,10 @@ class DuaAudioService {
     await initialize();
     final key = keyFor(item);
     final path = _prefs!.getString('dua_recording_$key');
-
     if (_currentKey == key) {
       await player.stop();
       _currentKey = null;
     }
-
     if (path != null) {
       final file = File(path);
       if (file.existsSync()) await file.delete();
@@ -181,65 +160,46 @@ class DuaAudioService {
     await _prefs!.remove('dua_recording_$key');
   }
 
-  /// Shares all locally recorded Dua files through the Android/iOS share sheet.
-  /// This is intentionally file-based so master recordings can be copied to a PC
-  /// and uploaded to the R2 bucket without Firebase being involved.
   static Future<int> exportRecordings(List<DuaItem> items) async {
     await initialize();
-
     final files = <XFile>[];
     for (final item in items) {
       final path = recordedPath(item);
       if (path == null || path.isEmpty) continue;
       final file = File(path);
       if (!file.existsSync()) continue;
-      files.add(
-        XFile(
-          path,
-          name: '${keyFor(item)}.m4a',
-          mimeType: 'audio/mp4',
-        ),
-      );
+      files.add(XFile(path, name: '${keyFor(item)}.m4a', mimeType: 'audio/mp4'));
     }
-
     if (files.isEmpty) return 0;
-
-    await SharePlus.instance.share(
-      ShareParams(
-        files: files,
-        title: 'NurVerse Dua Recordings',
-        text: 'NurVerse recorded Dua audio files',
-      ),
-    );
+    await SharePlus.instance.share(ShareParams(
+      files: files,
+      title: 'NurVerse Dua Recordings',
+      text: 'NurVerse recorded Dua audio files',
+    ));
     return files.length;
   }
 
   static Future<void> toggle(DuaItem item) async {
     await initialize();
     final key = keyFor(item);
-
     if (_currentKey == key && player.state == PlayerState.playing) {
       await player.pause();
       return;
     }
-
     if (_currentKey == key && player.state == PlayerState.paused) {
       await player.resume();
       return;
     }
-
     final cached = cachedPath(item);
     if (cached != null && File(cached).existsSync()) {
       await _play(item, cached);
       return;
     }
-
     final recorded = recordedPath(item);
     if (recorded != null && File(recorded).existsSync()) {
       await _play(item, recorded);
       return;
     }
-
     await downloadAndPlay(item);
   }
 
