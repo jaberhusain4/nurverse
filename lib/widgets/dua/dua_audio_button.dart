@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../data/dua_data.dart';
@@ -6,9 +8,8 @@ import '../../services/dua_audio_service.dart';
 
 /// Final user-facing Dua audio control.
 ///
-/// Record/delete/re-record controls are intentionally removed. A Dua is
-/// either already cached locally, or can be downloaded from the NurVerse
-/// audio store and then played offline.
+/// A Dua is either already cached locally, or can be downloaded from the
+/// NurVerse audio store and then played offline.
 class DuaAudioButton extends StatefulWidget {
   final DuaItem item;
   final Color color;
@@ -27,10 +28,19 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
   bool _busy = false;
   bool _playing = false;
   bool _downloaded = false;
+  StreamSubscription<void>? _completionSubscription;
 
   @override
   void initState() {
     super.initState();
+    _completionSubscription = DuaAudioService.player.onPlayerComplete.listen((_) {
+      if (!mounted) return;
+      if (DuaAudioService.keyFor(widget.item) ==
+          DuaAudioService.currentKey) {
+        setState(() => _playing = false);
+      }
+    });
+
     DuaAudioService.initialize().then((_) {
       if (!mounted) return;
       setState(() {
@@ -38,6 +48,12 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
         _playing = DuaAudioService.isPlaying(widget.item);
       });
     });
+  }
+
+  @override
+  void dispose() {
+    _completionSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _play() async {
@@ -125,11 +141,17 @@ class _DuaAudioButtonState extends State<DuaAudioButton> {
         IconButton(
           tooltip: _downloaded
               ? (l10n.isBangla ? 'অফলাইনে সংরক্ষিত' : 'Available offline')
-              : (l10n.isBangla ? 'অফলাইনের জন্য ডাউনলোড' : 'Download for offline'),
+              : (l10n.isBangla
+                  ? 'অফলাইনের জন্য ডাউনলোড'
+                  : 'Download for offline'),
           onPressed: _busy || _downloaded ? null : _download,
           icon: Icon(
-            _downloaded ? Icons.download_done_rounded : Icons.download_rounded,
-            color: _downloaded ? widget.color.withValues(alpha: .55) : widget.color,
+            _downloaded
+                ? Icons.download_done_rounded
+                : Icons.download_rounded,
+            color: _downloaded
+                ? widget.color.withValues(alpha: .55)
+                : widget.color,
             size: 22,
           ),
           padding: EdgeInsets.zero,
