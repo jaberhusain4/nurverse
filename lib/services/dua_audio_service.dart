@@ -73,6 +73,9 @@ class DuaAudioService {
     return directory.path;
   }
 
+  /// Downloads the published R2 audio only when it is not already cached.
+  /// The temporary file prevents an interrupted download from becoming a
+  /// seemingly valid offline audio file.
   static Future<bool> download(DuaItem item) async {
     await initialize();
     final existing = cachedPath(item);
@@ -83,8 +86,21 @@ class DuaAudioService {
       if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
         return false;
       }
-      final path = '${await _dir('dua_audio_cache')}/${keyFor(item)}.m4a';
-      await File(path).writeAsBytes(response.bodyBytes, flush: true);
+
+      final directory = await _dir('dua_audio_cache');
+      final path = '$directory/${keyFor(item)}.m4a';
+      final tempPath = '$path.part';
+      final tempFile = File(tempPath);
+
+      await tempFile.writeAsBytes(response.bodyBytes, flush: true);
+      if (!tempFile.existsSync() || await tempFile.length() == 0) {
+        if (tempFile.existsSync()) await tempFile.delete();
+        return false;
+      }
+
+      final finalFile = File(path);
+      if (finalFile.existsSync()) await finalFile.delete();
+      await tempFile.rename(path);
       await _prefs!.setString('dua_cached_${keyFor(item)}', path);
       return true;
     } catch (_) {
@@ -104,6 +120,39 @@ class DuaAudioService {
     final path = cachedPath(item);
     if (path == null || !File(path).existsSync()) return false;
     return _play(item, path);
+  }
+
+  static Future<void> toggle(DuaItem item) async {
+    await initialize();
+    final key = keyFor(item);
+
+    if (_currentKey == key && player.state == PlayerState.playing) {
+      await player.pause();
+      return;
+    }
+
+    if (_currentKey == key && player.state == PlayerState.paused) {
+      await player.resume();
+      return;
+    }
+
+    // Always prefer the local cache. This makes subsequent playback fully
+    // independent of internet availability.
+    final cached = cachedPath(item);
+    if (cached != null && File(cached).existsSync()) {
+      await _play(item, cached);
+      return;
+    }
+
+    // Legacy creator recording fallback retained for maintenance only.
+    final recorded = recordedPath(item);
+    if (recorded != null && File(recorded).existsSync()) {
+      await _play(item, recorded);
+      return;
+    }
+
+    // First playback downloads from R2 and immediately plays the local copy.
+    await downloadAndPlay(item);
   }
 
   static Future<bool> startRecording(DuaItem item) async {
@@ -177,30 +226,6 @@ class DuaAudioService {
       text: 'NurVerse recorded Dua audio files',
     ));
     return files.length;
-  }
-
-  static Future<void> toggle(DuaItem item) async {
-    await initialize();
-    final key = keyFor(item);
-    if (_currentKey == key && player.state == PlayerState.playing) {
-      await player.pause();
-      return;
-    }
-    if (_currentKey == key && player.state == PlayerState.paused) {
-      await player.resume();
-      return;
-    }
-    final cached = cachedPath(item);
-    if (cached != null && File(cached).existsSync()) {
-      await _play(item, cached);
-      return;
-    }
-    final recorded = recordedPath(item);
-    if (recorded != null && File(recorded).existsSync()) {
-      await _play(item, recorded);
-      return;
-    }
-    await downloadAndPlay(item);
   }
 
   static Future<void> stopPlayback() async {
