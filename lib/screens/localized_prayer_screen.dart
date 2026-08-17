@@ -117,15 +117,15 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
       radius: 22,
       padding: const EdgeInsets.fromLTRB(15, 14, 15, 13),
       child: Column(children: [
-        Row(children: [
-          _iconBox(primary, Icons.mosque_rounded, size: 42),
-          const SizedBox(width: 10),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Stack(children: [
+          Center(child: Column(children: [
+            _iconBox(primary, Icons.mosque_rounded, size: 42),
+            const SizedBox(height: 6),
             Text(l10n.currentPrayerLabel, maxLines: 1, style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w600)),
             const SizedBox(height: 2),
             Text(l10n.prayerName(c.currentPrayer), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, height: 1.05)),
           ])),
-          if (friday) _badge(primary, l10n.fridayLabel),
+          if (friday) Positioned(top: 2, right: 0, child: _badge(primary, l10n.fridayLabel)),
         ]),
         const SizedBox(height: 13),
         Row(children: [
@@ -387,8 +387,19 @@ class _PersistentPrayerTrackerCardState extends State<_PersistentPrayerTrackerCa
 
     return _trackerContainer(context, child: Column(children: [
       Row(children: [Icon(Icons.check_circle_outline_rounded, size: 21, color: primary), const SizedBox(width: 8), Expanded(child: Text(l10n.trackerTitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 15.5, fontWeight: FontWeight.w700))), Text('$todayCount/5', style: TextStyle(color: primary, fontSize: 13.5, fontWeight: FontWeight.w700))]),
-      const SizedBox(height: 4),
-      Align(alignment: Alignment.centerLeft, child: Text(_loading ? l10n.tr('লোড হচ্ছে...', 'Loading...') : _dateText(context, DateTime.now(), full: true), style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w500))),
+      const SizedBox(height: 5),
+      SizedBox(
+        width: double.infinity,
+        height: 18,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            _loading ? l10n.tr('লোড হচ্ছে...', 'Loading...') : _dateText(context, DateTime.now(), full: true),
+            textAlign: TextAlign.center,
+            style: TextStyle(color: secondary, fontSize: 12, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ),
       const SizedBox(height: 10),
       Row(children: [
         for (var i = 0; i < _prayers.length; i++) ...[
