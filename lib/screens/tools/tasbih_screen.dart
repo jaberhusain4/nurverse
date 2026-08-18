@@ -15,7 +15,7 @@ class _TasbihScreenState extends State<TasbihScreen> {
   int _target = 33;
   int _selectedDhikrIndex = 0;
   bool _vibrationEnabled = true;
-  bool _blankMode = false;
+  bool _blankMode = true;
 
   final List<Map<String, String>> _dhikrList = const [
     {'arabic': 'سُبْحَانَ ٱللَّٰهِ', 'bangla': 'সুবহানাল্লাহ', 'meaning': 'আল্লাহ তাআলা পবিত্র'},
