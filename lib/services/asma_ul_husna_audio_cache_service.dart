@@ -6,9 +6,9 @@ import 'package:path_provider/path_provider.dart';
 
 /// Permanent offline storage for the 99 Names of Allah audio library.
 ///
-/// Audio is stored in the app's persistent support directory, not in the
-/// temporary/cache directory. Once downloaded successfully, playback never
-/// needs the internet again.
+/// A file is considered downloaded only when it is a non-empty, valid OGG
+/// audio file. Cached files are always preferred and never trigger a network
+/// request during playback.
 class AsmaUlHusnaAudioCacheService {
   AsmaUlHusnaAudioCacheService._();
 
@@ -17,8 +17,9 @@ class AsmaUlHusnaAudioCacheService {
 
   static const String _baseUrl =
       'https://commons.wikimedia.org/wiki/Special:Redirect/file/';
-  static const Duration _downloadTimeout = Duration(seconds: 30);
-  static const int _maxConcurrentDownloads = 4;
+  static const Duration _downloadTimeout = Duration(seconds: 60);
+  static const int _maxConcurrentDownloads = 2;
+  static const int _maxAttempts = 3;
 
   Directory? _audioDirectory;
 
@@ -42,20 +43,35 @@ class AsmaUlHusnaAudioCacheService {
     return File(p.join(directory.path, fileName));
   }
 
+  Future<bool> _isValidOgg(File file) async {
+    try {
+      if (!await file.exists()) return false;
+      final length = await file.length();
+      if (length < 4) return false;
+      final bytes = await file.openRead(0, 4).fold<List<int>>(
+        <int>[],
+        (previous, chunk) => previous..addAll(chunk),
+      );
+      return bytes.length >= 4 &&
+          bytes[0] == 0x4f && // O
+          bytes[1] == 0x67 && // g
+          bytes[2] == 0x67 && // g
+          bytes[3] == 0x53; // S
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Returns the permanently stored local audio, or null when it has not
   /// been downloaded yet. This method never makes a network request.
   Future<File?> getCachedFile(String fileName) async {
     final file = await _localFile(fileName);
-    if (!await file.exists()) return null;
+    if (await _isValidOgg(file)) return file;
 
-    final length = await file.length();
-    if (length <= 0) {
-      try {
-        await file.delete();
-      } catch (_) {}
-      return null;
-    }
-    return file;
+    try {
+      if (await file.exists()) await file.delete();
+    } catch (_) {}
+    return null;
   }
 
   /// Returns a local file, downloading it only when it is not already stored.
@@ -65,31 +81,57 @@ class AsmaUlHusnaAudioCacheService {
 
     final target = await _localFile(fileName);
     final temporary = File('${target.path}.download');
+    Object? lastError;
 
-    try {
-      final response = await http
-          .get(Uri.parse(urlFor(fileName)))
-          .timeout(_downloadTimeout);
-
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw HttpException(
-          'Audio server returned HTTP ${response.statusCode}.',
-        );
-      }
-      if (response.bodyBytes.isEmpty) {
-        throw const HttpException('Downloaded audio is empty.');
-      }
-
-      await temporary.writeAsBytes(response.bodyBytes, flush: true);
-      if (await target.exists()) await target.delete();
-      await temporary.rename(target.path);
-      return target;
-    } catch (_) {
+    for (var attempt = 1; attempt <= _maxAttempts; attempt++) {
       try {
         if (await temporary.exists()) await temporary.delete();
-      } catch (_) {}
-      rethrow;
+
+        final response = await http
+            .get(
+              Uri.parse(urlFor(fileName)),
+              headers: const {
+                'User-Agent': 'NurVerse/1.0 (offline Islamic app)',
+                'Accept': 'audio/ogg,application/ogg,*/*;q=0.8',
+              },
+            )
+            .timeout(_downloadTimeout);
+
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          throw HttpException(
+            'Audio server returned HTTP ${response.statusCode}.',
+          );
+        }
+        if (response.bodyBytes.isEmpty) {
+          throw const HttpException('Downloaded audio is empty.');
+        }
+
+        await temporary.writeAsBytes(response.bodyBytes, flush: true);
+        if (!await _isValidOgg(temporary)) {
+          throw const FormatException('Downloaded file is not a valid OGG audio file.');
+        }
+
+        if (await target.exists()) await target.delete();
+        await temporary.rename(target.path);
+
+        final saved = await getCachedFile(fileName);
+        if (saved == null) {
+          throw const FormatException('Saved audio failed local verification.');
+        }
+        return saved;
+      } catch (error) {
+        lastError = error;
+        try {
+          if (await temporary.exists()) await temporary.delete();
+        } catch (_) {}
+
+        if (attempt < _maxAttempts) {
+          await Future<void>.delayed(Duration(seconds: attempt * 2));
+        }
+      }
     }
+
+    throw lastError ?? const HttpException('Audio download failed.');
   }
 
   Future<bool> isCached(String fileName) async {
@@ -98,10 +140,8 @@ class AsmaUlHusnaAudioCacheService {
 
   /// Downloads every Asma ul Husna audio file that is not already local.
   ///
-  /// Downloads run in a small concurrent pool instead of waiting for all 99
-  /// files one-by-one. Existing files are skipped. A failed item does not
-  /// stop the remaining downloads; the returned list contains every file
-  /// that could not be saved.
+  /// Existing valid files are skipped. Invalid/partial files are removed and
+  /// downloaded again. A failed item never marks the library as complete.
   Future<List<String>> downloadAll(
     List<String> fileNames, {
     void Function(int completed, int total)? onProgress,
@@ -153,6 +193,10 @@ class AsmaUlHusnaAudioCacheService {
   }
 
   Future<bool> isAllDownloaded(List<String> fileNames) async {
-    return await downloadedCount(fileNames) == fileNames.length;
+    if (fileNames.length != 99) return false;
+    for (final fileName in fileNames) {
+      if (!await isCached(fileName)) return false;
+    }
+    return true;
   }
 }
