@@ -11,7 +11,8 @@ class AsmaUlHusnaAudioScreen extends StatefulWidget {
 
 class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
   final AudioPlayer _player = AudioPlayer();
-  final AsmaUlHusnaAudioCacheService _audioCache = AsmaUlHusnaAudioCacheService.instance;
+  final AsmaUlHusnaAudioCacheService _audioCache =
+      AsmaUlHusnaAudioCacheService.instance;
   String? _playingId;
   bool _loadingAudio = false;
   String _query = '';
@@ -46,13 +47,24 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
 
     try {
       final fileName = _audioFiles[int.parse(id) - 1];
-      final file = await _audioCache.getFile(fileName);
+
+      // Cache-first: a previously downloaded file is opened locally and
+      // never waits for the network.
+      final cachedFile = await _audioCache.getCachedFile(fileName);
+      final file = cachedFile ?? await _audioCache.getFile(fileName);
+
       await _player.setFilePath(file.path);
       await _player.play();
     } catch (_) {
       if (mounted) {
         setState(() { _playingId = null; _loadingAudio = false; });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('অডিও লোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'এই অডিওটি এখনো ডিভাইসে সংরক্ষিত নেই। প্রথমবার চালাতে ইন্টারনেট প্রয়োজন।',
+            ),
+          ),
+        );
       }
     }
   }
@@ -62,8 +74,12 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
     super.initState();
     _player.playerStateStream.listen((state) {
       if (!mounted) return;
-      if (state.processingState == ProcessingState.completed) setState(() { _playingId = null; _loadingAudio = false; });
-      if (state.processingState == ProcessingState.ready && _loadingAudio) setState(() => _loadingAudio = false);
+      if (state.processingState == ProcessingState.completed) {
+        setState(() { _playingId = null; _loadingAudio = false; });
+      }
+      if (state.processingState == ProcessingState.ready && _loadingAudio) {
+        setState(() => _loadingAudio = false);
+      }
     });
   }
 
@@ -72,18 +88,115 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _names.where((item) { final q = _query.trim().toLowerCase(); return q.isEmpty || item['name']!.toLowerCase().contains(q) || item['meaning']!.toLowerCase().contains(q) || item['id'] == q; }).toList();
+    final filtered = _names.where((item) {
+      final q = _query.trim().toLowerCase();
+      return q.isEmpty ||
+          item['name']!.toLowerCase().contains(q) ||
+          item['meaning']!.toLowerCase().contains(q) ||
+          item['id'] == q;
+    }).toList();
     final secondary = context.secondaryTextColor;
     return Scaffold(
-      appBar: AppBar(title: const Text('আল্লাহর ৯৯ নাম', style: TextStyle(fontWeight: FontWeight.bold))),
-      body: SafeArea(child: Column(children: [
-        Padding(padding: const EdgeInsets.all(AppSpacing.md), child: TextField(onChanged: (value) => setState(() => _query = value), decoration: InputDecoration(hintText: 'নাম বা অর্থ দিয়ে খুঁজুন...', prefixIcon: const Icon(Icons.search, color: AppColors.seaBlue), filled: true, fillColor: context.cardColor, contentPadding: const EdgeInsets.symmetric(vertical: 12), border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.card), borderSide: BorderSide(color: context.borderColor)), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.card), borderSide: BorderSide(color: context.borderColor)), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.card), borderSide: const BorderSide(color: AppColors.seaBlue))))),
-        Padding(padding: const EdgeInsets.fromLTRB(18, 0, 18, 8), child: Row(children: [const Icon(Icons.volume_up_rounded, size: 18, color: AppColors.seaBlue), const SizedBox(width: 7), Expanded(child: Text(_loadingAudio ? 'অডিও লোড হচ্ছে...' : 'নাম শুনতে যেকোনো নামের ওপর চাপুন', style: TextStyle(fontSize: 12, color: secondary)))])),
-        Expanded(child: ListView.builder(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md), itemCount: filtered.length, itemBuilder: (context, index) {
-          final item = filtered[index]; final active = _playingId == item['id'];
-          return Card(child: ListTile(onTap: () => _playName(item), leading: CircleAvatar(backgroundColor: AppColors.seaBlue.withValues(alpha: .10), child: Text(item['id']!, style: const TextStyle(color: AppColors.seaBlue, fontWeight: FontWeight.bold))), title: Text(item['arabic']!, textAlign: TextAlign.right, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)), subtitle: Padding(padding: const EdgeInsets.only(top: 4), child: Text('${item['name']} — ${item['meaning']}')), trailing: active ? (_loadingAudio ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.stop_circle_rounded, color: AppColors.seaBlue)) : const Icon(Icons.play_circle_fill_rounded, color: AppColors.seaBlue)));
-        })),
-      ])),
+      appBar: AppBar(
+        title: const Text('আল্লাহর ৯৯ নাম', style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: TextField(
+                onChanged: (value) => setState(() => _query = value),
+                decoration: InputDecoration(
+                  hintText: 'নাম বা অর্থ দিয়ে খুঁজুন...',
+                  prefixIcon: const Icon(Icons.search, color: AppColors.seaBlue),
+                  filled: true,
+                  fillColor: context.cardColor,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    borderSide: BorderSide(color: context.borderColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    borderSide: BorderSide(color: context.borderColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    borderSide: const BorderSide(color: AppColors.seaBlue),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.volume_up_rounded, size: 18, color: AppColors.seaBlue),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      _loadingAudio
+                          ? 'অডিও লোড হচ্ছে...'
+                          : 'নাম শুনতে যেকোনো নামের ওপর চাপুন',
+                      style: TextStyle(fontSize: 12, color: secondary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                itemCount: filtered.length,
+                itemBuilder: (context, index) {
+                  final item = filtered[index];
+                  final active = _playingId == item['id'];
+                  return Card(
+                    child: ListTile(
+                      onTap: () => _playName(item),
+                      leading: CircleAvatar(
+                        backgroundColor: AppColors.seaBlue.withValues(alpha: .10),
+                        child: Text(
+                          item['id']!,
+                          style: const TextStyle(
+                            color: AppColors.seaBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        item['arabic']!,
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                      ),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text('${item['name']} — ${item['meaning']}'),
+                      ),
+                      trailing: active
+                          ? (_loadingAudio
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(
+                                  Icons.stop_circle_rounded,
+                                  color: AppColors.seaBlue,
+                                ))
+                          : const Icon(
+                              Icons.play_circle_fill_rounded,
+                              color: AppColors.seaBlue,
+                            ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
