@@ -15,6 +15,7 @@ class _TasbihScreenState extends State<TasbihScreen> {
   int _target = 33;
   int _selectedDhikrIndex = 0;
   bool _vibrationEnabled = true;
+  bool _blankMode = false;
 
   final List<Map<String, String>> _dhikrList = const [
     {'arabic': 'سُبْحَانَ ٱللَّٰهِ', 'bangla': 'সুবহানাল্লাহ', 'meaning': 'আল্লাহ তাআলা পবিত্র'},
@@ -26,16 +27,11 @@ class _TasbihScreenState extends State<TasbihScreen> {
 
   Future<void> _vibrate({bool completion = false}) async {
     if (!_vibrationEnabled) return;
-
-    // Flutter haptic is triggered directly, so the counter feedback does not
-    // depend on the native method channel being available.
     if (completion) {
       await HapticFeedback.heavyImpact();
     } else {
       await HapticFeedback.selectionClick();
     }
-
-    // Also request the native Android vibrator for a stronger physical pulse.
     try {
       await _vibrationChannel.invokeMethod<void>(completion ? 'targetReached' : 'tap');
     } on MissingPluginException {
@@ -61,6 +57,21 @@ class _TasbihScreenState extends State<TasbihScreen> {
   }
 
   void _resetCounter() => setState(() => _counter = 0);
+
+  void _selectDhikr(int index) {
+    setState(() {
+      _selectedDhikrIndex = index;
+      _blankMode = false;
+      _counter = 0;
+    });
+  }
+
+  void _selectBlankMode() {
+    setState(() {
+      _blankMode = true;
+      _counter = 0;
+    });
+  }
 
   void _showTargetReachedSnackBar(int targetValue) {
     final l10n = AppLocalizations.of(context);
@@ -91,20 +102,52 @@ class _TasbihScreenState extends State<TasbihScreen> {
         child: Column(
           children: [
             const SizedBox(height: 10),
-            SizedBox(height: 40, child: ListView.builder(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 16), itemCount: _dhikrList.length, itemBuilder: (context, index) {
-              final isSelected = index == _selectedDhikrIndex;
-              return Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(label: Text(_dhikrList[index]['bangla']!), selected: isSelected, selectedColor: AppColors.seaBlue.withValues(alpha: .2), labelStyle: TextStyle(color: isSelected ? AppColors.seaBlue : text, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal), onSelected: (selected) { if (selected) setState(() { _selectedDhikrIndex = index; _counter = 0; }); }));
-            })),
+            SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  for (var index = 0; index < _dhikrList.length; index++) ...[
+                    if (index > 0) const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: Text(_dhikrList[index]['bangla']!),
+                      selected: !_blankMode && index == _selectedDhikrIndex,
+                      selectedColor: AppColors.seaBlue.withValues(alpha: .2),
+                      labelStyle: TextStyle(color: !_blankMode && index == _selectedDhikrIndex ? AppColors.seaBlue : text, fontWeight: !_blankMode && index == _selectedDhikrIndex ? FontWeight.bold : FontWeight.normal),
+                      onSelected: (selected) { if (selected) _selectDhikr(index); },
+                    ),
+                  ],
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    avatar: const Icon(Icons.edit_note_rounded, size: 18),
+                    label: Text(l10n.tr('নন-তাসবিহ', 'Non-Tasbih')),
+                    selected: _blankMode,
+                    selectedColor: AppColors.seaBlue.withValues(alpha: .2),
+                    labelStyle: TextStyle(color: _blankMode ? AppColors.seaBlue : text, fontWeight: _blankMode ? FontWeight.bold : FontWeight.normal),
+                    onSelected: (selected) { if (selected) _selectBlankMode(); },
+                  ),
+                ],
+              ),
+            ),
             const Spacer(flex: 2),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(children: [
-                Text(currentDhikr['arabic']!, style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: AppColors.seaBlue), textAlign: TextAlign.center),
-                const SizedBox(height: 8),
-                Text(currentDhikr['bangla']!, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: text), textAlign: TextAlign.center),
-                const SizedBox(height: 4),
-                Text(currentDhikr['meaning']!, style: TextStyle(fontSize: 13, color: secondary), textAlign: TextAlign.center),
-              ]),
+              child: _blankMode
+                  ? Column(children: [
+                      Icon(Icons.touch_app_rounded, size: 42, color: AppColors.seaBlue),
+                      const SizedBox(height: 8),
+                      Text(l10n.tr('খালি কাউন্টার', 'Blank Counter'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: text)),
+                      const SizedBox(height: 5),
+                      Text(l10n.tr('যেকোনো দোয়া, যিকির বা আমল পড়তে এই কাউন্টার ব্যবহার করুন।', 'Use this counter for any dua, dhikr, or other recitation.'), textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: secondary)),
+                    ])
+                  : Column(children: [
+                      Text(currentDhikr['arabic']!, style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: AppColors.seaBlue), textAlign: TextAlign.center),
+                      const SizedBox(height: 8),
+                      Text(currentDhikr['bangla']!, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: text), textAlign: TextAlign.center),
+                      const SizedBox(height: 4),
+                      Text(currentDhikr['meaning']!, style: TextStyle(fontSize: 13, color: secondary), textAlign: TextAlign.center),
+                    ]),
             ),
             const Spacer(flex: 1),
             Column(children: [
