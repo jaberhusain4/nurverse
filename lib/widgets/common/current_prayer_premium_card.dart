@@ -54,7 +54,7 @@ class _ContextPrayer extends StatelessWidget {
   final String label, prayer, time; final IconData icon; final Color color, text;
   const _ContextPrayer({required this.label, required this.prayer, required this.time, required this.icon, required this.color, required this.text});
   @override
-  Widget build(BuildContext context) => Column(children: [Icon(icon, size: 16, color: color), const SizedBox(height: 2), Text(label, maxLines: 1, style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w600)), const SizedBox(height: 1), Text(prayer, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 12.5, fontWeight: FontWeight.w800)), Text(time.isEmpty ? '--:--' : time, style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w700))]);
+  Widget build(BuildContext context) => Column(children: [Icon(icon, size: 16, color: color), const SizedBox(height: 2), Text(label, maxLines: 1, style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w600)), const SizedBox(height: 1), Text(prayer, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800)), Text(time.isEmpty ? '--:--' : time, style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w700))]);
 }
 
 class _TimeLabel extends StatelessWidget {
