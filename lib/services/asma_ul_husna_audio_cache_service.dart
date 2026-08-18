@@ -16,9 +16,6 @@ class AsmaUlHusnaAudioCacheService {
 
   static const String _baseUrl =
       'https://commons.wikimedia.org/wiki/Special:Redirect/file/';
-
-  // Keep enough parallel requests for good mobile throughput without
-  // hammering Wikimedia with 99 simultaneous connections.
   static const int _maxConcurrentDownloads = 6;
   static const int _maxAttempts = 2;
   static const Duration _downloadTimeout = Duration(seconds: 30);
@@ -28,12 +25,9 @@ class AsmaUlHusnaAudioCacheService {
 
   Future<Directory> _getAudioDirectory() async {
     if (_audioDirectory != null) return _audioDirectory!;
-
     final root = await getApplicationSupportDirectory();
     final directory = Directory(p.join(root.path, 'asma_ul_husna_audio'));
-    if (!await directory.exists()) {
-      await directory.create(recursive: true);
-    }
+    if (!await directory.exists()) await directory.create(recursive: true);
     _audioDirectory = directory;
     return directory;
   }
@@ -48,14 +42,11 @@ class AsmaUlHusnaAudioCacheService {
 
   Future<bool> _isValidOgg(File file) async {
     try {
-      if (!await file.exists()) return false;
-      if (await file.length() < 4) return false;
-
+      if (!await file.exists() || await file.length() < 4) return false;
       final bytes = await file.openRead(0, 4).fold<List<int>>(
         <int>[],
         (previous, chunk) => previous..addAll(chunk),
       );
-
       return bytes.length >= 4 &&
           bytes[0] == 0x4f &&
           bytes[1] == 0x67 &&
@@ -70,14 +61,12 @@ class AsmaUlHusnaAudioCacheService {
   Future<File?> getCachedFile(String fileName) async {
     final file = await _localFile(fileName);
     if (await _isValidOgg(file)) return file;
-
     try {
       if (await file.exists()) await file.delete();
     } catch (_) {}
     return null;
   }
 
-  /// Gets a permanent local file. Downloads only when it is missing.
   Future<File> getFile(String fileName) async {
     final cached = await getCachedFile(fileName);
     if (cached != null) return cached;
@@ -89,7 +78,6 @@ class AsmaUlHusnaAudioCacheService {
     for (var attempt = 1; attempt <= _maxAttempts; attempt++) {
       try {
         if (await temporary.exists()) await temporary.delete();
-
         final response = await _client
             .get(
               Uri.parse(urlFor(fileName)),
@@ -116,7 +104,6 @@ class AsmaUlHusnaAudioCacheService {
 
         if (await target.exists()) await target.delete();
         await temporary.rename(target.path);
-
         final saved = await getCachedFile(fileName);
         if (saved == null) {
           throw const FormatException('Saved audio failed local verification.');
@@ -127,7 +114,6 @@ class AsmaUlHusnaAudioCacheService {
         try {
           if (await temporary.exists()) await temporary.delete();
         } catch (_) {}
-
         if (attempt < _maxAttempts) {
           await Future<void>.delayed(const Duration(milliseconds: 500));
         }
@@ -137,24 +123,20 @@ class AsmaUlHusnaAudioCacheService {
     throw lastError ?? const HttpException('Audio download failed.');
   }
 
-  Future<bool> isCached(String fileName) async {
-    return await getCachedFile(fileName) != null;
-  }
+  Future<bool> isCached(String fileName) async =>
+      await getCachedFile(fileName) != null;
 
-  /// Downloads all missing audio files with limited parallelism.
-  ///
-  /// Progress counts only completed download attempts. A file is counted as
-  /// successful only after local OGG validation. Failed files are returned so
-  /// the UI can offer a retry instead of incorrectly reporting 99/99.
+  /// Downloads all missing source files with limited parallelism.
+  /// Existing valid files are skipped. A file is successful only after local
+  /// OGG validation. Missing files are returned for a later retry.
   Future<List<String>> downloadAll(
     List<String> fileNames, {
     void Function(int completed, int total)? onProgress,
   }) async {
     if (fileNames.isEmpty) return const [];
 
-    // Deduplicate source filenames while preserving order. The Wikimedia
-    // collection legitimately contains repeated names at #48/#65 and
-    // #55/#77, so the same local source is not downloaded twice.
+    // Some numbered names intentionally share a source filename in the
+    // Wikimedia collection (#48/#65 and #55/#77). Download each source once.
     final uniqueFiles = <String>[];
     final seen = <String>{};
     for (final fileName in fileNames) {
@@ -172,56 +154,39 @@ class AsmaUlHusnaAudioCacheService {
     }
 
     var nextIndex = 0;
-    var finished = 0;
-    final failed = <String>[];
-
     Future<void> worker() async {
       while (true) {
         final index = nextIndex++;
         if (index >= pending.length) return;
-
-        final fileName = pending[index];
         try {
-          await getFile(fileName);
-        } catch (_) {
-          failed.add(fileName);
-        } finally {
-          finished++;
-          // Report the number of unique source files now present locally.
-          final current = await downloadedCount(fileNames);
-          onProgress?.call(current, fileNames.length);
-        }
+          await getFile(pending[index]);
+        } catch (_) {}
+        onProgress?.call(await downloadedCount(fileNames), fileNames.length);
       }
     }
 
     final workerCount = pending.length < _maxConcurrentDownloads
         ? pending.length
         : _maxConcurrentDownloads;
+    await Future.wait(List.generate(workerCount, (_) => worker()));
 
-    await Future.wait(
-      List.generate(workerCount, (_) => worker()),
-    );
-
-    // A final authoritative verification prevents a false 99/99 state.
     final finalCount = await downloadedCount(fileNames);
     onProgress?.call(finalCount, fileNames.length);
 
     if (finalCount == fileNames.length) return const [];
 
-    // Rebuild failures from the authoritative local state so every missing
-    // source can be retried on the next click.
     final missing = <String>[];
     for (final fileName in fileNames) {
       if (!await isCached(fileName)) missing.add(fileName);
     }
-    return missing.isEmpty ? failed : missing;
+    return missing;
   }
 
+  /// Counts the 99 numbered entries, not unique source files. This means a
+  /// shared source legitimately counts for both numbered names that use it.
   Future<int> downloadedCount(List<String> fileNames) async {
     var count = 0;
-    final seen = <String>{};
     for (final fileName in fileNames) {
-      if (!seen.add(fileName)) continue;
       if (await isCached(fileName)) count++;
     }
     return count;
@@ -235,7 +200,5 @@ class AsmaUlHusnaAudioCacheService {
     return true;
   }
 
-  void dispose() {
-    _client.close();
-  }
+  void dispose() => _client.close();
 }
