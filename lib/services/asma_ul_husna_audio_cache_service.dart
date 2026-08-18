@@ -36,9 +36,7 @@ class AsmaUlHusnaAudioCacheService {
     final paths = <String>[];
     for (final name in names) {
       final audio = name['audio'];
-      if (audio is String && audio.isNotEmpty) {
-        paths.add(audio);
-      }
+      if (audio is String && audio.isNotEmpty) paths.add(audio);
     }
 
     if (paths.length != 99) {
@@ -53,14 +51,17 @@ class AsmaUlHusnaAudioCacheService {
 
   Future<File> _localFile(String fileName) async {
     final directory = await _getAudioDirectory();
-    return File(p.join(directory.path, fileName));
+    final baseName = p.basenameWithoutExtension(fileName);
+    // The UI keeps its existing .ogg source IDs, but the bundled files are
+    // MP3. Store them with the real extension so just_audio selects the right
+    // decoder and old .ogg cache files cannot be mistaken for valid audio.
+    return File(p.join(directory.path, '$baseName.mp3'));
   }
 
   Future<bool> _isValidAudio(File file) async {
     try {
       if (!await file.exists()) return false;
-      final length = await file.length();
-      return length > 1024;
+      return await file.length() > 1024;
     } catch (_) {
       return false;
     }
@@ -77,13 +78,13 @@ class AsmaUlHusnaAudioCacheService {
     final cached = await getCachedFile(fileName);
     if (cached != null) return cached;
 
-    final fileNames = await _getBundledAudioPaths();
+    final bundledAudioPaths = await _getBundledAudioPaths();
     final index = _sourceIndexForFileName(fileName);
-    if (index < 0 || index >= fileNames.length) {
+    if (index < 0 || index >= bundledAudioPaths.length) {
       throw StateError('No bundled Asma ul Husna audio found for $fileName.');
     }
 
-    final assetPath = fileNames[index];
+    final assetPath = bundledAudioPaths[index];
     final bytes = await rootBundle.load(assetPath);
     final target = await _localFile(fileName);
     final temporary = File('${target.path}.download');
