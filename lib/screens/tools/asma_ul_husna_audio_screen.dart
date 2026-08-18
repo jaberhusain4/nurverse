@@ -71,7 +71,7 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
     });
 
     try {
-      await _audioCache.downloadAll(
+      final failed = await _audioCache.downloadAll(
         _audioFiles,
         onProgress: (completed, total) {
           if (!mounted) return;
@@ -80,16 +80,32 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
       );
       await _refreshDownloadedCount();
 
-      if (mounted) {
+      if (!mounted) return;
+
+      if (_downloadedCount == _audioFiles.length && failed.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('আল্লাহর ৯৯ নামের সব অডিও অফলাইনের জন্য সংরক্ষিত হয়েছে।')),
+          const SnackBar(
+            content: Text('আল্লাহর ৯৯ নামের সব অডিও অফলাইনের জন্য সংরক্ষিত হয়েছে।'),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${_downloadedCount}/${_audioFiles.length}টি অডিও অফলাইনে প্রস্তুত। ${failed.length}টি আবার চেষ্টা করতে হবে।',
+            ),
+          ),
         );
       }
     } catch (_) {
       await _refreshDownloadedCount();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('কিছু অডিও ডাউনলোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।')),
+          SnackBar(
+            content: Text(
+              '${_downloadedCount}/${_audioFiles.length}টি অডিও অফলাইনে প্রস্তুত। বাকি অডিওর জন্য আবার Download চাপুন।',
+            ),
+          ),
         );
       }
     } finally {
@@ -135,7 +151,7 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('এই অডিওটি অফলাইনে প্রস্তুত নয়। উপরের Download All Audio চাপুন।'),
+            content: Text('এই অডিওটি অফলাইনে প্রস্তুত নয়। উপরের Download চাপুন।'),
           ),
         );
       }
@@ -158,7 +174,6 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
           item['id'] == q;
     }).toList();
     final secondary = context.secondaryTextColor;
-
     final allDownloaded = _downloadedCount == _audioFiles.length;
 
     return Scaffold(
@@ -201,7 +216,9 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
                                 Text(
                                   _downloadingAll
                                       ? 'ডাউনলোড হচ্ছে $_downloadProgress/${_audioFiles.length}...'
-                                      : 'একবার ডাউনলোড করলে পরে ইন্টারনেট ছাড়াই শুনতে পারবেন।',
+                                      : allDownloaded
+                                          ? '৯৯/৯৯টি অডিও সংরক্ষিত। এখন ইন্টারনেট ছাড়াই শুনতে পারবেন।'
+                                          : '$_downloadedCount/${_audioFiles.length}টি প্রস্তুত। একবার Download চাপুন।',
                                   style: TextStyle(fontSize: 11, color: secondary),
                                 ),
                               ],
