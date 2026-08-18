@@ -49,7 +49,9 @@ class AsmaUlHusnaAudioCacheService {
 
     final length = await file.length();
     if (length <= 0) {
-      await file.delete().catchError((_) {});
+      try {
+        await file.delete();
+      } catch (_) {}
       return null;
     }
     return file;
@@ -82,9 +84,9 @@ class AsmaUlHusnaAudioCacheService {
       await temporary.rename(target.path);
       return target;
     } catch (_) {
-      if (await temporary.exists()) {
-        await temporary.delete().catchError((_) {});
-      }
+      try {
+        if (await temporary.exists()) await temporary.delete();
+      } catch (_) {}
       rethrow;
     }
   }
@@ -94,30 +96,30 @@ class AsmaUlHusnaAudioCacheService {
   }
 
   /// Downloads every Asma ul Husna audio file that is not already local.
-  ///
-  /// [fileNames] must contain the 99 audio filenames in order.
-  /// Returns the number of files newly downloaded during this call.
-  Future<int> downloadAll(
+  /// Existing files are skipped. A failed item does not stop the remaining
+  /// downloads; the returned list contains the files that could not be saved.
+  Future<List<String>> downloadAll(
     List<String> fileNames, {
     void Function(int completed, int total)? onProgress,
   }) async {
     var completed = 0;
-    var downloaded = 0;
+    final failed = <String>[];
 
     for (final fileName in fileNames) {
       try {
         final existing = await getCachedFile(fileName);
         if (existing == null) {
           await getFile(fileName);
-          downloaded++;
         }
+      } catch (_) {
+        failed.add(fileName);
       } finally {
         completed++;
         onProgress?.call(completed, fileNames.length);
       }
     }
 
-    return downloaded;
+    return failed;
   }
 
   Future<int> downloadedCount(List<String> fileNames) async {
