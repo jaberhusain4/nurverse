@@ -7,6 +7,9 @@
     <!-- Temporary Dua recording -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
+    <!-- Vibration for Tasbih target completion -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
     <!-- Internet (Hadith API, Quran translation download, Audio streaming, online books) -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
