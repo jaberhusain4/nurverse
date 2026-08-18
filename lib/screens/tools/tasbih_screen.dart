@@ -99,13 +99,11 @@ class _TasbihScreenState extends State<TasbihScreen> {
               ]),
             ),
             const Spacer(flex: 1),
-            // Counter sits between the Dhikr and the tap circle, keeping the
-            // visual focus centered on the screen.
             Column(children: [
               Text('$_counter', style: const TextStyle(fontSize: 46, fontWeight: FontWeight.w800, color: AppColors.seaBlue)),
               Text('${l10n.tr('বার', 'repetitions')} / $_target', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: secondary)),
             ]),
-            const SizedBox(height: 12),
+            const SizedBox(height: 30),
             GestureDetector(
               onTap: _incrementCounter,
               child: Container(
