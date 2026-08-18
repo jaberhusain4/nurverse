@@ -6,9 +6,8 @@ import 'package:path_provider/path_provider.dart';
 
 /// Permanent offline storage for the 99 Names of Allah audio library.
 ///
-/// A file is considered downloaded only when it is a non-empty, valid OGG
-/// audio file. Cached files are always preferred and never trigger a network
-/// request during playback.
+/// Valid local files are always preferred. Playback never contacts the
+/// network when a valid file already exists on the device.
 class AsmaUlHusnaAudioCacheService {
   AsmaUlHusnaAudioCacheService._();
 
@@ -17,11 +16,15 @@ class AsmaUlHusnaAudioCacheService {
 
   static const String _baseUrl =
       'https://commons.wikimedia.org/wiki/Special:Redirect/file/';
-  static const Duration _downloadTimeout = Duration(seconds: 60);
-  static const int _maxConcurrentDownloads = 2;
-  static const int _maxAttempts = 3;
+
+  // Keep enough parallel requests for good mobile throughput without
+  // hammering Wikimedia with 99 simultaneous connections.
+  static const int _maxConcurrentDownloads = 6;
+  static const int _maxAttempts = 2;
+  static const Duration _downloadTimeout = Duration(seconds: 30);
 
   Directory? _audioDirectory;
+  final http.Client _client = http.Client();
 
   Future<Directory> _getAudioDirectory() async {
     if (_audioDirectory != null) return _audioDirectory!;
@@ -46,24 +49,24 @@ class AsmaUlHusnaAudioCacheService {
   Future<bool> _isValidOgg(File file) async {
     try {
       if (!await file.exists()) return false;
-      final length = await file.length();
-      if (length < 4) return false;
+      if (await file.length() < 4) return false;
+
       final bytes = await file.openRead(0, 4).fold<List<int>>(
         <int>[],
         (previous, chunk) => previous..addAll(chunk),
       );
+
       return bytes.length >= 4 &&
-          bytes[0] == 0x4f && // O
-          bytes[1] == 0x67 && // g
-          bytes[2] == 0x67 && // g
-          bytes[3] == 0x53; // S
+          bytes[0] == 0x4f &&
+          bytes[1] == 0x67 &&
+          bytes[2] == 0x67 &&
+          bytes[3] == 0x53;
     } catch (_) {
       return false;
     }
   }
 
-  /// Returns the permanently stored local audio, or null when it has not
-  /// been downloaded yet. This method never makes a network request.
+  /// Local-only lookup. Never performs a network request.
   Future<File?> getCachedFile(String fileName) async {
     final file = await _localFile(fileName);
     if (await _isValidOgg(file)) return file;
@@ -74,7 +77,7 @@ class AsmaUlHusnaAudioCacheService {
     return null;
   }
 
-  /// Returns a local file, downloading it only when it is not already stored.
+  /// Gets a permanent local file. Downloads only when it is missing.
   Future<File> getFile(String fileName) async {
     final cached = await getCachedFile(fileName);
     if (cached != null) return cached;
@@ -87,11 +90,11 @@ class AsmaUlHusnaAudioCacheService {
       try {
         if (await temporary.exists()) await temporary.delete();
 
-        final response = await http
+        final response = await _client
             .get(
               Uri.parse(urlFor(fileName)),
               headers: const {
-                'User-Agent': 'NurVerse/1.0 (offline Islamic app)',
+                'User-Agent': 'NurVerse/1.0',
                 'Accept': 'audio/ogg,application/ogg,*/*;q=0.8',
               },
             )
@@ -102,7 +105,7 @@ class AsmaUlHusnaAudioCacheService {
             'Audio server returned HTTP ${response.statusCode}.',
           );
         }
-        if (response.bodyBytes.isEmpty) {
+        if (response.bodyBytes.length < 4) {
           throw const HttpException('Downloaded audio is empty.');
         }
 
@@ -126,7 +129,7 @@ class AsmaUlHusnaAudioCacheService {
         } catch (_) {}
 
         if (attempt < _maxAttempts) {
-          await Future<void>.delayed(Duration(seconds: attempt * 2));
+          await Future<void>.delayed(const Duration(milliseconds: 500));
         }
       }
     }
@@ -138,55 +141,87 @@ class AsmaUlHusnaAudioCacheService {
     return await getCachedFile(fileName) != null;
   }
 
-  /// Downloads every Asma ul Husna audio file that is not already local.
+  /// Downloads all missing audio files with limited parallelism.
   ///
-  /// Existing valid files are skipped. Invalid/partial files are removed and
-  /// downloaded again. A failed item never marks the library as complete.
+  /// Progress counts only completed download attempts. A file is counted as
+  /// successful only after local OGG validation. Failed files are returned so
+  /// the UI can offer a retry instead of incorrectly reporting 99/99.
   Future<List<String>> downloadAll(
     List<String> fileNames, {
     void Function(int completed, int total)? onProgress,
   }) async {
     if (fileNames.isEmpty) return const [];
 
+    // Deduplicate source filenames while preserving order. The Wikimedia
+    // collection legitimately contains repeated names at #48/#65 and
+    // #55/#77, so the same local source is not downloaded twice.
+    final uniqueFiles = <String>[];
+    final seen = <String>{};
+    for (final fileName in fileNames) {
+      if (seen.add(fileName)) uniqueFiles.add(fileName);
+    }
+
+    final pending = <String>[];
+    for (final fileName in uniqueFiles) {
+      if (!await isCached(fileName)) pending.add(fileName);
+    }
+
+    if (pending.isEmpty) {
+      onProgress?.call(fileNames.length, fileNames.length);
+      return const [];
+    }
+
     var nextIndex = 0;
-    var completed = 0;
+    var finished = 0;
     final failed = <String>[];
 
     Future<void> worker() async {
       while (true) {
-        if (nextIndex >= fileNames.length) return;
-
         final index = nextIndex++;
-        final fileName = fileNames[index];
+        if (index >= pending.length) return;
 
+        final fileName = pending[index];
         try {
-          final existing = await getCachedFile(fileName);
-          if (existing == null) {
-            await getFile(fileName);
-          }
+          await getFile(fileName);
         } catch (_) {
           failed.add(fileName);
         } finally {
-          completed++;
-          onProgress?.call(completed, fileNames.length);
+          finished++;
+          // Report the number of unique source files now present locally.
+          final current = await downloadedCount(fileNames);
+          onProgress?.call(current, fileNames.length);
         }
       }
     }
 
-    final workerCount = fileNames.length < _maxConcurrentDownloads
-        ? fileNames.length
+    final workerCount = pending.length < _maxConcurrentDownloads
+        ? pending.length
         : _maxConcurrentDownloads;
 
     await Future.wait(
       List.generate(workerCount, (_) => worker()),
     );
 
-    return failed;
+    // A final authoritative verification prevents a false 99/99 state.
+    final finalCount = await downloadedCount(fileNames);
+    onProgress?.call(finalCount, fileNames.length);
+
+    if (finalCount == fileNames.length) return const [];
+
+    // Rebuild failures from the authoritative local state so every missing
+    // source can be retried on the next click.
+    final missing = <String>[];
+    for (final fileName in fileNames) {
+      if (!await isCached(fileName)) missing.add(fileName);
+    }
+    return missing.isEmpty ? failed : missing;
   }
 
   Future<int> downloadedCount(List<String> fileNames) async {
     var count = 0;
+    final seen = <String>{};
     for (final fileName in fileNames) {
+      if (!seen.add(fileName)) continue;
       if (await isCached(fileName)) count++;
     }
     return count;
@@ -198,5 +233,9 @@ class AsmaUlHusnaAudioCacheService {
       if (!await isCached(fileName)) return false;
     }
     return true;
+  }
+
+  void dispose() {
+    _client.close();
   }
 }
