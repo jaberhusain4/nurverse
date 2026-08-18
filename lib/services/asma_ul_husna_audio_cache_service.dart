@@ -18,6 +18,7 @@ class AsmaUlHusnaAudioCacheService {
   static const String _baseUrl =
       'https://commons.wikimedia.org/wiki/Special:Redirect/file/';
   static const Duration _downloadTimeout = Duration(seconds: 30);
+  static const int _maxConcurrentDownloads = 4;
 
   Directory? _audioDirectory;
 
@@ -96,28 +97,49 @@ class AsmaUlHusnaAudioCacheService {
   }
 
   /// Downloads every Asma ul Husna audio file that is not already local.
-  /// Existing files are skipped. A failed item does not stop the remaining
-  /// downloads; the returned list contains the files that could not be saved.
+  ///
+  /// Downloads run in a small concurrent pool instead of waiting for all 99
+  /// files one-by-one. Existing files are skipped. A failed item does not
+  /// stop the remaining downloads; the returned list contains every file
+  /// that could not be saved.
   Future<List<String>> downloadAll(
     List<String> fileNames, {
     void Function(int completed, int total)? onProgress,
   }) async {
+    if (fileNames.isEmpty) return const [];
+
+    var nextIndex = 0;
     var completed = 0;
     final failed = <String>[];
 
-    for (final fileName in fileNames) {
-      try {
-        final existing = await getCachedFile(fileName);
-        if (existing == null) {
-          await getFile(fileName);
+    Future<void> worker() async {
+      while (true) {
+        if (nextIndex >= fileNames.length) return;
+
+        final index = nextIndex++;
+        final fileName = fileNames[index];
+
+        try {
+          final existing = await getCachedFile(fileName);
+          if (existing == null) {
+            await getFile(fileName);
+          }
+        } catch (_) {
+          failed.add(fileName);
+        } finally {
+          completed++;
+          onProgress?.call(completed, fileNames.length);
         }
-      } catch (_) {
-        failed.add(fileName);
-      } finally {
-        completed++;
-        onProgress?.call(completed, fileNames.length);
       }
     }
+
+    final workerCount = fileNames.length < _maxConcurrentDownloads
+        ? fileNames.length
+        : _maxConcurrentDownloads;
+
+    await Future.wait(
+      List.generate(workerCount, (_) => worker()),
+    );
 
     return failed;
   }
