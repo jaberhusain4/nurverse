@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../theme/app_theme.dart';
+import '../../services/asma_ul_husna_audio_cache_service.dart';
 
 class AsmaUlHusnaAudioScreen extends StatefulWidget {
   const AsmaUlHusnaAudioScreen({super.key});
@@ -10,6 +11,7 @@ class AsmaUlHusnaAudioScreen extends StatefulWidget {
 
 class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
   final AudioPlayer _player = AudioPlayer();
+  final AsmaUlHusnaAudioCacheService _audioCache = AsmaUlHusnaAudioCacheService.instance;
   String? _playingId;
   bool _loadingAudio = false;
   String _query = '';
@@ -31,8 +33,6 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
     {'id':'91','arabic':'الضَّارُّ','name':'আদ-দার্','meaning':'ক্ষতি সাধনে সক্ষম'},{'id':'92','arabic':'النَّافِعُ','name':'আন-নাফি','meaning':'উপকারকারী'},{'id':'93','arabic':'النُّورُ','name':'আন-নূর','meaning':'জ্যোতি'},{'id':'94','arabic':'الْهَادِي','name':'আল-হাদী','meaning':'পথপ্রদর্শক'},{'id':'95','arabic':'الْبَدِيعُ','name':'আল-বাদী','meaning':'অনুপম সৃষ্টিকর্তা'},{'id':'96','arabic':'الْبَاقِي','name':'আল-বাকী','meaning':'চিরস্থায়ী'},{'id':'97','arabic':'الْوَارِثُ','name':'আল-ওয়ারিস','meaning':'উত্তরাধিকারী'},{'id':'98','arabic':'الرَّشِيدُ','name':'আর-রশীদ','meaning':'সঠিক পথপ্রদর্শক'},{'id':'99','arabic':'الصَّبُورُ','name':'আস-সবূর','meaning':'পরম ধৈর্যশীল'},
   ];
 
-  String _audioUrl(String id) => 'https://commons.wikimedia.org/wiki/Special:Redirect/file/${Uri.encodeComponent(_audioFiles[int.parse(id) - 1])}';
-
   Future<void> _playName(Map<String, String> item) async {
     final id = item['id']!;
     if (_playingId == id && _player.playing) {
@@ -40,15 +40,19 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
       if (mounted) setState(() { _playingId = null; _loadingAudio = false; });
       return;
     }
+
     await _player.stop();
     if (mounted) setState(() { _playingId = id; _loadingAudio = true; });
+
     try {
-      await _player.setUrl(_audioUrl(id));
+      final fileName = _audioFiles[int.parse(id) - 1];
+      final file = await _audioCache.getFile(fileName);
+      await _player.setFilePath(file.path);
       await _player.play();
     } catch (_) {
       if (mounted) {
         setState(() { _playingId = null; _loadingAudio = false; });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('এই নামের অডিও পাওয়া যায়নি। পরে আবার চেষ্টা করুন।')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('অডিও লোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।')));
       }
     }
   }
