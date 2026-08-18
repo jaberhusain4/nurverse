@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
@@ -7,6 +8,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 /// - If the requested audio is already cached, return it immediately.
 /// - If it is not cached, download it once and persist it.
 /// - A cached file is never re-downloaded just because the device is offline.
+/// - A network/cache operation can never leave the UI waiting forever.
 class AsmaUlHusnaAudioCacheService {
   AsmaUlHusnaAudioCacheService._();
 
@@ -16,6 +18,7 @@ class AsmaUlHusnaAudioCacheService {
   static const String _baseUrl =
       'https://commons.wikimedia.org/wiki/Special:Redirect/file/';
   static const String _cachePrefix = 'asma-husna-audio/';
+  static const Duration _downloadTimeout = Duration(seconds: 20);
 
   final CacheManager _cache = CacheManager(
     Config(
@@ -30,30 +33,38 @@ class AsmaUlHusnaAudioCacheService {
 
   String _key(String fileName) => '$_cachePrefix$fileName';
 
-  /// Returns a cached file immediately when available.
+  /// Returns a cached file without making a network request.
+  Future<File?> getCachedFile(String fileName) async {
+    final cached = await _cache.getFileFromCache(_key(fileName));
+    if (cached == null) return null;
+
+    final file = cached.file;
+    if (!await file.exists()) return null;
+    return file;
+  }
+
+  /// Cache-first playback source.
   ///
-  /// Only a cache miss is allowed to touch the network. This is important
-  /// for true offline playback: cached audio must never wait for the network.
+  /// Network is touched only after a genuine cache miss. The download is
+  /// bounded so an unavailable/slow server cannot keep the player spinner
+  /// running forever.
   Future<File> getFile(String fileName) async {
+    final cached = await getCachedFile(fileName);
+    if (cached != null) return cached;
+
     final key = _key(fileName);
-
-    final cached = await _cache.getFileFromCache(key);
-    if (cached != null && await cached.file.exists()) {
-      return cached.file;
+    try {
+      return await _cache
+          .getSingleFile(urlFor(fileName), key: key)
+          .timeout(_downloadTimeout);
+    } on TimeoutException {
+      throw TimeoutException(
+        'Audio download timed out after ${_downloadTimeout.inSeconds} seconds.',
+      );
     }
-
-    // Cache miss: this is the only point where a network request is made.
-    return _cache.getSingleFile(urlFor(fileName), key: key);
   }
 
   Future<bool> isCached(String fileName) async {
-    final cached = await _cache.getFileFromCache(_key(fileName));
-    return cached != null && await cached.file.exists();
-  }
-
-  Future<File?> getCachedFile(String fileName) async {
-    final cached = await _cache.getFileFromCache(_key(fileName));
-    if (cached == null || !await cached.file.exists()) return null;
-    return cached.file;
+    return await getCachedFile(fileName) != null;
   }
 }
