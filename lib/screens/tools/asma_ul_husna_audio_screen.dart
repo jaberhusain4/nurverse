@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
+import 'package:just_audio/just_audio.dart';
 import '../../theme/app_theme.dart';
 
 class AsmaUlHusnaAudioScreen extends StatefulWidget {
@@ -10,10 +10,23 @@ class AsmaUlHusnaAudioScreen extends StatefulWidget {
 }
 
 class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
-  final FlutterTts _tts = FlutterTts();
+  final AudioPlayer _player = AudioPlayer();
   String? _playingId;
-  bool _speaking = false;
+  bool _loadingAudio = false;
   String _query = '';
+
+  static const List<String> _audioFiles = [
+    '01-ar-rahman.ogg','02-ar-rahim.ogg','03-al-malik.ogg','04-al-quddus.ogg','05-as-salam.ogg','06-al-mumin.ogg','07-al-muhaymin.ogg','08-al-aziz.ogg','09-al-jabbar.ogg','10-al-mutakabbir.ogg',
+    '11-al-khaliq.ogg','12-al-bari.ogg','13-al-musawwir.ogg','14-al-ghaffar.ogg','15-al-qahhar.ogg','16-al-wahhab.ogg','17-ar-razzaq.ogg','18-al-fattah.ogg','19-al-alim.ogg','20-al-qabid.ogg',
+    '21-al-basit.ogg','22-al-khafid.ogg','23-ar-rafi.ogg','24-al-muizz.ogg','25-al-mudhill.ogg','26-as-sami.ogg','27-al-basir.ogg','28-al-hakam.ogg','29-al-adl.ogg','30-al-latif.ogg',
+    '31-al-khabir.ogg','32-al-halim.ogg','33-al-azim.ogg','34-al-ghafur.ogg','35-ash-shakur.ogg','36-al-ali.ogg','37 al-kabir.ogg','38-al-hafiz.ogg','39-al-muqit.ogg','40-al-hasib.ogg',
+    '41-al-jalil.ogg','42 al-karim.ogg','43-ar-raqib.ogg','44-al-mujib.ogg','45-al-wasi.ogg','46-al-hakim.ogg','47-al-wadud.ogg','48-al-majid.ogg','49 al-baith.ogg','50-ash-shahid.ogg',
+    '51-al-haqq.ogg','52-al-wakil.ogg','53-al-qawi.ogg','54-al-matin.ogg','55-al-wali.ogg','56-al-hamid.ogg','57-al-muhsi.ogg','58-al-mubdi.ogg','59-al-muid.ogg','60-al-muhyi.ogg',
+    '61-al-mumit.ogg','62-al-hayy.ogg','63-al-qayyum.ogg','64-al-wajid.ogg','65-al-majid.ogg','66-al-wahid.ogg','67-al-ahad.ogg','68-as-samad.ogg','69-al-qadir.ogg','70-al-muqtadir.ogg',
+    '71-al-muqaddim.ogg','72-al-muakhkhir.ogg','73-al-awwal.ogg','74-al-akhir.ogg','75-az-zahir.ogg','76-al-batin.ogg','77-al-wali.ogg','78-al-mutaali.ogg','79-al-barr.ogg','80-at-tawwab.ogg',
+    '81-al-muntaqim.ogg','82-al-afuw.ogg','83-ar-rauf.ogg','84-malik-ul-mulk.ogg','85-dhul-jalaal-wal-ikraam.ogg','86-al-muqsit.ogg','87-al-jame.ogg','88-al-ghani.ogg','89-al-mughni.ogg','90-al-mani.ogg',
+    '91-ad-darr.ogg','92-an-nafi.ogg','93-an-nur.ogg','94-al-hadi.ogg','95-al-badi.ogg','96-al-baqi.ogg','97-al-warith.ogg','98-ar-rashid.ogg','99-as-sabur.ogg',
+  ];
 
   static const List<Map<String, String>> _names = [
     {'id':'1','arabic':'الرَّحْمَنُ','name':'আর-রহমান','meaning':'পরম দয়ালু'},
@@ -117,33 +130,49 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
     {'id':'99','arabic':'الصَّبُورُ','name':'আস-সবূর','meaning':'পরম ধৈর্যশীল'},
   ];
 
+  String _audioUrl(String id) {
+    final index = int.parse(id) - 1;
+    final file = _audioFiles[index];
+    return 'https://commons.wikimedia.org/wiki/Special:Redirect/file/${Uri.encodeComponent(file)}';
+  }
+
+  Future<void> _playName(Map<String, String> item) async {
+    final id = item['id']!;
+    if (_playingId == id && _player.playing) {
+      await _player.stop();
+      if (mounted) setState(() { _playingId = null; _loadingAudio = false; });
+      return;
+    }
+
+    await _player.stop();
+    if (mounted) setState(() { _playingId = id; _loadingAudio = true; });
+    try {
+      await _player.setUrl(_audioUrl(id));
+      await _player.play();
+    } catch (_) {
+      if (mounted) {
+        setState(() { _playingId = null; _loadingAudio = false; });
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('অডিও চালানো যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।')));
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _tts.setLanguage('ar-SA');
-    _tts.setSpeechRate(0.42);
-    _tts.setPitch(1.0);
-    _tts.setVolume(1.0);
-    _tts.setStartHandler(() { if (mounted) setState(() => _speaking = true); });
-    _tts.setCompletionHandler(() { if (mounted) setState(() { _speaking = false; _playingId = null; }); });
-    _tts.setCancelHandler(() { if (mounted) setState(() { _speaking = false; _playingId = null; }); });
-    _tts.setErrorHandler((_) { if (mounted) setState(() { _speaking = false; _playingId = null; }); });
-  }
-
-  Future<void> _speak(Map<String, String> item) async {
-    final id = item['id']!;
-    if (_playingId == id && _speaking) {
-      await _tts.stop();
-      return;
-    }
-    await _tts.stop();
-    if (mounted) setState(() { _playingId = id; _speaking = false; });
-    await _tts.speak(item['arabic']!);
+    _player.playerStateStream.listen((state) {
+      if (!mounted) return;
+      if (state.processingState == ProcessingState.completed) {
+        setState(() { _playingId = null; _loadingAudio = false; });
+      } else if (state.processingState == ProcessingState.ready) {
+        if (_loadingAudio) setState(() => _loadingAudio = false);
+      }
+    });
   }
 
   @override
   void dispose() {
-    _tts.stop();
+    _player.dispose();
     super.dispose();
   }
 
@@ -179,7 +208,7 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
           child: Row(children: [
             Icon(Icons.volume_up_rounded, size: 18, color: AppColors.seaBlue),
             const SizedBox(width: 7),
-            Expanded(child: Text('নাম শুনতে প্রতিটি নামের পাশে Play চাপুন', style: TextStyle(fontSize: 12, color: secondary))),
+            Expanded(child: Text(_loadingAudio ? 'অডিও লোড হচ্ছে...' : 'নাম শুনতে যেকোনো নামের ওপর চাপুন', style: TextStyle(fontSize: 12, color: secondary))),
           ]),
         ),
         Expanded(child: ListView.builder(
@@ -203,15 +232,19 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
                 ]),
                 subtitle: Padding(padding: const EdgeInsets.only(top: 4), child: Text(item['meaning']!, style: TextStyle(fontSize: 12, color: secondary))),
                 trailing: IconButton(
-                  tooltip: active && _speaking ? 'Pause' : 'শুনুন',
-                  onPressed: () => _speak(item),
-                  icon: Icon(active && _speaking ? Icons.stop_circle_outlined : Icons.play_circle_fill_rounded, size: 34, color: active ? AppColors.seaBlue : secondary),
+                  tooltip: active ? 'Stop' : 'শুনুন',
+                  onPressed: () => _playName(item),
+                  icon: Icon(active ? Icons.stop_circle_outlined : Icons.play_circle_fill_rounded, size: 34, color: active ? AppColors.seaBlue : secondary),
                 ),
-                onTap: () => _speak(item),
+                onTap: () => _playName(item),
               ),
             );
           },
         )),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(18, 4, 18, 10),
+          child: Text('Audio source: Wikimedia Commons • CC BY-SA 4.0', textAlign: TextAlign.center, style: TextStyle(fontSize: 9.5, color: secondary)),
+        ),
       ])),
     );
   }
