@@ -1,27 +1,24 @@
 import 'dart:io';
 
-import 'package:http/http.dart' as http;
+import 'package:esmaulhusna_muslimbg/esmaulhusna_muslimbg.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 /// Permanent offline storage for the 99 Names of Allah audio library.
 ///
-/// Valid local files are always preferred. Playback never contacts the
-/// network when a valid file already exists on the device.
+/// The 99 pronunciation MP3 files are bundled by the
+/// esmaulhusna_muslimbg package. They are copied once to the app's permanent
+/// support directory when the user chooses Download for Offline. After that,
+/// playback is always local and never depends on Internet connectivity.
 class AsmaUlHusnaAudioCacheService {
   AsmaUlHusnaAudioCacheService._();
 
   static final AsmaUlHusnaAudioCacheService instance =
       AsmaUlHusnaAudioCacheService._();
 
-  static const String _baseUrl =
-      'https://commons.wikimedia.org/wiki/Special:Redirect/file/';
-  static const int _maxConcurrentDownloads = 1;
-  static const int _maxAttempts = 4;
-  static const Duration _downloadTimeout = Duration(seconds: 45);
-
   Directory? _audioDirectory;
-  final http.Client _client = http.Client();
+  List<String>? _bundledAudioPaths;
 
   Future<Directory> _getAudioDirectory() async {
     if (_audioDirectory != null) return _audioDirectory!;
@@ -32,37 +29,47 @@ class AsmaUlHusnaAudioCacheService {
     return directory;
   }
 
-  String urlFor(String fileName) =>
-      '$_baseUrl${Uri.encodeComponent(fileName)}';
+  Future<List<String>> _getBundledAudioPaths() async {
+    if (_bundledAudioPaths != null) return _bundledAudioPaths!;
+
+    final names = await EsmaulHusna.getNames('en');
+    final paths = <String>[];
+    for (final name in names) {
+      final audio = name['audio'];
+      if (audio is String && audio.isNotEmpty) {
+        paths.add(audio);
+      }
+    }
+
+    if (paths.length != 99) {
+      throw StateError(
+        'Asma ul Husna bundled audio manifest contains ${paths.length} files; expected 99.',
+      );
+    }
+
+    _bundledAudioPaths = List.unmodifiable(paths);
+    return _bundledAudioPaths!;
+  }
 
   Future<File> _localFile(String fileName) async {
     final directory = await _getAudioDirectory();
     return File(p.join(directory.path, fileName));
   }
 
-  Future<bool> _isValidOgg(File file) async {
+  Future<bool> _isValidAudio(File file) async {
     try {
-      if (!await file.exists() || await file.length() < 4) return false;
-      final bytes = await file.openRead(0, 4).fold<List<int>>(
-        <int>[],
-        (previous, chunk) => previous..addAll(chunk),
-      );
-      return bytes.length >= 4 &&
-          bytes[0] == 0x4f &&
-          bytes[1] == 0x67 &&
-          bytes[2] == 0x67 &&
-          bytes[3] == 0x53;
+      if (!await file.exists()) return false;
+      final length = await file.length();
+      return length > 1024;
     } catch (_) {
       return false;
     }
   }
 
+  /// Local-only lookup. Never performs a network request.
   Future<File?> getCachedFile(String fileName) async {
     final file = await _localFile(fileName);
-    if (await _isValidOgg(file)) return file;
-    try {
-      if (await file.exists()) await file.delete();
-    } catch (_) {}
+    if (await _isValidAudio(file)) return file;
     return null;
   }
 
@@ -70,73 +77,55 @@ class AsmaUlHusnaAudioCacheService {
     final cached = await getCachedFile(fileName);
     if (cached != null) return cached;
 
-    final target = await _localFile(fileName);
-    final temporary = File('${target.path}.download');
-    Object? lastError;
-
-    for (var attempt = 1; attempt <= _maxAttempts; attempt++) {
-      try {
-        if (await temporary.exists()) await temporary.delete();
-        final response = await _client
-            .get(
-              Uri.parse(urlFor(fileName)),
-              headers: const {
-                'User-Agent': 'NurVerse/1.0',
-                'Accept': 'audio/ogg,application/ogg,*/*;q=0.8',
-              },
-            )
-            .timeout(_downloadTimeout);
-
-        if (response.statusCode < 200 || response.statusCode >= 300) {
-          throw HttpException(
-            'Audio server returned HTTP ${response.statusCode}.',
-          );
-        }
-        if (response.bodyBytes.length < 4) {
-          throw const HttpException('Downloaded audio is empty.');
-        }
-
-        await temporary.writeAsBytes(response.bodyBytes, flush: true);
-        if (!await _isValidOgg(temporary)) {
-          throw const FormatException('Downloaded file is not a valid OGG audio file.');
-        }
-
-        if (await target.exists()) await target.delete();
-        await temporary.rename(target.path);
-        final saved = await getCachedFile(fileName);
-        if (saved == null) {
-          throw const FormatException('Saved audio failed local verification.');
-        }
-        return saved;
-      } catch (error) {
-        lastError = error;
-        try {
-          if (await temporary.exists()) await temporary.delete();
-        } catch (_) {}
-        if (attempt < _maxAttempts) {
-          await Future<void>.delayed(const Duration(seconds: 1));
-        }
-      }
+    final fileNames = await _getBundledAudioPaths();
+    final index = _sourceIndexForFileName(fileName);
+    if (index < 0 || index >= fileNames.length) {
+      throw StateError('No bundled Asma ul Husna audio found for $fileName.');
     }
 
-    throw lastError ?? const HttpException('Audio download failed.');
+    final assetPath = fileNames[index];
+    final bytes = await rootBundle.load(assetPath);
+    final target = await _localFile(fileName);
+    final temporary = File('${target.path}.download');
+    await temporary.writeAsBytes(
+      bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
+      flush: true,
+    );
+
+    if (!await _isValidAudio(temporary)) {
+      try {
+        await temporary.delete();
+      } catch (_) {}
+      throw const FormatException('Bundled Asma ul Husna audio is invalid.');
+    }
+
+    if (await target.exists()) await target.delete();
+    await temporary.rename(target.path);
+    return target;
+  }
+
+  int _sourceIndexForFileName(String fileName) {
+    final match = RegExp(r'^(\d+)[ -]').firstMatch(fileName);
+    if (match == null) return -1;
+    final number = int.tryParse(match.group(1)!);
+    if (number == null || number < 1 || number > 99) return -1;
+    return number - 1;
   }
 
   Future<bool> isCached(String fileName) async =>
       await getCachedFile(fileName) != null;
 
-  /// Stable resumable queue. One file at a time avoids Wikimedia connection
-  /// throttling; valid files are skipped, and only missing files are retried.
+  /// Copies the bundled 99-name audio library to permanent local storage.
+  /// This is intentionally offline: no HTTP request is made.
   Future<List<String>> downloadAll(
     List<String> fileNames, {
     void Function(int completed, int total)? onProgress,
   }) async {
-    if (fileNames.isEmpty) return const [];
+    if (fileNames.length != 99) return List<String>.from(fileNames);
 
     var completed = await downloadedCount(fileNames);
     onProgress?.call(completed, fileNames.length);
 
-    final missing = <String>[];
     for (final fileName in fileNames) {
       if (await isCached(fileName)) continue;
       try {
@@ -144,22 +133,16 @@ class AsmaUlHusnaAudioCacheService {
         completed++;
         onProgress?.call(completed, fileNames.length);
       } catch (_) {
-        missing.add(fileName);
-        // Keep going. A single bad/slow source must never stop the other 98.
-        onProgress?.call(completed, fileNames.length);
+        // Continue so one broken package asset cannot stop the other names.
       }
     }
 
-    // Re-scan the device so the completion state is authoritative.
-    final stillMissing = <String>[];
+    final missing = <String>[];
     for (final fileName in fileNames) {
-      if (!await isCached(fileName)) stillMissing.add(fileName);
+      if (!await isCached(fileName)) missing.add(fileName);
     }
-    onProgress?.call(
-      fileNames.length - stillMissing.length,
-      fileNames.length,
-    );
-    return stillMissing;
+    onProgress?.call(fileNames.length - missing.length, fileNames.length);
+    return missing;
   }
 
   Future<int> downloadedCount(List<String> fileNames) async {
@@ -177,6 +160,4 @@ class AsmaUlHusnaAudioCacheService {
     }
     return true;
   }
-
-  void dispose() => _client.close();
 }
