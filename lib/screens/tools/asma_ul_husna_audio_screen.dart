@@ -5,6 +5,7 @@ import '../../services/asma_ul_husna_audio_cache_service.dart';
 
 class AsmaUlHusnaAudioScreen extends StatefulWidget {
   const AsmaUlHusnaAudioScreen({super.key});
+
   @override
   State<AsmaUlHusnaAudioScreen> createState() => _AsmaUlHusnaAudioScreenState();
 }
@@ -13,8 +14,12 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
   final AudioPlayer _player = AudioPlayer();
   final AsmaUlHusnaAudioCacheService _audioCache =
       AsmaUlHusnaAudioCacheService.instance;
+
   String? _playingId;
   bool _loadingAudio = false;
+  bool _downloadingAll = false;
+  int _downloadedCount = 0;
+  int _downloadProgress = 0;
   String _query = '';
 
   static const List<String> _audioFiles = [
@@ -34,35 +39,103 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
     {'id':'91','arabic':'الضَّارُّ','name':'আদ-দার্','meaning':'ক্ষতি সাধনে সক্ষম'},{'id':'92','arabic':'النَّافِعُ','name':'আন-নাফি','meaning':'উপকারকারী'},{'id':'93','arabic':'النُّورُ','name':'আন-নূর','meaning':'জ্যোতি'},{'id':'94','arabic':'الْهَادِي','name':'আল-হাদী','meaning':'পথপ্রদর্শক'},{'id':'95','arabic':'الْبَدِيعُ','name':'আল-বাদী','meaning':'অনুপম সৃষ্টিকর্তা'},{'id':'96','arabic':'الْبَاقِي','name':'আল-বাকী','meaning':'চিরস্থায়ী'},{'id':'97','arabic':'الْوَارِثُ','name':'আল-ওয়ারিস','meaning':'উত্তরাধিকারী'},{'id':'98','arabic':'الرَّشِيدُ','name':'আর-রশীদ','meaning':'সঠিক পথপ্রদর্শক'},{'id':'99','arabic':'الصَّبُورُ','name':'আস-সবূর','meaning':'পরম ধৈর্যশীল'},
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _refreshDownloadedCount();
+    _player.playerStateStream.listen((state) {
+      if (!mounted) return;
+      if (state.processingState == ProcessingState.completed) {
+        setState(() {
+          _playingId = null;
+          _loadingAudio = false;
+        });
+      } else if (state.processingState == ProcessingState.ready &&
+          _loadingAudio) {
+        setState(() => _loadingAudio = false);
+      }
+    });
+  }
+
+  Future<void> _refreshDownloadedCount() async {
+    final count = await _audioCache.downloadedCount(_audioFiles);
+    if (mounted) setState(() => _downloadedCount = count);
+  }
+
+  Future<void> _downloadAllAudio() async {
+    if (_downloadingAll || _downloadedCount == _audioFiles.length) return;
+
+    setState(() {
+      _downloadingAll = true;
+      _downloadProgress = 0;
+    });
+
+    try {
+      await _audioCache.downloadAll(
+        _audioFiles,
+        onProgress: (completed, total) {
+          if (!mounted) return;
+          setState(() => _downloadProgress = completed);
+        },
+      );
+      await _refreshDownloadedCount();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('আল্লাহর ৯৯ নামের সব অডিও অফলাইনের জন্য সংরক্ষিত হয়েছে।')),
+        );
+      }
+    } catch (_) {
+      await _refreshDownloadedCount();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('কিছু অডিও ডাউনলোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _downloadingAll = false);
+    }
+  }
+
   Future<void> _playName(Map<String, String> item) async {
     final id = item['id']!;
     if (_playingId == id && _player.playing) {
       await _player.stop();
-      if (mounted) setState(() { _playingId = null; _loadingAudio = false; });
+      if (mounted) {
+        setState(() {
+          _playingId = null;
+          _loadingAudio = false;
+        });
+      }
       return;
     }
 
     await _player.stop();
-    if (mounted) setState(() { _playingId = id; _loadingAudio = true; });
+    if (mounted) {
+      setState(() {
+        _playingId = id;
+        _loadingAudio = true;
+      });
+    }
 
     try {
       final fileName = _audioFiles[int.parse(id) - 1];
-
-      // Cache-first: a previously downloaded file is opened locally and
-      // never waits for the network.
-      final cachedFile = await _audioCache.getCachedFile(fileName);
-      final file = cachedFile ?? await _audioCache.getFile(fileName);
+      final file = await _audioCache.getCachedFile(fileName);
+      if (file == null) {
+        throw StateError('Audio is not downloaded for offline playback.');
+      }
 
       await _player.setFilePath(file.path);
       await _player.play();
     } catch (_) {
       if (mounted) {
-        setState(() { _playingId = null; _loadingAudio = false; });
+        setState(() {
+          _playingId = null;
+          _loadingAudio = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'এই অডিওটি এখনো ডিভাইসে সংরক্ষিত নেই। প্রথমবার চালাতে ইন্টারনেট প্রয়োজন।',
-            ),
+            content: Text('এই অডিওটি অফলাইনে প্রস্তুত নয়। উপরের Download All Audio চাপুন।'),
           ),
         );
       }
@@ -70,21 +143,10 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _player.playerStateStream.listen((state) {
-      if (!mounted) return;
-      if (state.processingState == ProcessingState.completed) {
-        setState(() { _playingId = null; _loadingAudio = false; });
-      }
-      if (state.processingState == ProcessingState.ready && _loadingAudio) {
-        setState(() => _loadingAudio = false);
-      }
-    });
+  void dispose() {
+    _player.dispose();
+    super.dispose();
   }
-
-  @override
-  void dispose() { _player.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -96,15 +158,88 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
           item['id'] == q;
     }).toList();
     final secondary = context.secondaryTextColor;
+
+    final allDownloaded = _downloadedCount == _audioFiles.length;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('আল্লাহর ৯৯ নাম', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'আল্লাহর ৯৯ নাম',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: SafeArea(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+              child: Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.download_for_offline_rounded,
+                              color: AppColors.seaBlue),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  allDownloaded
+                                      ? 'অফলাইন অডিও প্রস্তুত'
+                                      : '৯৯টি নামের অডিও অফলাইনে রাখুন',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _downloadingAll
+                                      ? 'ডাউনলোড হচ্ছে $_downloadProgress/${_audioFiles.length}...'
+                                      : 'একবার ডাউনলোড করলে পরে ইন্টারনেট ছাড়াই শুনতে পারবেন।',
+                                  style: TextStyle(fontSize: 11, color: secondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton.icon(
+                            onPressed: (_downloadingAll || allDownloaded)
+                                ? null
+                                : _downloadAllAudio,
+                            icon: _downloadingAll
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : Icon(allDownloaded
+                                    ? Icons.check_rounded
+                                    : Icons.download_rounded),
+                            label: Text(allDownloaded ? 'সম্পন্ন' : 'ডাউনলোড'),
+                          ),
+                        ],
+                      ),
+                      if (_downloadingAll) ...[
+                        const SizedBox(height: 9),
+                        LinearProgressIndicator(
+                          value: _downloadProgress / _audioFiles.length,
+                          minHeight: 5,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
               child: TextField(
                 onChanged: (value) => setState(() => _query = value),
                 decoration: InputDecoration(
@@ -132,13 +267,16 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
               padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
               child: Row(
                 children: [
-                  const Icon(Icons.volume_up_rounded, size: 18, color: AppColors.seaBlue),
+                  const Icon(Icons.volume_up_rounded,
+                      size: 18, color: AppColors.seaBlue),
                   const SizedBox(width: 7),
                   Expanded(
                     child: Text(
                       _loadingAudio
-                          ? 'অডিও লোড হচ্ছে...'
-                          : 'নাম শুনতে যেকোনো নামের ওপর চাপুন',
+                          ? 'অডিও চালু হচ্ছে...'
+                          : allDownloaded
+                              ? 'অফলাইন মোড: যেকোনো নাম চাপুন'
+                              : 'আগে উপরের Download চাপুন, তারপর যেকোনো নাম শুনুন',
                       style: TextStyle(fontSize: 12, color: secondary),
                     ),
                   ),
@@ -156,7 +294,8 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
                     child: ListTile(
                       onTap: () => _playName(item),
                       leading: CircleAvatar(
-                        backgroundColor: AppColors.seaBlue.withValues(alpha: .10),
+                        backgroundColor:
+                            AppColors.seaBlue.withValues(alpha: .10),
                         child: Text(
                           item['id']!,
                           style: const TextStyle(
@@ -168,7 +307,10 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
                       title: Text(
                         item['arabic']!,
                         textAlign: TextAlign.right,
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: 4),
