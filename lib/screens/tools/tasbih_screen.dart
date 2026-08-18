@@ -26,14 +26,22 @@ class _TasbihScreenState extends State<TasbihScreen> {
 
   Future<void> _vibrate({bool completion = false}) async {
     if (!_vibrationEnabled) return;
+
+    // Flutter haptic is triggered directly, so the counter feedback does not
+    // depend on the native method channel being available.
+    if (completion) {
+      await HapticFeedback.heavyImpact();
+    } else {
+      await HapticFeedback.selectionClick();
+    }
+
+    // Also request the native Android vibrator for a stronger physical pulse.
     try {
       await _vibrationChannel.invokeMethod<void>(completion ? 'targetReached' : 'tap');
+    } on MissingPluginException {
+      // Flutter haptic above is the fallback.
     } on PlatformException {
-      if (completion) {
-        await HapticFeedback.heavyImpact();
-      } else {
-        await HapticFeedback.lightImpact();
-      }
+      // Flutter haptic above is the fallback.
     }
   }
 
@@ -103,7 +111,7 @@ class _TasbihScreenState extends State<TasbihScreen> {
               Text('$_counter', style: const TextStyle(fontSize: 46, fontWeight: FontWeight.w800, color: AppColors.seaBlue)),
               Text('${l10n.tr('বার', 'repetitions')} / $_target', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: secondary)),
             ]),
-            const SizedBox(height: 30),
+            const SizedBox(height: 12),
             GestureDetector(
               onTap: _incrementCounter,
               child: Container(
