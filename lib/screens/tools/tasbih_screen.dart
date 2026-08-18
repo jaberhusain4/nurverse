@@ -35,9 +35,7 @@ class _TasbihScreenState extends State<TasbihScreen> {
     try {
       await _vibrationChannel.invokeMethod<void>(completion ? 'targetReached' : 'tap');
     } on MissingPluginException {
-      // Flutter haptic above is the fallback.
     } on PlatformException {
-      // Flutter haptic above is the fallback.
     }
   }
 
@@ -149,12 +147,12 @@ class _TasbihScreenState extends State<TasbihScreen> {
                       Text(currentDhikr['meaning']!, style: TextStyle(fontSize: 13, color: secondary), textAlign: TextAlign.center),
                     ]),
             ),
-            const Spacer(flex: 1),
+            const Spacer(flex: 2),
             Column(children: [
               Text('$_counter', style: const TextStyle(fontSize: 46, fontWeight: FontWeight.w800, color: AppColors.seaBlue)),
               Text('${l10n.tr('বার', 'repetitions')} / $_target', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: secondary)),
             ]),
-            const SizedBox(height: 12),
+            const SizedBox(height: 48),
             GestureDetector(
               onTap: _incrementCounter,
               child: Container(
