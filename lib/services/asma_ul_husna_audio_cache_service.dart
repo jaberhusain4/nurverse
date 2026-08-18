@@ -16,9 +16,9 @@ class AsmaUlHusnaAudioCacheService {
 
   static const String _baseUrl =
       'https://commons.wikimedia.org/wiki/Special:Redirect/file/';
-  static const int _maxConcurrentDownloads = 6;
-  static const int _maxAttempts = 2;
-  static const Duration _downloadTimeout = Duration(seconds: 30);
+  static const int _maxConcurrentDownloads = 1;
+  static const int _maxAttempts = 4;
+  static const Duration _downloadTimeout = Duration(seconds: 45);
 
   Directory? _audioDirectory;
   final http.Client _client = http.Client();
@@ -57,7 +57,6 @@ class AsmaUlHusnaAudioCacheService {
     }
   }
 
-  /// Local-only lookup. Never performs a network request.
   Future<File?> getCachedFile(String fileName) async {
     final file = await _localFile(fileName);
     if (await _isValidOgg(file)) return file;
@@ -115,7 +114,7 @@ class AsmaUlHusnaAudioCacheService {
           if (await temporary.exists()) await temporary.delete();
         } catch (_) {}
         if (attempt < _maxAttempts) {
-          await Future<void>.delayed(const Duration(milliseconds: 500));
+          await Future<void>.delayed(const Duration(seconds: 1));
         }
       }
     }
@@ -126,64 +125,43 @@ class AsmaUlHusnaAudioCacheService {
   Future<bool> isCached(String fileName) async =>
       await getCachedFile(fileName) != null;
 
-  /// Downloads all missing source files with limited parallelism.
-  /// Existing valid files are skipped. A file is successful only after local
-  /// OGG validation. Missing files are returned for a later retry.
+  /// Stable resumable queue. One file at a time avoids Wikimedia connection
+  /// throttling; valid files are skipped, and only missing files are retried.
   Future<List<String>> downloadAll(
     List<String> fileNames, {
     void Function(int completed, int total)? onProgress,
   }) async {
     if (fileNames.isEmpty) return const [];
 
-    // Some numbered names intentionally share a source filename in the
-    // Wikimedia collection (#48/#65 and #55/#77). Download each source once.
-    final uniqueFiles = <String>[];
-    final seen = <String>{};
-    for (final fileName in fileNames) {
-      if (seen.add(fileName)) uniqueFiles.add(fileName);
-    }
-
-    final pending = <String>[];
-    for (final fileName in uniqueFiles) {
-      if (!await isCached(fileName)) pending.add(fileName);
-    }
-
-    if (pending.isEmpty) {
-      onProgress?.call(fileNames.length, fileNames.length);
-      return const [];
-    }
-
-    var nextIndex = 0;
-    Future<void> worker() async {
-      while (true) {
-        final index = nextIndex++;
-        if (index >= pending.length) return;
-        try {
-          await getFile(pending[index]);
-        } catch (_) {}
-        onProgress?.call(await downloadedCount(fileNames), fileNames.length);
-      }
-    }
-
-    final workerCount = pending.length < _maxConcurrentDownloads
-        ? pending.length
-        : _maxConcurrentDownloads;
-    await Future.wait(List.generate(workerCount, (_) => worker()));
-
-    final finalCount = await downloadedCount(fileNames);
-    onProgress?.call(finalCount, fileNames.length);
-
-    if (finalCount == fileNames.length) return const [];
+    var completed = await downloadedCount(fileNames);
+    onProgress?.call(completed, fileNames.length);
 
     final missing = <String>[];
     for (final fileName in fileNames) {
-      if (!await isCached(fileName)) missing.add(fileName);
+      if (await isCached(fileName)) continue;
+      try {
+        await getFile(fileName);
+        completed++;
+        onProgress?.call(completed, fileNames.length);
+      } catch (_) {
+        missing.add(fileName);
+        // Keep going. A single bad/slow source must never stop the other 98.
+        onProgress?.call(completed, fileNames.length);
+      }
     }
-    return missing;
+
+    // Re-scan the device so the completion state is authoritative.
+    final stillMissing = <String>[];
+    for (final fileName in fileNames) {
+      if (!await isCached(fileName)) stillMissing.add(fileName);
+    }
+    onProgress?.call(
+      fileNames.length - stillMissing.length,
+      fileNames.length,
+    );
+    return stillMissing;
   }
 
-  /// Counts the 99 numbered entries, not unique source files. This means a
-  /// shared source legitimately counts for both numbered names that use it.
   Future<int> downloadedCount(List<String> fileNames) async {
     var count = 0;
     for (final fileName in fileNames) {
