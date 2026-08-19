@@ -35,97 +35,64 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
     return bn;
   }
 
-  DateTime? _parse(String value) {
-    final match = RegExp(
-      r'^(\d{1,2}):(\d{2})\s*(AM|PM)$',
-      caseSensitive: false,
-    ).firstMatch(value.trim());
-    if (match == null) return null;
-
-    var hour = int.tryParse(match.group(1)!) ?? -1;
-    final minute = int.tryParse(match.group(2)!) ?? -1;
-    if (hour < 1 || hour > 12 || minute < 0 || minute > 59) return null;
-
-    final period = match.group(3)!.toUpperCase();
-    if (period == 'AM' && hour == 12) hour = 0;
-    if (period == 'PM' && hour != 12) hour += 12;
-
-    return DateTime(_now.year, _now.month, _now.day, hour, minute);
-  }
-
-  String _left(Duration duration) {
-    final seconds = duration.inSeconds.clamp(0, 86400);
+  String _countdown(DateTime end) {
+    final seconds = end.difference(_now).inSeconds.clamp(0, 86400);
     final minutes = seconds ~/ 60;
     final remaining = seconds % 60;
-    return '$minutes:${remaining.toString().padLeft(2, '0')} '
-        '${_label('মিনিট বাকি', 'min left', 'دقيقة متبقية')}';
+    return '$minutes:${remaining.toString().padLeft(2, '0')}';
+  }
+
+  bool _active(DateTime? start, DateTime? end) {
+    if (start == null || end == null) return false;
+    return !_now.isBefore(start) && _now.isBefore(end);
   }
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<PrayerController>();
-    final sunrise = _parse(controller.sunriseTime);
-    final noon = _parse(controller.solarNoonTime);
-    final sunset = _parse(controller.sunsetTime);
 
-    final windows = <Map<String, dynamic>>[];
-
-    if (sunrise != null) {
-      windows.add({
-        'start': sunrise.subtract(const Duration(minutes: 15)),
-        'end': sunrise.add(const Duration(minutes: 15)),
-        'bn': 'সূর্যোদয়ের সময়',
-        'en': 'Sunrise restriction',
-        'ar': 'وقت النهي عند الشروق',
-      });
-    }
-
-    if (noon != null) {
-      windows.add({
-        'start': noon.subtract(const Duration(minutes: 10)),
-        'end': noon.add(const Duration(minutes: 5)),
-        'bn': 'জাওয়ালের সময়',
-        'en': 'Zawal restriction',
-        'ar': 'وقت النهي عند الزوال',
-      });
-    }
-
-    if (sunset != null) {
-      windows.add({
-        'start': sunset.subtract(const Duration(minutes: 15)),
-        'end': sunset.add(const Duration(minutes: 15)),
-        'bn': 'সূর্যাস্তের সময়',
-        'en': 'Sunset restriction',
-        'ar': 'وقت النهي عند الغروب',
-      });
-    }
-
-    final active = windows.where((window) {
-      final start = window['start'] as DateTime;
-      final end = window['end'] as DateTime;
-      return !_now.isBefore(start) && _now.isBefore(end);
-    }).toList();
-
-    final upcoming = windows.where((window) {
-      return _now.isBefore(window['start'] as DateTime);
-    }).toList();
-
-    final Map<String, dynamic>? window = active.isNotEmpty
-        ? active.first
-        : (upcoming.isNotEmpty ? upcoming.first : null);
-
-    if (window == null) return const SizedBox.shrink();
-
-    final isActive = active.isNotEmpty;
-    final title = _label(
-      window['bn'] as String,
-      window['en'] as String,
-      window['ar'] as String,
+    final bool prohibited = _active(
+      controller.prohibitedStart,
+      controller.prohibitedEnd,
+    );
+    final bool makruh = !prohibited && _active(
+      controller.makruhStart,
+      controller.makruhEnd,
     );
 
-    final message = isActive
-        ? '$title — ${_label('এখন নামাজের নিষিদ্ধ/মাকরূহ সময় চলছে', 'Restricted prayer time is active', 'وقت النهي قائم الآن')} • ${_left((window['end'] as DateTime).difference(_now))}'
-        : '$title — ${_left((window['start'] as DateTime).difference(_now))} ${_label('পর শুরু হবে', 'until it starts', 'حتى يبدأ')}';
+    // Home should not show a future-warning card. It appears only while
+    // the restriction is actually active, matching the normal prayer-app UX.
+    if (!prohibited && !makruh) {
+      return const SizedBox.shrink();
+    }
+
+    final DateTime end = prohibited
+        ? controller.prohibitedEnd!
+        : controller.makruhEnd!;
+
+    final String title = prohibited
+        ? _label(
+            'নামাজের নিষিদ্ধ সময় চলছে',
+            'Forbidden prayer time is active',
+            'وقت النهي عن الصلاة قائم الآن',
+          )
+        : _label(
+            'মাকরূহ সময় চলছে',
+            'Makruh prayer time is active',
+            'وقت الكراهة قائم الآن',
+          );
+
+    final String detail = prohibited
+        ? _label(
+            'এখন নামাজ না পড়ুন',
+            'Do not perform prayer now',
+            'لا تصل الآن',
+          )
+        : _label(
+            'এখন নামাজ পড়া এড়িয়ে চলুন',
+            'Avoid prayer during this period',
+            'تجنب الصلاة في هذا الوقت',
+          );
 
     final theme = Theme.of(context);
     final warningColor = theme.colorScheme.error;
@@ -133,32 +100,32 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: warningColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: warningColor.withValues(alpha: 0.25)),
+        border: Border.all(color: warningColor.withValues(alpha: 0.28)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.warning_amber_rounded, color: warningColor, size: 23),
+          Icon(Icons.warning_amber_rounded, color: warningColor, size: 24),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _label('সতর্কতা', 'Prayer Time Warning', 'تنبيه وقت الصلاة'),
+                  title,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w800,
                     color: warningColor,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  message,
+                  '$detail • ${_countdown(end)} ${_label('বাকি', 'remaining', 'متبقي')}',
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
