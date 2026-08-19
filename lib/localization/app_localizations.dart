@@ -24,6 +24,7 @@ class AppLocalizations {
   String get tools => _text('টুলস', 'Tools');
   String get more => _text('আরও', 'More');
   String get refresh => _text('রিফ্রেশ', 'Refresh');
+  String get refreshTooltip => _text('সালাতের সময় আপডেট করুন', 'Refresh prayer times');
   String get retry => _text('পুনরায় চেষ্টা করুন', 'Try Again');
   String get cancel => _text('বাতিল', 'Cancel');
   String get save => _text('সংরক্ষণ করুন', 'Save');
@@ -31,8 +32,6 @@ class AppLocalizations {
   String get done => _text('সম্পন্ন', 'Done');
   String get search => _text('অনুসন্ধান', 'Search');
   String get settings => _text('সেটিংস', 'Settings');
-
-  String get welcome => _text('আসসালামু আলাইকুম', 'Assalamu Alaikum');
   String get currentPrayer => _text('বর্তমান সালাত', 'Current Prayer');
   String get nextPrayer => _text('পরবর্তী সালাত', 'Next Prayer');
   String get prayerTime => _text('সালাতের সময়', 'Prayer Time');
@@ -52,6 +51,7 @@ class AppLocalizations {
   String get end => _text('শেষ', 'End');
   String get jamaat => _text('জামাআত', 'Jama’ah');
   String get friday => _text('শুক্রবার', 'Friday');
+  String get fridayLabel => friday;
   String get importantTimes => _text('আজকের গুরুত্বপূর্ণ সময়', 'Important Times Today');
   String get solarNoon => _text('যাওয়াল', 'Solar Noon');
   String get makruhTime => _text('মাকরূহ সময়', 'Makruh Time');
@@ -63,7 +63,9 @@ class AppLocalizations {
   String get awwabin => _text('আউওয়াবীন', 'Awwabin');
   String get tahajjud => _text('তাহাজ্জুদ', 'Tahajjud');
   String get prayerTracker => _text('আজকের সালাত ট্র্যাকার', 'Prayer Tracker');
+  String get trackerTitle => prayerTracker;
   String get markPrayers => _text('পড়া সালাতগুলো চিহ্নিত করুন', 'Mark the prayers you have performed');
+  String get trackerSubtitle => markPrayers;
   String get prayerLoadError => _text('সালাতের তথ্য লোড করা যায়নি', 'Could not load prayer information');
   String get prayerTimeNote => _text('সালাতের সময় স্থান, তারিখ ও হিসাব পদ্ধতির উপর নির্ভর করে পরিবর্তিত হতে পারে।', 'Prayer times may vary depending on location, date, and calculation method.');
   String get fajr => _text('ফজর', 'Fajr');
@@ -72,6 +74,22 @@ class AppLocalizations {
   String get maghrib => _text('মাগরিব', 'Maghrib');
   String get isha => _text('ইশা', 'Isha');
   String get jumuah => _text('জুমু‘আ', 'Jumu’ah');
+
+  String prayerName(String name) {
+    switch (name.trim().toLowerCase()) {
+      case 'fajr': case 'ফজর': return fajr;
+      case 'dhuhr': case 'যোহর': return dhuhr;
+      case 'asr': case 'আসর': return asr;
+      case 'maghrib': case 'মাগরিব': return maghrib;
+      case 'isha': case 'ইশা': return isha;
+      case 'jumuah': case 'জুমু‘আ': case 'জুমুআ': return jumuah;
+      case 'ishraq': case 'ইশরাক': return ishraq;
+      case 'duha': case 'চাশত': case 'দুহা': return duha;
+      case 'awwabin': case 'আউওয়াবীন': return awwabin;
+      case 'tahajjud': case 'তাহাজ্জুদ': return tahajjud;
+      default: return name;
+    }
+  }
 
   String get qibla => _text('কিবলা', 'Qibla');
   String get tasbih => _text('তাসবিহ', 'Tasbih');
@@ -125,31 +143,15 @@ class AppLocalizations {
   String get zakatCalculatorSubtitle => _text('যাকাতের হিসাব করুন', 'Calculate your Zakat');
   String get toolsHeroTitle => _text('আপনার ইসলামিক টুলস', 'Your Islamic Tools');
   String get toolsHeroSubtitle => _text('ইবাদত, জ্ঞান ও দৈনন্দিন প্রয়োজন—সব এক জায়গায়।', 'Worship, knowledge and daily needs—all in one place.');
-
   String get alQuran => _text('আল-কুরআন', 'Al-Quran');
   String get quranSubtitle => _text('হাফেজি পাঠ, অনুধাবন এবং তিলাওয়াত — তিনটি আলাদা অভিজ্ঞতা।', 'Hifzi reading, understanding and recitation — three distinct experiences.');
   String get hafeziQuran => _text('হাফেজি কুরআন', 'Hafezi Quran');
-  String get hafeziSubtitle => _text('১৫ লাইনের অফলাইন হাফেজি/ইন্দো-পাক স্টাইল মুসহাফ।', '15-line offline Hafezi/Indo-Pak style Mushaf.');
-  String get fifteenLinesOffline => _text('১৫ লাইন • অফলাইন', '15 lines • Offline');
-  String get onudhabonQuran => _text('অনুধাবন কুরআন', 'Onudhabon Quran');
-  String get onudhabonSubtitle => _text('আরবি আয়াত, বাংলা অনুবাদ এবং বাংলা তাফসির/ব্যাখ্যা।', 'Arabic verses, Bengali translation and Bengali tafsir/explanation.');
-  String get translationTafsir => _text('অনুবাদ + তাফসির', 'Translation + Tafsir');
-  String get audioQuranMode => _text('অডিও কুরআন', 'Audio Quran');
-  String get audioQuranModeSubtitle => _text('সূরা অনুযায়ী তিলাওয়াত, ক্বারী নির্বাচন, seek এবং offline download।', 'Surah-based recitation, reciter selection, seek and offline download.');
-  String get audioOfflineCache => _text('অডিও • অফলাইন ক্যাশ', 'Audio • Offline Cache');
-
-  String prayerStartsAt(String time) => _text('শুরু হবে $time', 'Starts at $time');
-  String prayerEndsAt(String time) => _text('শেষ হবে $time', 'Ends at $time');
-  String nextPrayerAt(String name, String time) => _text('পরবর্তী: $name • $time', 'Next: $name • $time');
-  String remaining(String value) => _text('$value বাকি', '$value remaining');
+  String get hafeziSubtitle => _text('১৫ লাইনের অফলাইন হাফেজি কুরআন', '15-line offline Hifzi Quran');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
-  @override
-  bool isSupported(Locale locale) => locale.languageCode == 'bn' || locale.languageCode == 'en';
-  @override
-  Future<AppLocalizations> load(Locale locale) async => AppLocalizations(locale);
-  @override
-  bool shouldReload(_AppLocalizationsDelegate old) => false;
+  @override bool isSupported(Locale locale) => ['bn', 'en'].contains(locale.languageCode);
+  @override Future<AppLocalizations> load(Locale locale) async => AppLocalizations(locale);
+  @override bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
