@@ -3,6 +3,13 @@ import 'package:geolocator/geolocator.dart';
 
 import 'prayer_calculation_config.dart';
 
+class PrayerTimeWindow {
+  final DateTime start;
+  final DateTime end;
+
+  const PrayerTimeWindow({required this.start, required this.end});
+}
+
 class PrayerEngineService {
   const PrayerEngineService();
 
@@ -32,33 +39,33 @@ class PrayerEngineService {
     };
   }
 
-  /// Real daily special windows derived from the same Adhan calculation.
-  /// These are deliberately kept in the engine so Home and Prayer can share
-  /// one source of truth.
-  Map<String, DateTimeRange> specialTimeWindows({
+  /// Special daily windows derived from the same Adhan calculation used for
+  /// the five daily prayers. This keeps Home and Prayer on one source of
+  /// truth and avoids hard-coded clock values.
+  Map<String, PrayerTimeWindow> specialTimeWindows({
     required Position position,
     required DateTime date,
     PrayerCalculationConfig config = PrayerCalculationConfig.defaults,
   }) {
     final t = getPrayerTimes(position: position, date: date, config: config);
 
-    // Sunrise -> a short post-sunrise prohibition.
     final sunriseEnd = t.sunrise.add(const Duration(minutes: 15));
-
-    // Zawal is represented conservatively as the final 10 minutes before
-    // Dhuhr. This is derived from the calculated Dhuhr, never a dummy clock.
     final zawalStart = t.dhuhr.subtract(const Duration(minutes: 10));
-
-    // The final 15 minutes before Maghrib are treated as the sunset-related
-    // prohibited window. The exact fiqh rule is surfaced as a time window,
-    // while the underlying astronomical boundary remains the calculated
-    // Maghrib/Sunset time.
     final sunsetStart = t.maghrib.subtract(const Duration(minutes: 15));
 
     return {
-      'sunriseProhibited': DateTimeRange(start: t.sunrise, end: sunriseEnd),
-      'zawalProhibited': DateTimeRange(start: zawalStart, end: t.dhuhr),
-      'sunsetProhibited': DateTimeRange(start: sunsetStart, end: t.maghrib),
+      'sunriseProhibited': PrayerTimeWindow(
+        start: t.sunrise,
+        end: sunriseEnd,
+      ),
+      'zawalProhibited': PrayerTimeWindow(
+        start: zawalStart,
+        end: t.dhuhr,
+      ),
+      'sunsetProhibited': PrayerTimeWindow(
+        start: sunsetStart,
+        end: t.maghrib,
+      ),
     };
   }
 
