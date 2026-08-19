@@ -60,8 +60,6 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
       controller.makruhEnd,
     );
 
-    // Home should not show a future-warning card. It appears only while
-    // the restriction is actually active, matching the normal prayer-app UX.
     if (!prohibited && !makruh) {
       return const SizedBox.shrink();
     }
@@ -72,26 +70,26 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
 
     final String title = prohibited
         ? _label(
-            'নামাজের নিষিদ্ধ সময় চলছে',
+            'এখন নিষিদ্ধ সময় চলছে',
             'Forbidden prayer time is active',
-            'وقت النهي عن الصلاة قائم الآن',
+            'وقت النهي قائم الآن',
           )
         : _label(
-            'মাকরূহ সময় চলছে',
+            'এখন মাকরূহ সময় চলছে',
             'Makruh prayer time is active',
             'وقت الكراهة قائم الآن',
           );
 
     final String detail = prohibited
         ? _label(
-            'এখন নামাজ না পড়ুন',
-            'Do not perform prayer now',
-            'لا تصل الآن',
+            'এখন নামাজ পড়া যাবে না',
+            'Prayer cannot be performed during this time',
+            'لا تُصلَّى الصلاة في هذا الوقت',
           )
         : _label(
-            'এখন নামাজ পড়া এড়িয়ে চলুন',
-            'Avoid prayer during this period',
-            'تجنب الصلاة في هذا الوقت',
+            'এখন মাকরূহ সময় চলছে',
+            'Makruh time is active',
+            'وقت الكراهة قائم الآن',
           );
 
     final theme = Theme.of(context);
