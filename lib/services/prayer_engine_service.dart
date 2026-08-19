@@ -6,128 +6,101 @@ import 'prayer_calculation_config.dart';
 class PrayerEngineService {
   const PrayerEngineService();
 
-  // ==========================================================================
-  // PRAYER TIMES
-  // ==========================================================================
-
   PrayerTimes getPrayerTimes({
     required Position position,
     required DateTime date,
     PrayerCalculationConfig config = PrayerCalculationConfig.defaults,
   }) {
-    final Coordinates coordinates = Coordinates(
-      position.latitude,
-      position.longitude,
-    );
-
-    final CalculationParameters params =
-        config.method.getParameters()..madhab = config.madhab;
-
+    final coordinates = Coordinates(position.latitude, position.longitude);
+    final params = config.method.getParameters()..madhab = config.madhab;
     return PrayerTimes(coordinates, DateComponents.from(date), params);
   }
-
-  // ==========================================================================
-  // PRAYER MAP
-  // ==========================================================================
 
   Map<String, DateTime> prayerMap({
     required Position position,
     required DateTime date,
     PrayerCalculationConfig config = PrayerCalculationConfig.defaults,
   }) {
-    final PrayerTimes prayerTimes = getPrayerTimes(
-      position: position,
-      date: date,
-      config: config,
-    );
-
+    final t = getPrayerTimes(position: position, date: date, config: config);
     return {
-      'Fajr': prayerTimes.fajr,
-      'Sunrise': prayerTimes.sunrise,
-      'Dhuhr': prayerTimes.dhuhr,
-      'Asr': prayerTimes.asr,
-      'Maghrib': prayerTimes.maghrib,
-      'Isha': prayerTimes.isha,
+      'Fajr': t.fajr,
+      'Sunrise': t.sunrise,
+      'Dhuhr': t.dhuhr,
+      'Asr': t.asr,
+      'Maghrib': t.maghrib,
+      'Isha': t.isha,
     };
   }
 
-  // ==========================================================================
-  // CURRENT PRAYER
-  // ==========================================================================
+  /// Real daily special windows derived from the same Adhan calculation.
+  /// These are deliberately kept in the engine so Home and Prayer can share
+  /// one source of truth.
+  Map<String, DateTimeRange> specialTimeWindows({
+    required Position position,
+    required DateTime date,
+    PrayerCalculationConfig config = PrayerCalculationConfig.defaults,
+  }) {
+    final t = getPrayerTimes(position: position, date: date, config: config);
+
+    // Sunrise -> a short post-sunrise prohibition.
+    final sunriseEnd = t.sunrise.add(const Duration(minutes: 15));
+
+    // Zawal is represented conservatively as the final 10 minutes before
+    // Dhuhr. This is derived from the calculated Dhuhr, never a dummy clock.
+    final zawalStart = t.dhuhr.subtract(const Duration(minutes: 10));
+
+    // The final 15 minutes before Maghrib are treated as the sunset-related
+    // prohibited window. The exact fiqh rule is surfaced as a time window,
+    // while the underlying astronomical boundary remains the calculated
+    // Maghrib/Sunset time.
+    final sunsetStart = t.maghrib.subtract(const Duration(minutes: 15));
+
+    return {
+      'sunriseProhibited': DateTimeRange(start: t.sunrise, end: sunriseEnd),
+      'zawalProhibited': DateTimeRange(start: zawalStart, end: t.dhuhr),
+      'sunsetProhibited': DateTimeRange(start: sunsetStart, end: t.maghrib),
+    };
+  }
 
   Prayer getCurrentPrayer({
     required Position position,
     DateTime? date,
     PrayerCalculationConfig config = PrayerCalculationConfig.defaults,
   }) {
-    final DateTime calculationDate = date ?? DateTime.now();
-
-    final PrayerTimes prayerTimes = getPrayerTimes(
+    final calculationDate = date ?? DateTime.now();
+    return getPrayerTimes(
       position: position,
       date: calculationDate,
       config: config,
-    );
-
-    return prayerTimes.currentPrayer();
+    ).currentPrayer();
   }
-
-  // ==========================================================================
-  // NEXT PRAYER
-  // ==========================================================================
 
   Prayer getNextPrayer({
     required Position position,
     DateTime? date,
     PrayerCalculationConfig config = PrayerCalculationConfig.defaults,
   }) {
-    final DateTime calculationDate = date ?? DateTime.now();
-
-    final PrayerTimes prayerTimes = getPrayerTimes(
+    final calculationDate = date ?? DateTime.now();
+    return getPrayerTimes(
       position: position,
       date: calculationDate,
       config: config,
-    );
-
-    return prayerTimes.nextPrayer();
+    ).nextPrayer();
   }
-
-  // ==========================================================================
-  // TIME UNTIL NEXT PRAYER
-  // ==========================================================================
 
   Duration timeUntilNextPrayer({
     required Position position,
     DateTime? date,
     PrayerCalculationConfig config = PrayerCalculationConfig.defaults,
   }) {
-    final DateTime now = date ?? DateTime.now();
-
-    final PrayerTimes prayerTimes = getPrayerTimes(
-      position: position,
-      date: now,
-      config: config,
-    );
-
-    final Prayer nextPrayer = prayerTimes.nextPrayer();
-
-    final DateTime? nextTime = prayerTimes.timeForPrayer(nextPrayer);
-
-    if (nextTime == null) {
-      return Duration.zero;
-    }
-
-    final Duration difference = nextTime.difference(now);
-
-    if (difference.isNegative) {
-      return Duration.zero;
-    }
-
-    return difference;
+    final now = date ?? DateTime.now();
+    final times = getPrayerTimes(position: position, date: now, config: config);
+    final next = times.nextPrayer();
+    final nextTime = times.timeForPrayer(next);
+    if (nextTime == null) return Duration.zero;
+    final difference = nextTime.difference(now);
+    return difference.isNegative ? Duration.zero : difference;
   }
-
-  // ==========================================================================
-  // SINGLE PRAYER TIME
-  // ==========================================================================
 
   DateTime? prayerTime({
     required Position position,
@@ -135,20 +108,13 @@ class PrayerEngineService {
     DateTime? date,
     PrayerCalculationConfig config = PrayerCalculationConfig.defaults,
   }) {
-    final PrayerTimes prayerTimes = getPrayerTimes(
+    return getPrayerTimes(
       position: position,
       date: date ?? DateTime.now(),
       config: config,
-    );
-
-    return prayerTimes.timeForPrayer(prayer);
+    ).timeForPrayer(prayer);
   }
 
-  // ==========================================================================
-  // SETTINGS → CALCULATION METHOD
-  // ==========================================================================
-
-  /// Backward-compatible helper.
   CalculationMethod calculationMethodFromString(String value) {
     return PrayerCalculationConfig.fromSettings(
       calculationMethod: value,
@@ -156,21 +122,12 @@ class PrayerEngineService {
     ).method;
   }
 
-  // ==========================================================================
-  // SETTINGS → MADAB
-  // ==========================================================================
-
-  /// Backward-compatible helper.
   Madhab madhabFromString(String value) {
     return PrayerCalculationConfig.fromSettings(
       calculationMethod: 'Karachi',
       madhhab: value,
     ).madhab;
   }
-
-  // ==========================================================================
-  // BUILD CONFIG FROM SETTINGS
-  // ==========================================================================
 
   PrayerCalculationConfig configFromSettings({
     required String calculationMethod,
