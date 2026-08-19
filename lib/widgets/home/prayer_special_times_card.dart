@@ -1,23 +1,27 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../controllers/prayer_controller.dart';
+import 'live_prayer_restriction_card.dart';
 
-class PrayerSpecialTimesCard extends StatefulWidget {
+/// Compatibility wrapper kept for existing screen wiring.
+/// Home now renders the live restriction warning only; the old
+/// "starts later" restriction message has been removed.
+class PrayerSpecialTimesCard extends StatelessWidget {
   final String languageCode;
-  final DateTime? prohibitedStart, prohibitedEnd, makruhStart, makruhEnd;
-  const PrayerSpecialTimesCard({super.key,this.languageCode='bn',this.prohibitedStart,this.prohibitedEnd,this.makruhStart,this.makruhEnd});
-  bool get compact=>prohibitedStart!=null||prohibitedEnd!=null||makruhStart!=null||makruhEnd!=null;
-  @override State<PrayerSpecialTimesCard> createState()=>_PrayerSpecialTimesCardState();
-}
-class _PrayerSpecialTimesCardState extends State<PrayerSpecialTimesCard>{
-  Timer? _timer; DateTime _now=DateTime.now();
-  @override void initState(){super.initState();_timer=Timer.periodic(const Duration(seconds:1),(_){if(mounted)setState(()=>_now=DateTime.now());});}
-  @override void dispose(){_timer?.cancel();super.dispose();}
-  String _label(String bn,String en,String ar)=>widget.languageCode=='en'?en:widget.languageCode=='ar'?ar:bn;
-  DateTime? _parse(String v){final m=RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)$',caseSensitive:false).firstMatch(v.trim());if(m==null)return null;var h=int.tryParse(m.group(1)!)??-1;final n=int.tryParse(m.group(2)!)??-1;if(h<1||h>12||n<0||n>59)return null;final p=m.group(3)!.toUpperCase();if(p=='AM'&&h==12)h=0;if(p=='PM'&&h!=12)h+=12;return DateTime(_now.year,_now.month,_now.day,h,n);}
-  String _left(Duration d){final s=d.inSeconds.clamp(0,86400);return '${s~/60}:${(s%60).toString().padLeft(2,'0')} ${_label('মিনিট বাকি','min left','دقيقة متبقية')}';}
-  @override Widget build(BuildContext context){final c=context.watch<PrayerController>();return widget.compact?_compact(context,c):_detail(context,c);}
-  Widget _compact(BuildContext context,PrayerController c){final sr=_parse(c.sunriseTime),zn=_parse(c.solarNoonTime),ss=_parse(c.sunsetTime);final windows=<Map<String,dynamic>>[];if(sr!=null)windows.add({'s':sr.subtract(const Duration(minutes:15)),'e':sr.add(const Duration(minutes:15)),'bn':'সূর্যোদয়ের সময়','en':'Sunrise restriction','ar':'وقت النهي عند الشروق'});if(zn!=null)windows.add({'s':zn.subtract(const Duration(minutes:10)),'e':zn.add(const Duration(minutes:5)),'bn':'জাওয়ালের সময়','en':'Zawal restriction','ar':'وقت النهي عند الزوال'});if(ss!=null)windows.add({'s':ss.subtract(const Duration(minutes:15)),'e':ss.add(const Duration(minutes:15)),'bn':'সূর্যাস্তের সময়','en':'Sunset restriction','ar':'وقت النهي عند الغروب'});final active=windows.where((w)=>!_now.isBefore(w['s'] as DateTime)&&_now.isBefore(w['e'] as DateTime)).toList();final next=windows.where((w)=>_now.isBefore(w['s'] as DateTime)).toList();final w=active.isNotEmpty?active.first:(next.isNotEmpty?next.first:null);if(w==null)return const SizedBox.shrink();final color=Theme.of(context).colorScheme.error,fg=Theme.of(context).colorScheme.onSurface;final title=_label(w['bn'] as String,w['en'] as String,w['ar'] as String);final message=active.isNotEmpty?'$title — ${_label('এখন নামাজের নিষিদ্ধ/মাকরূহ সময় চলছে','Restricted prayer time is active','وقت النهي قائم الآن')} • ${_left((w['e'] as DateTime).difference(_now))}':'$title — ${_left((w['s'] as DateTime).difference(_now))} ${_label('পর শুরু হবে','until it starts','حتى يبدأ')}';return Container(width:double.infinity,padding:const EdgeInsets.symmetric(horizontal:13,vertical:11),decoration:BoxDecoration(color:color.withValues(alpha:.08),borderRadius:BorderRadius.circular(16),border:Border.all(color:color.withValues(alpha:.25))),child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(Icons.warning_amber_rounded,color:color,size:23),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(_label('সতর্কতা','Prayer Time Warning','تنبيه وقت الصلاة'),style:TextStyle(fontSize:13,fontWeight:FontWeight.w800,color:color)),const SizedBox(height:3),Text(message,style:TextStyle(fontSize:13.5,fontWeight:FontWeight.w700,color:fg))]))]));}
-  Widget _detail(BuildContext context,PrayerController c){final t=Theme.of(context),p=t.colorScheme.primary,fg=t.colorScheme.onSurface,sec=t.textTheme.bodySmall?.color??fg.withValues(alpha:.7);return Container(width:double.infinity,padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:t.cardColor,borderRadius:BorderRadius.circular(18),border:Border.all(color:p.withValues(alpha:.12))),child:Text(_label('মাকরূহ ও নিষিদ্ধ সময়ের বিস্তারিত','Detailed Makruh & Prohibited Times','تفاصيل أوقات الكراهة والنهي'),style:TextStyle(fontSize:15,fontWeight:FontWeight.w800,color:fg)));}
+  final DateTime? prohibitedStart;
+  final DateTime? prohibitedEnd;
+  final DateTime? makruhStart;
+  final DateTime? makruhEnd;
+
+  const PrayerSpecialTimesCard({
+    super.key,
+    this.languageCode = 'bn',
+    this.prohibitedStart,
+    this.prohibitedEnd,
+    this.makruhStart,
+    this.makruhEnd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LivePrayerRestrictionCard(languageCode: languageCode);
+  }
 }
