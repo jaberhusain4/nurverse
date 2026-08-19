@@ -51,24 +51,22 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
   Widget build(BuildContext context) {
     final controller = context.watch<PrayerController>();
 
-    final bool prohibited = _active(
+    final prohibited = _active(
       controller.prohibitedStart,
       controller.prohibitedEnd,
     );
-    final bool makruh = !prohibited && _active(
+    final makruh = !prohibited && _active(
       controller.makruhStart,
       controller.makruhEnd,
     );
 
-    if (!prohibited && !makruh) {
-      return const SizedBox.shrink();
-    }
+    if (!prohibited && !makruh) return const SizedBox.shrink();
 
-    final DateTime end = prohibited
+    final end = prohibited
         ? controller.prohibitedEnd!
         : controller.makruhEnd!;
 
-    final String title = prohibited
+    final title = prohibited
         ? _label(
             'এখন নিষিদ্ধ সময় চলছে',
             'Forbidden prayer time is active',
@@ -77,18 +75,6 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
         : _label(
             'এখন মাকরূহ সময় চলছে',
             'Makruh prayer time is active',
-            'وقت الكراهة قائم الآن',
-          );
-
-    final String detail = prohibited
-        ? _label(
-            'এখন নামাজ পড়া যাবে না',
-            'Prayer cannot be performed during this time',
-            'لا تُصلَّى الصلاة في هذا الوقت',
-          )
-        : _label(
-            'এখন মাকরূহ সময় চলছে',
-            'Makruh time is active',
             'وقت الكراهة قائم الآن',
           );
 
@@ -123,7 +109,7 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '$detail • ${_countdown(end)} ${_label('বাকি', 'remaining', 'متبقي')}',
+                  '${_countdown(end)} ${_label('বাকি', 'remaining', 'متبقي')}',
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
