@@ -7,10 +7,9 @@ import 'package:path_provider/path_provider.dart';
 
 /// Permanent offline storage for the 99 Names of Allah audio library.
 ///
-/// The 99 pronunciation MP3 files are bundled by the
-/// esmaulhusna_muslimbg package. They are copied once to the app's permanent
-/// support directory when the user chooses Download for Offline. After that,
-/// playback is always local and never depends on Internet connectivity.
+/// The pronunciation MP3 files are bundled by the package. They are copied
+/// once to the app's permanent support directory when the user chooses
+/// Download for Offline. Playback then uses only the local files.
 class AsmaUlHusnaAudioCacheService {
   AsmaUlHusnaAudioCacheService._();
 
@@ -56,24 +55,56 @@ class AsmaUlHusnaAudioCacheService {
     return _bundledAudioPaths!;
   }
 
-  int _numberForFileName(String fileName) {
-    final match = RegExp(r'^(\d+)[ -]').firstMatch(fileName);
+  int _numberPrefix(String fileName) {
+    final match = RegExp(r'^(\d+)[ -]').firstMatch(p.basename(fileName));
     if (match == null) return -1;
     final number = int.tryParse(match.group(1)!);
     if (number == null || number < 1 || number > expectedAudioCount) return -1;
     return number;
   }
 
+  /// Resolves the 1-based name index deterministically.
+  ///
+  /// Some callers may provide an audio filename without the numeric prefix.
+  /// In that case we resolve it against the package's authoritative 99-entry
+  /// manifest instead of guessing from the basename. This prevents one entry
+  /// from being permanently stuck at 98/99 while its bundled audio still plays.
+  Future<int> _numberForFileName(String fileName) async {
+    final prefixed = _numberPrefix(fileName);
+    if (prefixed > 0) return prefixed;
+
+    final paths = await _getBundledAudioPaths();
+    final requestedBase = p.basenameWithoutExtension(fileName).toLowerCase();
+
+    for (var i = 0; i < paths.length; i++) {
+      final manifestBase =
+          p.basenameWithoutExtension(paths[i]).toLowerCase();
+      if (manifestBase == requestedBase) return i + 1;
+    }
+
+    // Last-resort normalized comparison for package paths containing minor
+    // punctuation/casing differences.
+    String normalize(String value) =>
+        value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '');
+
+    final normalizedRequested = normalize(requestedBase);
+    for (var i = 0; i < paths.length; i++) {
+      if (normalize(p.basenameWithoutExtension(paths[i])) ==
+          normalizedRequested) {
+        return i + 1;
+      }
+    }
+
+    return -1;
+  }
+
   Future<File> _localFile(String fileName) async {
     final directory = await _getAudioDirectory();
-    final number = _numberForFileName(fileName);
+    final number = await _numberForFileName(fileName);
     if (number < 1) {
       throw StateError('Invalid Asma ul Husna audio file name: $fileName');
     }
 
-    // Use the 1-based name index as part of the local filename. Several Names
-    // share the same English basename, so basename-only storage can overwrite
-    // different recordings and make 99 bundled files appear as 98/97.
     final baseName = p.basenameWithoutExtension(fileName);
     return File(
       p.join(
@@ -93,6 +124,7 @@ class AsmaUlHusnaAudioCacheService {
         <int>[],
         (previous, chunk) => previous..addAll(chunk),
       );
+
       if (bytes.length >= 3 &&
           bytes[0] == 0x49 &&
           bytes[1] == 0x44 &&
@@ -112,8 +144,10 @@ class AsmaUlHusnaAudioCacheService {
 
   /// Local-only lookup. Never performs a network request.
   Future<File?> getCachedFile(String fileName) async {
-    final file = await _localFile(fileName);
-    if (await _isValidMp3(file)) return file;
+    try {
+      final file = await _localFile(fileName);
+      if (await _isValidMp3(file)) return file;
+    } catch (_) {}
     return null;
   }
 
@@ -122,7 +156,8 @@ class AsmaUlHusnaAudioCacheService {
     if (cached != null) return cached;
 
     final bundledAudioPaths = await _getBundledAudioPaths();
-    final index = _numberForFileName(fileName) - 1;
+    final number = await _numberForFileName(fileName);
+    final index = number - 1;
     if (index < 0 || index >= bundledAudioPaths.length) {
       throw StateError('No bundled Asma ul Husna audio found for $fileName.');
     }
@@ -166,10 +201,7 @@ class AsmaUlHusnaAudioCacheService {
       await getCachedFile(fileName) != null;
 
   /// Copies the bundled 99-name audio library to permanent local storage.
-  /// This is intentionally offline: no HTTP request is made.
-  ///
-  /// Missing entries are retried in multiple passes. Completion is based only
-  /// on a final authoritative disk scan, so 99/99 is never reported early.
+  /// No HTTP request is made.
   Future<List<String>> downloadAll(
     List<String> fileNames, {
     void Function(int completed, int total)? onProgress,
@@ -178,30 +210,24 @@ class AsmaUlHusnaAudioCacheService {
       return List<String>.from(fileNames);
     }
 
-    var completed = await downloadedCount(fileNames);
-    onProgress?.call(completed, fileNames.length);
-
     for (var pass = 0; pass < maxDownloadPasses; pass++) {
-      var progressChanged = false;
+      var completed = await downloadedCount(fileNames);
+      onProgress?.call(completed, fileNames.length);
 
       for (final fileName in fileNames) {
         if (await isCached(fileName)) continue;
         try {
           await getFile(fileName);
-          completed = await downloadedCount(fileNames);
-          progressChanged = true;
-          onProgress?.call(completed, fileNames.length);
         } catch (_) {
-          // Retry this entry on the next pass.
+          // Retry unresolved entries on the next pass.
         }
+        completed = await downloadedCount(fileNames);
+        onProgress?.call(completed, fileNames.length);
       }
 
       final currentCount = await downloadedCount(fileNames);
       onProgress?.call(currentCount, fileNames.length);
-      if (currentCount == expectedAudioCount) {
-        return const <String>[];
-      }
-      if (!progressChanged && pass == maxDownloadPasses - 1) break;
+      if (currentCount == expectedAudioCount) return const <String>[];
     }
 
     final missing = <String>[];
@@ -209,8 +235,10 @@ class AsmaUlHusnaAudioCacheService {
       if (!await isCached(fileName)) missing.add(fileName);
     }
 
-    final finalCount = fileNames.length - missing.length;
-    onProgress?.call(finalCount, fileNames.length);
+    onProgress?.call(
+      fileNames.length - missing.length,
+      fileNames.length,
+    );
     return missing;
   }
 
