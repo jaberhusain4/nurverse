@@ -19,6 +19,7 @@ class AsmaUlHusnaAudioCacheService {
 
   static const int expectedAudioCount = 99;
   static const int minimumAudioBytes = 1024;
+  static const int maxDownloadPasses = 3;
 
   Directory? _audioDirectory;
   List<String>? _bundledAudioPaths;
@@ -70,12 +71,16 @@ class AsmaUlHusnaAudioCacheService {
       throw StateError('Invalid Asma ul Husna audio file name: $fileName');
     }
 
-    // IMPORTANT: use the 1-based name index as part of the local filename.
-    // Several Names share the same English basename (for example Al-Majid and
-    // Al-Wali), so basename-only storage causes two different recordings to
-    // overwrite one another and makes 99 bundled files appear as 98/97.
+    // Use the 1-based name index as part of the local filename. Several Names
+    // share the same English basename, so basename-only storage can overwrite
+    // different recordings and make 99 bundled files appear as 98/97.
     final baseName = p.basenameWithoutExtension(fileName);
-    return File(p.join(directory.path, '${number.toString().padLeft(2, '0')}-$baseName.mp3'));
+    return File(
+      p.join(
+        directory.path,
+        '${number.toString().padLeft(2, '0')}-$baseName.mp3',
+      ),
+    );
   }
 
   Future<bool> _isValidMp3(File file) async {
@@ -162,6 +167,9 @@ class AsmaUlHusnaAudioCacheService {
 
   /// Copies the bundled 99-name audio library to permanent local storage.
   /// This is intentionally offline: no HTTP request is made.
+  ///
+  /// Missing entries are retried in multiple passes. Completion is based only
+  /// on a final authoritative disk scan, so 99/99 is never reported early.
   Future<List<String>> downloadAll(
     List<String> fileNames, {
     void Function(int completed, int total)? onProgress,
@@ -173,15 +181,27 @@ class AsmaUlHusnaAudioCacheService {
     var completed = await downloadedCount(fileNames);
     onProgress?.call(completed, fileNames.length);
 
-    for (final fileName in fileNames) {
-      if (await isCached(fileName)) continue;
-      try {
-        await getFile(fileName);
-        completed++;
-        onProgress?.call(completed, fileNames.length);
-      } catch (_) {
-        // Continue so one broken package asset cannot stop the other names.
+    for (var pass = 0; pass < maxDownloadPasses; pass++) {
+      var progressChanged = false;
+
+      for (final fileName in fileNames) {
+        if (await isCached(fileName)) continue;
+        try {
+          await getFile(fileName);
+          completed = await downloadedCount(fileNames);
+          progressChanged = true;
+          onProgress?.call(completed, fileNames.length);
+        } catch (_) {
+          // Retry this entry on the next pass.
+        }
       }
+
+      final currentCount = await downloadedCount(fileNames);
+      onProgress?.call(currentCount, fileNames.length);
+      if (currentCount == expectedAudioCount) {
+        return const <String>[];
+      }
+      if (!progressChanged && pass == maxDownloadPasses - 1) break;
     }
 
     final missing = <String>[];
@@ -189,9 +209,8 @@ class AsmaUlHusnaAudioCacheService {
       if (!await isCached(fileName)) missing.add(fileName);
     }
 
-    // Final progress is authoritative and always reflects the actual files
-    // present on disk. The UI must only show complete when this reaches 99/99.
-    onProgress?.call(fileNames.length - missing.length, fileNames.length);
+    final finalCount = fileNames.length - missing.length;
+    onProgress?.call(finalCount, fileNames.length);
     return missing;
   }
 
