@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../controllers/prayer_controller.dart';
 
 class CurrentPrayerPremiumCard extends StatelessWidget {
   final String previousPrayer, previousPrayerTime, currentPrayer, currentPrayerTime, nextPrayer, nextPrayerTime, remainingTime, iqamahTime, status, languageCode;
@@ -17,16 +20,18 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
     return DateTime(base.year, base.month, base.day, hour, minute);
   }
   String _clock(DateTime time) => '${time.hour % 12 == 0 ? 12 : time.hour % 12}:${time.minute.toString().padLeft(2, '0')} ${time.hour >= 12 ? 'PM' : 'AM'}';
-  String _awalText() {
-    final now = DateTime.now(); final start = _parseTime(currentPrayerTime, now); var next = _parseTime(nextPrayerTime, now);
-    if (start == null || next == null) return _label(bn: 'আওয়াল ওয়াক্তের তথ্য প্রস্তুত হচ্ছে', en: 'Awal Waqt information is being prepared', ar: 'جارٍ تجهيز وقت الأول');
-    if (!next.isAfter(start)) next = next.add(const Duration(days: 1));
-    final total = next.difference(start); if (total.inMinutes <= 0) return _label(bn: 'আওয়াল ওয়াক্তের তথ্য প্রস্তুত হচ্ছে', en: 'Awal Waqt information is being prepared', ar: 'جارٍ تجهيز وقت الأول');
-    final end = start.add(Duration(milliseconds: total.inMilliseconds ~/ 3)); final active = !now.isBefore(start) && now.isBefore(end);
-    return '${_label(bn: active ? 'আওয়াল ওয়াক্ত চলছে' : 'আওয়াল ওয়াক্ত শেষ', en: active ? 'Awal Waqt active' : 'Awal Waqt ended', ar: active ? 'وقت الأول مستمر' : 'انتهى وقت الأول')} • ${_clock(start)} → ${_clock(end)}';
+  String _awalText(String actualEndTime) {
+    final now = DateTime.now(); final start = _parseTime(currentPrayerTime, now); final end = _parseTime(actualEndTime, now);
+    if (start == null || end == null) return _label(bn: 'আওয়াল ওয়াক্তের তথ্য প্রস্তুত হচ্ছে', en: 'Awal Waqt information is being prepared', ar: 'جارٍ تجهيز وقت الأول');
+    var endTime = end;
+    if (!endTime.isAfter(start)) endTime = endTime.add(const Duration(days: 1));
+    final active = !now.isBefore(start) && now.isBefore(endTime);
+    return '${_label(bn: active ? 'আওয়াল ওয়াক্ত চলছে' : 'আওয়াল ওয়াক্ত শেষ', en: active ? 'Awal Waqt active' : 'Awal Waqt ended', ar: active ? 'وقت الأول مستمر' : 'انتهى وقت الأول')} • ${_clock(start)} → ${_clock(endTime)}';
   }
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<PrayerController>();
+    final actualEndTime = controller.currentPrayerEnd;
     final theme = Theme.of(context); final primary = theme.colorScheme.primary; final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface; final secondary = theme.textTheme.bodySmall?.color?.withValues(alpha: .72) ?? theme.colorScheme.onSurface.withValues(alpha: .72);
     final safeProgress = progress.clamp(0.0, 1.0).toDouble(); final percentage = (safeProgress * 100).round();
     return Container(width: double.infinity, padding: const EdgeInsets.fromLTRB(14, 13, 14, 12), decoration: BoxDecoration(color: theme.cardColor.withValues(alpha: theme.brightness == Brightness.dark ? .72 : .88), borderRadius: BorderRadius.circular(22), border: Border.all(color: primary.withValues(alpha: .10))), child: Column(children: [
@@ -38,11 +43,11 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
       const SizedBox(height: 9),
       Container(height: 44, width: double.infinity, alignment: Alignment.center, padding: const EdgeInsets.symmetric(horizontal: 12), decoration: BoxDecoration(color: primary.withValues(alpha: .035), borderRadius: BorderRadius.circular(14), border: Border.all(color: primary.withValues(alpha: .08))), child: RichText(text: TextSpan(children: [TextSpan(text: '${_label(bn: 'সময় বাকি', en: 'Time left', ar: 'الوقت المتبقي')}  ', style: TextStyle(color: secondary, fontSize: 13, fontWeight: FontWeight.w700)), TextSpan(text: remainingTime.isEmpty ? '--:--:--' : remainingTime, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800))]))),
       const SizedBox(height: 8),
-      Row(children: [Expanded(child: _TimeLabel(label: _label(bn: 'শুরু', en: 'Start', ar: 'البداية'), time: currentPrayerTime, color: secondary)), Expanded(child: Align(alignment: Alignment.centerRight, child: _TimeLabel(label: _label(bn: 'শেষ', en: 'End', ar: 'النهاية'), time: nextPrayerTime, color: secondary)))]),
+      Row(children: [Expanded(child: _TimeLabel(label: _label(bn: 'শুরু', en: 'Start', ar: 'البداية'), time: currentPrayerTime, color: secondary)), Expanded(child: Align(alignment: Alignment.centerRight, child: _TimeLabel(label: _label(bn: 'শেষ', en: 'End', ar: 'النهاية'), time: actualEndTime, color: secondary)))]),
       const SizedBox(height: 5),
       Row(children: [Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: safeProgress, minHeight: 6, backgroundColor: primary.withValues(alpha: .09), valueColor: AlwaysStoppedAnimation<Color>(primary)))), const SizedBox(width: 7), Text('$percentage%', style: TextStyle(color: primary, fontSize: 10.5, fontWeight: FontWeight.w800))]),
       const SizedBox(height: 8),
-      Row(children: [Icon(Icons.bolt_rounded, size: 16, color: primary), const SizedBox(width: 5), Expanded(child: Text(_awalText(), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 11.5, fontWeight: FontWeight.w700)))]),
+      Row(children: [Icon(Icons.bolt_rounded, size: 16, color: primary), const SizedBox(width: 5), Expanded(child: Text(_awalText(actualEndTime), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 11.5, fontWeight: FontWeight.w700)))]),
       if (status.isNotEmpty) ...[const SizedBox(height: 4), Row(children: [Icon(Icons.info_outline_rounded, size: 14, color: secondary), const SizedBox(width: 5), Expanded(child: Text(status, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)))])],
       const SizedBox(height: 7),
       Material(color: Colors.transparent, child: InkWell(onTap: onJamaatTap, borderRadius: BorderRadius.circular(12), child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7), decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(12)), child: Row(children: [Icon(Icons.groups_rounded, size: 17, color: primary), const SizedBox(width: 6), Text(_label(bn: 'জামাআত', en: 'Jamaat', ar: 'الجماعة'), style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w700)), const Spacer(), Text(iqamahTime.isEmpty ? '--:--' : iqamahTime, style: TextStyle(color: text, fontSize: 12.5, fontWeight: FontWeight.w800)), const SizedBox(width: 3), Icon(Icons.chevron_right_rounded, size: 16, color: secondary)])))),
