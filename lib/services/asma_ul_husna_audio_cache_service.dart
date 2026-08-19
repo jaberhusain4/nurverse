@@ -55,13 +55,27 @@ class AsmaUlHusnaAudioCacheService {
     return _bundledAudioPaths!;
   }
 
+  int _numberForFileName(String fileName) {
+    final match = RegExp(r'^(\d+)[ -]').firstMatch(fileName);
+    if (match == null) return -1;
+    final number = int.tryParse(match.group(1)!);
+    if (number == null || number < 1 || number > expectedAudioCount) return -1;
+    return number;
+  }
+
   Future<File> _localFile(String fileName) async {
     final directory = await _getAudioDirectory();
+    final number = _numberForFileName(fileName);
+    if (number < 1) {
+      throw StateError('Invalid Asma ul Husna audio file name: $fileName');
+    }
+
+    // IMPORTANT: use the 1-based name index as part of the local filename.
+    // Several Names share the same English basename (for example Al-Majid and
+    // Al-Wali), so basename-only storage causes two different recordings to
+    // overwrite one another and makes 99 bundled files appear as 98/97.
     final baseName = p.basenameWithoutExtension(fileName);
-    // The UI keeps its existing .ogg source IDs, but the bundled files are
-    // MP3. Store them with the real extension so the audio decoder sees the
-    // actual format and old .ogg cache files cannot be mistaken for valid data.
-    return File(p.join(directory.path, '$baseName.mp3'));
+    return File(p.join(directory.path, '${number.toString().padLeft(2, '0')}-$baseName.mp3'));
   }
 
   Future<bool> _isValidMp3(File file) async {
@@ -70,9 +84,6 @@ class AsmaUlHusnaAudioCacheService {
       final length = await file.length();
       if (length <= minimumAudioBytes) return false;
 
-      // Accept the common ID3 header or an MPEG audio frame sync. This avoids
-      // treating an HTML/error payload or arbitrary non-audio bytes as a valid
-      // cached recording.
       final bytes = await file.openRead(0, 4).fold<List<int>>(
         <int>[],
         (previous, chunk) => previous..addAll(chunk),
@@ -106,7 +117,7 @@ class AsmaUlHusnaAudioCacheService {
     if (cached != null) return cached;
 
     final bundledAudioPaths = await _getBundledAudioPaths();
-    final index = _sourceIndexForFileName(fileName);
+    final index = _numberForFileName(fileName) - 1;
     if (index < 0 || index >= bundledAudioPaths.length) {
       throw StateError('No bundled Asma ul Husna audio found for $fileName.');
     }
@@ -123,7 +134,9 @@ class AsmaUlHusnaAudioCacheService {
       );
 
       if (!await _isValidMp3(temporary)) {
-        throw const FormatException('Bundled Asma ul Husna audio is not a valid MP3.');
+        throw const FormatException(
+          'Bundled Asma ul Husna audio is not a valid MP3.',
+        );
       }
 
       if (await target.exists()) await target.delete();
@@ -131,7 +144,9 @@ class AsmaUlHusnaAudioCacheService {
 
       final saved = await getCachedFile(fileName);
       if (saved == null) {
-        throw const FormatException('Saved Asma ul Husna audio failed local verification.');
+        throw const FormatException(
+          'Saved Asma ul Husna audio failed local verification.',
+        );
       }
       return saved;
     } catch (_) {
@@ -140,14 +155,6 @@ class AsmaUlHusnaAudioCacheService {
       } catch (_) {}
       rethrow;
     }
-  }
-
-  int _sourceIndexForFileName(String fileName) {
-    final match = RegExp(r'^(\d+)[ -]').firstMatch(fileName);
-    if (match == null) return -1;
-    final number = int.tryParse(match.group(1)!);
-    if (number == null || number < 1 || number > expectedAudioCount) return -1;
-    return number - 1;
   }
 
   Future<bool> isCached(String fileName) async =>
