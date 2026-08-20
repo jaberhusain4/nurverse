@@ -103,7 +103,9 @@ class DateOverviewCard extends StatelessWidget {
     const englishDigits = '0123456789';
     const banglaDigits = '০১২৩৪৫৬৭৮৯';
     var result = value;
-    for (var i = 0; i < englishDigits.length; i++) result = result.replaceAll(englishDigits[i], banglaDigits[i]);
+    for (var i = 0; i < englishDigits.length; i++) {
+      result = result.replaceAll(englishDigits[i], banglaDigits[i]);
+    }
     return result;
   }
 }

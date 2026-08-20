@@ -164,7 +164,7 @@ class TopHeader extends StatelessWidget {
             onTap: () => _handleProfileTap(context, user),
             customBorder: const CircleBorder(),
             child: hasPhoto
-                ? ClipOval(child: Image.network(photoUrl!, width: 40, height: 40, fit: BoxFit.cover, filterQuality: FilterQuality.high, errorBuilder: (_, __, ___) => Center(child: _profileFallback(context, user))))
+                ? ClipOval(child: Image.network(photoUrl, width: 40, height: 40, fit: BoxFit.cover, filterQuality: FilterQuality.high, errorBuilder: (_, __, ___) => Center(child: _profileFallback(context, user))))
                 : Center(child: _profileFallback(context, user)),
           ),
         ),

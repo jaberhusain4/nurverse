@@ -56,7 +56,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
         return;
       }
       final sequenceState = player.sequenceState;
-      final currentSource = sequenceState?.currentSource;
+      final currentSource = sequenceState.currentSource;
       final currentTag = currentSource?.tag;
       final sameSurah = currentTag == '${_selectedReciter.id}:$_selectedSurah';
       if (sameSurah && player.processingState != ProcessingState.completed) {

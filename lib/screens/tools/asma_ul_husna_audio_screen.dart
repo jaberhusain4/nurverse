@@ -92,7 +92,7 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${_downloadedCount}/${_audioFiles.length}টি অডিও অফলাইনে প্রস্তুত। ${failed.length}টি আবার চেষ্টা করতে হবে।',
+              '$_downloadedCount/${_audioFiles.length}টি অডিও অফলাইনে প্রস্তুত। ${failed.length}টি আবার চেষ্টা করতে হবে।',
             ),
           ),
         );
@@ -103,7 +103,7 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${_downloadedCount}/${_audioFiles.length}টি অডিও অফলাইনে প্রস্তুত। বাকি অডিওর জন্য আবার Download চাপুন।',
+              '$_downloadedCount/${_audioFiles.length}টি অডিও অফলাইনে প্রস্তুত। বাকি অডিওর জন্য আবার Download চাপুন।',
             ),
           ),
         );

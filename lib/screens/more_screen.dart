@@ -869,7 +869,7 @@ class MoreScreen extends StatelessWidget {
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(13),
                           child: Image.network(
-                            photoUrl!,
+                            photoUrl,
                             width: 42,
                             height: 42,
                             fit: BoxFit.cover,
