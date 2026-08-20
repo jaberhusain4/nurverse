@@ -200,7 +200,22 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
     return Container(margin: const EdgeInsets.only(bottom: 7), padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(16), border: Border.all(color: primary.withValues(alpha: .06))), child: Row(children: [Icon(item.icon, color: primary, size: 22), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(item.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)), const SizedBox(height: 2), Text(item.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.secondaryTextColor, fontSize: 11.5, fontWeight: FontWeight.w500))])), const SizedBox(width: 8), Flexible(child: Text(item.time, textAlign: TextAlign.end, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: primary, fontSize: 12.5, fontWeight: FontWeight.w800)))]));
   }
 
-  Widget _empty(BuildContext context, String text) => Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(14)), child: Text(text, style: TextStyle(color: context.secondaryTextColor, fontSize: 12, fontWeight: FontWeight.w600));
+  Widget _empty(BuildContext context, String text) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: context.cardColor,
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Text(
+      text,
+      style: TextStyle(
+        color: context.secondaryTextColor,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
 
   Widget _sectionTitle(BuildContext context, String title, String subtitle, IconData icon) {
     final primary = Theme.of(context).colorScheme.primary;
@@ -216,7 +231,22 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
 
   Widget _dailyTime(BuildContext context, IconData icon, String title, String value, Color color) => Column(children: [Icon(icon, color: color, size: 22), const SizedBox(height: 5), Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.secondaryTextColor, fontSize: 11.5, fontWeight: FontWeight.w600)), const SizedBox(height: 2), FittedBox(fit: BoxFit.scaleDown, child: Text(value.isEmpty ? '--:--' : value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)))]);
 
-  Widget _footer(BuildContext context) => _card(context, child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(Icons.info_outline_rounded, size: 18, color: Theme.of(context).colorScheme.primary), const SizedBox(width: 8), Expanded(child: Text(_label(context, 'সালাতের সময় আপনার লোকেশন, গণনা পদ্ধতি ও মাযহাবের সেটিং অনুযায়ী হিসাব করা হয়।', 'Prayer times are calculated from your location, calculation method and madhhab settings.'), style: TextStyle(color: context.secondaryTextColor, height: 1.4, fontSize: 11.5))]));
+  Widget _footer(BuildContext context) => _card(
+    context,
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.info_outline_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            _label(context, 'সালাতের সময় আপনার লোকেশন, গণনা পদ্ধতি ও মাযহাবের সেটিং অনুযায়ী হিসাব করা হয়।', 'Prayer times are calculated from your location, calculation method and madhhab settings.'),
+            style: TextStyle(color: context.secondaryTextColor, height: 1.4, fontSize: 11.5),
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _error(BuildContext context, PrayerController c) => Center(child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.error_outline_rounded, size: 50, color: Colors.redAccent), const SizedBox(height: 12), Text(_label(context, 'সালাতের সময় লোড করা যায়নি', 'Could not load prayer times'), textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)), const SizedBox(height: 7), Text(c.error ?? _label(context, 'অজানা সমস্যা', 'Unknown problem'), textAlign: TextAlign.center, style: TextStyle(color: context.secondaryTextColor, fontSize: 12.5)), const SizedBox(height: 16), FilledButton.icon(onPressed: c.refreshPrayerTimes, icon: const Icon(Icons.refresh_rounded), label: Text(_label(context, 'আবার চেষ্টা করুন', 'Try again')))])));
 
