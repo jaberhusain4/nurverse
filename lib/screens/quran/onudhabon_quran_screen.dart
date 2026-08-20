@@ -12,7 +12,7 @@ import '../../theme/app_theme.dart';
 class OnudhabonQuranScreen extends StatefulWidget {
   final bool openLastRead;
 
-  const OnudhabonQuranScreen({super.key, this.openLastRead = true});
+  const OnudhabonQuranScreen({super.key, this.openLastRead = false});
 
   @override
   State<OnudhabonQuranScreen> createState() => _OnudhabonQuranScreenState();
