@@ -42,14 +42,25 @@ class LastReadService {
       return null;
     }
 
+    final surahNumber = prefs.getInt(_surahNumberKey);
+    final ayahNumber = prefs.getInt(_ayahNumberKey);
+
+    // A precise ayah position is the source of truth for Continue Reading.
+    // Older installs may have a stale/missing mode value, so normalize such
+    // records to Onudhabon instead of falling back to the Quran tab.
+    final storedMode = prefs.getString(_modeKey);
+    final mode = surahNumber != null && ayahNumber != null
+        ? 'onudhabon'
+        : (storedMode ?? 'onudhabon');
+
     return {
       'surahName': surahName,
       'paraNo': prefs.getInt(_paraNoKey) ?? 1,
       'pageNo': prefs.getInt(_pageNoKey) ?? 1,
       'progress': prefs.getDouble(_progressKey) ?? 0.0,
-      'mode': prefs.getString(_modeKey) ?? 'onudhabon',
-      'surahNumber': prefs.getInt(_surahNumberKey),
-      'ayahNumber': prefs.getInt(_ayahNumberKey),
+      'mode': mode,
+      'surahNumber': surahNumber,
+      'ayahNumber': ayahNumber,
     };
   }
 
