@@ -63,7 +63,7 @@ class _ContextPrayer extends StatelessWidget {
   Widget build(BuildContext context) => Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6), decoration: BoxDecoration(color: color.withValues(alpha: .035), borderRadius: BorderRadius.circular(14), border: Border.all(color: color.withValues(alpha: .07))), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
     SizedBox(height: 21, child: Icon(icon, size: 19, color: color)), const SizedBox(height: 2),
     SizedBox(height: 16, child: FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1, style: TextStyle(color: labelColor ?? color, fontSize: 12, fontWeight: FontWeight.w700, height: 1.0)))), const SizedBox(height: 1),
-    SizedBox(height: 17, child: FittedBox(fit: BoxFit.scaleDown, child: Text(prayer, maxLines: 1, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 15, fontWeight: FontWeight.w800, height: 1.0)))), const SizedBox(height: 1),
+    SizedBox(height: 17, child: FittedBox(fit: BoxFit.scaleDown, child: Text(prayer, maxLines: 1, textAlign: TextAlign.center, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w700, height: 1.0)))), const SizedBox(height: 1),
     SizedBox(height: 14, child: FittedBox(fit: BoxFit.scaleDown, child: Text(time.isEmpty ? '--:--' : time, maxLines: 1, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700, height: 1.0)))),
   ]));
 }
