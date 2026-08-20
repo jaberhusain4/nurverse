@@ -6,10 +6,6 @@ import 'package:provider/provider.dart';
 import '../../controllers/prayer_controller.dart';
 import '../../services/prayer_engine_service.dart';
 
-/// Home-screen-only smart prohibited-time card.
-/// Uses a single one-second tick for the live countdown; no continuous
-/// animation, location polling, or prayer recalculation is performed by the
-/// timer itself.
 class LivePrayerRestrictionCard extends StatefulWidget {
   final String languageCode;
 
@@ -179,9 +175,11 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard>
         : _label('শুরু হতে বাকি', 'Starts in', 'يبدأ خلال');
 
     final total = end.difference(start).inMilliseconds;
+    // Determinate progress only. A null value makes LinearProgressIndicator
+    // run its indeterminate loading animation, which is not wanted here.
     final progress = active && total > 0
         ? (1 - duration.inMilliseconds / total).clamp(0.0, 1.0)
-        : null;
+        : 0.0;
 
     return Container(
       width: double.infinity,
