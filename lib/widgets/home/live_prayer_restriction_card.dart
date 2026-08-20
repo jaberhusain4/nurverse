@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/prayer_controller.dart';
+import '../../services/prayer_engine_service.dart';
 
 /// Home-screen-only smart prohibited-time card.
 /// Shows the current prohibited window with a live countdown, or only the
-/// nearest upcoming prohibited window when no prohibited period is active.
+/// nearest upcoming prohibited window. If today's windows are finished, it
+/// calculates tomorrow's real first prohibited window instead of disappearing.
 class LivePrayerRestrictionCard extends StatefulWidget {
   final String languageCode;
 
@@ -22,6 +24,7 @@ class LivePrayerRestrictionCard extends StatefulWidget {
 }
 
 class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
+  final PrayerEngineService _engine = const PrayerEngineService();
   Timer? _timer;
   DateTime _now = DateTime.now();
 
@@ -29,9 +32,7 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() => _now = DateTime.now());
-      }
+      if (mounted) setState(() => _now = DateTime.now());
     });
   }
 
@@ -59,37 +60,87 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
     final hours = seconds ~/ 3600;
     final minutes = (seconds % 3600) ~/ 60;
     final remainingSeconds = seconds % 60;
-
     if (hours > 0) {
       return '$hours:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
     }
     return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
-  bool _active(DateTime? start, DateTime? end) {
-    if (start == null || end == null) return false;
-    return !_now.isBefore(start) && _now.isBefore(end);
+  List<List<DateTime>> _windowsForDate(
+    PrayerController controller,
+    DateTime date,
+  ) {
+    final position = controller.position;
+    if (position == null) return const [];
+
+    final times = _engine.getPrayerTimes(
+      position: position,
+      date: date,
+      config: controller.calculationConfig,
+    );
+
+    final sunrise = times.sunrise;
+    final dhuhr = times.dhuhr;
+    final maghrib = times.maghrib;
+    if (sunrise == null || dhuhr == null || maghrib == null) {
+      return const [];
+    }
+
+    return [
+      [sunrise, sunrise.add(const Duration(minutes: 15))],
+      [dhuhr.subtract(const Duration(minutes: 10)), dhuhr],
+      [maghrib.subtract(const Duration(minutes: 15)), maghrib],
+    ];
+  }
+
+  List<DateTime>? _findWindow(PrayerController controller) {
+    // First honor the controller's already-calculated current/next window.
+    final controllerStart = controller.prohibitedStart;
+    final controllerEnd = controller.prohibitedEnd;
+    if (controllerStart != null && controllerEnd != null) {
+      if (!_now.isBefore(controllerStart) && _now.isBefore(controllerEnd)) {
+        return [controllerStart, controllerEnd];
+      }
+      if (_now.isBefore(controllerStart)) {
+        return [controllerStart, controllerEnd];
+      }
+    }
+
+    // Recalculate today's windows so the card can recover immediately after
+    // a boundary without waiting for another controller state transition.
+    final today = DateTime(_now.year, _now.month, _now.day);
+    for (final window in _windowsForDate(controller, today)) {
+      if (!_now.isBefore(window[0]) && _now.isBefore(window[1])) {
+        return window;
+      }
+      if (_now.isBefore(window[0])) {
+        return window;
+      }
+    }
+
+    // All of today's prohibited windows are over: show tomorrow's real
+    // sunrise prohibited window instead of hiding the card.
+    final tomorrow = today.add(const Duration(days: 1));
+    final tomorrowWindows = _windowsForDate(controller, tomorrow);
+    if (tomorrowWindows.isNotEmpty) return tomorrowWindows.first;
+
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<PrayerController>();
-    final start = controller.prohibitedStart;
-    final end = controller.prohibitedEnd;
+    final window = _findWindow(controller);
 
-    if (start == null || end == null) {
-      return const SizedBox.shrink();
-    }
+    if (window == null) return const SizedBox.shrink();
 
-    final active = _active(start, end);
+    final start = window[0];
+    final end = window[1];
+    final active = !_now.isBefore(start) && _now.isBefore(end);
     final target = active ? end : start;
     final duration = target.difference(_now);
 
-    // The controller exposes the nearest current/future prohibited window.
-    // Never show a stale/past window if the controller has not advanced yet.
-    if (duration.isNegative || (duration.inSeconds == 0 && !active)) {
-      return const SizedBox.shrink();
-    }
+    if (duration.isNegative) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
     final warningColor = theme.colorScheme.error;
@@ -97,34 +148,27 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
     final foreground = theme.colorScheme.onSurface;
     final secondary = theme.textTheme.bodySmall?.color?.withValues(alpha: .72) ??
         foreground.withValues(alpha: .72);
+    final accent = active ? warningColor : primary;
 
     final title = active
-        ? _label(
-            'এখন নিষিদ্ধ সময় চলছে',
-            'Forbidden prayer time is active',
-            'وقت النهي قائم الآن',
-          )
-        : _label(
-            'পরবর্তী নিষিদ্ধ সময়',
-            'Next prohibited time',
-            'وقت النهي التالي',
-          );
-
+        ? _label('এখন নিষিদ্ধ সময় চলছে', 'Forbidden prayer time is active', 'وقت النهي قائم الآن')
+        : _label('পরবর্তী নিষিদ্ধ সময়', 'Next prohibited time', 'وقت النهي التالي');
     final countdownLabel = active
         ? _label('শেষ হতে বাকি', 'Ends in', 'ينتهي خلال')
         : _label('শুরু হতে বাকি', 'Starts in', 'يبدأ خلال');
 
-    final countdown = _countdown(duration);
+    final total = end.difference(start).inMilliseconds;
+    final progress = active && total > 0
+        ? (1 - duration.inMilliseconds / total).clamp(0.0, 1.0)
+        : null;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
-        color: (active ? warningColor : primary).withValues(alpha: .055),
+        color: accent.withValues(alpha: .055),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: (active ? warningColor : primary).withValues(alpha: .18),
-        ),
+        border: Border.all(color: accent.withValues(alpha: .18)),
       ),
       child: Column(
         children: [
@@ -137,11 +181,11 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: (active ? warningColor : primary).withValues(alpha: .10),
+                  color: accent.withValues(alpha: .10),
                 ),
                 child: Icon(
                   active ? Icons.warning_amber_rounded : Icons.schedule_rounded,
-                  color: active ? warningColor : primary,
+                  color: accent,
                   size: 22,
                 ),
               ),
@@ -188,9 +232,9 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    countdown,
+                    _countdown(duration),
                     style: TextStyle(
-                      color: active ? warningColor : primary,
+                      color: accent,
                       fontSize: 17,
                       fontWeight: FontWeight.w900,
                       fontFeatures: const [FontFeature.tabularFigures()],
@@ -204,19 +248,10 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
-              value: active
-                  ? (end.difference(start).inMilliseconds <= 0
-                      ? 1.0
-                      : (1 -
-                              duration.inMilliseconds /
-                                  end.difference(start).inMilliseconds)
-                          .clamp(0.0, 1.0))
-                  : null,
+              value: progress,
               minHeight: 5,
-              backgroundColor: (active ? warningColor : primary).withValues(alpha: .10),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                active ? warningColor : primary,
-              ),
+              backgroundColor: accent.withValues(alpha: .10),
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
             ),
           ),
         ],
