@@ -28,27 +28,32 @@ class QuranTranslationService {
     QuranTranslationEdition(
       id: 'muhiuddin-khan',
       title: 'মুহিউদ্দীন খান',
-      author: 'প্রচলিত বাংলা অনুবাদ',
-      quranComId: null,
+      author: 'বর্তমান অফলাইন বাংলা অনুবাদ',
       localMuhiuddin: true,
     ),
     QuranTranslationEdition(
       id: 'taisirul-quran',
       title: 'তাইসীরুল কুরআন',
-      author: 'তাওহীদ পাবলিকেশন',
+      author: 'Tawheed Publication',
       quranComId: 161,
     ),
     QuranTranslationEdition(
       id: 'sheikh-mujibur-rahman',
       title: 'শাইখ মুজিবুর রহমান',
-      author: 'দারুসসালাম পাবলিকেশন',
+      author: 'বাংলা অনুবাদ',
       quranComId: 163,
     ),
     QuranTranslationEdition(
       id: 'rawai-al-bayan',
       title: 'রাওয়াইউল বায়ান',
-      author: 'বয়ান ফাউন্ডেশন',
+      author: 'বাংলা অনুবাদ',
       quranComId: 162,
+    ),
+    QuranTranslationEdition(
+      id: 'taqi-usmani-en',
+      title: 'Mufti Taqi Usmani',
+      author: 'English translation',
+      quranComId: 84,
     ),
   ];
 
