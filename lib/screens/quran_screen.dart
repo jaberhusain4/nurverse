@@ -16,32 +16,52 @@ class QuranScreen extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 30),
         children: [
-          Text(l10n.alQuran, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 6),
-          Text(l10n.quranSubtitle, style: TextStyle(color: context.secondaryTextColor)),
-          const SizedBox(height: 20),
+          Text(
+            l10n.alQuran,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontSize: 16,
+              height: 1.2,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            l10n.quranSubtitle,
+            style: TextStyle(fontSize: 13, color: context.secondaryTextColor),
+          ),
+          const SizedBox(height: 18),
           _QuranModeCard(
             icon: Icons.menu_book_rounded,
             title: l10n.hafeziQuran,
             subtitle: l10n.hafeziSubtitle,
             badge: l10n.fifteenLinesOffline,
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HafeziQuranScreen())),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const HafeziQuranScreen()),
+            ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           _QuranModeCard(
             icon: Icons.auto_stories_rounded,
             title: l10n.onudhabonQuran,
             subtitle: l10n.onudhabonSubtitle,
             badge: l10n.translationTafsir,
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const OnudhabonQuranScreen())),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const OnudhabonQuranScreen(
+                  openLastRead: false,
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           _QuranModeCard(
             icon: Icons.headphones_rounded,
             title: l10n.audioQuranMode,
             subtitle: l10n.audioQuranModeSubtitle,
             badge: l10n.audioOfflineCache,
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AudioQuranScreen())),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AudioQuranScreen()),
+            ),
           ),
         ],
       ),
@@ -56,48 +76,89 @@ class _QuranModeCard extends StatelessWidget {
   final String? badge;
   final VoidCallback onTap;
 
-  const _QuranModeCard({required this.icon, required this.title, required this.subtitle, required this.badge, required this.onTap});
+  const _QuranModeCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.badge,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     return Material(
       color: context.cardColor,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(22),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
               Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(color: primary.withValues(alpha: .10), shape: BoxShape.circle),
-                child: Icon(icon, color: primary, size: 28),
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: .10),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: primary, size: 26),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 6),
-                    Text(subtitle, style: TextStyle(fontSize: 12.5, height: 1.45, color: context.secondaryTextColor)),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        height: 1.2,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.35,
+                        color: context.secondaryTextColor,
+                      ),
+                    ),
                     if (badge != null) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 7),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: primary.withValues(alpha: .08), borderRadius: BorderRadius.circular(20)),
-                        child: Text(badge!, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: primary)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: primary.withValues(alpha: .08),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          badge!,
+                          style: TextStyle(
+                            fontSize: 10,
+                            height: 1.1,
+                            fontWeight: FontWeight.w700,
+                            color: primary,
+                          ),
+                        ),
                       ),
                     ],
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right_rounded, color: context.secondaryTextColor),
+              const SizedBox(width: 6),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 21,
+                color: context.secondaryTextColor,
+              ),
             ],
           ),
         ),
