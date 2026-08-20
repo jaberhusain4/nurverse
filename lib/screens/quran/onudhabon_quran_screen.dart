@@ -11,8 +11,13 @@ import '../../theme/app_theme.dart';
 
 class OnudhabonQuranScreen extends StatefulWidget {
   final bool openLastRead;
+  final int? initialSurahNumber;
 
-  const OnudhabonQuranScreen({super.key, this.openLastRead = false});
+  const OnudhabonQuranScreen({
+    super.key,
+    this.openLastRead = false,
+    this.initialSurahNumber,
+  });
 
   @override
   State<OnudhabonQuranScreen> createState() => _OnudhabonQuranScreenState();
@@ -47,6 +52,8 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
   double _arabicFontSize = _defaultArabicFontSize;
   double _translationFontSize = _defaultTranslationFontSize;
 
+  bool get _isReadingRoute => _selectedSurah != null;
+
   @override
   void initState() {
     super.initState();
@@ -59,7 +66,11 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
       await _loadReadingSettings();
       await _data.init();
 
-      if (widget.openLastRead) {
+      final initial = widget.initialSurahNumber;
+      if (initial != null && initial >= 1 && initial <= 114) {
+        _selectedSurah = initial;
+        _resumeAyah = 1;
+      } else if (widget.openLastRead) {
         final lastRead = await LastReadService.getLastRead();
         if (lastRead != null && lastRead['mode'] == 'onudhabon') {
           final surahNumber = lastRead['surahNumber'];
@@ -79,8 +90,15 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
     if (!mounted) return;
     setState(() => _loading = false);
 
-    if (widget.openLastRead && _selectedSurah != null && _resumeAyah != null) {
+    if (_selectedSurah != null && _resumeAyah != null) {
       _scheduleResume();
+      if (widget.initialSurahNumber != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _selectedSurah != null) {
+            _savePosition(_selectedSurah!, _resumeAyah!);
+          }
+        });
+      }
     }
 
     if (!_data.translationAvailable) {
@@ -100,7 +118,8 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
         _minArabicFontSize,
         _maxArabicFontSize,
       );
-      _translationFontSize = (translation ?? _defaultTranslationFontSize).clamp(
+      _translationFontSize =
+          (translation ?? _defaultTranslationFontSize).clamp(
         _minTranslationFontSize,
         _maxTranslationFontSize,
       );
@@ -351,16 +370,24 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
   }
 
   void _selectSurah(int number) {
-    setState(() {
-      _selectedSurah = number;
-      _resumeAyah = 1;
-      _tafsirByAyah = {};
-      _tafsirError = null;
-    });
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OnudhabonQuranScreen(
+          initialSurahNumber: number,
+        ),
+      ),
+    );
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _savePosition(number, 1);
+  void _goBackFromReading() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    setState(() {
+      _selectedSurah = null;
+      _resumeAyah = null;
     });
   }
 
@@ -378,17 +405,24 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
   }
 
   void _scrollToAyah(int ayahNumber) {
+    if (!_readingScrollController.hasClients) {
+      _scheduleResumeRetry(ayahNumber);
+      return;
+    }
+
     final key = _ayahKeys[ayahNumber];
     final targetContext = key?.currentContext;
     if (targetContext == null) {
       _scheduleResumeRetry(ayahNumber);
       return;
     }
+
     final renderObject = targetContext.findRenderObject();
     if (renderObject is! RenderBox) {
       _scheduleResumeRetry(ayahNumber);
       return;
     }
+
     final top = renderObject.localToGlobal(Offset.zero).dy;
     const desiredTop = 96.0;
     final target = (_readingScrollController.offset + top - desiredTop).clamp(
@@ -419,19 +453,22 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
   void _saveVisibleAyah() {
     final surahNumber = _selectedSurah;
     if (surahNumber == null) return;
+
     int? bestAyah;
     double bestTop = double.infinity;
     for (final entry in _ayahKeys.entries) {
-      final context = entry.value.currentContext;
-      if (context == null) continue;
-      final renderObject = context.findRenderObject();
+      final ayahContext = entry.value.currentContext;
+      if (ayahContext == null) continue;
+      final renderObject = ayahContext.findRenderObject();
       if (renderObject is! RenderBox || !renderObject.hasSize) continue;
+
       final top = renderObject.localToGlobal(Offset.zero).dy;
       if (top >= 72 && top < bestTop) {
         bestTop = top;
         bestAyah = entry.key;
       }
     }
+
     bestAyah ??= _resumeAyah ?? 1;
     _resumeAyah = bestAyah;
     _savePosition(surahNumber, bestAyah);
@@ -444,6 +481,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
     final progress = surah.totalVerses <= 1
         ? 0.0
         : ((safeAyah - 1) / (surah.totalVerses - 1)).clamp(0.0, 1.0);
+
     await LastReadService.saveLastRead(
       surahName: surah.banglaName ?? surah.transliteration,
       paraNo: 1,
@@ -476,15 +514,22 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
     final selected = _selectedSurah == null
         ? null
         : _data.getSurah(_selectedSurah!);
-    if (selected != null && _resumeAyah != null) _scheduleResume();
+
+    if (selected != null && _resumeAyah != null) {
+      _scheduleResume();
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'অনুধাবন কুরআন',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        title: Text(
+          _isReadingRoute ? 'অনুধাবন কুরআন' : 'অনুধাবন কুরআন',
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         centerTitle: true,
+        automaticallyImplyLeading: true,
         actions: selected == null
             ? null
             : [
@@ -653,10 +698,8 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
             child: Row(
               children: [
                 IconButton(
-                  onPressed: () => setState(() {
-                    _selectedSurah = null;
-                    _resumeAyah = null;
-                  }),
+                  tooltip: 'সূরা তালিকায় ফিরুন',
+                  onPressed: _goBackFromReading,
                   icon: const Icon(Icons.arrow_back_rounded, size: 20),
                 ),
                 Expanded(
@@ -711,7 +754,8 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
           Padding(
             padding: const EdgeInsets.all(12),
             child: FilledButton.icon(
-              onPressed: _translationDownloading ? null : _downloadTranslation,
+              onPressed:
+                  _translationDownloading ? null : _downloadTranslation,
               icon: _translationDownloading
                   ? const SizedBox(
                       width: 18,
@@ -820,9 +864,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
           Row(
             children: [
               TextButton.icon(
-                onPressed: _tafsirLoading
-                    ? null
-                    : () => _loadTafsir(surah),
+                onPressed: _tafsirLoading ? null : () => _loadTafsir(surah),
                 icon: const Icon(Icons.menu_book_rounded, size: 17),
                 label: const Text(
                   'তাফসির / ব্যাখ্যা',
