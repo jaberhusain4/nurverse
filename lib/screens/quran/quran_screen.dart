@@ -43,7 +43,11 @@ class QuranScreen extends StatelessWidget {
             subtitle: 'সূরা, আয়াত, বাংলা অনুবাদ ও অনুধাবনভিত্তিক পাঠ',
             badge: 'পড়ার জন্য খুলুন',
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const OnudhabonQuranScreen()),
+              MaterialPageRoute(
+                builder: (_) => const OnudhabonQuranScreen(
+                  openLastRead: false,
+                ),
+              ),
             ),
           ),
         ],
