@@ -31,9 +31,7 @@ import 'tools/zakat_calculator_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(int)? onNavigateTab;
-
   const HomeScreen({super.key, this.onNavigateTab});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -49,12 +47,14 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _updateClock();
     _loadLastRead();
-    JamaatService.initialize().then((_) {
-      if (mounted) setState(() {});
-    });
-    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) _updateClock();
-    });
+    JamaatService.initialize().then((_) { if (mounted) setState(() {}); });
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) { if (mounted) _updateClock(); });
+  }
+
+  @override
+  void dispose() {
+    _clockTimer?.cancel();
+    super.dispose();
   }
 
   void _updateClock() {
@@ -70,16 +70,10 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final data = await LastReadService.getLastRead();
       if (!mounted) return;
-      setState(() {
-        _lastRead = data;
-        _lastReadLoading = false;
-      });
+      setState(() { _lastRead = data; _lastReadLoading = false; });
     } catch (_) {
       if (!mounted) return;
-      setState(() {
-        _lastRead = null;
-        _lastReadLoading = false;
-      });
+      setState(() { _lastRead = null; _lastReadLoading = false; });
     }
   }
 
@@ -92,22 +86,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _greeting(String languageCode) {
     final hour = DateTime.now().hour;
-    if (languageCode == 'en') {
-      if (hour < 12) return 'Good Morning';
-      if (hour < 18) return 'Good Afternoon';
-      return 'Good Evening';
-    }
+    if (languageCode == 'en') { if (hour < 12) return 'Good Morning'; if (hour < 18) return 'Good Afternoon'; return 'Good Evening'; }
     if (languageCode == 'ar') return hour < 12 ? 'صباح الخير' : 'مساء الخير';
-    if (hour < 12) return 'শুভ সকাল';
-    if (hour < 15) return 'শুভ দুপুর';
-    if (hour < 18) return 'শুভ বিকেল';
-    return 'শুভ সন্ধ্যা';
+    if (hour < 12) return 'শুভ সকাল'; if (hour < 15) return 'শুভ দুপুর'; if (hour < 18) return 'শুভ বিকেল'; return 'শুভ সন্ধ্যা';
   }
 
   String _label(String languageCode, String bn, String en, String ar) {
-    if (languageCode == 'en') return en;
-    if (languageCode == 'ar') return ar;
-    return bn;
+    if (languageCode == 'en') return en; if (languageCode == 'ar') return ar; return bn;
   }
 
   String _hijriDate(String languageCode) {
@@ -118,83 +103,29 @@ class _HomeScreenState extends State<HomeScreen> {
       const arMonths = <String>['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
       const digits = <String>['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
       String bnDigits(int value) => value.toString().split('').map((d) => digits[int.parse(d)]).join();
-      final index = (h.hMonth - 1).clamp(0, 11);
-      if (languageCode == 'en') return '${h.hDay} ${enMonths[index]} ${h.hYear} AH';
-      if (languageCode == 'ar') return '${h.hDay} ${arMonths[index]} ${h.hYear} هـ';
-      return '${bnDigits(h.hDay)} ${bnMonths[index]} ${bnDigits(h.hYear)} হিজরি';
-    } catch (_) {
-      return languageCode == 'en' ? 'Hijri date unavailable' : languageCode == 'ar' ? 'التاريخ الهجري غير متاح' : 'হিজরি তারিখ পাওয়া যায়নি';
-    }
+      final month = languageCode == 'en' ? enMonths[h.hMonth - 1] : languageCode == 'ar' ? arMonths[h.hMonth - 1] : bnMonths[h.hMonth - 1];
+      final day = languageCode == 'bn' ? bnDigits(h.hDay) : h.hDay.toString();
+      final year = languageCode == 'bn' ? bnDigits(h.hYear) : h.hYear.toString();
+      return '$day $month $year';
+    } catch (_) { return '--'; }
   }
 
   String _banglaDate() {
     final now = DateTime.now();
-    final year = now.year;
-    final starts = <DateTime>[DateTime(year, 4, 14), DateTime(year, 5, 15), DateTime(year, 6, 15), DateTime(year, 7, 16), DateTime(year, 8, 16), DateTime(year, 9, 16), DateTime(year, 10, 16), DateTime(year, 11, 15), DateTime(year, 12, 15), DateTime(year + 1, 1, 15), DateTime(year + 1, 2, 13), DateTime(year + 1, 3, 15)];
-    const months = <String>['বৈশাখ', 'জ্যৈষ্ঠ', 'আষাঢ়', 'শ্রাবণ', 'ভাদ্র', 'আশ্বিন', 'কার্তিক', 'অগ্রহায়ণ', 'পৌষ', 'মাঘ', 'ফাল্গুন', 'চৈত্র'];
-    var index = -1;
-    for (var i = 0; i < starts.length; i++) {
-      if (!now.isBefore(starts[i])) index = i;
-    }
-    if (index < 0) index = 11;
-    final banglaYear = now.month > 4 || (now.month == 4 && now.day >= 14) ? year - 593 : year - 594;
-    return '${now.difference(starts[index]).inDays + 1} ${months[index]} $banglaYear';
+    const months = <String>['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+    const digits = <String>['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    String bnDigits(int value) => value.toString().split('').map((d) => digits[int.parse(d)]).join();
+    return '${bnDigits(now.day)} ${months[now.month - 1]} ${bnDigits(now.year)}';
   }
 
   String _currentJamaatKey(String prayer) {
-    switch (prayer) {
-      case 'ফজর': return 'Fajr';
-      case 'যোহর':
-      case "জুমু'আ": return 'Dhuhr';
-      case 'আসর': return 'Asr';
-      case 'মাগরিব': return 'Maghrib';
-      case 'ইশা': return 'Isha';
-      default: return '';
-    }
-  }
-
-  Widget _continueReading(BuildContext context, String languageCode) {
-    if (_lastReadLoading) {
-      return Container(
-        height: 126,
-        decoration: BoxDecoration(
-          color: context.cardColor,
-          borderRadius: BorderRadius.circular(22),
-        ),
-        child: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    void openContinueReading() {
-      final mode = _lastRead?['mode']?.toString();
-      if (mode == 'onudhabon') {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => const OnudhabonQuranScreen(openLastRead: true),
-          ),
-        );
-        return;
-      }
-      widget.onNavigateTab?.call(2);
-    }
-
-    if (_lastRead == null) {
-      return ContinueReadingCard(
-        languageCode: languageCode,
-        surahName: _label(languageCode, 'অনুধাবন কুরআন শুরু করুন', 'Start Onudhabon Quran', 'ابدأ قرآن الفهم'),
-        paraNo: 1,
-        pageNo: 1,
-        progress: 0,
-        onTap: openContinueReading,
-      );
-    }
-
-    final surahName = _lastRead!['surahName']?.toString() ?? 'কুরআন';
-    final paraNo = _lastRead!['paraNo'] is int ? _lastRead!['paraNo'] as int : int.tryParse(_lastRead!['paraNo']?.toString() ?? '') ?? 1;
-    final pageNo = _lastRead!['pageNo'] is int ? _lastRead!['pageNo'] as int : int.tryParse(_lastRead!['pageNo']?.toString() ?? '') ?? 1;
-    final progress = _lastRead!['progress'] is num ? (_lastRead!['progress'] as num).toDouble().clamp(0.0, 1.0) : (double.tryParse(_lastRead!['progress']?.toString() ?? '') ?? 0).clamp(0.0, 1.0);
-
-    return ContinueReadingCard(languageCode: languageCode, surahName: surahName, paraNo: paraNo, pageNo: pageNo, progress: progress, onTap: openContinueReading);
+    final normalized = prayer.trim().toLowerCase();
+    if (normalized.contains('ফজর') || normalized.contains('fajr')) return 'Fajr';
+    if (normalized.contains('যোহর') || normalized.contains('dhuhr') || normalized.contains('জুমু')) return 'Dhuhr';
+    if (normalized.contains('আসর') || normalized.contains('asr')) return 'Asr';
+    if (normalized.contains('মাগরিব') || normalized.contains('maghrib')) return 'Maghrib';
+    if (normalized.contains('ইশা') || normalized.contains('isha')) return 'Isha';
+    return '';
   }
 
   Widget _quickAction(BuildContext context, {required String title, required IconData icon, required VoidCallback onTap}) {
@@ -207,77 +138,50 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
-  void _openScreen(Widget screen) {
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
-  }
+  void _openScreen(Widget screen) { Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen)); }
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<PrayerController>();
     final settings = context.watch<SettingsProvider>();
     final languageCode = settings.languageCode;
-
     JamaatService.configureDefaultsFromPrayerList(controller.prayers);
     final jamaatKey = _currentJamaatKey(controller.currentPrayer);
     final currentJamaat = jamaatKey.isEmpty ? '--:--' : JamaatService.get(jamaatKey);
 
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          const Positioned.fill(child: IslamicOrnamentalBackground()),
-          SafeArea(
-            child: RefreshIndicator(
-              onRefresh: _refreshHome,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TopHeader(greeting: _greeting(languageCode), currentTime: _currentTime, onNotificationTap: () => widget.onNavigateTab?.call(5), onProfileTap: () => widget.onNavigateTab?.call(5)),
-                    const SizedBox(height: 14),
-                    CurrentPrayerPremiumCard(previousPrayer: controller.previousPrayer, previousPrayerTime: controller.previousPrayerTime, currentPrayer: controller.currentPrayer, currentPrayerTime: controller.currentPrayerTime, nextPrayer: controller.nextPrayer, nextPrayerTime: controller.nextPrayerTime, remainingTime: controller.timeRemainingForNextPrayer, progress: controller.prayerProgress, iqamahTime: currentJamaat, status: controller.prayerStatus, languageCode: languageCode, onJamaatTap: _openJamaatSettings),
-                    const SizedBox(height: 10),
-                    PrayerTimelineCard(prayers: controller.prayers, languageCode: languageCode),
-                    const SizedBox(height: 10),
-                    IslamicInfoCard(location: controller.currentLocationName, englishDate: DateService.englishDate(), banglaDate: _banglaDate(), hijriDate: _hijriDate(languageCode), sunrise: controller.sunriseTime, sunset: controller.sunsetTime, languageCode: languageCode, onRefresh: controller.refreshLocation),
-                    const SizedBox(height: 10),
-                    LivePrayerRestrictionCard(languageCode: languageCode),
-                    const SizedBox(height: 14),
-                    _continueReading(context, languageCode),
-                    const SizedBox(height: 16),
-                    Text(_label(languageCode, 'দৈনিক আমল ও জ্ঞান', 'Daily Deeds & Knowledge', 'الأعمال والمعرفة اليومية'), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 8),
-                    DailyContentSection(languageCode: languageCode, onNavigateTab: widget.onNavigateTab),
-                    const SizedBox(height: 16),
-                    Text(_label(languageCode, 'কুইক অ্যাকশন', 'Quick Actions', 'إجراءات سريعة'), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 8),
-                    GridView.count(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                      childAspectRatio: 1.0,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        _quickAction(context, title: _label(languageCode, 'কিবলা', 'Qibla', 'القبلة'), icon: Icons.explore_rounded, onTap: () => _openScreen(const QiblaScreen())),
-                        _quickAction(context, title: _label(languageCode, 'তাসবিহ', 'Tasbih', 'التسبيح'), icon: Icons.touch_app_rounded, onTap: () => _openScreen(const TasbihScreen())),
-                        _quickAction(context, title: _label(languageCode, '৯৯ নাম', '99 Names', 'أسماء الله'), icon: Icons.auto_awesome_rounded, onTap: () => _openScreen(const AsmaUlHusnaScreen())),
-                        _quickAction(context, title: _label(languageCode, 'রুকইয়াহ', 'Ruqyah', 'الرقية'), icon: Icons.menu_book_rounded, onTap: () => _openScreen(const RuqyahScreen())),
-                        _quickAction(context, title: _label(languageCode, 'দোয়া', 'Dua', 'الدعاء'), icon: Icons.favorite_rounded, onTap: () => _openScreen(const DuaScreen())),
-                        _quickAction(context, title: _label(languageCode, 'ক্যালেন্ডার', 'Calendar', 'التقويم'), icon: Icons.calendar_month_rounded, onTap: () => _openScreen(const CalendarScreen())),
-                        _quickAction(context, title: _label(languageCode, 'জাকাত', 'Zakat', 'الزكاة'), icon: Icons.account_balance_wallet_rounded, onTap: () => _openScreen(const ZakatCalculatorScreen())),
-                        _quickAction(context, title: _label(languageCode, 'কুরআন', 'Quran', 'القرآن'), icon: Icons.menu_book_rounded, onTap: () => widget.onNavigateTab?.call(2)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+      body: Stack(fit: StackFit.expand, children: [
+        const Positioned.fill(child: IslamicOrnamentalBackground()),
+        SafeArea(child: RefreshIndicator(onRefresh: _refreshHome, child: SingleChildScrollView(physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()), padding: const EdgeInsets.fromLTRB(16, 10, 16, 28), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          TopHeader(greeting: _greeting(languageCode), currentTime: _currentTime, onNotificationTap: () => widget.onNavigateTab?.call(5), onProfileTap: () => widget.onNavigateTab?.call(5)),
+          const SizedBox(height: 14),
+          CurrentPrayerPremiumCard(previousPrayer: controller.previousPrayer, previousPrayerTime: controller.previousPrayerTime, currentPrayer: controller.currentPrayer, currentPrayerTime: controller.currentPrayerTime, nextPrayer: controller.nextPrayer, nextPrayerTime: controller.nextPrayerTime, remainingTime: controller.timeRemainingForNextPrayer, progress: controller.prayerProgress, iqamahTime: currentJamaat, status: controller.prayerStatus, languageCode: languageCode, onJamaatTap: _openJamaatSettings),
+          const SizedBox(height: 10),
+          PrayerTimelineCard(prayers: controller.prayers, languageCode: languageCode),
+          const SizedBox(height: 10),
+          IslamicInfoCard(location: controller.currentLocationName, englishDate: DateService.englishDate(), banglaDate: _banglaDate(), hijriDate: _hijriDate(languageCode), sunrise: controller.sunriseTime, sunset: controller.sunsetTime, languageCode: languageCode, onRefresh: controller.refreshLocation),
+          const SizedBox(height: 10),
+          LivePrayerRestrictionCard(languageCode: languageCode),
+          const SizedBox(height: 14),
+          Text(_label(languageCode, 'কুইক অ্যাকশন', 'Quick Actions', 'إجراءات سريعة'), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 8),
+          GridView.count(crossAxisCount: 4, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 1.0, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), children: [
+            _quickAction(context, title: _label(languageCode, 'কিবলা', 'Qibla', 'القبلة'), icon: Icons.explore_rounded, onTap: () => _openScreen(const QiblaScreen())),
+            _quickAction(context, title: _label(languageCode, 'তাসবিহ', 'Tasbih', 'التسبيح'), icon: Icons.touch_app_rounded, onTap: () => _openScreen(const TasbihScreen())),
+            _quickAction(context, title: _label(languageCode, '৯৯ নাম', '99 Names', 'أسماء الله'), icon: Icons.auto_awesome_rounded, onTap: () => _openScreen(const AsmaUlHusnaScreen())),
+            _quickAction(context, title: _label(languageCode, 'রুকইয়াহ', 'Ruqyah', 'الرقية'), icon: Icons.menu_book_rounded, onTap: () => _openScreen(const RuqyahScreen())),
+            _quickAction(context, title: _label(languageCode, 'দোয়া', 'Dua', 'الدعاء'), icon: Icons.favorite_rounded, onTap: () => _openScreen(const DuaScreen())),
+            _quickAction(context, title: _label(languageCode, 'ক্যালেন্ডার', 'Calendar', 'التقويم'), icon: Icons.calendar_month_rounded, onTap: () => _openScreen(const CalendarScreen())),
+            _quickAction(context, title: _label(languageCode, 'জাকাত', 'Zakat', 'الزكاة'), icon: Icons.account_balance_wallet_rounded, onTap: () => _openScreen(const ZakatCalculatorScreen())),
+            _quickAction(context, title: _label(languageCode, 'কুরআন', 'Quran', 'القرآن'), icon: Icons.menu_book_rounded, onTap: () => widget.onNavigateTab?.call(2)),
+          ]),
+          const SizedBox(height: 16),
+          _continueReading(context, languageCode),
+          const SizedBox(height: 16),
+          Text(_label(languageCode, 'দৈনিক আমল ও জ্ঞান', 'Daily Deeds & Knowledge', 'الأعمال والمعرفة اليومية'), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 8),
+          DailyContentSection(languageCode: languageCode, onNavigateTab: widget.onNavigateTab),
+          const SizedBox(height: 16),
+        ]))))]);
   }
 }
