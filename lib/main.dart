@@ -27,11 +27,7 @@ import 'screens/more_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await AuthService.instance.initializeGoogleSignIn();
   await initializeDateFormatting('en');
   await initializeDateFormatting('bn');
@@ -40,22 +36,12 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<SettingsProvider>(
-          create: (_) => SettingsProvider(),
-        ),
-        ChangeNotifierProvider<TextScaleProvider>(
-          create: (_) => TextScaleProvider(),
-        ),
-        ChangeNotifierProvider<BoldTextProvider>(
-          create: (_) => BoldTextProvider(),
-        ),
-        ChangeNotifierProvider<PremiumProvider>(
-          create: (_) => PremiumProvider()..checkPremiumStatus(),
-        ),
+        ChangeNotifierProvider<SettingsProvider>(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider<TextScaleProvider>(create: (_) => TextScaleProvider()),
+        ChangeNotifierProvider<BoldTextProvider>(create: (_) => BoldTextProvider()),
+        ChangeNotifierProvider<PremiumProvider>(create: (_) => PremiumProvider()..checkPremiumStatus()),
         ChangeNotifierProvider<AudioService>(create: (_) => AudioService()),
-        ChangeNotifierProvider<PrayerController>(
-          create: (_) => PrayerController(),
-        ),
+        ChangeNotifierProvider<PrayerController>(create: (_) => PrayerController()),
       ],
       child: const NurVerseApp(),
     ),
@@ -115,9 +101,7 @@ class NurVerseApp extends StatelessWidget {
           return Theme(
             data: baseTheme.copyWith(textTheme: effectiveTextTheme),
             child: MediaQuery(
-              data: mediaQuery.copyWith(
-                textScaler: TextScaler.linear(combinedScale),
-              ),
+              data: mediaQuery.copyWith(textScaler: TextScaler.linear(combinedScale)),
               child: const AuthGate(),
             ),
           );
@@ -137,6 +121,7 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
   SettingsProvider? _settingsProvider;
+  final GlobalKey<HomeScreenState> _homeKey = GlobalKey<HomeScreenState>();
 
   @override
   void didChangeDependencies() {
@@ -173,12 +158,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     setState(() => _selectedIndex = index);
   }
 
-  void _handleSystemBack() {
+  Future<void> _handleSystemBack() async {
     if (!mounted) return;
     if (_selectedIndex != 0) {
       setState(() => _selectedIndex = 0);
+      return;
     }
-    // On Home, consume the back action instead of exiting the app.
+    await _homeKey.currentState?.refreshForBack();
   }
 
   @override
@@ -187,7 +173,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final settings = context.watch<SettingsProvider>();
 
     final screens = [
-      HomeScreen(onNavigateTab: _onNavigateTab),
+      HomeScreen(key: _homeKey, onNavigateTab: _onNavigateTab),
       const PrayerScreen(),
       const QuranScreen(),
       const HadithScreen(),
@@ -210,9 +196,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: context.cardColor,
-            border: Border(
-              top: BorderSide(color: context.borderColor, width: 0.5),
-            ),
+            border: Border(top: BorderSide(color: context.borderColor, width: 0.5)),
           ),
           child: BottomNavigationBar(
             currentIndex: _selectedIndex,
@@ -225,36 +209,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             unselectedFontSize: 11,
             elevation: 0,
             items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.home_outlined),
-                activeIcon: const Icon(Icons.home),
-                label: l10n.home,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.mosque_outlined),
-                activeIcon: const Icon(Icons.mosque),
-                label: l10n.prayer,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.menu_book_outlined),
-                activeIcon: const Icon(Icons.menu_book),
-                label: l10n.quran,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.auto_stories_outlined),
-                activeIcon: const Icon(Icons.auto_stories),
-                label: l10n.hadith,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.grid_view_outlined),
-                activeIcon: const Icon(Icons.grid_view),
-                label: l10n.tools,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.more_horiz_outlined),
-                activeIcon: const Icon(Icons.more_horiz),
-                label: l10n.more,
-              ),
+              BottomNavigationBarItem(icon: const Icon(Icons.home_outlined), activeIcon: const Icon(Icons.home), label: l10n.home),
+              BottomNavigationBarItem(icon: const Icon(Icons.mosque_outlined), activeIcon: const Icon(Icons.mosque), label: l10n.prayer),
+              BottomNavigationBarItem(icon: const Icon(Icons.menu_book_outlined), activeIcon: const Icon(Icons.menu_book), label: l10n.quran),
+              BottomNavigationBarItem(icon: const Icon(Icons.auto_stories_outlined), activeIcon: const Icon(Icons.auto_stories), label: l10n.hadith),
+              BottomNavigationBarItem(icon: const Icon(Icons.grid_view_outlined), activeIcon: const Icon(Icons.grid_view), label: l10n.tools),
+              BottomNavigationBarItem(icon: const Icon(Icons.more_horiz_outlined), activeIcon: const Icon(Icons.more_horiz), label: l10n.more),
             ],
           ),
         ),
