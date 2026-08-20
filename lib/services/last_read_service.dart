@@ -45,13 +45,10 @@ class LastReadService {
     final surahNumber = prefs.getInt(_surahNumberKey);
     final ayahNumber = prefs.getInt(_ayahNumberKey);
 
-    // A precise ayah position is the source of truth for Continue Reading.
-    // Older installs may have a stale/missing mode value, so normalize such
-    // records to Onudhabon instead of falling back to the Quran tab.
-    final storedMode = prefs.getString(_modeKey);
-    final mode = surahNumber != null && ayahNumber != null
-        ? 'onudhabon'
-        : (storedMode ?? 'onudhabon');
+    // Continue Reading is an Onudhabon action. Always normalize an existing
+    // saved reading record to Onudhabon so stale mode values from older app
+    // versions can never send the user to the generic Quran tab.
+    const mode = 'onudhabon';
 
     return {
       'surahName': surahName,
