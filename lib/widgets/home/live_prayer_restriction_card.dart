@@ -3,12 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/prayer_controller.dart';
 
+/// Compact live-only warning for the Home screen.
+/// The complete Makruh + Forbidden schedule belongs on the Prayer screen.
 class LivePrayerRestrictionCard extends StatefulWidget {
   final String languageCode;
-  const LivePrayerRestrictionCard({super.key, required this.languageCode});
+
+  const LivePrayerRestrictionCard({
+    super.key,
+    required this.languageCode,
+  });
 
   @override
-  State<LivePrayerRestrictionCard> createState() => _LivePrayerRestrictionCardState();
+  State<LivePrayerRestrictionCard> createState() =>
+      _LivePrayerRestrictionCardState();
 }
 
 class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
@@ -51,33 +58,16 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
   Widget build(BuildContext context) {
     final controller = context.watch<PrayerController>();
 
+    // Home intentionally shows ONLY an active forbidden period.
+    // Makruh and the complete schedule are handled by the Prayer screen.
     final prohibited = _active(
       controller.prohibitedStart,
       controller.prohibitedEnd,
     );
-    final makruh = !prohibited && _active(
-      controller.makruhStart,
-      controller.makruhEnd,
-    );
 
-    if (!prohibited && !makruh) return const SizedBox.shrink();
+    if (!prohibited) return const SizedBox.shrink();
 
-    final end = prohibited
-        ? controller.prohibitedEnd!
-        : controller.makruhEnd!;
-
-    final title = prohibited
-        ? _label(
-            'এখন নিষিদ্ধ সময় চলছে',
-            'Forbidden prayer time is active',
-            'وقت النهي قائم الآن',
-          )
-        : _label(
-            'এখন মাকরূহ সময় চলছে',
-            'Makruh prayer time is active',
-            'وقت الكراهة قائم الآن',
-          );
-
+    final end = controller.prohibitedEnd!;
     final theme = Theme.of(context);
     final warningColor = theme.colorScheme.error;
     final foreground = theme.colorScheme.onSurface;
@@ -100,7 +90,11 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  _label(
+                    'এখন নিষিদ্ধ সময় চলছে',
+                    'Forbidden prayer time is active',
+                    'وقت النهي قائم الآن',
+                  ),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
