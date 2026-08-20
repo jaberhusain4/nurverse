@@ -17,12 +17,12 @@ class OnudhabonQuranScreen extends StatefulWidget {
 }
 
 class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
-  static const double _defaultArabicFontSize = 22;
-  static const double _defaultTranslationFontSize = 16;
-  static const double _minArabicFontSize = 18;
-  static const double _maxArabicFontSize = 32;
-  static const double _minTranslationFontSize = 13;
-  static const double _maxTranslationFontSize = 22;
+  static const double _defaultArabicFontSize = 20;
+  static const double _defaultTranslationFontSize = 15;
+  static const double _minArabicFontSize = 16;
+  static const double _maxArabicFontSize = 28;
+  static const double _minTranslationFontSize = 12;
+  static const double _maxTranslationFontSize = 21;
 
   final QuranDataService _data = QuranDataService.instance;
   final QuranTafsirService _tafsir = QuranTafsirService.instance;
@@ -85,17 +85,21 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
 
   Future<void> _loadReadingSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+
     final arabic = prefs.getDouble('onudhabon_arabic_font_size');
     final translation = prefs.getDouble('onudhabon_translation_font_size');
 
-    _arabicFontSize = (arabic ?? _defaultArabicFontSize).clamp(
-      _minArabicFontSize,
-      _maxArabicFontSize,
-    );
-    _translationFontSize = (translation ?? _defaultTranslationFontSize).clamp(
-      _minTranslationFontSize,
-      _maxTranslationFontSize,
-    );
+    setState(() {
+      _arabicFontSize = (arabic ?? _defaultArabicFontSize).clamp(
+        _minArabicFontSize,
+        _maxArabicFontSize,
+      );
+      _translationFontSize = (translation ?? _defaultTranslationFontSize).clamp(
+        _minTranslationFontSize,
+        _maxTranslationFontSize,
+      );
+    });
   }
 
   Future<void> _saveReadingSettings() async {
@@ -107,101 +111,43 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
     );
   }
 
-  Future<void> _showReadingSettings() async {
-    double arabic = _arabicFontSize;
-    double translation = _translationFontSize;
+  Future<void> _resetReadingSettings() async {
+    setState(() {
+      _arabicFontSize = _defaultArabicFontSize;
+      _translationFontSize = _defaultTranslationFontSize;
+    });
+    await _saveReadingSettings();
+  }
 
+  void _setArabicFontSize(double value) {
+    setState(() {
+      _arabicFontSize = value.clamp(_minArabicFontSize, _maxArabicFontSize);
+    });
+    _saveReadingSettings();
+  }
+
+  void _setTranslationFontSize(double value) {
+    setState(() {
+      _translationFontSize =
+          value.clamp(_minTranslationFontSize, _maxTranslationFontSize);
+    });
+    _saveReadingSettings();
+  }
+
+  void _stepArabicFontSize(double delta) => _setArabicFontSize(_arabicFontSize + delta);
+
+  void _stepTranslationFontSize(double delta) =>
+      _setTranslationFontSize(_translationFontSize + delta);
+
+  Future<void> _showReadingSettings() async {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (sheetContext) {
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      builder: (context) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            Widget settingRow({
-              required String title,
-              required double value,
-              required double min,
-              required double max,
-              required ValueChanged<double> onChanged,
-            }) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: .08),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${value.round()}px',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        tooltip: 'ছোট করুন',
-                        onPressed: value <= min
-                            ? null
-                            : () {
-                                final next = (value - 1).clamp(min, max);
-                                setSheetState(() => onChanged(next));
-                              },
-                        icon: const Icon(Icons.remove_rounded),
-                      ),
-                      Expanded(
-                        child: Slider(
-                          value: value,
-                          min: min,
-                          max: max,
-                          divisions: (max - min).round(),
-                          label: '${value.round()}px',
-                          onChanged: (next) {
-                            setSheetState(() => onChanged(next));
-                          },
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'বড় করুন',
-                        onPressed: value >= max
-                            ? null
-                            : () {
-                                final next = (value + 1).clamp(min, max);
-                                setSheetState(() => onChanged(next));
-                              },
-                        icon: const Icon(Icons.add_rounded),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            }
-
             return SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
@@ -209,69 +155,67 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'পড়ার সেটিংস',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    Row(
+                      children: [
+                        Icon(Icons.text_fields_rounded,
+                            color: Theme.of(context).colorScheme.primary),
+                        const SizedBox(width: 10),
+                        const Text('পড়ার সেটিংস',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () async {
+                            await _resetReadingSettings();
+                            setSheetState(() {});
+                          },
+                          child: const Text('ডিফল্ট', style: TextStyle(fontSize: 13)),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'আরবি আয়াত ও বাংলা অনুবাদ আলাদাভাবে আপনার সুবিধামতো বড় বা ছোট করুন।',
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.45,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    settingRow(
-                      title: 'আরবি আয়াত',
-                      value: arabic,
+                    const SizedBox(height: 14),
+                    _buildFontControl(
+                      context: context,
+                      label: 'আরবি আয়াত',
+                      value: _arabicFontSize,
                       min: _minArabicFontSize,
                       max: _maxArabicFontSize,
-                      onChanged: (next) => arabic = next,
+                      onChanged: (value) {
+                        _setArabicFontSize(value);
+                        setSheetState(() {});
+                      },
+                      onMinus: () {
+                        _stepArabicFontSize(-1);
+                        setSheetState(() {});
+                      },
+                      onPlus: () {
+                        _stepArabicFontSize(1);
+                        setSheetState(() {});
+                      },
                     ),
-                    const SizedBox(height: 10),
-                    settingRow(
-                      title: 'বাংলা অনুবাদ',
-                      value: translation,
+                    const SizedBox(height: 12),
+                    _buildFontControl(
+                      context: context,
+                      label: 'বাংলা অনুবাদ',
+                      value: _translationFontSize,
                       min: _minTranslationFontSize,
                       max: _maxTranslationFontSize,
-                      onChanged: (next) => translation = next,
+                      onChanged: (value) {
+                        _setTranslationFontSize(value);
+                        setSheetState(() {});
+                      },
+                      onMinus: () {
+                        _stepTranslationFontSize(-1);
+                        setSheetState(() {});
+                      },
+                      onPlus: () {
+                        _stepTranslationFontSize(1);
+                        setSheetState(() {});
+                      },
                     ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          setSheetState(() {
-                            arabic = _defaultArabicFontSize;
-                            translation = _defaultTranslationFontSize;
-                          });
-                        },
-                        icon: const Icon(Icons.restart_alt_rounded, size: 18),
-                        label: const Text('ডিফল্টে ফিরিয়ে দিন'),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () async {
-                          if (!mounted) return;
-                          setState(() {
-                            _arabicFontSize = arabic;
-                            _translationFontSize = translation;
-                          });
-                          await _saveReadingSettings();
-                          if (sheetContext.mounted) {
-                            Navigator.of(sheetContext).pop();
-                          }
-                        },
-                        child: const Text('প্রয়োগ করুন'),
-                      ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'আরবি ও অনুবাদের আকার আলাদাভাবে আপনার সুবিধামতো ঠিক করুন।',
+                      style: TextStyle(fontSize: 12, height: 1.4, color: context.secondaryTextColor),
                     ),
                   ],
                 ),
@@ -280,6 +224,57 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildFontControl({
+    required BuildContext context,
+    required String label,
+    required double value,
+    required double min,
+    required double max,
+    required ValueChanged<double> onChanged,
+    required VoidCallback onMinus,
+    required VoidCallback onPlus,
+  }) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+            const Spacer(),
+            Text('${value.round()}px',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: primary)),
+          ],
+        ),
+        Row(
+          children: [
+            IconButton(
+              tooltip: 'ছোট করুন',
+              onPressed: value <= min ? null : onMinus,
+              icon: const Icon(Icons.remove_rounded, size: 19),
+              visualDensity: VisualDensity.compact,
+            ),
+            Expanded(
+              child: Slider(
+                value: value.clamp(min, max),
+                min: min,
+                max: max,
+                divisions: (max - min).round(),
+                onChanged: onChanged,
+              ),
+            ),
+            IconButton(
+              tooltip: 'বড় করুন',
+              onPressed: value >= max ? null : onPlus,
+              icon: const Icon(Icons.add_rounded, size: 19),
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -333,9 +328,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
     });
   }
 
-  GlobalKey _keyForAyah(int ayahNumber) {
-    return _ayahKeys.putIfAbsent(ayahNumber, GlobalKey.new);
-  }
+  GlobalKey _keyForAyah(int ayahNumber) => _ayahKeys.putIfAbsent(ayahNumber, GlobalKey.new);
 
   void _scheduleResume() {
     if (_resumeScheduled) return;
@@ -354,21 +347,17 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
       _scheduleResumeRetry(ayahNumber);
       return;
     }
-
     final renderObject = targetContext.findRenderObject();
     if (renderObject is! RenderBox) {
       _scheduleResumeRetry(ayahNumber);
       return;
     }
-
     final top = renderObject.localToGlobal(Offset.zero).dy;
     const desiredTop = 96.0;
-    final delta = top - desiredTop;
-    final target = (_readingScrollController.offset + delta).clamp(
+    final target = (_readingScrollController.offset + top - desiredTop).clamp(
       0.0,
       _readingScrollController.position.maxScrollExtent,
     );
-
     _readingScrollController.jumpTo(target.toDouble());
   }
 
@@ -393,23 +382,19 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
   void _saveVisibleAyah() {
     final surahNumber = _selectedSurah;
     if (surahNumber == null) return;
-
     int? bestAyah;
     double bestTop = double.infinity;
-
     for (final entry in _ayahKeys.entries) {
       final context = entry.value.currentContext;
       if (context == null) continue;
       final renderObject = context.findRenderObject();
       if (renderObject is! RenderBox || !renderObject.hasSize) continue;
-
       final top = renderObject.localToGlobal(Offset.zero).dy;
       if (top >= 72 && top < bestTop) {
         bestTop = top;
         bestAyah = entry.key;
       }
     }
-
     bestAyah ??= _resumeAyah ?? 1;
     _resumeAyah = bestAyah;
     _savePosition(surahNumber, bestAyah);
@@ -417,13 +402,11 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
 
   Future<void> _savePosition(int surahNumber, int ayahNumber) async {
     if (surahNumber < 1 || surahNumber > 114 || ayahNumber < 1) return;
-
     final surah = _data.getSurah(surahNumber);
     final safeAyah = ayahNumber.clamp(1, surah.totalVerses);
     final progress = surah.totalVerses <= 1
         ? 0.0
         : ((safeAyah - 1) / (surah.totalVerses - 1)).clamp(0.0, 1.0);
-
     await LastReadService.saveLastRead(
       surahName: surah.banglaName ?? surah.transliteration,
       paraNo: 1,
@@ -447,19 +430,12 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final surahs = _data.surahList;
-    final selected = _selectedSurah == null
-        ? null
-        : _data.getSurah(_selectedSurah!);
-
-    if (selected != null && _resumeAyah != null) {
-      _scheduleResume();
-    }
+    final selected = _selectedSurah == null ? null : _data.getSurah(_selectedSurah!);
+    if (selected != null && _resumeAyah != null) _scheduleResume();
 
     return Scaffold(
       appBar: AppBar(
@@ -468,13 +444,15 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip: 'পড়ার সেটিংস',
-            onPressed: _showReadingSettings,
-            icon: const Icon(Icons.text_fields_rounded, size: 20),
-          ),
-        ],
+        actions: selected == null
+            ? null
+            : [
+                IconButton(
+                  tooltip: 'পড়ার সেটিংস',
+                  onPressed: _showReadingSettings,
+                  icon: const Icon(Icons.text_fields_rounded, size: 20),
+                ),
+              ],
       ),
       body: selected == null
           ? _buildSurahPicker(context, surahs)
@@ -502,7 +480,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
           onChanged: (value) => setState(() => _query = value),
           decoration: InputDecoration(
             hintText: 'সূরা খুঁজুন...',
-            prefixIcon: const Icon(Icons.search_rounded),
+            prefixIcon: const Icon(Icons.search_rounded, size: 20),
             suffixIcon: _query.isEmpty
                 ? null
                 : IconButton(
@@ -510,7 +488,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
                       _searchController.clear();
                       setState(() => _query = '');
                     },
-                    icon: const Icon(Icons.close_rounded),
+                    icon: const Icon(Icons.close_rounded, size: 19),
                   ),
             filled: true,
             fillColor: context.cardColor,
@@ -521,9 +499,9 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
           ),
         ),
         const SizedBox(height: 14),
-        Text(
+        const Text(
           'সূরা নির্বাচন করুন',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 8),
         ...filtered.map((surah) => _buildSurahTile(context, surah)),
@@ -537,10 +515,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            primary.withValues(alpha: .14),
-            primary.withValues(alpha: .04),
-          ],
+          colors: [primary.withValues(alpha: .14), primary.withValues(alpha: .04)],
         ),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: primary.withValues(alpha: .10)),
@@ -554,21 +529,19 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
               color: primary.withValues(alpha: .12),
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Icon(Icons.auto_stories_rounded, color: primary),
+            child: Icon(Icons.auto_stories_rounded, color: primary, size: 24),
           ),
           const SizedBox(width: 12),
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'পড়ুন, বুঝুন, অনুধাবন করুন',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                ),
+                Text('পড়ুন, বুঝুন, অনুধাবন করুন',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                 SizedBox(height: 4),
                 Text(
                   'আরবি আয়াতের সঙ্গে বাংলা অনুবাদ এবং নির্বাচিত বাংলা তাফসির।',
-                  style: TextStyle(fontSize: 12, height: 1.45),
+                  style: TextStyle(fontSize: 12, height: 1.4),
                 ),
               ],
             ),
@@ -599,7 +572,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
           child: Center(
             child: Text(
               _bnNumber(surah.number),
-              style: TextStyle(color: primary, fontWeight: FontWeight.w800),
+              style: TextStyle(color: primary, fontSize: 13, fontWeight: FontWeight.w800),
             ),
           ),
         ),
@@ -614,7 +587,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
         trailing: Text(
           surah.arabicName,
           textDirection: TextDirection.rtl,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -626,7 +599,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
         Material(
           color: context.cardColor,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+            padding: const EdgeInsets.fromLTRB(12, 6, 8, 8),
             child: Row(
               children: [
                 IconButton(
@@ -634,7 +607,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
                     _selectedSurah = null;
                     _resumeAyah = null;
                   }),
-                  icon: const Icon(Icons.arrow_back_rounded),
+                  icon: const Icon(Icons.arrow_back_rounded, size: 20),
                 ),
                 Expanded(
                   child: Column(
@@ -642,10 +615,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
                     children: [
                       Text(
                         surah.banglaName ?? surah.transliteration,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                       ),
                       Text(
                         '${surah.transliteration} • ${surah.totalVerses} আয়াত',
@@ -653,6 +623,11 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  tooltip: 'পড়ার সেটিংস',
+                  onPressed: _showReadingSettings,
+                  icon: const Icon(Icons.text_fields_rounded, size: 20),
                 ),
                 PopupMenuButton<String>(
                   tooltip: 'তাফসির নির্বাচন',
@@ -667,10 +642,10 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
                     for (final edition in QuranTafsirService.editions)
                       PopupMenuItem(
                         value: edition.slug,
-                        child: Text(edition.title),
+                        child: Text(edition.title, style: const TextStyle(fontSize: 14)),
                       ),
                   ],
-                  icon: const Icon(Icons.tune_rounded),
+                  icon: const Icon(Icons.tune_rounded, size: 20),
                 ),
               ],
             ),
@@ -687,14 +662,14 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.download_rounded),
-              label: const Text('বাংলা অনুবাদ ডাউনলোড করুন'),
+                  : const Icon(Icons.download_rounded, size: 18),
+              label: const Text('বাংলা অনুবাদ ডাউনলোড করুন', style: TextStyle(fontSize: 14)),
             ),
           ),
         Expanded(
           child: ListView.builder(
             controller: _readingScrollController,
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 32),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             itemCount: surah.verses.length,
             itemBuilder: (context, index) {
               final verse = surah.verses[index];
@@ -709,18 +684,15 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
     );
   }
 
-  Widget _buildAyahCard(
-    BuildContext context,
-    QuranSurah surah,
-    QuranVerse verse,
-  ) {
+  Widget _buildAyahCard(BuildContext context, QuranSurah surah, QuranVerse verse) {
     final primary = Theme.of(context).colorScheme.primary;
     final tafsir = _tafsirByAyah[verse.number];
-    final arabicLineHeight = _arabicFontSize >= 28 ? 1.55 : 1.6;
+    final arabicLineHeight = _arabicFontSize >= 25 ? 1.7 : 1.62;
+    final translationLineHeight = _translationFontSize >= 18 ? 1.52 : 1.48;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.fromLTRB(16, 15, 16, 14),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(15, 13, 15, 12),
       decoration: BoxDecoration(
         color: context.cardColor,
         borderRadius: BorderRadius.circular(20),
@@ -736,24 +708,15 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
                 backgroundColor: primary.withValues(alpha: .10),
                 child: Text(
                   _bnNumber(verse.number),
-                  style: TextStyle(
-                    color: primary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: TextStyle(color: primary, fontSize: 11, fontWeight: FontWeight.w800),
                 ),
               ),
               const Spacer(),
-              Text(
-                '${surah.number}:${verse.number}',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: context.secondaryTextColor,
-                ),
-              ),
+              Text('${surah.number}:${verse.number}',
+                  style: TextStyle(fontSize: 11, color: context.secondaryTextColor)),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 11),
           Text(
             verse.arabic,
             textDirection: TextDirection.rtl,
@@ -765,7 +728,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
             ),
           ),
           if (verse.bangla != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 11),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -774,10 +737,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
               ),
               child: Text(
                 verse.bangla!,
-                style: TextStyle(
-                  fontSize: _translationFontSize,
-                  height: 1.6,
-                ),
+                style: TextStyle(fontSize: _translationFontSize, height: translationLineHeight),
               ),
             ),
           ],
@@ -785,11 +745,9 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
           Row(
             children: [
               TextButton.icon(
-                onPressed: _tafsirLoading
-                    ? null
-                    : () => _loadTafsir(surah),
-                icon: const Icon(Icons.menu_book_rounded, size: 18),
-                label: const Text('তাফসির / ব্যাখ্যা'),
+                onPressed: _tafsirLoading ? null : () => _loadTafsir(surah),
+                icon: const Icon(Icons.menu_book_rounded, size: 17),
+                label: const Text('তাফসির / ব্যাখ্যা', style: TextStyle(fontSize: 13)),
               ),
             ],
           ),
@@ -803,7 +761,7 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
                 'তাফসির লোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চাপুন।',
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
               ),
             ),
           if (tafsir != null) ...[
@@ -820,21 +778,12 @@ class _OnudhabonQuranScreenState extends State<OnudhabonQuranScreen> {
                 children: [
                   Text(
                     QuranTafsirService.editions
-                        .firstWhere(
-                          (edition) => edition.slug == _selectedTafsir,
-                        )
+                        .firstWhere((edition) => edition.slug == _selectedTafsir)
                         .title,
-                    style: TextStyle(
-                      color: primary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: primary, fontWeight: FontWeight.w800, fontSize: 12),
                   ),
                   const SizedBox(height: 7),
-                  Text(
-                    tafsir,
-                    style: const TextStyle(fontSize: 14, height: 1.65),
-                  ),
+                  Text(tafsir, style: const TextStyle(fontSize: 14, height: 1.55)),
                 ],
               ),
             ),
