@@ -19,7 +19,7 @@ class QuranTafsirService {
   static final QuranTafsirService instance = QuranTafsirService._();
 
   static const String _baseUrl =
-      'https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/editions';
+      'https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir';
 
   static const List<QuranTafsirEdition> editions = [
     QuranTafsirEdition(
