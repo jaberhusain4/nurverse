@@ -1,52 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../services/last_read_service.dart';
 import '../../theme/app_theme.dart';
 import 'hafezi_quran_screen.dart';
 import 'onudhabon_quran_screen.dart';
 
-class QuranScreen extends StatefulWidget {
+class QuranScreen extends StatelessWidget {
   const QuranScreen({super.key});
 
   @override
-  State<QuranScreen> createState() => _QuranScreenState();
-}
-
-class _QuranScreenState extends State<QuranScreen> {
-  bool _loadingLastRead = true;
-  bool _hasOnudhabonLastRead = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadLastRead();
-  }
-
-  Future<void> _loadLastRead() async {
-    final lastRead = await LastReadService.getLastRead();
-    if (!mounted) return;
-    setState(() {
-      _hasOnudhabonLastRead = lastRead?['mode'] == 'onudhabon' &&
-          lastRead?['surahNumber'] is int &&
-          lastRead?['ayahNumber'] is int;
-      _loadingLastRead = false;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_loadingLastRead) {
-      return const SafeArea(
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    // Home-এর "কুরআন পড়া চালিয়ে যান" card Quran tab-এ নিয়ে এলে,
-    // saved Onudhabon position থেকেই reader খুলবে।
-    if (_hasOnudhabonLastRead) {
-      return const OnudhabonQuranScreen();
-    }
-
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
@@ -54,16 +16,17 @@ class _QuranScreenState extends State<QuranScreen> {
           Text(
             'কুরআন',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontSize: 22,
+              fontSize: 16,
+              height: 1.2,
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 5),
           Text(
             'দুইভাবে কুরআন পড়ুন — হিফজ ও অনুধাবন।',
-            style: TextStyle(color: context.secondaryTextColor),
+            style: TextStyle(fontSize: 13, color: context.secondaryTextColor),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           _QuranModeCard(
             icon: Icons.menu_book_rounded,
             title: 'Hafezi Quran',
@@ -73,13 +36,12 @@ class _QuranScreenState extends State<QuranScreen> {
               MaterialPageRoute(builder: (_) => const HafeziQuranScreen()),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           _QuranModeCard(
             icon: Icons.auto_stories_rounded,
             title: 'Onudhabon Quran',
             subtitle: 'সূরা, আয়াত, বাংলা অনুবাদ ও অনুধাবনভিত্তিক পাঠ',
-            badge: 'চালিয়ে যান',
-            enabled: true,
+            badge: 'পড়ার জন্য খুলুন',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const OnudhabonQuranScreen()),
             ),
@@ -96,7 +58,6 @@ class _QuranModeCard extends StatelessWidget {
   final String subtitle;
   final String? badge;
   final VoidCallback onTap;
-  final bool enabled;
 
   const _QuranModeCard({
     required this.icon,
@@ -104,39 +65,34 @@ class _QuranModeCard extends StatelessWidget {
     required this.subtitle,
     required this.badge,
     required this.onTap,
-    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: context.cardColor,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(22),
       child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(24),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
               Container(
-                width: 56,
-                height: 56,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
-                  color: AppColors.softAqua.withValues(
-                    alpha: enabled ? .18 : .08,
-                  ),
+                  color: AppColors.softAqua.withValues(alpha: .16),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   icon,
-                  color: enabled
-                      ? AppColors.seaBlueDark
-                      : context.secondaryTextColor,
-                  size: 28,
+                  color: AppColors.seaBlueDark,
+                  size: 26,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,33 +101,35 @@ class _QuranModeCard extends StatelessWidget {
                       title,
                       style: const TextStyle(
                         fontSize: 14,
+                        height: 1.2,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 5),
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 12.5,
-                        height: 1.45,
+                        fontSize: 12,
+                        height: 1.35,
                         color: context.secondaryTextColor,
                       ),
                     ),
                     if (badge != null) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 7),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 7,
+                          vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.softAqua.withValues(alpha: .14),
+                          color: AppColors.softAqua.withValues(alpha: .13),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           badge!,
                           style: const TextStyle(
                             fontSize: 10,
+                            height: 1.1,
                             fontWeight: FontWeight.w700,
                             color: AppColors.seaBlueDark,
                           ),
@@ -181,9 +139,10 @@ class _QuranModeCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Icon(
                 Icons.chevron_right_rounded,
+                size: 21,
                 color: context.secondaryTextColor,
               ),
             ],
