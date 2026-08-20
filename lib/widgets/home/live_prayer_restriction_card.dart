@@ -7,9 +7,9 @@ import '../../controllers/prayer_controller.dart';
 import '../../services/prayer_engine_service.dart';
 
 /// Home-screen-only smart prohibited-time card.
-/// Shows the current prohibited window with a live countdown, or only the
-/// nearest upcoming prohibited window. If today's windows are finished, it
-/// calculates tomorrow's real first prohibited window instead of disappearing.
+/// Uses a single one-second tick for the live countdown; no continuous
+/// animation, location polling, or prayer recalculation is performed by the
+/// timer itself.
 class LivePrayerRestrictionCard extends StatefulWidget {
   final String languageCode;
 
@@ -23,7 +23,8 @@ class LivePrayerRestrictionCard extends StatefulWidget {
       _LivePrayerRestrictionCardState();
 }
 
-class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
+class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard>
+    with WidgetsBindingObserver {
   final PrayerEngineService _engine = const PrayerEngineService();
   Timer? _timer;
   DateTime _now = DateTime.now();
@@ -31,14 +32,39 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() => _now = DateTime.now());
+      if (!mounted) return;
+      setState(() => _now = DateTime.now());
     });
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _now = DateTime.now();
+      _startTimer();
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _stopTimer();
+    }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _stopTimer();
     super.dispose();
   }
 
@@ -94,7 +120,6 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
   }
 
   List<DateTime>? _findWindow(PrayerController controller) {
-    // First honor the controller's already-calculated current/next window.
     final controllerStart = controller.prohibitedStart;
     final controllerEnd = controller.prohibitedEnd;
     if (controllerStart != null && controllerEnd != null) {
@@ -106,8 +131,6 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
       }
     }
 
-    // Recalculate today's windows so the card can recover immediately after
-    // a boundary without waiting for another controller state transition.
     final today = DateTime(_now.year, _now.month, _now.day);
     for (final window in _windowsForDate(controller, today)) {
       if (!_now.isBefore(window[0]) && _now.isBefore(window[1])) {
@@ -118,8 +141,6 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
       }
     }
 
-    // All of today's prohibited windows are over: show tomorrow's real
-    // sunrise prohibited window instead of hiding the card.
     final tomorrow = today.add(const Duration(days: 1));
     final tomorrowWindows = _windowsForDate(controller, tomorrow);
     if (tomorrowWindows.isNotEmpty) return tomorrowWindows.first;
