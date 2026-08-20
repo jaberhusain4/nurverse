@@ -147,6 +147,13 @@ class AppLocalizations {
   String get quranSubtitle => _text('হাফেজি পাঠ, অনুধাবন এবং তিলাওয়াত — তিনটি আলাদা অভিজ্ঞতা।', 'Hifzi reading, understanding and recitation — three distinct experiences.');
   String get hafeziQuran => _text('হাফেজি কুরআন', 'Hafezi Quran');
   String get hafeziSubtitle => _text('১৫ লাইনের অফলাইন হাফেজি কুরআন', '15-line offline Hifzi Quran');
+  String get fifteenLinesOffline => _text('১৫ লাইন • অফলাইন', '15 lines • Offline');
+  String get onudhabonQuran => _text('অনুধাবন কুরআন', 'Onudhabon Quran');
+  String get onudhabonSubtitle => _text('আরবি আয়াত, বাংলা অনুবাদ ও তাফসির', 'Arabic verses, Bangla translation and Tafsir');
+  String get translationTafsir => _text('অনুবাদ • তাফসির', 'Translation • Tafsir');
+  String get audioQuranMode => _text('অডিও কুরআন', 'Audio Quran');
+  String get audioQuranModeSubtitle => _text('তিলাওয়াত শুনুন ও অফলাইনে ক্যাশ করুন', 'Listen and cache recitation offline');
+  String get audioOfflineCache => _text('অফলাইন ক্যাশ', 'Offline cache');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
