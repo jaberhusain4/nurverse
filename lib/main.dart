@@ -173,13 +173,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     setState(() => _selectedIndex = index);
   }
 
-  Future<bool> _handleSystemBack() async {
-    if (!mounted) return false;
+  void _handleSystemBack() {
+    if (!mounted) return;
     if (_selectedIndex != 0) {
       setState(() => _selectedIndex = 0);
-      return false;
     }
-    return true;
+    // On Home, consume the back action instead of exiting the app.
   }
 
   @override
@@ -197,7 +196,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ];
 
     return PopScope<Object?>(
-      canPop: _selectedIndex == 0,
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         _handleSystemBack();
