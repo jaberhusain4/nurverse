@@ -80,9 +80,7 @@ class _PremiumOnudhabonReaderV2State extends State<PremiumOnudhabonReaderV2> {
           _resumeAyah = ayah is int && ayah > 0 ? ayah : 1;
         }
       }
-    } catch (_) {
-      // Keep the reader usable with bundled Arabic even when optional data is unavailable.
-    }
+    } catch (_) {}
     if (!mounted) return;
     setState(() => _loading = false);
     if (_selectedSurah != null) {
@@ -90,6 +88,12 @@ class _PremiumOnudhabonReaderV2State extends State<PremiumOnudhabonReaderV2> {
       await _loadSources(surah);
       _resumeAfterBuild();
     }
+  }
+
+  Future<void> _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('onudhabon_arabic_font_size', _arSize);
+    await prefs.setDouble('onudhabon_translation_font_size', _trSize);
   }
 
   Future<void> _loadSources(QuranSurah surah) async {
@@ -279,7 +283,7 @@ class _PremiumOnudhabonReaderV2State extends State<PremiumOnudhabonReaderV2> {
       _surahHeader(context, surah, meta),
       if (_loadingTranslation || _loadingTafsir) const LinearProgressIndicator(minHeight: 2),
       if (_translationError != null) _errorBanner(context, _translationError!),
-      if (_tafsirError != null) _errorBanner(context, 'এই ব্যাখ্যাটি এখন পাওয়া যায়নি। অন্য ব্যাখ্যা নির্বাচন করতে পারেন।'),
+      if (_tafsirError != null) _errorBanner(context, 'এই ব্যাখ্যাটি এখন পাওয়া যায়নি। অন্য ব্যাখ্যা নির্বাচন করতে পারেন.'),
       Expanded(child: ListView.builder(controller: _scroll, padding: const EdgeInsets.fromLTRB(14, 10, 14, 28), itemCount: surah.verses.length, itemBuilder: (context, index) {
         final verse = surah.verses[index];
         final key = _ayahKeys.putIfAbsent(verse.number, GlobalKey.new);
@@ -302,40 +306,35 @@ class _PremiumOnudhabonReaderV2State extends State<PremiumOnudhabonReaderV2> {
         ]),
         const SizedBox(height: 10),
         Wrap(alignment: WrapAlignment.center, spacing: 7, runSpacing: 7, children: [
-          _metaChip(context, 'আয়াত', _bn(surah.totalVerses)),
-          _metaChip(context, 'রুকু', _bn(meta.rukuCount)),
-          _metaChip(context, 'সিজদা', _bn(meta.sajdaCount)),
-          _metaChip(context, 'ধরণ', surah.type == 'meccan' ? 'মাক্কী' : 'মাদানী'),
+          _metaChip(context, Icons.format_list_numbered_rounded, '${_bn(surah.totalVerses)} আয়াত'),
+          _metaChip(context, Icons.menu_book_rounded, '${_bn(meta.rukuCount)} রুকু'),
+          _metaChip(context, Icons.front_hand_rounded, '${_bn(meta.sajdaCount)} সিজদা'),
+          _metaChip(context, Icons.location_on_outlined, surah.type == 'meccan' ? 'মাক্কী' : 'মাদানী'),
         ]),
         const SizedBox(height: 11),
         Row(children: [
-          Expanded(child: _sourceButton(context, Icons.translate_rounded, _translationEdition.title, () => _translationPicker(surah))),
+          Expanded(child: FilledButton.tonalIcon(onPressed: () => _translationPicker(surah), icon: const Icon(Icons.translate_rounded, size: 17), label: Text(_translationEdition.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)))),
           const SizedBox(width: 8),
-          Expanded(child: _sourceButton(context, Icons.menu_book_rounded, _tafsirTitle, () => _tafsirPicker(surah))),
+          Expanded(child: FilledButton.tonalIcon(onPressed: () => _tafsirPicker(surah), icon: const Icon(Icons.menu_book_rounded, size: 17), label: Text(_tafsirTitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)))),
         ]),
       ]),
     );
   }
 
-  Widget _metaChip(BuildContext context, String label, String value) {
+  Widget _metaChip(BuildContext context, IconData icon, String label) {
     final primary = Theme.of(context).colorScheme.primary;
-    return Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6), decoration: BoxDecoration(color: primary.withValues(alpha: .06), borderRadius: BorderRadius.circular(11)), child: Text('$label  $value', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: context.secondaryTextColor)));
-  }
-
-  Widget _sourceButton(BuildContext context, IconData icon, String title, VoidCallback onTap) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return Material(color: primary.withValues(alpha: .055), borderRadius: BorderRadius.circular(12), child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(12), child: Padding(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9), child: Row(children: [Icon(icon, size: 17, color: primary), const SizedBox(width: 6), Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700))), const Icon(Icons.keyboard_arrow_down_rounded, size: 16)]))));
+    return Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6), decoration: BoxDecoration(color: primary.withValues(alpha: .055), borderRadius: BorderRadius.circular(11)), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 14, color: primary), const SizedBox(width: 4), Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.secondaryTextColor))]));
   }
 
   Widget _verseCard(BuildContext context, QuranSurah surah, QuranVerse verse) {
     final primary = Theme.of(context).colorScheme.primary;
-    final translation = _translationByAyah[verse.number] ?? verse.bangla;
+    final translation = _translationByAyah[verse.number];
     final tafsir = _tafsirByAyah[verse.number];
     return Container(
-      margin: const EdgeInsets.only(bottom: 11),
-      padding: const EdgeInsets.fromLTRB(15, 14, 15, 14),
-      decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(21), border: Border.all(color: primary.withValues(alpha: .07))),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+      decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: primary.withValues(alpha: .06))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Container(width: 30, height: 30, alignment: Alignment.center, decoration: BoxDecoration(shape: BoxShape.circle, color: primary.withValues(alpha: .10)), child: Text(_bn(verse.number), style: TextStyle(color: primary, fontSize: 10.5, fontWeight: FontWeight.w800))),
           const Spacer(),
