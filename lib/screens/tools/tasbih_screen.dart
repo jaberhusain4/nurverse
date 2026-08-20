@@ -34,8 +34,8 @@ class _TasbihScreenState extends State<TasbihScreen> {
     }
     try {
       await _vibrationChannel.invokeMethod<void>(completion ? 'targetReached' : 'tap');
-    } on MissingPluginException {
-    } on PlatformException {
+    } catch (_) {
+      // Platform vibration is optional; the counter must continue to work.
     }
   }
 
