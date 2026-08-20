@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'premium_onudhabon_reader_v2.dart';
+import 'onudhabon_quran_reader.dart';
 
 class OnudhabonQuranScreen extends StatelessWidget {
   final bool openLastRead;
@@ -9,6 +9,6 @@ class OnudhabonQuranScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumOnudhabonReaderV2(openLastRead: openLastRead);
+    return OnudhabonQuranReader(openLastRead: openLastRead);
   }
 }
