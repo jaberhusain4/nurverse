@@ -87,9 +87,7 @@ class QuranTranslationService {
         final cached = _parse(decoded);
         if (cached.isNotEmpty) return cached;
       }
-    } catch (_) {
-      // Re-download a bad/missing cache.
-    }
+    } catch (_) {}
 
     final translationId = edition.quranComId;
     if (translationId == null) return const <int, String>{};
