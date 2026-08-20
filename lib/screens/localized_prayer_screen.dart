@@ -77,13 +77,13 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
                       const SizedBox(height: 12),
                       _currentCard(context, c, friday),
                       const SizedBox(height: 12),
-                      PrayerSpecialTimesCard(languageCode: l10n.locale.languageCode),
-                      const SizedBox(height: 12),
                       _importantTimes(context, c),
                       const SizedBox(height: 18),
                       _sectionTitle(context, _label(context, 'আজকের সালাত', 'Today\'s Salah'), _label(context, 'পাঁচ ওয়াক্তের বাস্তব সময়সূচি', 'Five daily prayer times'), Icons.mosque_outlined),
                       const SizedBox(height: 8),
                       ...c.prayers.where((p) => p['category'] == 'obligatory').map((p) => _prayerTile(context, p, friday)),
+                      const SizedBox(height: 14),
+                      PrayerSpecialTimesCard(languageCode: l10n.locale.languageCode),
                       const SizedBox(height: 14),
                       _sectionTitle(context, _label(context, 'নফল সালাতের সময়', 'Nafl Prayer Times'), _label(context, 'শুধু বাস্তব গণনা পাওয়া গেলে দেখানো হবে', 'Only calculated times are shown'), Icons.auto_awesome_outlined),
                       const SizedBox(height: 8),
@@ -200,22 +200,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
     return Container(margin: const EdgeInsets.only(bottom: 7), padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(16), border: Border.all(color: primary.withValues(alpha: .06))), child: Row(children: [Icon(item.icon, color: primary, size: 22), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(item.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)), const SizedBox(height: 2), Text(item.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.secondaryTextColor, fontSize: 11.5, fontWeight: FontWeight.w500))])), const SizedBox(width: 8), Flexible(child: Text(item.time, textAlign: TextAlign.end, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: primary, fontSize: 12.5, fontWeight: FontWeight.w800)))]));
   }
 
-  Widget _empty(BuildContext context, String text) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: context.cardColor,
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: Text(
-      text,
-      style: TextStyle(
-        color: context.secondaryTextColor,
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-      ),
-    ),
-  );
+  Widget _empty(BuildContext context, String text) => Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(14)), child: Text(text, style: TextStyle(color: context.secondaryTextColor, fontSize: 12, fontWeight: FontWeight.w600)));
 
   Widget _sectionTitle(BuildContext context, String title, String subtitle, IconData icon) {
     final primary = Theme.of(context).colorScheme.primary;
@@ -231,22 +216,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
 
   Widget _dailyTime(BuildContext context, IconData icon, String title, String value, Color color) => Column(children: [Icon(icon, color: color, size: 22), const SizedBox(height: 5), Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.secondaryTextColor, fontSize: 11.5, fontWeight: FontWeight.w600)), const SizedBox(height: 2), FittedBox(fit: BoxFit.scaleDown, child: Text(value.isEmpty ? '--:--' : value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)))]);
 
-  Widget _footer(BuildContext context) => _card(
-    context,
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(Icons.info_outline_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            _label(context, 'সালাতের সময় আপনার লোকেশন, গণনা পদ্ধতি ও মাযহাবের সেটিং অনুযায়ী হিসাব করা হয়।', 'Prayer times are calculated from your location, calculation method and madhhab settings.'),
-            style: TextStyle(color: context.secondaryTextColor, height: 1.4, fontSize: 11.5),
-          ),
-        ),
-      ],
-    ),
-  );
+  Widget _footer(BuildContext context) => _card(context, child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(Icons.info_outline_rounded, size: 18, color: Theme.of(context).colorScheme.primary), const SizedBox(width: 8), Expanded(child: Text(_label(context, 'সালাতের সময় আপনার লোকেশন, গণনা পদ্ধতি ও মাজহাবের সেটিং অনুযায়ী হিসাব করা হয়।', 'Prayer times are calculated from your location, calculation method and madhhab settings.'), style: TextStyle(color: context.secondaryTextColor, height: 1.4, fontSize: 11.5))]));
 
   Widget _error(BuildContext context, PrayerController c) => Center(child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.error_outline_rounded, size: 50, color: Colors.redAccent), const SizedBox(height: 12), Text(_label(context, 'সালাতের সময় লোড করা যায়নি', 'Could not load prayer times'), textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)), const SizedBox(height: 7), Text(c.error ?? _label(context, 'অজানা সমস্যা', 'Unknown problem'), textAlign: TextAlign.center, style: TextStyle(color: context.secondaryTextColor, fontSize: 12.5)), const SizedBox(height: 16), FilledButton.icon(onPressed: c.refreshPrayerTimes, icon: const Icon(Icons.refresh_rounded), label: Text(_label(context, 'আবার চেষ্টা করুন', 'Try again')))])));
 
@@ -261,54 +231,34 @@ class _NaflData {
   final String description;
   final String time;
   final IconData icon;
+
   const _NaflData(this.title, this.description, this.time, this.icon);
 }
 
-class _PrayerTrackerCard extends StatefulWidget {
+class _PrayerTrackerCard extends StatelessWidget {
   final bool friday;
   const _PrayerTrackerCard({required this.friday});
-  @override
-  State<_PrayerTrackerCard> createState() => _PrayerTrackerCardState();
-}
-
-class _PrayerTrackerCardState extends State<_PrayerTrackerCard> {
-  static const _keys = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-  Map<String, bool> _today = {};
-  bool _loading = true;
-  String _dateKey = '';
-
-  String _key(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
-
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = _key(DateTime.now());
-    final data = {for (final prayer in _keys) prayer: prefs.getBool('nurverse_tracker_${key}_$prayer') ?? false};
-    if (!mounted) return;
-    setState(() { _dateKey = key; _today = data; _loading = false; });
-  }
-
-  Future<void> _toggle(String prayer) async {
-    if (_loading) return;
-    final next = !(_today[prayer] ?? false);
-    setState(() => _today = {..._today, prayer: next});
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('nurverse_tracker_${_dateKey}_$prayer', next);
-  }
-
-  @override
-  void initState() { super.initState(); _load(); }
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<PrayerController>();
     final primary = Theme.of(context).colorScheme.primary;
-    final text = Theme.of(context).colorScheme.onSurface;
-    final done = _today.values.where((v) => v).length;
-    return _card(context, child: Column(children: [
-      Row(children: [Icon(Icons.check_circle_outline_rounded, size: 21, color: primary), const SizedBox(width: 8), Expanded(child: Text(AppLocalizations.of(context).trackerTitle, style: TextStyle(color: text, fontSize: 15.5, fontWeight: FontWeight.w800))), Text('$done/5', style: TextStyle(color: primary, fontSize: 13.5, fontWeight: FontWeight.w800))]),
-      const SizedBox(height: 10),
-      Row(children: [for (var i = 0; i < _keys.length; i++) ...[Expanded(child: InkWell(onTap: _loading ? null : () => _toggle(_keys[i]), borderRadius: BorderRadius.circular(12), child: Column(children: [AnimatedContainer(duration: const Duration(milliseconds: 160), width: 38, height: 38, decoration: BoxDecoration(color: (_today[_keys[i]] ?? false) ? primary : primary.withValues(alpha: .08), shape: BoxShape.circle), child: Icon((_today[_keys[i]] ?? false) ? Icons.check_rounded : Icons.circle_outlined, color: (_today[_keys[i]] ?? false) ? Colors.white : primary, size: 21)), const SizedBox(height: 4), Text(AppLocalizations.of(context).prayerName(_keys[i] == 'Dhuhr' && widget.friday ? 'Jumuah' : _keys[i]), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 10.5, fontWeight: FontWeight.w600))]))), if (i < _keys.length - 1) const SizedBox(width: 2)]]),
+    final todayKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final completed = controller.getCompletedPrayerCount(todayKey);
+    final target = friday ? 4 : 5;
+    final progress = target == 0 ? 0.0 : (completed / target).clamp(0.0, 1.0);
+
+    return _card(context, child: Row(children: [
+      Stack(alignment: Alignment.center, children: [
+        SizedBox(width: 52, height: 52, child: CircularProgressIndicator(value: progress, strokeWidth: 5, backgroundColor: primary.withValues(alpha: .10), color: primary)),
+        Text('$completed/$target', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: primary)),
+      ]),
+      const SizedBox(width: 12),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(AppLocalizations.of(context).trackerTitle, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 3),
+        Text(AppLocalizations.of(context).trackerSubtitle, style: TextStyle(fontSize: 11.5, color: context.secondaryTextColor, fontWeight: FontWeight.w500)),
+      ]),
     ]));
   }
-
-  Widget _card(BuildContext context, {required Widget child}) => Container(width: double.infinity, padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: .07))), child: child);
 }
