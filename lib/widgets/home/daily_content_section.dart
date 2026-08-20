@@ -8,12 +8,20 @@ import '../../theme/app_theme.dart';
 import 'daily_content_card.dart';
 
 class DailyContentSection extends StatelessWidget {
-  const DailyContentSection({super.key});
+  final String? languageCodeOverride;
+  final Function(int)? onNavigateTab;
+
+  const DailyContentSection({
+    super.key,
+    String? languageCode,
+    this.onNavigateTab,
+  }) : languageCodeOverride = languageCode;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final languageCode = context.watch<SettingsProvider>().languageCode;
+    final languageCode =
+        languageCodeOverride ?? context.watch<SettingsProvider>().languageCode;
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final secondary = context.secondaryTextColor;
@@ -50,7 +58,10 @@ class DailyContentSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    l10n.tr('আজকের আয়াত, হাদিস ও দোয়া', 'Today’s Ayah, Hadith & Dua'),
+                    l10n.tr(
+                      'আজকের আয়াত, হাদিস ও দোয়া',
+                      'Today’s Ayah, Hadith & Dua',
+                    ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: secondary,
                       fontSize: 12,
