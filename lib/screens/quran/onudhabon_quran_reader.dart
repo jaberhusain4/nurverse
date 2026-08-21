@@ -574,12 +574,30 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
             '?? ?????????? ??? ????? ?????? ???? ???????? ???????? ???? ??????',
           ),
         Expanded(
-          child: Scrollbar(
-            controller: _scrollController,
-            thumbVisibility: true,
-            thickness: 5,
-            radius: const Radius.circular(8),
-            child: ListView.builder(
+          child: Builder(
+            builder: (context) {
+              final primary = Theme.of(context).colorScheme.primary;
+
+              return ScrollbarTheme(
+                data: ScrollbarThemeData(
+                  thumbColor: WidgetStatePropertyAll(
+                    primary.withValues(alpha: .72),
+                  ),
+                  trackColor: WidgetStatePropertyAll(
+                    primary.withValues(alpha: .07),
+                  ),
+                  trackBorderColor: WidgetStatePropertyAll(
+                    primary.withValues(alpha: .12),
+                  ),
+                  thickness: const WidgetStatePropertyAll(7),
+                  radius: const Radius.circular(10),
+                  minThumbLength: 52,
+                ),
+                child: Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: true,
+                  interactive: true,
+                  child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(14, 8, 18, 28),
               itemCount: surah.verses.length + 1,
@@ -605,8 +623,11 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                   key: key,
                   child: _ayahCard(context, surah, verse),
                 );
-              },
-            ),
+                    },
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ],
