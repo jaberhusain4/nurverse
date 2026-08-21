@@ -7,8 +7,8 @@ import '../../screens/hadith_screen.dart';
 import '../../screens/more_screen.dart';
 import '../../screens/prayer_screen.dart';
 import '../../screens/tools/calendar_screen.dart';
+import '../../screens/tools/islamic_books_screen.dart';
 import '../../screens/tools/qibla_screen.dart';
-import '../../screens/quran_screen.dart';
 import '../../screens/tools/tasbih_screen.dart';
 import '../../screens/tools_screen.dart';
 
@@ -30,11 +30,11 @@ class QuickActionsSection extends StatelessWidget {
         ),
       ),
       (
-        l10n.quran,
-        Icons.menu_book_rounded,
+        l10n.islamicBooks,
+        Icons.library_books_rounded,
         () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const QuranScreen()),
+          MaterialPageRoute(builder: (_) => const IslamicBooksScreen()),
         ),
       ),
       (
