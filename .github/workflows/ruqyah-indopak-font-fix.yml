@@ -1,0 +1,47 @@
+name: Ruqyah IndoPak Font Fix
+
+on:
+  push:
+    branches:
+      - fix/prayer-completion-tracker
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply IndoPak Arabic marker font
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('lib/screens/tools/ruqyah_screen.dart')
+          s = p.read_text(encoding='utf-8')
+
+          old = """                    text: '${widget.item.arabic.trim()}  ۝',\n                    style: const TextStyle(\n                      fontSize: 20,\n                      height: 1.65,\n                      fontWeight: FontWeight.w500,\n                    ),"""
+          new = """                    text: '${widget.item.arabic.trim()}  ۝',\n                    style: const TextStyle(\n                      fontFamily: 'IndoPakQuran',\n                      fontSize: 20,\n                      height: 1.65,\n                      fontWeight: FontWeight.w500,\n                    ),"""
+          if old not in s:
+              raise SystemExit('Target Ruqyah dua renderer not found; refusing unsafe rewrite.')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/screens/tools/ruqyah_screen.dart
+          git commit -m "Fix Ruqyah Arabic marker font" || true
+          git push || true
+
+      - name: Remove temporary workflow
+        if: always()
+        run: |
+          git rm -f .github/workflows/ruqyah-indopak-font-fix.yml || true
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: remove temporary Ruqyah font fix workflow"
+          git push
