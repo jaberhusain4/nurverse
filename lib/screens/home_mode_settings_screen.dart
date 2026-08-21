@@ -20,50 +20,51 @@ class HomeModeSettingsScreen extends StatelessWidget {
           appBar: AppBar(
             title: Text(
               _title(isEnglish),
-              style: const TextStyle(fontWeight: FontWeight.w800),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
             ),
             centerTitle: true,
           ),
           body: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
             children: [
               Text(
                 isEnglish
-                    ? 'Choose how NurVerse should look when you open Home.'
-                    : 'NurVerse চালু করলে Home screen-এ কোন layout দেখাবেন তা নির্বাচন করুন।',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    ? 'Choose the Home layout you prefer.'
+                    : 'আপনার পছন্দের হোম স্ক্রিনের ধরন নির্বাচন করুন।',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: context.secondaryTextColor,
-                  height: 1.45,
+                  fontSize: 12,
+                  height: 1.4,
                 ),
-              ),
-              const SizedBox(height: 18),
-              _ModeCard(
-                selected: !service.isSimple,
-                icon: Icons.dashboard_customize_rounded,
-                title: isEnglish ? 'Informative Home' : 'ইনফরমেটিভ Home',
-                subtitle: isEnglish
-                    ? 'Prayer timeline, dates, restrictions, quick actions and daily content.'
-                    : 'নামাজের টাইমলাইন, তারিখ, নিষিদ্ধ সময়, কুইক অ্যাকশন ও দৈনিক কনটেন্টসহ পূর্ণ dashboard।',
-                badge: isEnglish ? 'Detailed' : 'বিস্তারিত',
-                onTap: () => service.setSimple(false),
               ),
               const SizedBox(height: 14),
               _ModeCard(
+                selected: !service.isSimple,
+                icon: Icons.dashboard_customize_rounded,
+                title: isEnglish ? 'Informative' : 'ইনফরমেটিভ',
+                subtitle: isEnglish
+                    ? 'More details, prayer information and daily content.'
+                    : 'আরও তথ্য, সালাতের তথ্য ও দৈনিক কনটেন্টসহ বিস্তারিত হোম।',
+                badge: isEnglish ? 'Detailed' : 'বিস্তারিত',
+                onTap: () => service.setSimple(false),
+              ),
+              const SizedBox(height: 10),
+              _ModeCard(
                 selected: service.isSimple,
                 icon: Icons.home_rounded,
-                title: isEnglish ? 'Simple Home' : 'সিম্পল Home',
+                title: isEnglish ? 'Simple' : 'সিম্পল',
                 subtitle: isEnglish
-                    ? 'A clean daily-use home focused on the next prayer, Quran and essential tools.'
-                    : 'পরের নামাজ, কুরআন ও প্রয়োজনীয় tools-এ দ্রুত পৌঁছানোর জন্য পরিষ্কার, সহজ layout।',
-                badge: isEnglish ? 'Easy & Clean' : 'সহজ ও পরিষ্কার',
+                    ? 'Clean, calm and focused on everyday essentials.'
+                    : 'পরিষ্কার, শান্ত এবং প্রতিদিনের প্রয়োজনীয় বিষয়গুলোকে গুরুত্ব দেয়।',
+                badge: isEnglish ? 'Clean' : 'সহজ',
                 onTap: () => service.setSimple(true),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(13),
                 decoration: BoxDecoration(
                   color: context.cardColor,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(18),
                   border: Border.all(
                     color: Theme.of(context).colorScheme.primary.withValues(alpha: .08),
                   ),
@@ -73,17 +74,19 @@ class HomeModeSettingsScreen extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.tips_and_updates_outlined,
+                      size: 19,
                       color: Theme.of(context).colorScheme.primary,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         isEnglish
-                            ? 'You can switch these layouts anytime. Your prayer data, Quran progress and other settings stay the same.'
-                            : 'আপনি যেকোনো সময় layout বদলাতে পারবেন। নামাজের data, কুরআনের progress এবং অন্যান্য settings একই থাকবে।',
+                            ? 'You can change this choice anytime. Your prayer data and Quran progress stay unchanged.'
+                            : 'আপনি যেকোনো সময় এই পছন্দ পরিবর্তন করতে পারবেন। আপনার সালাতের তথ্য ও কুরআনের অগ্রগতি অপরিবর্তিত থাকবে।',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 11.5,
                           color: context.secondaryTextColor,
-                          height: 1.45,
+                          height: 1.4,
                         ),
                       ),
                     ),
@@ -124,31 +127,31 @@ class _ModeCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(19),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(13),
           decoration: BoxDecoration(
             color: selected ? primary.withValues(alpha: .07) : context.cardColor,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(19),
             border: Border.all(
-              color: selected ? primary.withValues(alpha: .45) : primary.withValues(alpha: .08),
-              width: selected ? 1.3 : 1,
+              color: selected ? primary.withValues(alpha: .35) : primary.withValues(alpha: .08),
+              width: selected ? 1.2 : 1,
             ),
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   color: primary.withValues(alpha: .10),
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: primary, size: 25),
+                child: Icon(icon, color: primary, size: 22),
               ),
-              const SizedBox(width: 13),
+              const SizedBox(width: 11),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,34 +161,28 @@ class _ModeCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, height: 1.15),
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(
                             color: primary.withValues(alpha: .08),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
                             badge,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: primary,
-                              fontWeight: FontWeight.w800,
-                            ),
+                            style: TextStyle(fontSize: 9.5, color: primary, fontWeight: FontWeight.w800),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: context.secondaryTextColor,
-                        height: 1.45,
-                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 11.5, height: 1.35, color: context.secondaryTextColor),
                     ),
                   ],
                 ),
@@ -194,7 +191,7 @@ class _ModeCard extends StatelessWidget {
               Icon(
                 selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
                 color: selected ? primary : context.secondaryTextColor,
-                size: 23,
+                size: 21,
               ),
             ],
           ),
