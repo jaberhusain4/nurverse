@@ -509,7 +509,10 @@ illa khasara.
           const SizedBox(height: 15),
           Text(
             'রুকইয়াহ হলো কুরআনের আয়াত ও বৈধ দু‘আ দ্বারা আল্লাহর কাছে শিফা ও সুরক্ষা চাওয়া। শিফা একমাত্র আল্লাহর পক্ষ থেকেই আসে।',
-            style: theme.textTheme.bodyMedium?.copyWith(height: 1.55),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
+              height: 1.5,
+            ),
           ),
           const SizedBox(height: 13),
           Container(
