@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - fix/prayer-completion-tracker
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -39,7 +42,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          rm -f .github/workflows/one-shot-simple-home-refresh-fix.yml
+          rm -f .github/workflows/one-shot-simple-home-refresh-fix.yml .github/simple-home-refresh-trigger.txt
           git add -A
           git commit -m "fix(home): remove refresh gesture from Simple Home"
           git push origin HEAD:fix/prayer-completion-tracker
