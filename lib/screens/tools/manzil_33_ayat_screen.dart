@@ -21,6 +21,11 @@ class _Manzil33AyatScreenState extends State<Manzil33AyatScreen> {
   bool _loading = true;
   List<_ManzilGroup> _groups = const [];
 
+  String _ar(int number) {
+    const digits = '٠١٢٣٤٥٦٧٨٩';
+    return number.toString().split('').map((d) => digits[int.parse(d)]).join();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -196,42 +201,37 @@ class _Manzil33AyatScreenState extends State<Manzil33AyatScreen> {
           ...verses.map(
             (verse) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: Directionality(
-                      textDirection: TextDirection.rtl,
-                      child: Text(
-                        verse.arabic.trim(),
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(
-                          fontSize: 19,
-                          height: 1.55,
-                          fontWeight: FontWeight.w500,
-                        ),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: verse.arabic,
+                            style: const TextStyle(
+                              fontSize: 19,
+                              height: 1.55,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          TextSpan(
+                            text: '  ۝${_ar(verse.number)}',
+                            style: TextStyle(
+                              color: primary,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
                       ),
+                      textAlign: TextAlign.right,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 24,
-                    height: 24,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: primary.withValues(alpha: .09),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '${verse.number}',
-                      style: TextStyle(
-                        color: primary,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
