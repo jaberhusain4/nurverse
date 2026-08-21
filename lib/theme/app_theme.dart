@@ -145,11 +145,11 @@ class AppTheme {
         surface: card,
         onSurface: textPrimary,
       ),
-      fontFamily: 'Noto Sans Bengali',
       fontFamilyFallback: const [
         'NotoNaskhArabic',
         'Noto Naskh Arabic',
         'Noto Sans Arabic',
+        'sans-serif',
         'serif',
       ],
       textTheme: textTheme,
