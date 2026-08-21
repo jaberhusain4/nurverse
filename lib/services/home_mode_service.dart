@@ -8,7 +8,8 @@ class HomeModeService extends ChangeNotifier {
 
   static const String _key = 'home_screen_mode';
 
-  bool _isSimple = false;
+  // Simple Home is NurVerse's default for new installs.
+  bool _isSimple = true;
   bool _loaded = false;
 
   bool get isSimple => _isSimple;
@@ -19,9 +20,10 @@ class HomeModeService extends ChangeNotifier {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      _isSimple = prefs.getString(_key) == 'simple';
+      final stored = prefs.getString(_key);
+      _isSimple = stored == null || stored == 'simple';
     } catch (_) {
-      _isSimple = false;
+      _isSimple = true;
     } finally {
       _loaded = true;
       notifyListeners();
@@ -41,5 +43,5 @@ class HomeModeService extends ChangeNotifier {
     }
   }
 
-  Future<void> reset() => setSimple(false);
+  Future<void> reset() => setSimple(true);
 }
