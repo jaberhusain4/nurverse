@@ -6,11 +6,11 @@ import '../localization/app_localizations.dart';
 import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
 import 'home_switcher_screen.dart';
+import 'more_screen_with_home_shortcut.dart';
 import 'prayer_screen_v2.dart';
 import 'localized_hadith_screen.dart';
 import 'quran_screen.dart';
 import 'tools_screen.dart';
-import 'more_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -81,7 +81,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       const QuranScreen(),
       const LocalizedHadithScreen(),
       const ToolsScreen(),
-      const MoreScreen(),
+      const MoreScreenWithHomeShortcut(),
     ];
 
     return PopScope<Object?>(
