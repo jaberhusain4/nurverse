@@ -223,7 +223,7 @@ class _RuqyahScreenState extends State<RuqyahScreen> {
       type: RuqyahType.dua,
       source: 'জামে‘ আত-তিরমিযী ৩৩৮৮',
       repetition: 'সকাল ও সন্ধ্যায় ৩ বার',
-      arabic: '''بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ ۝ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ ۝ وَهُوَ السَّمِيعُ الْعَلِيمُ''',
+      arabic: '''بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ''',
       translation:
           'আল্লাহর নামে, যাঁর নামের সাথে পৃথিবী ও আকাশে কোনো কিছুই ক্ষতি করতে পারে না। তিনি সর্বশ্রোতা, সর্বজ্ঞ।',
       note: 'হাদিসে সকাল ও সন্ধ্যায় এই দু‘আ তিনবার বলার কথা এসেছে।',
@@ -775,10 +775,34 @@ class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
           ),
           child: Directionality(
             textDirection: TextDirection.rtl,
-            child: SelectableText(
-              widget.item.arabic,
-              textAlign: TextAlign.right,
-              style: const TextStyle(fontSize: 20, height: 1.65, fontWeight: FontWeight.w500),
+            child: Row(
+              textDirection: TextDirection.rtl,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.item.arabic.trim(),
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      height: 1.65,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: primary.withValues(alpha: .72),
+                      width: 1.4,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
