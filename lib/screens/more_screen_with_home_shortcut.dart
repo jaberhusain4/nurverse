@@ -9,6 +9,9 @@ class MoreScreenWithHomeShortcut extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.of(context).padding.top;
+    final isEnglish = Localizations.localeOf(context).languageCode == 'en';
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Stack(
       children: [
         const MoreScreen(),
@@ -29,16 +32,24 @@ class MoreScreenWithHomeShortcut extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: .10),
+                  color: primary.withValues(alpha: .10),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: .16),
-                  ),
+                  border: Border.all(color: primary.withValues(alpha: .16)),
                 ),
-                child: Icon(
-                  Icons.dashboard_customize_rounded,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.primary,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.dashboard_customize_rounded, size: 18, color: primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      isEnglish ? 'Home Screen' : 'হোম স্ক্রিন',
+                      style: TextStyle(
+                        color: primary,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
