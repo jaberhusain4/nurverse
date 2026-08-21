@@ -1,0 +1,51 @@
+name: Ruqyah Waqf Finalize
+
+on:
+  push:
+    branches:
+      - fix/prayer-completion-tracker
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fix RTL marker position
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('lib/screens/tools/ruqyah_screen.dart')
+          text = path.read_text(encoding='utf-8')
+
+          old = '''          child: Directionality(\n            textDirection: TextDirection.rtl,\n            child: Text.rich(\n              TextSpan(\n                children: [\n                  TextSpan(\n                    text: widget.item.arabic.trim(),\n                    style: const TextStyle(\n                      fontSize: 20,\n                      height: 1.65,\n                      fontWeight: FontWeight.w500,\n                    ),\n                  ),\n                  WidgetSpan(\n                    alignment: PlaceholderAlignment.middle,\n                    child: Padding(\n                      padding: const EdgeInsetsDirectional.only(start: 7),\n                      child: Container(\n                        width: 21,\n                        height: 21,\n                        decoration: BoxDecoration(\n                          shape: BoxShape.circle,\n                          border: Border.all(\n                            color: primary.withValues(alpha: .72),\n                            width: 1.4,\n                          ),\n                        ),\n                      ),\n                    ),\n                  ),\n                ],\n              ),\n              textAlign: TextAlign.right,\n            ),\n          ),'''
+
+          new = '''          child: Directionality(\n            textDirection: TextDirection.rtl,\n            child: Text.rich(\n              TextSpan(\n                children: [\n                  WidgetSpan(\n                    alignment: PlaceholderAlignment.middle,\n                    child: Padding(\n                      padding: const EdgeInsetsDirectional.only(end: 7),\n                      child: Container(\n                        width: 21,\n                        height: 21,\n                        decoration: BoxDecoration(\n                          shape: BoxShape.circle,\n                          border: Border.all(\n                            color: primary.withValues(alpha: .72),\n                            width: 1.4,\n                          ),\n                        ),\n                      ),\n                    ),\n                  ),\n                  TextSpan(\n                    text: widget.item.arabic.trim(),\n                    style: const TextStyle(\n                      fontSize: 20,\n                      height: 1.65,\n                      fontWeight: FontWeight.w500,\n                    ),\n                  ),\n                ],\n              ),\n              textAlign: TextAlign.right,\n            ),\n          ),'''
+
+          if old not in text:
+              raise SystemExit('Current inline waqf renderer not found; refusing unsafe rewrite.')
+
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/screens/tools/ruqyah_screen.dart
+          git commit -m "Fix Ruqyah waqf marker RTL position"
+          git push
+
+      - name: Cleanup workflow
+        if: always()
+        run: |
+          git rm -f .github/workflows/ruqyah-waqf-finalize.yml || true
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: remove temporary Ruqyah finalize workflow"
+          git push
