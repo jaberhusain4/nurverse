@@ -541,6 +541,7 @@ illa khasara.
   }
 
 
+
   Widget _buildManzilCard(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
@@ -584,21 +585,20 @@ illa khasara.
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '????? ? ?? ?????? ???',
+                      '\u09ae\u09a8\u099c\u09bf\u09b2 \u2014 \u09e9\u09e9 \u0986\u09df\u09be\u09a4\u09c7\u09b0 \u0986\u09ae\u09b2',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '??????? ??????? ????? ? ???? ??? ? ??????',
+                      '\u09aa\u09cd\u09b0\u099a\u09b2\u09bf\u09a4 \u0995\u09c1\u09b0\u0986\u09a8\u09bf\u0995 \u09b8\u0982\u0995\u09b2\u09a8 \u2022 \u0986\u09b0\u09ac\u09bf \u09aa\u09be\u09a0 \u2022 \u0985\u09ab\u09b2\u09be\u0987\u09a8',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.textTheme.bodySmall?.color?.withValues(
                           alpha: .62,
                         ),
                       ),
-                    ),
-                  ],
+                    ),                  ],
                 ),
               ),
               Icon(
