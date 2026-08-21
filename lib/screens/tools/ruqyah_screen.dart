@@ -775,34 +775,37 @@ class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
           ),
           child: Directionality(
             textDirection: TextDirection.rtl,
-            child: Row(
-              textDirection: TextDirection.rtl,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.item.arabic.trim(),
-                    textAlign: TextAlign.right,
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: widget.item.arabic.trim(),
                     style: const TextStyle(
                       fontSize: 20,
                       height: 1.65,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: primary.withValues(alpha: .72),
-                      width: 1.4,
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.middle,
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.only(start: 7),
+                      child: Container(
+                        width: 21,
+                        height: 21,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: primary.withValues(alpha: .72),
+                            width: 1.4,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              textAlign: TextAlign.right,
             ),
           ),
         ),
