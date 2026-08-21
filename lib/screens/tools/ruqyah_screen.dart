@@ -775,37 +775,28 @@ class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
           ),
           child: Directionality(
             textDirection: TextDirection.rtl,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Flexible(
-                  child: Text(
-                    widget.item.arabic.trim(),
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: widget.item.arabic.trim(),
                     style: const TextStyle(
-                      fontFamily: 'IndoPakQuran',
                       fontSize: 20,
-                      height: 1.65,
+                      height: 1.58,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-                const SizedBox(width: 6),
-                Container(
-                  width: 21,
-                  height: 21,
-                  margin: const EdgeInsets.only(bottom: 5),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: primary.withValues(alpha: .72),
-                      width: 1.4,
+                  TextSpan(
+                    text: '  ۝',
+                    style: TextStyle(
+                      color: primary,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              textAlign: TextAlign.right,
             ),
           ),
         ),
