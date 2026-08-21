@@ -7,6 +7,8 @@ import 'package:share_plus/share_plus.dart';
 
 import 'auth/google_login_screen.dart';
 
+import 'home_mode_settings_screen.dart';
+
 import '../providers/premium_provider.dart';
 import '../services/auth_service.dart';
 import '../providers/settings_provider.dart';
@@ -380,32 +382,24 @@ class MoreScreen extends StatelessWidget {
           _buildSettingsGroup(
             context,
             children: [
-              _buildSettingTile(
-                context,
-                icon: Icons.dashboard_customize_outlined,
-                title: isEnglish ? 'Home Screen' : 'হোম স্ক্রিন',
-                subtitle:
-                    isEnglish
-                        ? 'Customize your dashboard'
-                        : 'ড্যাশবোর্ড নিজের মতো সাজান',
-                trailing: Icons.lock_outline_rounded,
-                premium: true,
-                onTap: () {
-                  _showPremiumFeature(
-                    context,
-                    settings,
-                    title:
-                        isEnglish
-                            ? 'Home Screen Personalization'
-                            : 'হোম স্ক্রিন ব্যক্তিগতকরণ',
-                    description:
-                        isEnglish
-                            ? 'Premium users will be able to customize dashboard cards and shortcuts.'
-                            : 'Premium userরা dashboard card এবং shortcut নিজের মতো সাজাতে পারবেন।',
-                  );
-                },
-              ),
-              _buildDivider(),
+    _buildSettingTile(
+      context,
+      icon: Icons.dashboard_customize_outlined,
+      title: isEnglish ? 'Home Screen' : 'হোম স্ক্রিন',
+      subtitle:
+          isEnglish
+              ? 'Choose Simple or Informative Home'
+              : 'Simple বা Informative Home বেছে নিন',
+      trailing: Icons.arrow_forward_ios_rounded,
+      onTap: () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const HomeModeSettingsScreen(),
+          ),
+        );
+      },
+    ),
+    _buildDivider(),
               _buildSettingTile(
                 context,
                 icon: Icons.widgets_outlined,
