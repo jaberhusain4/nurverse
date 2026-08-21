@@ -628,10 +628,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: _showReadingSettings,
-                icon: const Icon(Icons.text_fields_rounded, size: 19),
-              ),
+
             ],
           ),
           const SizedBox(height: 9),
@@ -666,9 +663,8 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
+          Align(
+            alignment: Alignment.centerRight,
             child: OutlinedButton.icon(
               onPressed: () {
                 setState(() => _showTafsir = !_showTafsir);
@@ -678,17 +674,33 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                 _showTafsir
                     ? Icons.visibility_off_rounded
                     : Icons.visibility_rounded,
-                size: 17,
+                size: 15,
               ),
               label: Text(
-                _showTafsir
-                    ? '\u09a4\u09be\u09ab\u09b8\u09bf\u09b0 \u09b2\u09c1\u0995\u09be\u09a8'
-                    : '\u09a4\u09be\u09ab\u09b8\u09bf\u09b0 \u09a6\u09c7\u0996\u09be\u09a8',
+                _showTafsir ? '?????? ?????' : '?????? ?????',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 5,
+                ),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                side: BorderSide(
+                  color: primary.withValues(alpha: .28),
+                  width: 1.1,
+                ),
+                backgroundColor: primary.withValues(alpha: .055),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
-        ],
-      ),
     );
   }
 
