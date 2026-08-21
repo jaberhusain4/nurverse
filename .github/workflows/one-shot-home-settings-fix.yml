@@ -1,0 +1,83 @@
+name: One-shot Home Settings Fix
+
+on:
+  push:
+    branches:
+      - fix/prayer-completion-tracker
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/prayer-completion-tracker
+          fetch-depth: 0
+
+      - name: Patch Settings Home Screen entry
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          path = Path('lib/screens/more_screen.dart')
+          text = path.read_text(encoding='utf-8')
+
+          if "import 'home_mode_settings_screen.dart';" not in text:
+              marker = "import 'auth/google_login_screen.dart';\n"
+              text = text.replace(
+                  marker,
+                  marker + "\nimport 'home_mode_settings_screen.dart';\n",
+                  1,
+              )
+
+          pattern = re.compile(
+              r"\n\s*_buildSettingTile\(\n"
+              r"\s*context,\n"
+              r"\s*icon: Icons\.dashboard_customize_outlined,\n"
+              r"\s*title: isEnglish \? 'Home Screen' : 'হোম স্ক্রিন',\n"
+              r".*?\n\s*\),\n\s*_buildDivider\(\),",
+              re.S,
+          )
+
+          replacement = '''
+              _buildSettingTile(
+                context,
+                icon: Icons.dashboard_customize_outlined,
+                title: isEnglish ? 'Home Screen' : 'হোম স্ক্রিন',
+                subtitle:
+                    isEnglish
+                        ? 'Choose Simple or Informative Home'
+                        : 'Simple বা Informative Home বেছে নিন',
+                trailing: Icons.arrow_forward_ios_rounded,
+                onTap: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const HomeModeSettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+              _buildDivider(),'''
+
+          updated, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit('Home Screen settings tile pattern not found; refusing to modify file.')
+
+          path.write_text(updated, encoding='utf-8')
+
+      - name: Commit and remove one-shot workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/one-shot-home-settings-fix.yml
+          git add lib/screens/more_screen.dart .github/workflows/one-shot-home-settings-fix.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "fix(settings): make Home Screen selector the single entry point"
+          git push origin HEAD:fix/prayer-completion-tracker
