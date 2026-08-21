@@ -196,31 +196,37 @@ class _Manzil33AyatScreenState extends State<Manzil33AyatScreen> {
           ...verses.map(
             (verse) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: Directionality(
-                textDirection: TextDirection.rtl,
-                child: Text.rich(
-                  TextSpan(
-                    children: [
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Text.rich(
                       TextSpan(
-                        text: verse.arabic.trim(),
-                        style: const TextStyle(
-                          fontSize: 19,
-                          height: 1.55,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        children: [
+                          TextSpan(
+                            text: verse.arabic.trim(),
+                            style: const TextStyle(
+                              fontSize: 19,
+                              height: 1.55,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          TextSpan(
+                            text: '  ۝ ${verse.number}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              height: 1.35,
+                              fontWeight: FontWeight.w700,
+                              color: primary.withValues(alpha: .72),
+                            ),
+                          ),
+                        ],
                       ),
-                      TextSpan(
-                        text: '  ۝ ${verse.number}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          height: 1.35,
-                          fontWeight: FontWeight.w700,
-                          color: primary.withValues(alpha: .72),
-                        ),
-                      ),
-                    ],
+                      textAlign: TextAlign.right,
+                    ),
                   ),
-                  textAlign: TextAlign.right,
                 ),
               ),
             ),
