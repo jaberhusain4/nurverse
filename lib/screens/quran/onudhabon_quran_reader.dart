@@ -483,7 +483,6 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
           ],
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: primary.withValues(alpha: .10)),
       ),
       child: Row(
         children: [
@@ -647,19 +646,35 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
+                child: TextButton.icon(
                   onPressed: () => _showTranslationPicker(surah),
                   icon: const Icon(Icons.translate_rounded, size: 17),
                   label: Text(_translationEdition.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                ),
+
+                  style: TextButton.styleFrom(
+                    foregroundColor: primary,
+                    backgroundColor: primary.withValues(alpha: .055),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),                ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: OutlinedButton.icon(
+                child: TextButton.icon(
                   onPressed: () => _showTafsirPicker(surah),
                   icon: const Icon(Icons.menu_book_rounded, size: 17),
                   label: const Text('তাফসির / ব্যাখ্যা', maxLines: 1),
-                ),
+
+                  style: TextButton.styleFrom(
+                    foregroundColor: primary,
+                    backgroundColor: primary.withValues(alpha: .055),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),                ),
               ),
             ],
           ),
@@ -677,7 +692,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                 size: 15,
               ),
               label: Text(
-                _showTafsir ? '?????? ?????' : '?????? ?????',
+                _showTafsir ? '\u09a4\u09be\u09ab\u09b8\u09bf\u09b0 \u09b2\u09c1\u0995\u09be\u09a8' : '\u09a4\u09be\u09ab\u09b8\u09bf\u09b0 \u09a6\u09c7\u0996\u09be\u09a8',
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -691,7 +706,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                 ),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 side: BorderSide(
-                  color: primary.withValues(alpha: .28),
+                  color: primary.withValues(alpha: .32),
                   width: 1.1,
                 ),
                 backgroundColor: primary.withValues(alpha: .055),
@@ -716,7 +731,6 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
       decoration: BoxDecoration(
         color: context.cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: primary.withValues(alpha: .07)),
       ),
       child: Column(
         children: [
@@ -787,7 +801,6 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
               decoration: BoxDecoration(
                 color: primary.withValues(alpha: .035),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: primary.withValues(alpha: .07)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
