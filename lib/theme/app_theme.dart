@@ -146,6 +146,11 @@ class AppTheme {
         onSurface: textPrimary,
       ),
       fontFamily: 'Noto Sans Bengali',
+      fontFamilyFallback: const [
+        'Noto Naskh Arabic',
+        'Noto Sans Arabic',
+        'serif',
+      ],
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: appBarBackground,
