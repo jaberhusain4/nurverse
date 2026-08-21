@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../models/quran_surah.dart';
 import '../../services/quran_data_service.dart';
 import '../../theme/app_theme.dart';
 
@@ -143,7 +144,8 @@ class _Manzil33AyatScreenState extends State<Manzil33AyatScreen> {
     final verses = surah.verses
         .where(
           (verse) =>
-              verse.number >= group.from && verse.number <= group.to,
+              verse.number >= group.from &&
+              verse.number <= group.to,
         )
         .toList();
 
@@ -236,7 +238,10 @@ class _Manzil33AyatScreenState extends State<Manzil33AyatScreen> {
   ) {
     final primary = Theme.of(context).colorScheme.primary;
     final translated = verses
-        .where((verse) => verse.bangla != null && verse.bangla!.trim().isNotEmpty)
+        .where(
+          (verse) =>
+              verse.bangla != null && verse.bangla!.trim().isNotEmpty,
+        )
         .toList();
 
     return Container(
