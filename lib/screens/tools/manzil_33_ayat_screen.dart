@@ -18,6 +18,7 @@ class Manzil33AyatScreen extends StatefulWidget {
 
 class _Manzil33AyatScreenState extends State<Manzil33AyatScreen> {
   final _quran = QuranDataService.instance;
+  final ScrollController _scrollController = ScrollController();
   bool _loading = true;
   List<_ManzilGroup> _groups = const [];
 
@@ -30,6 +31,12 @@ class _Manzil33AyatScreenState extends State<Manzil33AyatScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -85,60 +92,77 @@ class _Manzil33AyatScreenState extends State<Manzil33AyatScreen> {
         ),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(14, 8, 14, 30),
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: .07),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+      body: ScrollbarTheme(
+        data: ScrollbarThemeData(
+          thumbColor: WidgetStatePropertyAll(primary.withValues(alpha: .72)),
+          trackColor: WidgetStatePropertyAll(primary.withValues(alpha: .08)),
+          trackVisibility: const WidgetStatePropertyAll(true),
+          thickness: const WidgetStatePropertyAll(6),
+          radius: const Radius.circular(8),
+          crossAxisMargin: 3,
+          mainAxisMargin: 4,
+        ),
+        child: Scrollbar(
+          controller: _scrollController,
+          thumbVisibility: true,
+          interactive: true,
+          child: ListView(
+            controller: _scrollController,
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 30),
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: .07),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: primary.withValues(alpha: .11),
-                        borderRadius: BorderRadius.circular(13),
-                      ),
-                      child: Icon(
-                        Icons.shield_rounded,
-                        color: primary,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Text(
-                        'মনজিল — প্রচলিত ৩৩ আয়াতের সংকলন',
-                        style: TextStyle(
-                          fontSize: 15,
-                          height: 1.35,
-                          fontWeight: FontWeight.w700,
+                    Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: primary.withValues(alpha: .11),
+                            borderRadius: BorderRadius.circular(13),
+                          ),
+                          child: Icon(
+                            Icons.shield_rounded,
+                            color: primary,
+                            size: 22,
+                          ),
                         ),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'মনজিল — প্রচলিত ৩৩ আয়াতের সংকলন',
+                            style: TextStyle(
+                              fontSize: 15,
+                              height: 1.35,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 9),
+                    Text(
+                      'কুরআনের বিভিন্ন সূরার নির্বাচিত আয়াতের একটি প্রচলিত সংকলন। NurVerse এটিকে নির্দিষ্ট Sunnah-নির্ধারিত পাঠ বা বাধ্যতামূলক repetition হিসেবে উপস্থাপন করছে না।',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontSize: 13,
+                        height: 1.45,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 9),
-                Text(
-                  'কুরআনের বিভিন্ন সূরার নির্বাচিত আয়াতের একটি প্রচলিত সংকলন। NurVerse এটিকে নির্দিষ্ট Sunnah-নির্ধারিত পাঠ বা বাধ্যতামূলক repetition হিসেবে উপস্থাপন করছে না।',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontSize: 13,
-                    height: 1.45,
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 12),
+              ..._groups.map((group) => _buildGroup(context, group)),
+            ],
           ),
-          const SizedBox(height: 12),
-          ..._groups.map((group) => _buildGroup(context, group)),
-        ],
+        ),
       ),
     );
   }
