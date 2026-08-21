@@ -1,0 +1,45 @@
+name: One-shot Ruqyah marker patch
+
+on:
+  push:
+    branches:
+      - chore/one-shot-ruqyah-marker
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch only the morning protection dua marker
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('lib/screens/tools/ruqyah_screen.dart')
+          text = path.read_text(encoding='utf-8')
+
+          old = "arabic: '''بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ ۝ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ ۝ وَهُوَ السَّمِيعُ الْعَلِيمُ''',"
+          new = "arabic: '''بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ''',"
+
+          if old not in text:
+              raise SystemExit('Expected old dua marker string not found.')
+
+          text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+          print('Patched exact morning-protection Arabic string.')
+          PY
+
+      - name: Remove temporary workflow and commit exact patch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -f .github/workflows/ruqyah_marker_patch.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- lib/screens/tools/ruqyah_screen.dart .github/workflows/ruqyah_marker_patch.yml
+          git commit -m "Fix Ruqyah dua decorative marker"
+          git push origin HEAD:chore/one-shot-ruqyah-marker
