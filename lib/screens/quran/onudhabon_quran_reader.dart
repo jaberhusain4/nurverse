@@ -12,7 +12,12 @@ import '../../widgets/quran/bismillah_header.dart';
 
 class OnudhabonQuranReader extends StatefulWidget {
   final bool openLastRead;
-  const OnudhabonQuranReader({super.key, this.openLastRead = false});
+  final int? initialSurahNumber;
+  const OnudhabonQuranReader({
+    super.key,
+    this.openLastRead = false,
+    this.initialSurahNumber,
+  });
 
   @override
   State<OnudhabonQuranReader> createState() => _OnudhabonQuranReaderState();
@@ -74,7 +79,12 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
 
     await _data.init();
 
-    if (widget.openLastRead) {
+    if (widget.initialSurahNumber != null &&
+        widget.initialSurahNumber! >= 1 &&
+        widget.initialSurahNumber! <= 114) {
+      _selectedSurah = widget.initialSurahNumber;
+      _resumeAyah = null;
+    } else if (widget.openLastRead) {
       final last = await LastReadService.getLastRead();
       final surah = last?['surahNumber'];
       final ayah = last?['ayahNumber'];
@@ -83,7 +93,6 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         _resumeAyah = ayah is int && ayah > 0 ? ayah : 1;
       }
     }
-
     if (!mounted) return;
     setState(() => _loading = false);
     if (_selectedSurah != null) {
@@ -144,13 +153,12 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
 
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => const OnudhabonQuranReader(
-          openLastRead: true,
+        builder: (_) => OnudhabonQuranReader(
+          initialSurahNumber: number,
         ),
       ),
     );
   }
-
   void _backToQuranScreen() {
     Navigator.of(context).pop();
   }
