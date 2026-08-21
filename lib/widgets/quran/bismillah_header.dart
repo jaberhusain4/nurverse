@@ -7,33 +7,46 @@ class BismillahHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final textColor = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 4),
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 6),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(child: Divider(color: primary.withValues(alpha: .24), thickness: 1)),
+              Expanded(
+                child: Divider(
+                  color: primary.withValues(alpha: .20),
+                  thickness: 1,
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Icon(
                   Icons.auto_awesome_rounded,
-                  size: 14,
-                  color: primary.withValues(alpha: .72),
+                  size: 13,
+                  color: primary.withValues(alpha: .68),
                 ),
               ),
-              Expanded(child: Divider(color: primary.withValues(alpha: .24), thickness: 1)),
+              Expanded(
+                child: Divider(
+                  color: primary.withValues(alpha: .20),
+                  thickness: 1,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 9),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(16, 13, 16, 12),
             decoration: BoxDecoration(
-              color: primary.withValues(alpha: isDark ? .075 : .045),
+              color: primary.withValues(alpha: isDark ? .065 : .035),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
@@ -44,53 +57,49 @@ class BismillahHeader extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 25,
-                    height: 1.75,
+                    height: 1.78,
                     fontWeight: FontWeight.w500,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                    color: textColor,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 5),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.star_rounded, size: 10, color: primary.withValues(alpha: .65)),
-                    const SizedBox(width: 7),
-                    Text(
-                      'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        height: 1.3,
-                        color: primary.withValues(alpha: .82),
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 9,
+                      color: primary.withValues(alpha: .55),
                     ),
                     const SizedBox(width: 7),
-                    Icon(Icons.star_rounded, size: 10, color: primary.withValues(alpha: .65)),
+                    Container(
+                      width: 28,
+                      height: 1,
+                      color: primary.withValues(alpha: .20),
+                    ),
+                    const SizedBox(width: 7),
+                    Icon(
+                      Icons.mosque_rounded,
+                      size: 13,
+                      color: primary.withValues(alpha: .60),
+                    ),
+                    const SizedBox(width: 7),
+                    Container(
+                      width: 28,
+                      height: 1,
+                      color: primary.withValues(alpha: .20),
+                    ),
+                    const SizedBox(width: 7),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 9,
+                      color: primary.withValues(alpha: .55),
+                    ),
                   ],
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 34,
-                height: 1,
-                color: primary.withValues(alpha: .20),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.mosque_rounded, size: 13, color: primary.withValues(alpha: .58)),
-              const SizedBox(width: 8),
-              Container(
-                width: 34,
-                height: 1,
-                color: primary.withValues(alpha: .20),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
         ],
       ),
     );
