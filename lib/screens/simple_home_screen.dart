@@ -224,10 +224,11 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
                 pageNo: lastRead!['pageNo'] is int
                     ? lastRead!['pageNo'] as int
                     : int.tryParse('${lastRead!['pageNo']}') ?? 1,
-                progress: (lastRead!['progress'] is num
-                        ? (lastRead!['progress'] as num).toDouble()
-                        : 0.0)
-                    .clamp(0.0, 1.0),
+                progress: ((lastRead!['progress'] is num
+                            ? (lastRead!['progress'] as num).toDouble()
+                            : 0.0)
+                        .clamp(0.0, 1.0))
+                    .toDouble(),
                 languageCode: languageCode,
                 onTap: () => _open(
                   const OnudhabonQuranScreen(openLastRead: true),
