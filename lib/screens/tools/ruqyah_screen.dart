@@ -781,6 +781,7 @@ class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
                   TextSpan(
                     text: '${widget.item.arabic.trim()}  ۝',
                     style: const TextStyle(
+                      fontFamily: 'IndoPakQuran',
                       fontSize: 20,
                       height: 1.65,
                       fontWeight: FontWeight.w500,
