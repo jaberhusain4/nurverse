@@ -38,6 +38,9 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   String? _translationError;
   String? _tafsirError;
   bool _loadingSources = false;
+  bool _showAyah = true;
+  bool _showTranslation = true;
+  bool _showTafsir = false;
 
   QuranTranslationEdition get _translationEdition =>
       QuranTranslationService.editions.firstWhere(
@@ -64,6 +67,9 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         .clamp(12.0, 21.0);
     _translationId = prefs.getString('onudhabon_translation') ?? _translationId;
     _tafsirId = prefs.getString('onudhabon_tafsir') ?? _tafsirId;
+    _showAyah = prefs.getBool('onudhabon_show_ayah') ?? true;
+    _showTranslation = prefs.getBool('onudhabon_show_translation') ?? true;
+    _showTafsir = prefs.getBool('onudhabon_show_tafsir') ?? false;
 
     await _data.init();
 
@@ -132,16 +138,16 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   }
 
   Future<void> _selectSurah(int number) async {
-    setState(() {
-      _selectedSurah = number;
-      _resumeAyah = 1;
-      _translations = {};
-      _tafsirs = {};
-      _ayahKeys.clear();
-    });
-    final surah = _data.getSurah(number);
-    await _loadSources(surah);
     await _savePosition(number, 1);
+    if (!mounted) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const OnudhabonQuranReader(
+          openLastRead: true,
+        ),
+      ),
+    );
   }
 
   void _backToQuranScreen() {
@@ -184,8 +190,30 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('onudhabon_arabic_font_size', _arabicSize);
     await prefs.setDouble('onudhabon_translation_font_size', _translationSize);
+    await prefs.setBool('onudhabon_show_ayah', _showAyah);
+    await prefs.setBool('onudhabon_show_translation', _showTranslation);
+    await prefs.setBool('onudhabon_show_tafsir', _showTafsir);
   }
 
+  void _toggleReadingPart(String part) {
+    setState(() {
+      switch (part) {
+        case 'ayah':
+          if (_showAyah && !_showTranslation && !_showTafsir) return;
+          _showAyah = !_showAyah;
+          break;
+        case 'translation':
+          if (_showTranslation && !_showAyah && !_showTafsir) return;
+          _showTranslation = !_showTranslation;
+          break;
+        case 'tafsir':
+          if (_showTafsir && !_showAyah && !_showTranslation) return;
+          _showTafsir = !_showTafsir;
+          break;
+      }
+    });
+    _saveSettings();
+  }
   Future<void> _showReadingSettings() async {
     await showModalBottomSheet<void>(
       context: context,
@@ -219,7 +247,22 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                     ),
                   ],
                 ),
-                _slider('আরবি আয়াত', _arabicSize, 16, 28, (v) {
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '?? ?? ???????',
+                    style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 7,
+                  runSpacing: 7,
+                  children: [
+
+                  ],
+                ),
+                const SizedBox(height: 8),                _slider('আরবি আয়াত', _arabicSize, 16, 28, (v) {
                   setState(() => _arabicSize = v);
                   _saveSettings();
                   setSheetState(() {});
@@ -639,10 +682,11 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
             ],
           ),
           const SizedBox(height: 10),
-          Container(
-            width: double.infinity,
-            alignment: Alignment.centerRight,
-            child: Directionality(
+          if (_showAyah)
+            Container(
+              width: double.infinity,
+              alignment: Alignment.centerRight,
+              child: Directionality(
               textDirection: TextDirection.rtl,
               child: Text.rich(
                 TextSpan(
@@ -669,7 +713,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
               ),
             ),
           ),
-          if (translation != null && translation.trim().isNotEmpty) ...[
+          if (_showTranslation && translation != null && translation.trim().isNotEmpty) ...[
             const SizedBox(height: 12),
             Container(
               width: double.infinity,
@@ -685,7 +729,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
               ),
             ),
           ],
-          if (tafsir != null && tafsir.trim().isNotEmpty) ...[
+          if (_showTafsir && tafsir != null && tafsir.trim().isNotEmpty) ...[
             const SizedBox(height: 10),
             Container(
               width: double.infinity,
