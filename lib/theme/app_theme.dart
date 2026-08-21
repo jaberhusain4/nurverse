@@ -147,6 +147,7 @@ class AppTheme {
       ),
       fontFamily: 'Noto Sans Bengali',
       fontFamilyFallback: const [
+        'NotoNaskhArabic',
         'Noto Naskh Arabic',
         'Noto Sans Arabic',
         'serif',
