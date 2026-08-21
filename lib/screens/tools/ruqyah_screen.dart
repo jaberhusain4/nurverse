@@ -775,11 +775,15 @@ class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
           ),
           child: Directionality(
             textDirection: TextDirection.rtl,
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '${widget.item.arabic.trim()}  ۝',
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: Text(
+                    widget.item.arabic.trim(),
+                    textAlign: TextAlign.right,
+                    textDirection: TextDirection.rtl,
                     style: const TextStyle(
                       fontFamily: 'IndoPakQuran',
                       fontSize: 20,
@@ -787,9 +791,21 @@ class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                ],
-              ),
-              textAlign: TextAlign.right,
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  width: 21,
+                  height: 21,
+                  margin: const EdgeInsets.only(bottom: 5),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: primary.withValues(alpha: .72),
+                      width: 1.4,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
