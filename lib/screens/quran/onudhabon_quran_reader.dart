@@ -701,6 +701,8 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
               ),
             ),
           ),
+        ],
+      ),
     );
   }
 
