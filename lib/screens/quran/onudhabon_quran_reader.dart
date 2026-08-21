@@ -8,6 +8,7 @@ import '../../services/quran_metadata_service.dart';
 import '../../services/quran_tafsir_service.dart';
 import '../../services/quran_translation_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/quran/bismillah_header.dart';
 
 class OnudhabonQuranReader extends StatefulWidget {
   final bool openLastRead;
@@ -564,24 +565,48 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   Widget _buildReader(BuildContext context, QuranSurah surah) {
     return Column(
       children: [
-        _surahHeader(context, surah),
-        if (_loadingSources) const LinearProgressIndicator(minHeight: 2),
+        if (_loadingSources)
+          const LinearProgressIndicator(minHeight: 2),
         if (_translationError != null) _error(context, _translationError!),
         if (_tafsirError != null)
-          _error(context, 'এই ব্যাখ্যাটি এখন পাওয়া যায়নি। অন্য ব্যাখ্যা নির্বাচন করতে পারেন।'),
+          _error(
+            context,
+            '?? ?????????? ??? ????? ?????? ???? ???????? ???????? ???? ??????',
+          ),
         Expanded(
-          child: ListView.builder(
+          child: Scrollbar(
             controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 28),
-            itemCount: surah.verses.length,
-            itemBuilder: (context, index) {
-              final verse = surah.verses[index];
-              final key = _ayahKeys.putIfAbsent(verse.number, GlobalKey.new);
-              return KeyedSubtree(
-                key: key,
-                child: _ayahCard(context, surah, verse),
-              );
-            },
+            thumbVisibility: true,
+            thickness: 5,
+            radius: const Radius.circular(8),
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.fromLTRB(14, 8, 18, 28),
+              itemCount: surah.verses.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Column(
+                    children: [
+                      _surahHeader(context, surah),
+                      if (surah.number != 1 && surah.number != 9)
+                        const BismillahHeader(),
+                      const SizedBox(height: 4),
+                    ],
+                  );
+                }
+
+                final verse = surah.verses[index - 1];
+                final key = _ayahKeys.putIfAbsent(
+                  verse.number,
+                  GlobalKey.new,
+                );
+
+                return KeyedSubtree(
+                  key: key,
+                  child: _ayahCard(context, surah, verse),
+                );
+              },
+            ),
           ),
         ),
       ],
