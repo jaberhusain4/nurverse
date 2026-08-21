@@ -21,11 +21,9 @@ jobs:
         shell: python
         run: |
           from pathlib import Path
-
           path = Path('lib/screens/quran/onudhabon_quran_reader.dart')
           text = path.read_text(encoding='utf-8')
 
-          # Remove the duplicate text-size button from the Surah header.
           duplicate = """              IconButton(
                 onPressed: _showReadingSettings,
                 icon: const Icon(Icons.text_fields_rounded, size: 19),
@@ -35,8 +33,6 @@ jobs:
               raise SystemExit(f'Expected one duplicate header text-size button, found {text.count(duplicate)}')
           text = text.replace(duplicate, '', 1)
 
-          # Replace the translation/tafsir selector row with a compact premium
-          # Tafsir show/hide action underneath it.
           row = """          Row(
             children: [
               Expanded(
@@ -90,9 +86,7 @@ jobs:
           ),
 """
           text = text.replace(row, replacement, 1)
-
           path.write_text(text, encoding='utf-8', newline='\n')
-          print('Onudhabon UI polish applied.')
 
       - name: Commit and push
         run: |
