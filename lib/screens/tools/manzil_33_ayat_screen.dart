@@ -193,62 +193,96 @@ class _Manzil33AyatScreenState extends State<Manzil33AyatScreen> {
           const SizedBox(height: 9),
           ...verses.map(
             (verse) => Padding(
-              padding: const EdgeInsets.only(bottom: 13),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: Text.rich(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Text.rich(
+                  TextSpan(
+                    children: [
                       TextSpan(
-                        children: [
-                          TextSpan(
-                            text: verse.arabic.trim(),
-                            style: const TextStyle(
-                              fontSize: 19,
-                              height: 1.55,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '  ۝ ${verse.number}',
-                            style: TextStyle(
-                              fontSize: 10,
-                              height: 1.35,
-                              fontWeight: FontWeight.w700,
-                              color: primary.withValues(alpha: .72),
-                            ),
-                          ),
-                        ],
+                        text: verse.arabic.trim(),
+                        style: const TextStyle(
+                          fontSize: 19,
+                          height: 1.55,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      textAlign: TextAlign.right,
-                    ),
+                      TextSpan(
+                        text: '  ۝ ${verse.number}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          height: 1.35,
+                          fontWeight: FontWeight.w700,
+                          color: primary.withValues(alpha: .72),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 6),
-                  if (verse.bangla != null && verse.bangla!.trim().isNotEmpty)
-                    Text(
-                      verse.bangla!.trim(),
-                      textAlign: TextAlign.left,
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.5,
-                        fontWeight: FontWeight.w400,
-                        color: context.primaryTextColor,
-                      ),
-                    )
-                  else
-                    Text(
-                      'বাংলা অনুবাদ এখনো অফলাইনে প্রস্তুত হয়নি। কুরআন অনুবাদ একবার সিঙ্ক করলে এখানে দেখাবে।',
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.45,
-                        color: context.secondaryTextColor,
-                      ),
-                    ),
-                ],
+                  textAlign: TextAlign.right,
+                ),
               ),
             ),
           ),
+          const SizedBox(height: 2),
+          _buildTranslationSection(context, verses),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTranslationSection(
+    BuildContext context,
+    List<QuranVerse> verses,
+  ) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final translated = verses
+        .where((verse) => verse.bangla != null && verse.bangla!.trim().isNotEmpty)
+        .toList();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(11, 10, 11, 10),
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: .045),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'বাংলা অর্থ',
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.35,
+              fontWeight: FontWeight.w700,
+              color: primary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          if (translated.isEmpty)
+            Text(
+              'বাংলা অনুবাদ এখনো অফলাইনে প্রস্তুত হয়নি। কুরআন অনুবাদ একবার সিঙ্ক করলে এখানে দেখাবে।',
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.45,
+                color: context.secondaryTextColor,
+              ),
+            )
+          else
+            ...translated.map(
+              (verse) => Padding(
+                padding: const EdgeInsets.only(bottom: 7),
+                child: Text(
+                  '${verse.number}. ${verse.bangla!.trim()}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    fontWeight: FontWeight.w400,
+                    color: context.primaryTextColor,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
