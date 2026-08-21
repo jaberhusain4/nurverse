@@ -5,7 +5,8 @@ import '../controllers/prayer_controller.dart';
 import '../localization/app_localizations.dart';
 import '../providers/settings_provider.dart';
 import '../theme/app_theme.dart';
-import 'home_screen.dart';
+import 'home_switcher_screen.dart';
+import 'home_mode_settings_screen.dart';
 import 'prayer_screen_v2.dart';
 import 'localized_hadith_screen.dart';
 import 'quran_screen.dart';
@@ -69,11 +70,21 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     setState(() => _homeRefreshId++);
   }
 
+  Future<void> _openHomeModeSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const HomeModeSettingsScreen(),
+      ),
+    );
+    if (!mounted) return;
+    setState(() => _homeRefreshId++);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final screens = <Widget>[
-      HomeScreen(
+      HomeSwitcherScreen(
         key: ValueKey<int>(_homeRefreshId),
         onNavigateTab: _onNavigateTab,
       ),
@@ -95,6 +106,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           index: _selectedIndex,
           children: screens,
         ),
+        floatingActionButton: _selectedIndex == 5
+            ? FloatingActionButton.extended(
+                onPressed: _openHomeModeSettings,
+                icon: const Icon(Icons.home_work_outlined),
+                label: Text(
+                  context.watch<SettingsProvider>().isEnglish
+                      ? 'Home Screen'
+                      : 'হোম স্ক্রিন',
+                ),
+              )
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: context.cardColor,
