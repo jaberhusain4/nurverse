@@ -250,7 +250,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    '?? ?? ???????',
+                    '\u0995\u09c0 \u0995\u09c0 \u09a6\u09c7\u0996\u09be\u09ac\u09c7\u09a8',
                     style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -259,7 +259,22 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                   spacing: 7,
                   runSpacing: 7,
                   children: [
-
+                    FilterChip(
+                      label: const Text('\u0986\u09df\u09be\u09a4'),
+                      selected: _showAyah,
+                      onSelected: (_) {
+                        _toggleReadingPart('ayah');
+                        setSheetState(() {});
+                      },
+                    ),
+                    FilterChip(
+                      label: const Text('\u0985\u09a8\u09c1\u09ac\u09be\u09a6'),
+                      selected: _showTranslation,
+                      onSelected: (_) {
+                        _toggleReadingPart('translation');
+                        setSheetState(() {});
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),                _slider('আরবি আয়াত', _arabicSize, 16, 28, (v) {
@@ -650,6 +665,27 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                setState(() => _showTafsir = !_showTafsir);
+                _saveSettings();
+              },
+              icon: Icon(
+                _showTafsir
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
+                size: 17,
+              ),
+              label: Text(
+                _showTafsir
+                    ? '\u09a4\u09be\u09ab\u09b8\u09bf\u09b0 \u09b2\u09c1\u0995\u09be\u09a8'
+                    : '\u09a4\u09be\u09ab\u09b8\u09bf\u09b0 \u09a6\u09c7\u0996\u09be\u09a8',
+              ),
+            ),
           ),
         ],
       ),
