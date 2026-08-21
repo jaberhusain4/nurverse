@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'manzil_33_ayat_screen.dart';
+
 class RuqyahScreen extends StatefulWidget {
   const RuqyahScreen({super.key});
 
@@ -422,6 +424,8 @@ illa khasara.
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _buildHeroCard(context),
+                const SizedBox(height: 10),
+                _buildManzilCard(context),
                 const SizedBox(height: 16),
                 _buildSearchBar(context),
                 const SizedBox(height: 12),
@@ -536,9 +540,78 @@ illa khasara.
     );
   }
 
-  // ============================================================
-  // SEARCH
-  // ============================================================
+
+  Widget _buildManzilCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
+    return Material(
+      color: theme.cardColor,
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const Manzil33AyatScreen(),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            color: primary.withValues(alpha: .065),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: .11),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Icon(
+                  Icons.shield_moon_rounded,
+                  color: primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '????? ? ?? ?????? ???',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '??????? ??????? ????? ? ???? ??? ? ??????',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.textTheme.bodySmall?.color?.withValues(
+                          alpha: .62,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 15,
+                color: primary.withValues(alpha: .45),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildSearchBar(BuildContext context) {
     final theme = Theme.of(context);
