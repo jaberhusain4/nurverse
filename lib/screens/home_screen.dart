@@ -27,6 +27,7 @@ import 'dua/dua_screen.dart';
 import 'tools/ruqyah_screen.dart';
 import 'tools/tasbih_screen.dart';
 import 'tools/zakat_calculator_screen.dart';
+import 'tools/islamic_books_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(int)? onNavigateTab;
@@ -195,7 +196,7 @@ class HomeScreenState extends State<HomeScreen> {
                       _quickAction(context, title: _label(languageCode, 'দোয়া', 'Dua', 'الدعاء'), icon: Icons.favorite_rounded, onTap: () => _openScreen(const DuaScreen())),
                       _quickAction(context, title: _label(languageCode, 'ক্যালেন্ডার', 'Calendar', 'التقويم'), icon: Icons.calendar_month_rounded, onTap: () => _openScreen(const CalendarScreen())),
                       _quickAction(context, title: _label(languageCode, 'জাকাত', 'Zakat', 'الزকاة'), icon: Icons.account_balance_wallet_rounded, onTap: () => _openScreen(const ZakatCalculatorScreen())),
-                      _quickAction(context, title: _label(languageCode, 'কুরআন', 'Quran', 'القرآن'), icon: Icons.menu_book_rounded, onTap: () => widget.onNavigateTab?.call(2)),
+                                            _quickAction(context, title: _label(languageCode, '\u09ac\u0987', 'Books', '\u0627\u0644\u0643\u062a\u0628'), icon: Icons.library_books_rounded, onTap: () => _openScreen(const IslamicBooksScreen())),
                     ]),
                     const SizedBox(height: 16),
                     _continueReading(context, languageCode),
