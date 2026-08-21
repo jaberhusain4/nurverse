@@ -778,18 +778,10 @@ class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
             child: Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(
-                    text: widget.item.arabic.trim(),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      height: 1.65,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
                   WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: Padding(
-                      padding: const EdgeInsetsDirectional.only(start: 7),
+                      padding: const EdgeInsetsDirectional.only(end: 7),
                       child: Container(
                         width: 21,
                         height: 21,
@@ -801,6 +793,14 @@ class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                  TextSpan(
+                    text: widget.item.arabic.trim(),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      height: 1.65,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
