@@ -1,5 +1,5 @@
-import 'simple_home_screen_v5.dart';
+import 'simple_home_screen_v6.dart';
 
-class HomeScreen extends SimpleHomeScreenV5 {
+class HomeScreen extends SimpleHomeScreenV6 {
   const HomeScreen({super.key, super.onNavigateTab});
 }
