@@ -624,21 +624,29 @@ class _RuqyahWaqfPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.shortestSide * 0.40;
-    final ring = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
-    final dot = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius, ring);
-    canvas.drawCircle(center, radius * 0.28, dot);
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '۝',
+        style: TextStyle(
+          fontFamily: 'IndoPakQuran',
+          color: color,
+          fontSize: size.shortestSide * .82,
+          height: 1,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: size.width);
+
+    final offset = Offset(
+      (size.width - textPainter.width) / 2,
+      (size.height - textPainter.height) / 2,
+    );
+    textPainter.paint(canvas, offset);
   }
 
   @override
-  bool shouldRepaint(covariant _RuqyahWaqfPainter oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(covariant _RuqyahWaqfPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
