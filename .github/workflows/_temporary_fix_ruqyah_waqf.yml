@@ -1,0 +1,48 @@
+name: Temporary Ruqyah Waqf Fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/_temporary_fix_ruqyah_waqf.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/prayer-completion-tracker
+          fetch-depth: 0
+
+      - name: Patch Ruqyah waqf marker
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/screens/tools/ruqyah_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          old = """                  TextSpan(\n                    text: '  ۝',\n                    style: TextStyle(\n                      color: primary,\n                      fontSize: 13.5,\n                      fontWeight: FontWeight.w800,\n                    ),\n                  ),"""
+          new = """                  const WidgetSpan(\n                    alignment: PlaceholderAlignment.middle,\n                    child: Padding(\n                      padding: EdgeInsetsDirectional.only(start: 4),\n                      child: _RuqyahWaqfMarker(),\n                    ),\n                  ),"""
+          if old not in s:
+              raise SystemExit('Expected Ruqyah waqf block was not found')
+          s = s.replace(old, new, 1)
+          needle = 'class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {'
+          marker = '''class _RuqyahWaqfMarker extends StatelessWidget {\n  const _RuqyahWaqfMarker();\n\n  @override\n  Widget build(BuildContext context) {\n    final primary = Theme.of(context).colorScheme.primary;\n    return SizedBox(\n      width: 22,\n      height: 22,\n      child: CustomPaint(\n        painter: _RuqyahWaqfPainter(primary),\n      ),\n    );\n  }\n}\n\nclass _RuqyahWaqfPainter extends CustomPainter {\n  final Color color;\n  const _RuqyahWaqfPainter(this.color);\n\n  @override\n  void paint(Canvas canvas, Size size) {\n    final center = Offset(size.width / 2, size.height / 2);\n    final radius = size.shortestSide * 0.40;\n    final ring = Paint()\n      ..color = color\n      ..style = PaintingStyle.stroke\n      ..strokeWidth = 1.4;\n    final dot = Paint()\n      ..color = color\n      ..style = PaintingStyle.fill;\n    canvas.drawCircle(center, radius, ring);\n    canvas.drawCircle(center, radius * 0.28, dot);\n  }\n\n  @override\n  bool shouldRepaint(covariant _RuqyahWaqfPainter oldDelegate) => oldDelegate.color != color;\n}\n\n'''
+          if needle not in s:
+              raise SystemExit('Ruqyah detail state insertion point not found')
+          s = s.replace(needle, marker + needle, 1)
+          p.write_text(s, encoding='utf-8')
+
+      - name: Commit patch and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/screens/tools/ruqyah_screen.dart
+          git commit -m "fix: render Ruqyah waqf marker without font glyph dependency" || true
+          rm -f .github/workflows/_temporary_fix_ruqyah_waqf.yml
+          git add .github/workflows/_temporary_fix_ruqyah_waqf.yml
+          git commit -m "chore: remove temporary Ruqyah fix workflow" || true
+          git push origin HEAD:fix/prayer-completion-tracker
