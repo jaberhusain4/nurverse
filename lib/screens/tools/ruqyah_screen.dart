@@ -602,53 +602,6 @@ class RuqyahDetailScreen extends StatefulWidget {
   State<RuqyahDetailScreen> createState() => _RuqyahDetailScreenState();
 }
 
-class _RuqyahWaqfMarker extends StatelessWidget {
-  const _RuqyahWaqfMarker();
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return SizedBox(
-      width: 22,
-      height: 22,
-      child: CustomPaint(
-        painter: _RuqyahWaqfPainter(primary),
-      ),
-    );
-  }
-}
-
-class _RuqyahWaqfPainter extends CustomPainter {
-  final Color color;
-  const _RuqyahWaqfPainter(this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: '۝',
-        style: TextStyle(
-          fontFamily: 'IndoPakQuran',
-          color: color,
-          fontSize: size.shortestSide * .82,
-          height: 1,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: size.width);
-
-    final offset = Offset(
-      (size.width - textPainter.width) / 2,
-      (size.height - textPainter.height) / 2,
-    );
-    textPainter.paint(canvas, offset);
-  }
-
-  @override
-  bool shouldRepaint(covariant _RuqyahWaqfPainter oldDelegate) =>
-      oldDelegate.color != color;
-}
-
 class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
   final _quran = QuranDataService.instance;
   bool _loadingQuran = false;
@@ -833,11 +786,11 @@ class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const WidgetSpan(
-                    alignment: PlaceholderAlignment.middle,
-                    child: Padding(
-                      padding: EdgeInsetsDirectional.only(start: 4),
-                      child: _RuqyahWaqfMarker(),
+                  const TextSpan(
+                    text: '  ۝',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ],
