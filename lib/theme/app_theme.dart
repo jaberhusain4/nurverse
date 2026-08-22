@@ -6,25 +6,19 @@ class AppColors {
   static const Color seaBlue = Color(0xFF0EA5E9);
   static const Color seaBlueDark = Color(0xFF0284C7);
   static const Color softAqua = Color(0xFF7DD3FC);
-
   static const Color backgroundLight = Color(0xFFF4F8FC);
-  // Global premium glass-card surface. The transparency is intentional so the
-  // Islamic calligraphic artwork remains visible underneath every card.
   static const Color cardLight = Color(0xD9FFFFFF);
   static const Color borderLight = Color(0x260EA5E9);
   static const Color textPrimaryLight = Color(0xFF111827);
   static const Color textSecondaryLight = Color(0xFF4B5563);
-
   static const Color backgroundDark = Color(0xFF07141F);
   static const Color cardDark = Color(0xB8112535);
   static const Color borderDark = Color(0x300EA5E9);
   static const Color textPrimaryDark = Color(0xFFFFFFFF);
   static const Color textSecondaryDark = Color(0xFFE5EDF5);
-
   static const Color amoledBackground = Colors.black;
   static const Color amoledCard = Color(0xA60B0B0B);
   static const Color amoledBorder = Color(0x300EA5E9);
-
   static const Color primary = seaBlue;
   static const Color textPrimary = textPrimaryLight;
   static const Color textSecondary = textSecondaryDark;
@@ -51,36 +45,15 @@ class AppSpacing {
 
 extension ThemeBuildContext on BuildContext {
   ThemeData get appTheme => Theme.of(this);
-
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
-
-  bool get isAmoled =>
-      Theme.of(this).scaffoldBackgroundColor == AppColors.amoledBackground;
-
-  Color get cardColor {
-    if (isAmoled) return AppColors.amoledCard;
-    return isDark ? AppColors.cardDark : AppColors.cardLight;
-  }
-
-  Color get borderColor {
-    if (isAmoled) return AppColors.amoledBorder;
-    return isDark ? AppColors.borderDark : AppColors.borderLight;
-  }
-
-  Color get primaryTextColor =>
-      isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-
-  Color get secondaryTextColor =>
-      isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+  bool get isAmoled => Theme.of(this).scaffoldBackgroundColor == AppColors.amoledBackground;
+  Color get cardColor => isAmoled ? AppColors.amoledCard : (isDark ? AppColors.cardDark : AppColors.cardLight);
+  Color get borderColor => isAmoled ? AppColors.amoledBorder : (isDark ? AppColors.borderDark : AppColors.borderLight);
+  Color get primaryTextColor => isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+  Color get secondaryTextColor => isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
 }
 
 class AppTheme {
-  // NurVerse premium typography system.
-  // Normal app text is locked to 16sp.
-  // Headings are deliberately restrained for a clean mobile hierarchy.
-  // Blue is reserved for headings/titles and important UI emphasis.
-  // Body text stays neutral for comfortable reading.
-  // Quran Arabic/translation controls remain feature-specific.
   static const TextTheme _lightTextTheme = TextTheme(
     displayLarge: TextStyle(color: AppColors.seaBlueDark, fontSize: 22, height: 1.25, fontWeight: FontWeight.w700),
     displayMedium: TextStyle(color: AppColors.seaBlueDark, fontSize: 21, height: 1.3, fontWeight: FontWeight.w700),
@@ -145,7 +118,11 @@ class AppTheme {
         surface: card,
         onSurface: textPrimary,
       ),
+      // Global Latin/numeric typeface: Roboto supplies normal digits, while
+      // Bengali/Arabic glyphs fall back automatically when Roboto lacks them.
+      fontFamily: 'Roboto',
       fontFamilyFallback: const [
+        'Noto Sans Bengali',
         'NotoNaskhArabic',
         'Noto Naskh Arabic',
         'Noto Sans Arabic',
@@ -182,18 +159,9 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: card,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.button),
-          borderSide: BorderSide(color: border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.button),
-          borderSide: BorderSide(color: border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.button),
-          borderSide: BorderSide(color: primary, width: 1.5),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.button), borderSide: BorderSide(color: border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.button), borderSide: BorderSide(color: border)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.button), borderSide: BorderSide(color: primary, width: 1.5)),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
@@ -205,41 +173,41 @@ class AppTheme {
   }
 
   static ThemeData get lightTheme => _theme(
-        brightness: Brightness.light,
-        background: AppColors.backgroundLight,
-        card: AppColors.cardLight,
-        border: AppColors.borderLight,
-        primary: AppColors.seaBlueDark,
-        secondary: AppColors.seaBlue,
-        textTheme: _lightTextTheme,
-        textPrimary: AppColors.textPrimaryLight,
-        textSecondary: AppColors.textSecondaryLight,
-        appBarBackground: AppColors.backgroundLight,
-      );
+    brightness: Brightness.light,
+    background: AppColors.backgroundLight,
+    card: AppColors.cardLight,
+    border: AppColors.borderLight,
+    primary: AppColors.seaBlueDark,
+    secondary: AppColors.seaBlue,
+    textTheme: _lightTextTheme,
+    textPrimary: AppColors.textPrimaryLight,
+    textSecondary: AppColors.textSecondaryLight,
+    appBarBackground: AppColors.backgroundLight,
+  );
 
   static ThemeData get darkTheme => _theme(
-        brightness: Brightness.dark,
-        background: AppColors.backgroundDark,
-        card: AppColors.cardDark,
-        border: AppColors.borderDark,
-        primary: AppColors.seaBlue,
-        secondary: AppColors.softAqua,
-        textTheme: _darkTextTheme,
-        textPrimary: AppColors.textPrimaryDark,
-        textSecondary: AppColors.textSecondaryDark,
-        appBarBackground: AppColors.backgroundDark,
-      );
+    brightness: Brightness.dark,
+    background: AppColors.backgroundDark,
+    card: AppColors.cardDark,
+    border: AppColors.borderDark,
+    primary: AppColors.seaBlue,
+    secondary: AppColors.softAqua,
+    textTheme: _darkTextTheme,
+    textPrimary: AppColors.textPrimaryDark,
+    textSecondary: AppColors.textSecondaryDark,
+    appBarBackground: AppColors.backgroundDark,
+  );
 
   static ThemeData get amoledTheme => _theme(
-        brightness: Brightness.dark,
-        background: AppColors.amoledBackground,
-        card: AppColors.amoledCard,
-        border: AppColors.amoledBorder,
-        primary: AppColors.seaBlue,
-        secondary: AppColors.softAqua,
-        textTheme: _darkTextTheme,
-        textPrimary: AppColors.textPrimaryDark,
-        textSecondary: AppColors.textSecondaryDark,
-        appBarBackground: AppColors.amoledBackground,
-      );
+    brightness: Brightness.dark,
+    background: AppColors.amoledBackground,
+    card: AppColors.amoledCard,
+    border: AppColors.amoledBorder,
+    primary: AppColors.seaBlue,
+    secondary: AppColors.softAqua,
+    textTheme: _darkTextTheme,
+    textPrimary: AppColors.textPrimaryDark,
+    textSecondary: AppColors.textSecondaryDark,
+    appBarBackground: AppColors.amoledBackground,
+  );
 }
