@@ -55,6 +55,9 @@ flutter:
     - family: IndoPakQuran
       fonts:
         - asset: assets/fonts/IndoPakQuran.ttf
+    - family: NotoNaskhArabic
+      fonts:
+        - asset: assets/fonts/NotoNaskhArabic-Regular.ttf
 
   assets:
     - assets/fonts/
