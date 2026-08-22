@@ -242,9 +242,9 @@ class TopHeader extends StatelessWidget {
                         maxLines: 1,
                         style: theme.textTheme.bodyLarge?.copyWith(
                           fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.15,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0,
+                          fontFeatures: const <FontFeature>[],
                         ),
                       ),
                     ),
