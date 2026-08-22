@@ -1,7 +1,10 @@
-import 'dart:async';
+import 'simple_home_screen_v10.dart';
 
-import 'package:flutter/material.dart';
-import 'package:hijri/hijri_calendar.dart';
-import 'package:provider/provider.dart';
-
-import '../controllers/prayer_controller.dart';
+/// V11 entry point.
+///
+/// V11 currently reuses the complete, compiling V10 implementation rather
+/// than keeping a broken/truncated duplicate. This keeps the Home architecture
+/// stable while the visual hero can be evolved safely in one place.
+class SimpleHomeScreenV11 extends SimpleHomeScreenV10 {
+  const SimpleHomeScreenV11({super.key, super.onNavigateTab});
+}
