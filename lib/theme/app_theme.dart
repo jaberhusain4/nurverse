@@ -102,12 +102,6 @@ class AppTheme {
     required Color textSecondary,
     required Color appBarBackground,
   }) {
-    // Roboto is the global Latin/numeric typeface. Bengali and Arabic glyphs
-    // automatically fall back to the listed script fonts. Keeping this at the
-    // ThemeData level makes every ordinary Text widget use the same digit
-    // family without modifying each screen individually.
-    final globalTextTheme = textTheme.apply(fontFamily: 'Roboto');
-
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
@@ -124,17 +118,12 @@ class AppTheme {
         surface: card,
         onSurface: textPrimary,
       ),
-      fontFamily: 'Roboto',
-      fontFamilyFallback: const [
-        'Noto Sans Bengali',
-        'NotoNaskhArabic',
-        'Noto Naskh Arabic',
-        'Noto Sans Arabic',
-        'sans-serif',
-        'serif',
-      ],
-      textTheme: globalTextTheme,
-      primaryTextTheme: globalTextTheme,
+      // Intentionally no fontFamily/fontFamilyFallback here.
+      // Flutter will use the platform's normal system sans-serif font,
+      // including its native numeric glyphs. Individual screens may still
+      // opt into a script-specific font when needed.
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: appBarBackground,
         foregroundColor: primary,
@@ -142,7 +131,7 @@ class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         iconTheme: IconThemeData(color: primary),
-        titleTextStyle: const TextStyle(fontFamily: 'Roboto', fontSize: 20, height: 1.3, fontWeight: FontWeight.w700),
+        titleTextStyle: TextStyle(color: primary, fontSize: 20, height: 1.3, fontWeight: FontWeight.w700),
       ),
       cardTheme: CardThemeData(
         color: card,
@@ -171,7 +160,7 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: card,
-        contentTextStyle: TextStyle(fontFamily: 'Roboto', color: textPrimary, fontSize: 16, height: 1.5),
+        contentTextStyle: TextStyle(color: textPrimary, fontSize: 16, height: 1.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
