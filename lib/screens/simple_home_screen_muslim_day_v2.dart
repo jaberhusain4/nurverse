@@ -37,25 +37,12 @@ class SimpleHomeScreenMuslimDayV2 extends StatefulWidget {
 
 class _SimpleHomeScreenMuslimDayV2State
     extends State<SimpleHomeScreenMuslimDayV2> {
-  Timer? _clockTimer;
-  DateTime _now = DateTime.now();
   Map<String, dynamic>? _lastRead;
 
   @override
   void initState() {
     super.initState();
-    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() => _now = DateTime.now());
-      }
-    });
     _loadLastRead();
-  }
-
-  @override
-  void dispose() {
-    _clockTimer?.cancel();
-    super.dispose();
   }
 
   Future<void> _loadLastRead() async {
@@ -130,21 +117,6 @@ class _SimpleHomeScreenMuslimDayV2State
     return '$day $month $year';
   }
 
-  String _countdown(DateTime? target) {
-    if (target == null) {
-      return '--:--:--';
-    }
-    final difference = target.difference(_now);
-    if (difference.isNegative) {
-      return '00:00:00';
-    }
-    final total = difference.inSeconds;
-    final hours = total ~/ 3600;
-    final minutes = (total % 3600) ~/ 60;
-    final seconds = total % 60;
-    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
   List<Map<String, dynamic>> _fivePrayers(PrayerController controller) {
     const keys = <String>['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     final result = <Map<String, dynamic>>[];
@@ -167,12 +139,6 @@ class _SimpleHomeScreenMuslimDayV2State
       }
     }
     return result;
-  }
-
-  String _prayerName(Map<String, dynamic> prayer, String lang) {
-    return lang == 'en'
-        ? '${prayer['name'] ?? ''}'
-        : '${prayer['nameBn'] ?? prayer['name'] ?? ''}';
   }
 
   String _time(dynamic value) => value == null ? '--' : '$value';
@@ -218,7 +184,7 @@ class _SimpleHomeScreenMuslimDayV2State
                 nextPrayerTime: _time(controller.nextPrayerTime),
                 sunrise: _time(controller.sunriseTime),
                 sunset: _time(controller.sunsetTime),
-                countdown: _countdown(controller.currentPrayerEnd),
+                countdown: controller.timeRemainingForNextPrayer,
               ),
               const SizedBox(height: 20),
               Row(
@@ -370,7 +336,7 @@ class _DominantPrayerCard extends StatelessWidget {
   final String hijri;
   final String gregorian;
   final String prayerName;
-  final DateTime? prayerEnd;
+  final String prayerEnd;
   final String nextPrayer;
   final String nextPrayerTime;
   final String sunrise;
@@ -378,6 +344,8 @@ class _DominantPrayerCard extends StatelessWidget {
   final String countdown;
 
   String _tr(String bn, String en) => lang == 'en' ? en : bn;
+
+  bool get _hasPrayerEnd => prayerEnd.trim().isNotEmpty && prayerEnd != '--:--';
 
   @override
   Widget build(BuildContext context) {
@@ -472,9 +440,9 @@ class _DominantPrayerCard extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            prayerEnd == null
-                ? '$nextPrayer  •  $nextPrayerTime'
-                : _tr('ওয়াক্ত শেষ হবে', 'Waqt ends in'),
+            _hasPrayerEnd
+                ? _tr('ওয়াক্ত শেষ হবে', 'Waqt ends in')
+                : '$nextPrayer  •  $nextPrayerTime',
             style: TextStyle(
               color: muted,
               fontSize: 13.5,
@@ -483,7 +451,7 @@ class _DominantPrayerCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            countdown,
+            countdown.trim().isEmpty ? '--:--:--' : countdown,
             style: TextStyle(
               color: text,
               fontSize: 28,
@@ -492,12 +460,12 @@ class _DominantPrayerCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 7),
-          if (prayerEnd == null)
+          if (!_hasPrayerEnd)
             Text(
               _tr('পরবর্তী সালাত', 'Next prayer'),
               style: TextStyle(color: muted, fontSize: 11.5),
             ),
-          if (prayerEnd == null)
+          if (!_hasPrayerEnd)
             Text(
               '$nextPrayer  •  $nextPrayerTime',
               style: TextStyle(
