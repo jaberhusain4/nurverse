@@ -602,6 +602,45 @@ class RuqyahDetailScreen extends StatefulWidget {
   State<RuqyahDetailScreen> createState() => _RuqyahDetailScreenState();
 }
 
+class _RuqyahWaqfMarker extends StatelessWidget {
+  const _RuqyahWaqfMarker();
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return SizedBox(
+      width: 22,
+      height: 22,
+      child: CustomPaint(
+        painter: _RuqyahWaqfPainter(primary),
+      ),
+    );
+  }
+}
+
+class _RuqyahWaqfPainter extends CustomPainter {
+  final Color color;
+  const _RuqyahWaqfPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.shortestSide * 0.40;
+    final ring = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+    final dot = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, radius, ring);
+    canvas.drawCircle(center, radius * 0.28, dot);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RuqyahWaqfPainter oldDelegate) => oldDelegate.color != color;
+}
+
 class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
   final _quran = QuranDataService.instance;
   bool _loadingQuran = false;
@@ -786,12 +825,11 @@ class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  TextSpan(
-                    text: '  ۝',
-                    style: TextStyle(
-                      color: primary,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
+                  const WidgetSpan(
+                    alignment: PlaceholderAlignment.middle,
+                    child: Padding(
+                      padding: EdgeInsetsDirectional.only(start: 4),
+                      child: _RuqyahWaqfMarker(),
                     ),
                   ),
                 ],
