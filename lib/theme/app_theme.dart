@@ -102,6 +102,12 @@ class AppTheme {
     required Color textSecondary,
     required Color appBarBackground,
   }) {
+    // Roboto is the global Latin/numeric typeface. Bengali and Arabic glyphs
+    // automatically fall back to the listed script fonts. Keeping this at the
+    // ThemeData level makes every ordinary Text widget use the same digit
+    // family without modifying each screen individually.
+    final globalTextTheme = textTheme.apply(fontFamily: 'Roboto');
+
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
@@ -118,8 +124,6 @@ class AppTheme {
         surface: card,
         onSurface: textPrimary,
       ),
-      // Global Latin/numeric typeface: Roboto supplies normal digits, while
-      // Bengali/Arabic glyphs fall back automatically when Roboto lacks them.
       fontFamily: 'Roboto',
       fontFamilyFallback: const [
         'Noto Sans Bengali',
@@ -129,7 +133,8 @@ class AppTheme {
         'sans-serif',
         'serif',
       ],
-      textTheme: textTheme,
+      textTheme: globalTextTheme,
+      primaryTextTheme: globalTextTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: appBarBackground,
         foregroundColor: primary,
@@ -137,7 +142,7 @@ class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         iconTheme: IconThemeData(color: primary),
-        titleTextStyle: TextStyle(color: primary, fontSize: 20, height: 1.3, fontWeight: FontWeight.w700),
+        titleTextStyle: const TextStyle(fontFamily: 'Roboto', fontSize: 20, height: 1.3, fontWeight: FontWeight.w700),
       ),
       cardTheme: CardThemeData(
         color: card,
@@ -166,7 +171,7 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: card,
-        contentTextStyle: TextStyle(color: textPrimary, fontSize: 16, height: 1.5),
+        contentTextStyle: TextStyle(fontFamily: 'Roboto', color: textPrimary, fontSize: 16, height: 1.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
