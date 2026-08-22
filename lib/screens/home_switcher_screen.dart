@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/home_mode_service.dart';
 import 'home_screen.dart';
-import 'simple_home_screen_v10.dart';
+import 'simple_home_screen_prayer_v1.dart';
 
 class HomeSwitcherScreen extends StatefulWidget {
   const HomeSwitcherScreen({super.key, this.onNavigateTab});
@@ -34,9 +34,13 @@ class _HomeSwitcherScreenState extends State<HomeSwitcherScreen> {
         }
 
         if (_service.isSimple) {
-          return SimpleHomeScreenV10(onNavigateTab: widget.onNavigateTab);
+          return SimpleHomeScreenPrayerV1(
+            onNavigateTab: widget.onNavigateTab,
+          );
         }
 
+        // Informative Home is intentionally locked. Do not modify this path
+        // while redesigning Simple Home.
         return HomeScreen(onNavigateTab: widget.onNavigateTab);
       },
     );
