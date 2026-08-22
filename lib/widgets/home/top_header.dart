@@ -16,7 +16,7 @@ class TopHeader extends StatelessWidget {
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
 
-  const TopHeader({super.key, required this.greeting, required this.currentTime, this.onNotificationTap, this.onProfileTap});
+  const TopHeader({super.key, required this.greeting, this.currentTime = '', this.onNotificationTap, this.onProfileTap});
 
   String _subtitle(String language) {
     switch (language) {
@@ -235,7 +235,19 @@ class TopHeader extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
                     decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(14)),
-                    child: FittedBox(fit: BoxFit.scaleDown, child: Text(currentTime, maxLines: 1, style: theme.textTheme.bodyLarge?.copyWith(fontSize: 14.5, fontWeight: FontWeight.w700))),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        currentTime,
+                        maxLines: 1,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0,
+                          fontFeatures: const <FontFeature>[],
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),

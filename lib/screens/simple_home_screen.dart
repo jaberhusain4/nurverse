@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:hijri/hijri_calendar.dart';
@@ -61,10 +62,11 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
     await _loadLastRead();
   }
 
-  void _open(Widget screen) {
-    Navigator.of(context).push(
+  Future<void> _open(Widget screen) async {
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => screen),
     );
+    if (mounted) await _refreshHome();
   }
 
   String _label(String languageCode, String bn, String en) =>
@@ -118,6 +120,7 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
       'Dhul-Qadah',
       'Dhul-Hijjah',
     ];
+
     String digits(int value) {
       const bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
       return value.toString().split('').map((d) => bn[int.parse(d)]).join();
@@ -140,7 +143,8 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
         final nameBn = (prayer['nameBn'] ?? '').toString().toLowerCase();
         final match = name.contains(key.toLowerCase()) ||
             (key == 'Fajr' && nameBn.contains('ফজর')) ||
-            (key == 'Dhuhr' && (nameBn.contains('যোহর') || nameBn.contains('জুমু'))) ||
+            (key == 'Dhuhr' &&
+                (nameBn.contains('যোহর') || nameBn.contains('জুমু'))) ||
             (key == 'Asr' && nameBn.contains('আসর')) ||
             (key == 'Maghrib' && nameBn.contains('মাগরিব')) ||
             (key == 'Isha' && nameBn.contains('ইশা'));
@@ -166,83 +170,85 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
         (lastRead['surahName']?.toString() ?? '').trim().isNotEmpty;
 
     return Scaffold(
-      body: RefreshIndicator(
-        color: primary,
-        onRefresh: _refreshHome,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
-          ),
-          padding: const EdgeInsets.fromLTRB(14, 10, 14, 28),
-          children: [
-            _CalmHeader(
-              greeting: _greeting(languageCode),
-              date: _dateText(languageCode),
-              location: controller.currentLocationName,
-              languageCode: languageCode,
+      body: SafeArea(
+        top: true,
+        bottom: false,
+        child: RefreshIndicator(
+          color: primary,
+          onRefresh: _refreshHome,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
             ),
-            const SizedBox(height: 12),
-            _ScenicPrayerHero(
-              now: _now,
-              clock: _clock(),
-              currentPrayer: controller.currentPrayer,
-              nextPrayer: controller.nextPrayerName,
-              nextPrayerTime: controller.nextPrayerTime,
-              remaining: controller.timeRemainingForNextPrayer,
-              progress: controller.prayerProgress,
-              sunrise: controller.sunriseTime,
-              sunset: controller.sunsetTime,
-              languageCode: languageCode,
-            ),
-            const SizedBox(height: 12),
-            _PrayerStrip(prayers: prayers, languageCode: languageCode),
-            const SizedBox(height: 18),
-            _SectionTitle(
-              title: _label(languageCode, 'প্রয়োজনীয়', 'Essentials'),
-            ),
-            const SizedBox(height: 9),
-            _EssentialGrid(
-              languageCode: languageCode,
-              onQuran: () => widget.onNavigateTab?.call(2),
-              onHadith: () => widget.onNavigateTab?.call(3),
-              onQibla: () => _open(const QiblaScreen()),
-              onDua: () => _open(const DuaScreen()),
-              onTasbih: () => _open(const TasbihScreen()),
-              onNames: () => _open(const AsmaUlHusnaScreen()),
-            ),
-            if (hasLastRead) ...[
-              const SizedBox(height: 18),
-              _SectionTitle(
-                title: _label(languageCode, 'কুরআন চালিয়ে যান', 'Continue Quran'),
-              ),
-              const SizedBox(height: 9),
-              ContinueReadingCard(
-                surahName: lastRead!['surahName']?.toString() ?? '',
-                paraNo: lastRead!['paraNo'] is int
-                    ? lastRead!['paraNo'] as int
-                    : int.tryParse('${lastRead!['paraNo']}') ?? 1,
-                pageNo: lastRead!['pageNo'] is int
-                    ? lastRead!['pageNo'] as int
-                    : int.tryParse('${lastRead!['pageNo']}') ?? 1,
-                progress: ((lastRead!['progress'] is num
-                            ? (lastRead!['progress'] as num).toDouble()
-                            : 0.0)
-                        .clamp(0.0, 1.0))
-                    .toDouble(),
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 28),
+            children: [
+              _CalmHeader(
+                greeting: _greeting(languageCode),
+                date: _dateText(languageCode),
+                location: controller.currentLocationName,
                 languageCode: languageCode,
-                onTap: () => _open(
-                  const OnudhabonQuranScreen(openLastRead: true),
+              ),
+              const SizedBox(height: 12),
+              _ScenicPrayerHero(
+                now: _now,
+                clock: _clock(),
+                currentPrayer: controller.currentPrayer,
+                nextPrayer: controller.nextPrayerName,
+                nextPrayerTime: controller.nextPrayerTime,
+                remaining: controller.timeRemainingForNextPrayer,
+                progress: controller.prayerProgress,
+                sunrise: controller.sunriseTime,
+                sunset: controller.sunsetTime,
+                languageCode: languageCode,
+              ),
+              const SizedBox(height: 12),
+              _PrayerStrip(prayers: prayers, languageCode: languageCode),
+              const SizedBox(height: 18),
+              _SectionTitle(title: _label(languageCode, 'প্রয়োজনীয়', 'Essentials')),
+              const SizedBox(height: 9),
+              _EssentialGrid(
+                languageCode: languageCode,
+                onQuran: () => widget.onNavigateTab?.call(2),
+                onHadith: () => widget.onNavigateTab?.call(3),
+                onQibla: () => _open(const QiblaScreen()),
+                onDua: () => _open(const DuaScreen()),
+                onTasbih: () => _open(const TasbihScreen()),
+                onNames: () => _open(const AsmaUlHusnaScreen()),
+              ),
+              if (hasLastRead) ...[
+                const SizedBox(height: 18),
+                _SectionTitle(
+                  title: _label(languageCode, 'কুরআন চালিয়ে যান', 'Continue Quran'),
                 ),
+                const SizedBox(height: 9),
+                ContinueReadingCard(
+                  surahName: lastRead!['surahName']?.toString() ?? '',
+                  paraNo: lastRead!['paraNo'] is int
+                      ? lastRead!['paraNo'] as int
+                      : int.tryParse('${lastRead!['paraNo']}') ?? 1,
+                  pageNo: lastRead!['pageNo'] is int
+                      ? lastRead!['pageNo'] as int
+                      : int.tryParse('${lastRead!['pageNo']}') ?? 1,
+                  progress: ((lastRead!['progress'] is num
+                              ? (lastRead!['progress'] as num).toDouble()
+                              : 0.0)
+                          .clamp(0.0, 1.0))
+                      .toDouble(),
+                  languageCode: languageCode,
+                  onTap: () => _open(
+                    const OnudhabonQuranScreen(openLastRead: true),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 18),
+              _DateFooter(
+                englishDate: DateService.englishDate(),
+                sunrise: controller.sunriseTime,
+                sunset: controller.sunsetTime,
+                languageCode: languageCode,
               ),
             ],
-            const SizedBox(height: 18),
-            _DateFooter(
-              englishDate: DateService.englishDate(),
-              sunrise: controller.sunriseTime,
-              sunset: controller.sunsetTime,
-              languageCode: languageCode,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -279,22 +285,24 @@ class _CalmHeader extends StatelessWidget {
           greeting,
           style: theme.textTheme.titleLarge?.copyWith(
             fontSize: 21,
+            height: 1.15,
             fontWeight: FontWeight.w800,
             color: theme.colorScheme.primary,
           ),
         ),
-        const SizedBox(height: 3),
+        const SizedBox(height: 5),
         Row(
           children: [
-            Icon(Icons.location_on_rounded, size: 14, color: secondary),
-            const SizedBox(width: 4),
+            Icon(Icons.location_on_rounded, size: 16, color: secondary),
+            const SizedBox(width: 5),
             Expanded(
               child: Text(
                 city,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 13,
+                  fontSize: 13.5,
+                  height: 1.2,
                   color: secondary,
                 ),
               ),
@@ -305,7 +313,8 @@ class _CalmHeader extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 12.5,
+                fontSize: 13,
+                height: 1.2,
                 color: secondary,
               ),
             ),
@@ -353,9 +362,8 @@ class _ScenicPrayerHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
     final safeProgress = progress.clamp(0.0, 1.0).toDouble();
-    final p = _ScenePalette.forPhase(phase);
+    final palette = _ScenePalette.forPhase(phase);
 
     return Container(
       height: 318,
@@ -373,7 +381,9 @@ class _ScenicPrayerHero extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          CustomPaint(painter: _SkylinePainter(phase: phase, palette: p)),
+          CustomPaint(
+            painter: _SkylinePainter(phase: phase, palette: palette),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(19, 16, 19, 16),
             child: Column(
@@ -384,16 +394,16 @@ class _ScenicPrayerHero extends StatelessWidget {
                     Text(
                       _label('পরের সালাত', 'NEXT PRAYER'),
                       style: TextStyle(
-                        color: p.lightText.withValues(alpha: .82),
-                        fontSize: 10,
+                        color: palette.lightText.withValues(alpha: .88),
+                        fontSize: 11,
                         fontWeight: FontWeight.w800,
-                        letterSpacing: 1.3,
+                        letterSpacing: 1.2,
                       ),
                     ),
                     const Spacer(),
                     _PhasePill(
                       text: phase.label(languageCode),
-                      color: p.lightText,
+                      color: palette.lightText,
                     ),
                   ],
                 ),
@@ -403,18 +413,20 @@ class _ScenicPrayerHero extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: p.lightText,
+                    color: palette.lightText,
                     fontSize: 31,
+                    height: 1.05,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -.5,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   nextPrayerTime.isEmpty ? '--:--' : nextPrayerTime,
                   style: TextStyle(
-                    color: p.lightText.withValues(alpha: .92),
-                    fontSize: 14,
+                    color: palette.lightText.withValues(alpha: .94),
+                    fontSize: 14.5,
+                    height: 1.1,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -426,7 +438,7 @@ class _ScenicPrayerHero extends StatelessWidget {
                       child: Text(
                         remaining.isEmpty ? '--:--:--' : remaining,
                         style: TextStyle(
-                          color: p.lightText,
+                          color: palette.lightText,
                           fontSize: 38,
                           height: .95,
                           fontWeight: FontWeight.w300,
@@ -441,17 +453,18 @@ class _ScenicPrayerHero extends StatelessWidget {
                         Text(
                           _label('এখন', 'NOW'),
                           style: TextStyle(
-                            color: p.lightText.withValues(alpha: .62),
-                            fontSize: 9,
+                            color: palette.lightText.withValues(alpha: .68),
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
-                            letterSpacing: 1.1,
+                            letterSpacing: 1.0,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           clock,
                           style: TextStyle(
-                            color: p.lightText,
-                            fontSize: 14,
+                            color: palette.lightText,
+                            fontSize: 14.5,
                             fontWeight: FontWeight.w700,
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
@@ -466,9 +479,9 @@ class _ScenicPrayerHero extends StatelessWidget {
                   child: LinearProgressIndicator(
                     minHeight: 6,
                     value: safeProgress,
-                    backgroundColor: p.lightText.withValues(alpha: .16),
+                    backgroundColor: palette.lightText.withValues(alpha: .16),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Colors.white.withValues(alpha: .88),
+                      Colors.white.withValues(alpha: .90),
                     ),
                   ),
                 ),
@@ -478,19 +491,19 @@ class _ScenicPrayerHero extends StatelessWidget {
                     _HeroChip(
                       icon: Icons.mosque_rounded,
                       text: currentPrayer.isEmpty ? '--' : currentPrayer,
-                      color: p.lightText,
+                      color: palette.lightText,
                     ),
                     const Spacer(),
                     _HeroTimeChip(
                       label: _label('সূর্যোদয়', 'Sunrise'),
                       value: sunrise,
-                      color: p.lightText,
+                      color: palette.lightText,
                     ),
                     const SizedBox(width: 10),
                     _HeroTimeChip(
                       label: _label('সূর্যাস্ত', 'Sunset'),
                       value: sunset,
-                      color: p.lightText,
+                      color: palette.lightText,
                     ),
                   ],
                 ),
@@ -521,7 +534,9 @@ class _PrayerStrip extends StatelessWidget {
 
     return Row(
       children: List.generate(5, (index) {
-        final prayer = index < prayers.length ? prayers[index] : const <String, dynamic>{};
+        final prayer = index < prayers.length
+            ? prayers[index]
+            : const <String, dynamic>{};
         final active = prayer['isCurrent'] == true;
         final name = _name(prayer);
         final time = prayer['start']?.toString() ?? '--:--';
@@ -529,9 +544,11 @@ class _PrayerStrip extends StatelessWidget {
         return Expanded(
           child: Container(
             margin: EdgeInsets.only(left: index == 0 ? 0 : 4),
-            padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 3),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 3),
             decoration: BoxDecoration(
-              color: active ? primary.withValues(alpha: .10) : context.cardColor,
+              color: active
+                  ? primary.withValues(alpha: .10)
+                  : context.cardColor,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: active
@@ -548,17 +565,19 @@ class _PrayerStrip extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: active ? primary : secondary,
-                    fontSize: 11,
+                    fontSize: 11.5,
+                    height: 1.1,
                     fontWeight: active ? FontWeight.w800 : FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 4),
                 Text(
                   time,
                   maxLines: 1,
                   style: TextStyle(
                     color: active ? primary : context.primaryTextColor,
-                    fontSize: 10.5,
+                    fontSize: 11.5,
+                    height: 1.1,
                     fontWeight: FontWeight.w700,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
@@ -574,7 +593,6 @@ class _PrayerStrip extends StatelessWidget {
 
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.title});
-
   final String title;
 
   @override
@@ -582,9 +600,10 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontSize: 16,
-        fontWeight: FontWeight.w800,
-      ),
+            fontSize: 17,
+            height: 1.2,
+            fontWeight: FontWeight.w800,
+          ),
     );
   }
 }
@@ -629,7 +648,7 @@ class _EssentialGrid extends StatelessWidget {
         crossAxisCount: 3,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 1.35,
+        childAspectRatio: 1.30,
       ),
       itemBuilder: (context, index) => _EssentialTile(item: items[index]),
     );
@@ -638,7 +657,6 @@ class _EssentialGrid extends StatelessWidget {
 
 class _EssentialItem {
   const _EssentialItem(this.icon, this.title, this.onTap);
-
   final IconData icon;
   final String title;
   final VoidCallback onTap;
@@ -646,21 +664,23 @@ class _EssentialItem {
 
 class _EssentialTile extends StatelessWidget {
   const _EssentialTile({required this.item});
-
   final _EssentialItem item;
+
+  Color _itemColor(BuildContext context) {
+    const colors = [
+      AppColors.seaBlueDark,
+      AppColors.seaBlue,
+      Color(0xFF0F8FB6),
+      Color(0xFF2C7FB3),
+      Color(0xFF4A90B8),
+      AppColors.softAqua,
+    ];
+    return colors[item.icon.codePoint.abs() % colors.length];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final palette = <Color>[
-      primary,
-      const Color(0xFF14B8A6),
-      const Color(0xFFF59E0B),
-      const Color(0xFF8B5CF6),
-      const Color(0xFFEC4899),
-      const Color(0xFF06B6D4),
-    ];
-    final color = palette[item.title.hashCode.abs() % palette.length];
+    final color = _itemColor(context);
 
     return Material(
       color: Colors.transparent,
@@ -671,21 +691,21 @@ class _EssentialTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: color.withValues(alpha: .075),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: color.withValues(alpha: .12)),
+            border: Border.all(color: color.withValues(alpha: .14)),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 34,
-                height: 34,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: .13),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(item.icon, color: color, size: 19),
+                child: Icon(item.icon, color: color, size: 20),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 6),
               Text(
                 item.title,
                 maxLines: 1,
@@ -693,7 +713,8 @@ class _EssentialTile extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: context.primaryTextColor,
-                  fontSize: 11.5,
+                  fontSize: 12.5,
+                  height: 1.1,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -724,11 +745,13 @@ class _DateFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     final secondary = context.secondaryTextColor;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
         color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: .06)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: .06),
+        ),
       ),
       child: Row(
         children: [
@@ -737,17 +760,25 @@ class _DateFooter extends StatelessWidget {
               '${_label('তারিখ', 'Date')}: $englishDate',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: secondary, fontSize: 11),
+              style: TextStyle(color: secondary, fontSize: 11.5),
             ),
           ),
           Text(
             '${_label('সূর্যোদয়', 'Sunrise')} $sunrise',
-            style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: secondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(width: 8),
           Text(
             '${_label('সূর্যাস্ত', 'Sunset')} $sunset',
-            style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: secondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -757,7 +788,6 @@ class _DateFooter extends StatelessWidget {
 
 class _PhasePill extends StatelessWidget {
   const _PhasePill({required this.text, required this.color});
-
   final String text;
   final Color color;
 
@@ -772,7 +802,7 @@ class _PhasePill extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w800),
+        style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -780,7 +810,6 @@ class _PhasePill extends StatelessWidget {
 
 class _HeroChip extends StatelessWidget {
   const _HeroChip({required this.icon, required this.text, required this.color});
-
   final IconData icon;
   final String text;
   final Color color;
@@ -796,13 +825,13 @@ class _HeroChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color),
+          Icon(icon, size: 15, color: color),
           const SizedBox(width: 5),
           Text(
             text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w800),
+            style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -812,7 +841,6 @@ class _HeroChip extends StatelessWidget {
 
 class _HeroTimeChip extends StatelessWidget {
   const _HeroTimeChip({required this.label, required this.value, required this.color});
-
   final String label;
   final String value;
   final Color color;
@@ -824,11 +852,12 @@ class _HeroTimeChip extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(color: color.withValues(alpha: .55), fontSize: 8.5, fontWeight: FontWeight.w700),
+          style: TextStyle(color: color.withValues(alpha: .60), fontSize: 10, fontWeight: FontWeight.w700),
         ),
+        const SizedBox(height: 1),
         Text(
           value,
-          style: TextStyle(color: color.withValues(alpha: .88), fontSize: 10.5, fontWeight: FontWeight.w800),
+          style: TextStyle(color: color.withValues(alpha: .92), fontSize: 11.5, fontWeight: FontWeight.w800),
         ),
       ],
     );
@@ -883,35 +912,35 @@ class _ScenePalette {
     switch (phase) {
       case _DayPhase.dawn:
         return const _ScenePalette(
-          sky: [Color(0xFF9FC8E9), Color(0xFFF7D7B3)],
-          horizon: Color(0xFF6F8C9B),
-          ground: Color(0xFF3E5A63),
+          sky: [Color(0xFF8FC7E8), Color(0xFFF4D3B3)],
+          horizon: Color(0xFF648B9B),
+          ground: Color(0xFF294E5D),
           lightText: Colors.white,
-          sun: Color(0xFFFFE1A4),
+          sun: Color(0xFFFFE2AC),
         );
       case _DayPhase.day:
         return const _ScenePalette(
-          sky: [Color(0xFF55B8E6), Color(0xFFE6F4FA)],
-          horizon: Color(0xFF5C9A7A),
-          ground: Color(0xFF2E5C43),
+          sky: [Color(0xFF43B7E8), Color(0xFFE8F7FC)],
+          horizon: Color(0xFF4E91A8),
+          ground: Color(0xFF24546A),
           lightText: Colors.white,
-          sun: Color(0xFFFFF0B0),
+          sun: Color(0xFFFFEEB1),
         );
       case _DayPhase.sunset:
         return const _ScenePalette(
-          sky: [Color(0xFFEF9B79), Color(0xFFF5C7A5)],
-          horizon: Color(0xFF7B5D69),
-          ground: Color(0xFF3E4253),
+          sky: [Color(0xFFE48C78), Color(0xFFF4C8AE)],
+          horizon: Color(0xFF626D85),
+          ground: Color(0xFF32435A),
           lightText: Colors.white,
-          sun: Color(0xFFFFD18A),
+          sun: Color(0xFFFFD394),
         );
       case _DayPhase.night:
         return const _ScenePalette(
-          sky: [Color(0xFF0D2340), Color(0xFF172F4D)],
-          horizon: Color(0xFF27374B),
-          ground: Color(0xFF0A1524),
+          sky: [Color(0xFF0B2039), Color(0xFF15334F)],
+          horizon: Color(0xFF263C50),
+          ground: Color(0xFF081422),
           lightText: Colors.white,
-          sun: Color(0xFFE8F0F8),
+          sun: Color(0xFFE7F0FA),
         );
     }
   }
@@ -936,8 +965,13 @@ class _SkylinePainter extends CustomPainter {
 
     final celestial = Paint()..color = palette.sun;
     final cx = size.width * (phase == _DayPhase.night ? .77 : .73);
-    final cy = size.height * (phase == _DayPhase.dawn ? .29 : phase == _DayPhase.sunset ? .38 : .22);
-    canvas.drawCircle(Offset(cx, cy), phase == _DayPhase.night ? 21 : 24, celestial);
+    final cy = size.height *
+        (phase == _DayPhase.dawn ? .29 : phase == _DayPhase.sunset ? .38 : .22);
+    canvas.drawCircle(
+      Offset(cx, cy),
+      phase == _DayPhase.night ? 21 : 24,
+      celestial,
+    );
 
     if (phase == _DayPhase.night) {
       final star = Paint()..color = Colors.white.withValues(alpha: .70);
@@ -950,15 +984,29 @@ class _SkylinePainter extends CustomPainter {
         Offset(.70, .31),
       ];
       for (final p in points) {
-        canvas.drawCircle(Offset(size.width * p.dx, size.height * p.dy), 1.3, star);
+        canvas.drawCircle(
+          Offset(size.width * p.dx, size.height * p.dy),
+          1.3,
+          star,
+        );
       }
     }
 
     final hill = Paint()..color = palette.horizon.withValues(alpha: .78);
     final hillPath = Path()
       ..moveTo(0, size.height * .67)
-      ..quadraticBezierTo(size.width * .20, size.height * .53, size.width * .42, size.height * .65)
-      ..quadraticBezierTo(size.width * .63, size.height * .46, size.width, size.height * .64)
+      ..quadraticBezierTo(
+        size.width * .20,
+        size.height * .53,
+        size.width * .42,
+        size.height * .65,
+      )
+      ..quadraticBezierTo(
+        size.width * .63,
+        size.height * .46,
+        size.width,
+        size.height * .64,
+      )
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();
@@ -967,38 +1015,90 @@ class _SkylinePainter extends CustomPainter {
     final ground = Paint()..color = palette.ground;
     final groundPath = Path()
       ..moveTo(0, size.height * .72)
-      ..quadraticBezierTo(size.width * .30, size.height * .64, size.width * .53, size.height * .73)
-      ..quadraticBezierTo(size.width * .77, size.height * .65, size.width, size.height * .72)
+      ..quadraticBezierTo(
+        size.width * .30,
+        size.height * .64,
+        size.width * .53,
+        size.height * .73,
+      )
+      ..quadraticBezierTo(
+        size.width * .77,
+        size.height * .65,
+        size.width,
+        size.height * .72,
+      )
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();
     canvas.drawPath(groundPath, ground);
 
     final mosque = Paint()..color = palette.ground.withValues(alpha: .98);
-    final base = Rect.fromLTWH(size.width * .30, size.height * .63, size.width * .40, size.height * .22);
+    final base = Rect.fromLTWH(
+      size.width * .30,
+      size.height * .63,
+      size.width * .40,
+      size.height * .22,
+    );
     canvas.drawRect(base, mosque);
 
     final dome = Path()
       ..moveTo(size.width * .37, size.height * .64)
-      ..quadraticBezierTo(size.width * .50, size.height * .48, size.width * .63, size.height * .64)
+      ..quadraticBezierTo(
+        size.width * .50,
+        size.height * .48,
+        size.width * .63,
+        size.height * .64,
+      )
       ..close();
     canvas.drawPath(dome, mosque);
 
-    final centerTower = Rect.fromLTWH(size.width * .477, size.height * .46, size.width * .045, size.height * .18);
+    final centerTower = Rect.fromLTWH(
+      size.width * .477,
+      size.height * .46,
+      size.width * .045,
+      size.height * .18,
+    );
     canvas.drawRect(centerTower, mosque);
-    canvas.drawCircle(Offset(size.width * .50, size.height * .45), 4, mosque);
+    canvas.drawCircle(
+      Offset(size.width * .50, size.height * .45),
+      4,
+      mosque,
+    );
 
-    final minaret1 = Rect.fromLTWH(size.width * .27, size.height * .54, size.width * .028, size.height * .32);
-    final minaret2 = Rect.fromLTWH(size.width * .70, size.height * .54, size.width * .028, size.height * .32);
+    final minaret1 = Rect.fromLTWH(
+      size.width * .27,
+      size.height * .54,
+      size.width * .028,
+      size.height * .32,
+    );
+    final minaret2 = Rect.fromLTWH(
+      size.width * .70,
+      size.height * .54,
+      size.width * .028,
+      size.height * .32,
+    );
     canvas.drawRect(minaret1, mosque);
     canvas.drawRect(minaret2, mosque);
-    canvas.drawCircle(Offset(size.width * .284, size.height * .535), 3, mosque);
-    canvas.drawCircle(Offset(size.width * .714, size.height * .535), 3, mosque);
+    canvas.drawCircle(
+      Offset(size.width * .284, size.height * .535),
+      3,
+      mosque,
+    );
+    canvas.drawCircle(
+      Offset(size.width * .714, size.height * .535),
+      3,
+      mosque,
+    );
 
     final doorway = Paint()..color = palette.sky.last.withValues(alpha: .35);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(size.width * .478, size.height * .74, size.width * .044, size.height * .11),
+        Rect.fromLTWH(
+          size.width * .478,
+          size.height * .74,
+          size.width * .044,
+          size.height * .11,
+        ),
         const Radius.circular(20),
       ),
       doorway,

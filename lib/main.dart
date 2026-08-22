@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
-import 'firebase_options.dart';
 
+import 'firebase_options.dart';
 import 'localization/app_localizations.dart';
 import 'theme/app_theme.dart';
 import 'providers/settings_provider.dart';
@@ -27,11 +27,7 @@ import 'screens/more_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await AuthService.instance.initializeGoogleSignIn();
   await initializeDateFormatting('en');
   await initializeDateFormatting('bn');
@@ -113,9 +109,6 @@ class NurVerseApp extends StatelessWidget {
       ),
     );
   }
-
-  // ignore: unused_element
-  static TextStyle? _keepTextStylesAlive(TextTheme textTheme) => textTheme.bodyMedium;
 }
 
 class MainNavigationScreen extends StatefulWidget {
@@ -159,11 +152,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _onNavigateTab(int index) {
-    if (index < 0 || index > 5 || _selectedIndex == index) return;
+    if (index < 0 || index > 5) return;
+    if (_selectedIndex == index) return;
     setState(() => _selectedIndex = index);
   }
 
-  void _handleSystemBack() {
+  Future<void> _handleSystemBack() async {
     if (!mounted) return;
     if (_selectedIndex != 0) {
       setState(() => _selectedIndex = 0);
@@ -174,6 +168,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final settings = context.watch<SettingsProvider>();
+
     final screens = [
       HomeScreen(onNavigateTab: _onNavigateTab),
       const PrayerScreen(),
@@ -183,10 +178,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       const MoreScreen(),
     ];
 
-    return PopScope<void>(
+    return PopScope<Object?>(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) _handleSystemBack();
+        if (didPop) return;
+        _handleSystemBack();
       },
       child: Scaffold(
         body: IndexedStack(
