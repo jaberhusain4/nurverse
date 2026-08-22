@@ -789,6 +789,7 @@ class _RuqyahDetailScreenState extends State<RuqyahDetailScreen> {
                   const TextSpan(
                     text: '  ۝',
                     style: TextStyle(
+                      fontFamily: 'NotoNaskhArabic',
                       fontSize: 13.5,
                       fontWeight: FontWeight.w800,
                     ),
