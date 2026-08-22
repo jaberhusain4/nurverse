@@ -121,7 +121,7 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
   SettingsProvider? _settingsProvider;
-  final GlobalKey<HomeScreenState> _homeKey = GlobalKey<HomeScreenState>();
+  final GlobalKey<SimpleHomeScreenV5State> _homeKey = GlobalKey<SimpleHomeScreenV5State>();
 
   @override
   void didChangeDependencies() {
