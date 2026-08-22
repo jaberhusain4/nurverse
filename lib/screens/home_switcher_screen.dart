@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/home_mode_service.dart';
 import 'home_screen.dart';
-import 'simple_home_screen_muslim_day_v2.dart';
+import 'simple_home_screen_muslim_day_v3.dart';
 
 class HomeSwitcherScreen extends StatefulWidget {
   const HomeSwitcherScreen({super.key, this.onNavigateTab});
@@ -34,7 +34,7 @@ class _HomeSwitcherScreenState extends State<HomeSwitcherScreen> {
         }
 
         if (_service.isSimple) {
-          return SimpleHomeScreenMuslimDayV2(
+          return SimpleHomeScreenMuslimDayV3(
             onNavigateTab: widget.onNavigateTab,
           );
         }
