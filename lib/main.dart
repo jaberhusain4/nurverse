@@ -121,7 +121,6 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
   SettingsProvider? _settingsProvider;
-  final GlobalKey<SimpleHomeScreenV5State> _homeKey = GlobalKey<SimpleHomeScreenV5State>();
 
   @override
   void didChangeDependencies() {
@@ -162,9 +161,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (!mounted) return;
     if (_selectedIndex != 0) {
       setState(() => _selectedIndex = 0);
-      return;
     }
-    await _homeKey.currentState?.refreshForBack();
   }
 
   @override
@@ -173,7 +170,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final settings = context.watch<SettingsProvider>();
 
     final screens = [
-      HomeScreen(key: _homeKey, onNavigateTab: _onNavigateTab),
+      HomeScreen(onNavigateTab: _onNavigateTab),
       const PrayerScreen(),
       const QuranScreen(),
       const HadithScreen(),
