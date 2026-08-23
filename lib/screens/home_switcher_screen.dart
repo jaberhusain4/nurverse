@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/home_mode_service.dart';
 import 'home_screen.dart';
-import 'simple_home_screen_nurverse.dart';
+import 'simple_home_screen_nova.dart';
 
 class HomeSwitcherScreen extends StatefulWidget {
   const HomeSwitcherScreen({super.key, this.onNavigateTab});
@@ -34,7 +34,7 @@ class _HomeSwitcherScreenState extends State<HomeSwitcherScreen> {
         }
 
         if (_service.isSimple) {
-          return SimpleHomeScreenNurVerse(
+          return SimpleHomeScreenNova(
             onNavigateTab: widget.onNavigateTab,
           );
         }
