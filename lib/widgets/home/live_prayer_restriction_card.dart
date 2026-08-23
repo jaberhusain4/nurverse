@@ -19,8 +19,7 @@ class LivePrayerRestrictionCard extends StatefulWidget {
       _LivePrayerRestrictionCardState();
 }
 
-class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard>
-    with WidgetsBindingObserver {
+class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
   final PrayerEngineService _engine = const PrayerEngineService();
   Timer? _timer;
   DateTime _now = DateTime.now();
@@ -28,39 +27,15 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _startTimer();
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       setState(() => _now = DateTime.now());
     });
   }
 
-  void _stopTimer() {
-    _timer?.cancel();
-    _timer = null;
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _now = DateTime.now();
-      _startTimer();
-    } else if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
-      _stopTimer();
-    }
-  }
-
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _stopTimer();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -70,208 +45,192 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard>
     return bn;
   }
 
-  String _formatClock(DateTime value) {
+  String _clock(DateTime value) {
     final hour = value.hour % 12 == 0 ? 12 : value.hour % 12;
-    final minute = value.minute.toString().padLeft(2, '0');
-    final period = value.hour >= 12 ? 'PM' : 'AM';
-    return '$hour:$minute $period';
+    return '$hour:${value.minute.toString().padLeft(2, '0')} ${value.hour >= 12 ? 'PM' : 'AM'}';
   }
 
   String _countdown(Duration duration) {
     final seconds = duration.inSeconds.clamp(0, 7 * 86400);
     final hours = seconds ~/ 3600;
     final minutes = (seconds % 3600) ~/ 60;
-    final remainingSeconds = seconds % 60;
+    final secs = seconds % 60;
     if (hours > 0) {
-      return '$hours:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
     }
-    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
+    return '$minutes:${secs.toString().padLeft(2, '0')}';
   }
 
-  List<List<DateTime>> _windowsForDate(
+  List<PrayerTimeWindow> _todayAndTomorrowWindows(
     PrayerController controller,
     DateTime date,
   ) {
     final position = controller.position;
     if (position == null) return const [];
 
-    final times = _engine.getPrayerTimes(
-      position: position,
-      date: date,
-      config: controller.calculationConfig,
-    );
-
-    final sunrise = times.sunrise;
-    final dhuhr = times.dhuhr;
-    final maghrib = times.maghrib;
-    if (sunrise == null || dhuhr == null || maghrib == null) {
-      return const [];
-    }
-
-    return [
-      [sunrise, sunrise.add(const Duration(minutes: 15))],
-      [dhuhr.subtract(const Duration(minutes: 10)), dhuhr],
-      [maghrib.subtract(const Duration(minutes: 15)), maghrib],
-    ];
+    final windows = _engine
+        .specialTimeWindows(
+          position: position,
+          date: date,
+          config: controller.calculationConfig,
+        )
+        .values
+        .toList()
+      ..sort((a, b) => a.start.compareTo(b.start));
+    return windows;
   }
 
-  List<DateTime>? _findWindow(PrayerController controller) {
-    final controllerStart = controller.prohibitedStart;
-    final controllerEnd = controller.prohibitedEnd;
-    if (controllerStart != null && controllerEnd != null) {
-      if (!_now.isBefore(controllerStart) && _now.isBefore(controllerEnd)) {
-        return [controllerStart, controllerEnd];
-      }
-      if (_now.isBefore(controllerStart)) {
-        return [controllerStart, controllerEnd];
-      }
-    }
-
-    final today = DateTime(_now.year, _now.month, _now.day);
-    for (final window in _windowsForDate(controller, today)) {
-      if (!_now.isBefore(window[0]) && _now.isBefore(window[1])) {
-        return window;
-      }
-      if (_now.isBefore(window[0])) {
+  PrayerTimeWindow? _activeWindow(PrayerController controller) {
+    for (final window in _todayAndTomorrowWindows(controller, DateTime(_now.year, _now.month, _now.day))) {
+      if (!_now.isBefore(window.start) && _now.isBefore(window.end)) {
         return window;
       }
     }
-
-    final tomorrow = today.add(const Duration(days: 1));
-    final tomorrowWindows = _windowsForDate(controller, tomorrow);
-    if (tomorrowWindows.isNotEmpty) return tomorrowWindows.first;
-
     return null;
+  }
+
+  PrayerTimeWindow? _nextWindow(PrayerController controller) {
+    final today = DateTime(_now.year, _now.month, _now.day);
+    final candidates = <PrayerTimeWindow>[
+      ..._todayAndTomorrowWindows(controller, today),
+      ..._todayAndTomorrowWindows(controller, today.add(const Duration(days: 1))),
+    ];
+    candidates.sort((a, b) => a.start.compareTo(b.start));
+    for (final window in candidates) {
+      if (_now.isBefore(window.start)) return window;
+    }
+    return null;
+  }
+
+  String _name(PrayerTimeWindow window) {
+    final hour = window.start.hour;
+    if (hour < 10) {
+      return _label('সূর্যোদয়ের নিষিদ্ধ সময়', 'Sunrise prohibited time', 'وقت النهي عند الشروق');
+    }
+    if (hour >= 16) {
+      return _label('সূর্যাস্তের নিষিদ্ধ সময়', 'Sunset prohibited time', 'وقت النهي عند الغروب');
+    }
+    return _label('জাওয়ালের নিষিদ্ধ সময়', 'Zawal prohibited time', 'وقت النهي عند الزوال');
+  }
+
+  Widget _timerRow({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required String timer,
+    required bool active,
+  }) {
+    final theme = Theme.of(context);
+    final accent = active ? theme.colorScheme.error : theme.colorScheme.primary;
+    final foreground = theme.colorScheme.onSurface;
+    final secondary = theme.textTheme.bodySmall?.color ?? foreground.withValues(alpha: .7);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: active ? .09 : .055),
+        borderRadius: BorderRadius.circular(14),
+        border: active ? Border.all(color: accent.withValues(alpha: .22)) : null,
+      ),
+      child: Row(
+        children: [
+          Icon(active ? Icons.timer_rounded : Icons.schedule_rounded, color: accent, size: 20),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(color: foreground, fontSize: 12.5, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 3),
+                Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                timer,
+                style: TextStyle(
+                  color: accent,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                active
+                    ? _label('শেষ হবে', 'ends', 'ينتهي')
+                    : _label('শুরু হবে', 'starts', 'يبدأ'),
+                style: TextStyle(color: secondary, fontSize: 9.5, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<PrayerController>();
-    final window = _findWindow(controller);
+    final active = _activeWindow(controller);
+    final next = _nextWindow(controller);
 
-    if (window == null) return const SizedBox.shrink();
-
-    final start = window[0];
-    final end = window[1];
-    final active = !_now.isBefore(start) && _now.isBefore(end);
-    final target = active ? end : start;
-    final duration = target.difference(_now);
-
-    if (duration.isNegative) return const SizedBox.shrink();
+    if (active == null && next == null) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    final warningColor = theme.colorScheme.error;
-    final primary = theme.colorScheme.primary;
     final foreground = theme.colorScheme.onSurface;
-    final secondary = theme.textTheme.bodySmall?.color?.withValues(alpha: .72) ??
-        foreground.withValues(alpha: .72);
-    final accent = active ? warningColor : primary;
-
-    final title = active
-        ? _label('এখন নিষিদ্ধ সময় চলছে', 'Forbidden prayer time is active', 'وقت النهي قائم الآن')
-        : _label('পরবর্তী নিষিদ্ধ সময়', 'Next prohibited time', 'وقت النهي التالي');
-    final countdownLabel = active
-        ? _label('শেষ হতে বাকি', 'Ends in', 'ينتهي خلال')
-        : _label('শুরু হতে বাকি', 'Starts in', 'يبدأ خلال');
-
-    final total = end.difference(start).inMilliseconds;
-    // Determinate progress only. A null value makes LinearProgressIndicator
-    // run its indeterminate loading animation, which is not wanted here.
-    final progress = active && total > 0
-        ? (1 - duration.inMilliseconds / total).clamp(0.0, 1.0)
-        : 0.0;
+    final secondary = theme.textTheme.bodySmall?.color ?? foreground.withValues(alpha: .7);
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: .055),
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accent.withValues(alpha: .18)),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: .11)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: accent.withValues(alpha: .10),
-                ),
-                child: Icon(
-                  active ? Icons.warning_amber_rounded : Icons.schedule_rounded,
-                  color: accent,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 10),
+              Icon(Icons.block_rounded, size: 21, color: active != null ? theme.colorScheme.error : theme.colorScheme.primary),
+              const SizedBox(width: 8),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: active ? warningColor : foreground,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${_formatClock(start)} → ${_formatClock(end)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: secondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  _label('নিষিদ্ধ সময়', 'Prohibited Prayer Times', 'أوقات النهي'),
+                  style: TextStyle(color: foreground, fontSize: 16, fontWeight: FontWeight.w800),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    countdownLabel,
-                    style: TextStyle(
-                      color: secondary,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _countdown(duration),
-                    style: TextStyle(
-                      color: accent,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w900,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
           const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 5,
-              backgroundColor: accent.withValues(alpha: .10),
-              valueColor: AlwaysStoppedAnimation<Color>(accent),
+          if (active != null)
+            _timerRow(
+              context: context,
+              title: _label('বর্তমান নিষিদ্ধ সময়', 'Current prohibited time', 'وقت النهي الحالي'),
+              subtitle: '${_name(active)} • ${_clock(active.start)} – ${_clock(active.end)}',
+              timer: _countdown(active.end.difference(_now)),
+              active: true,
             ),
+          if (active != null && next != null) const SizedBox(height: 8),
+          if (next != null)
+            _timerRow(
+              context: context,
+              title: _label('পরবর্তী নিষিদ্ধ সময়', 'Next prohibited time', 'وقت النهي التالي'),
+              subtitle: '${_name(next)} • ${_clock(next.start)} – ${_clock(next.end)}',
+              timer: _countdown(next.start.difference(_now)),
+              active: false,
+            ),
+          const SizedBox(height: 7),
+          Text(
+            _label('সময়গুলো প্রতি সেকেন্ডে লাইভ আপডেট হচ্ছে।', 'Times update live every second.', 'الأوقات تتحدث مباشرة كل ثانية.'),
+            style: TextStyle(color: secondary, fontSize: 10.5),
           ),
         ],
       ),
