@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/settings_provider.dart';
+import '../providers/text_scale_provider.dart';
 import '../theme/app_theme.dart';
 import 'home_mode_settings_screen.dart';
 
@@ -11,6 +12,7 @@ class SettingsHubScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
+    final textScale = context.watch<TextScaleProvider>();
     final isEnglish = settings.isEnglish;
 
     return Scaffold(
@@ -57,7 +59,17 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.palette_outlined,
                 isEnglish ? 'Theme' : 'থিম',
                 _themeLabel(settings),
-                () => _themeSheet(context, settings),
+                () => _choiceSheet(
+                  context,
+                  isEnglish ? 'Theme' : 'থিম',
+                  const ['system', 'light', 'dark', 'amoled'],
+                  (value) async {
+                    if (value == 'system') await settings.setSystemTheme();
+                    if (value == 'light') await settings.setLightTheme();
+                    if (value == 'dark') await settings.setDarkTheme();
+                    if (value == 'amoled') await settings.setAmoledTheme();
+                  },
+                ),
               ),
               _divider(),
               _tile(
@@ -65,17 +77,20 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.language_rounded,
                 isEnglish ? 'Language' : 'ভাষা',
                 isEnglish ? 'English' : 'বাংলা',
-                () => _languageSheet(context, settings),
+                () => _choiceSheet(
+                  context,
+                  isEnglish ? 'Language' : 'ভাষা',
+                  const ['bn', 'en'],
+                  settings.setLanguage,
+                ),
               ),
               _divider(),
               _tile(
                 context,
                 Icons.text_fields_rounded,
-                isEnglish ? 'Reading & Font' : 'পাঠ ও ফন্ট',
-                isEnglish
-                    ? 'Quran and translation text size'
-                    : 'কুরআন ও অনুবাদের লেখার আকার',
-                () => _readingSheet(context, settings),
+                isEnglish ? 'App Text Size' : 'অ্যাপের লেখা',
+                _textSizeLabel(textScale.level, isEnglish),
+                () => _textSizeSheet(context, textScale),
               ),
               _divider(),
               _switchTile(
@@ -83,8 +98,8 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.timer_outlined,
                 isEnglish ? 'Show seconds' : 'সেকেন্ড দেখান',
                 isEnglish
-                    ? 'Show seconds where a live clock supports it'
-                    : 'যেখানে লাইভ ঘড়ি আছে সেখানে সেকেন্ড দেখাবে',
+                    ? 'Show seconds where supported'
+                    : 'যেখানে সমর্থিত সেখানে সেকেন্ড দেখাবে',
                 settings.showSeconds,
                 settings.toggleShowSeconds,
               ),
@@ -94,7 +109,7 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.vibration_rounded,
                 isEnglish ? 'Vibration' : 'ভাইব্রেশন',
                 isEnglish
-                    ? 'Allow haptic feedback for supported actions'
+                    ? 'Allow supported haptic feedback'
                     : 'সমর্থিত action-এ haptic feedback চালু রাখুন',
                 settings.vibrationEnabled,
                 settings.toggleVibration,
@@ -112,7 +127,7 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.calculate_outlined,
                 isEnglish ? 'Prayer Calculation' : 'সালাতের হিসাব পদ্ধতি',
                 settings.calculationMethod,
-                () => _selectionSheet(
+                () => _choiceSheet(
                   context,
                   isEnglish ? 'Prayer Calculation' : 'সালাতের হিসাব পদ্ধতি',
                   SettingsProvider.calculationMethods,
@@ -125,11 +140,11 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.mosque_outlined,
                 isEnglish ? 'Madhhab' : 'মাযহাব',
                 settings.madhhab,
-                () => _selectionSheet(
+                () => _choiceSheet(
                   context,
                   isEnglish ? 'Madhhab' : 'মাযহাব',
                   SettingsProvider.madhabs,
-                  settings.setMadhab,
+                  settings.setMadhhab,
                 ),
               ),
               _divider(),
@@ -138,7 +153,7 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.notifications_active_outlined,
                 isEnglish ? 'Adhan Notifications' : 'আজান নোটিফিকেশন',
                 isEnglish
-                    ? 'Enable prayer-time notification scheduling'
+                    ? 'Enable prayer-time notifications'
                     : 'সালাতের সময়ের নোটিফিকেশন চালু রাখুন',
                 settings.isAdhanNotificationEnabled,
                 settings.toggleAdhanNotification,
@@ -157,7 +172,7 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.access_time_rounded,
                 isEnglish ? 'Jamaat Times' : 'জামাতের সময়',
                 isEnglish
-                    ? 'Set your local Jamaat times'
+                    ? 'Set local Jamaat times'
                     : 'নিজের এলাকার জামাতের সময় সেট করুন',
                 () => _jamaatDialog(context, settings),
               ),
@@ -174,7 +189,7 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.format_size_rounded,
                 isEnglish ? 'Quran Reading' : 'কুরআন পড়ার সেটিংস',
                 '${settings.quranFontSize.round()} / ${settings.translationFontSize.round()}',
-                () => _readingSheet(context, settings),
+                () => _quranFontSheet(context, settings),
               ),
               _divider(),
               _tile(
@@ -182,7 +197,7 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.translate_rounded,
                 isEnglish ? 'Translation' : 'অনুবাদ',
                 settings.quranTranslation,
-                () => _selectionSheet(
+                () => _choiceSheet(
                   context,
                   isEnglish ? 'Translation' : 'অনুবাদ',
                   const ['Bangla', 'English'],
@@ -195,7 +210,7 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.font_download_outlined,
                 isEnglish ? 'Arabic Font' : 'আরবি ফন্ট',
                 settings.quranArabicFont,
-                () => _selectionSheet(
+                () => _choiceSheet(
                   context,
                   isEnglish ? 'Arabic Font' : 'আরবি ফন্ট',
                   const ['Default', 'Amiri', 'Scheherazade'],
@@ -208,7 +223,7 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.skip_next_rounded,
                 isEnglish ? 'Auto-play next' : 'পরেরটি স্বয়ংক্রিয় চালান',
                 isEnglish
-                    ? 'Continue with the next audio item when supported'
+                    ? 'Continue with the next supported audio item'
                     : 'সমর্থিত অডিওতে পরেরটি স্বয়ংক্রিয়ভাবে চালাবে',
                 settings.autoPlayNext,
                 settings.toggleAutoPlayNext,
@@ -247,7 +262,12 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.calendar_month_outlined,
                 isEnglish ? 'Date Preferences' : 'তারিখের পছন্দ',
                 _dateLabel(settings, isEnglish),
-                () => _dateSheet(context, settings),
+                () => _choiceSheet(
+                  context,
+                  isEnglish ? 'Date Preferences' : 'তারিখের পছন্দ',
+                  const ['hijri', 'gregorian', 'both'],
+                  settings.setDateDisplayPreference,
+                ),
               ),
             ],
           ),
@@ -262,7 +282,7 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.restart_alt_rounded,
                 isEnglish ? 'Reset Settings' : 'সেটিংস রিসেট',
                 isEnglish
-                    ? 'Restore all configurable preferences'
+                    ? 'Restore configurable preferences'
                     : 'সব configurable preference ডিফল্টে ফিরিয়ে দিন',
                 () => _resetDialog(context, settings),
               ),
@@ -272,20 +292,18 @@ class SettingsHubScreen extends StatelessWidget {
                 Icons.info_outline_rounded,
                 isEnglish ? 'About NurVerse' : 'NurVerse সম্পর্কে',
                 'Version 1.0.0',
-                () {
-                  showAboutDialog(
-                    context: context,
-                    applicationName: 'NurVerse',
-                    applicationVersion: '1.0.0',
-                    children: [
-                      Text(
-                        isEnglish
-                            ? 'A calm companion for everyday Islamic practice.'
-                            : 'প্রতিদিনের ইসলামিক জীবনের শান্ত সঙ্গী।',
-                      ),
-                    ],
-                  );
-                },
+                () => showAboutDialog(
+                  context: context,
+                  applicationName: 'NurVerse',
+                  applicationVersion: '1.0.0',
+                  children: [
+                    Text(
+                      isEnglish
+                          ? 'A calm companion for everyday Islamic practice.'
+                          : 'প্রতিদিনের ইসলামিক জীবনের শান্ত সঙ্গী।',
+                    ),
+                  ],
+                ),
               ),
               _divider(),
               _tile(
@@ -295,13 +313,11 @@ class SettingsHubScreen extends StatelessWidget {
                 isEnglish
                     ? 'Libraries used by NurVerse'
                     : 'NurVerse-এ ব্যবহৃত লাইব্রেরি',
-                () {
-                  showLicensePage(
-                    context: context,
-                    applicationName: 'NurVerse',
-                    applicationVersion: '1.0.0',
-                  );
-                },
+                () => showLicensePage(
+                  context: context,
+                  applicationName: 'NurVerse',
+                  applicationVersion: '1.0.0',
+                ),
               ),
             ],
           ),
@@ -474,7 +490,6 @@ class SettingsHubScreen extends StatelessWidget {
 
   String _themeLabel(SettingsProvider settings) {
     if (settings.isAmoledMode) return 'AMOLED Black';
-
     switch (settings.themeMode) {
       case ThemeMode.light:
         return settings.isEnglish ? 'Light Mode' : 'লাইট মোড';
@@ -485,15 +500,26 @@ class SettingsHubScreen extends StatelessWidget {
     }
   }
 
+  String _textSizeLabel(int level, bool isEnglish) {
+    switch (level) {
+      case 0:
+        return isEnglish ? 'Small' : 'ছোট';
+      case 2:
+        return isEnglish ? 'Large' : 'বড়';
+      case 3:
+        return isEnglish ? 'Very Large' : 'খুব বড়';
+      default:
+        return isEnglish ? 'Normal' : 'স্বাভাবিক';
+    }
+  }
+
   String _adjustmentLabel(SettingsProvider settings, bool isEnglish) {
     final active = settings.prayerAdjustments.entries
         .where((entry) => entry.value != 0)
         .toList();
-
     if (active.isEmpty) {
       return isEnglish ? 'No adjustments' : 'কোনো সমন্বয় নেই';
     }
-
     final first = active.first;
     final sign = first.value > 0 ? '+' : '';
     return '${first.key}: $sign${first.value} min';
@@ -510,102 +536,164 @@ class SettingsHubScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _themeSheet(
-    BuildContext context,
-    SettingsProvider settings,
-  ) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) => _choiceList(
-        sheetContext,
-        settings.isEnglish ? 'Theme' : 'থিম',
-        const ['system', 'light', 'dark', 'amoled'],
-        (value) async {
-          if (value == 'system') await settings.setSystemTheme();
-          if (value == 'light') await settings.setLightTheme();
-          if (value == 'dark') await settings.setDarkTheme();
-          if (value == 'amoled') await settings.setAmoledTheme();
-          if (sheetContext.mounted) Navigator.pop(sheetContext);
-        },
-      ),
-    );
-  }
-
-  Future<void> _languageSheet(
-    BuildContext context,
-    SettingsProvider settings,
-  ) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) => _choiceList(
-        sheetContext,
-        settings.isEnglish ? 'Language' : 'ভাষা',
-        const ['bn', 'en'],
-        (value) async {
-          await settings.setLanguage(value);
-          if (sheetContext.mounted) Navigator.pop(sheetContext);
-        },
-      ),
-    );
-  }
-
-  Future<void> _selectionSheet(
+  Future<void> _choiceSheet(
     BuildContext context,
     String title,
     List<String> options,
-    ValueChanged<String> onSelected,
+    Future<void> Function(String) onSelected,
   ) async {
     await showModalBottomSheet<void>(
       context: context,
-      builder: (sheetContext) => _choiceList(
-        sheetContext,
-        title,
-        options,
-        (value) async {
-          onSelected(value);
-          if (sheetContext.mounted) Navigator.pop(sheetContext);
-        },
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Theme.of(sheetContext).dividerColor,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: Theme.of(sheetContext)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 10),
+              ...options.map(
+                (option) => ListTile(
+                  title: Text(option),
+                  onTap: () async {
+                    await onSelected(option);
+                    if (sheetContext.mounted) Navigator.pop(sheetContext);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _choiceList(
+  Future<void> _textSizeSheet(
     BuildContext context,
-    String title,
-    List<String> options,
-    Future<void> Function(String) onTap,
+    TextScaleProvider provider,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Theme.of(sheetContext).dividerColor,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                provider.level == 0 ? 'App Text Size' : 'App Text Size',
+                style: Theme.of(sheetContext)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Choose the text size used across NurVerse. Quran-specific text remains controlled separately.',
+                style: Theme.of(sheetContext).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 14),
+              for (int level = 0; level < 4; level++) ...[
+                _textSizeOption(sheetContext, provider, level),
+                if (level != 3) const SizedBox(height: 7),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _textSizeOption(
+    BuildContext context,
+    TextScaleProvider provider,
+    int level,
   ) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final selected = provider.level == level;
+    final label = switch (level) {
+      0 => 'Small',
+      1 => 'Normal',
+      2 => 'Large',
+      _ => 'Very Large',
+    };
+    final scale = switch (level) {
+      0 => TextScaleProvider.smallScale,
+      1 => TextScaleProvider.normalScale,
+      2 => TextScaleProvider.largeScale,
+      _ => TextScaleProvider.extraLargeScale,
+    };
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => provider.setLevel(level),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.seaBlue.withValues(alpha: .10)
+              : Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected
+                ? AppColors.seaBlue.withValues(alpha: .35)
+                : Theme.of(context).dividerColor,
+          ),
+        ),
+        child: Row(
           children: [
-            Center(
-              child: Container(
-                width: 42,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).dividerColor,
-                  borderRadius: BorderRadius.circular(9),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14 * scale,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
             Text(
-              title,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 10),
-            ...options.map(
-              (option) => ListTile(
-                title: Text(option),
-                onTap: () => onTap(option),
+              '${(scale * 100).round()}%',
+              style: const TextStyle(
+                color: AppColors.seaBlue,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
               ),
+            ),
+            const SizedBox(width: 10),
+            Icon(
+              selected
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_off_rounded,
+              color: selected ? AppColors.seaBlue : context.secondaryTextColor,
             ),
           ],
         ),
@@ -613,7 +701,7 @@ class SettingsHubScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _readingSheet(
+  Future<void> _quranFontSheet(
     BuildContext context,
     SettingsProvider settings,
   ) async {
@@ -627,14 +715,14 @@ class SettingsHubScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                settings.isEnglish ? 'Reading & Font' : 'পাঠ ও ফন্ট',
+                settings.isEnglish ? 'Quran Reading' : 'কুরআন পড়ার সেটিংস',
                 style: Theme.of(sheetContext)
                     .textTheme
                     .titleLarge
                     ?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 18),
-              _slider(
+              _quranSlider(
                 sheetContext,
                 settings.isEnglish ? 'Quran Arabic' : 'কুরআন আরবি',
                 settings.quranFontSize,
@@ -643,7 +731,7 @@ class SettingsHubScreen extends StatelessWidget {
                 settings.updateQuranFontSize,
               ),
               const SizedBox(height: 14),
-              _slider(
+              _quranSlider(
                 sheetContext,
                 settings.isEnglish ? 'Translation' : 'অনুবাদ',
                 settings.translationFontSize,
@@ -658,7 +746,7 @@ class SettingsHubScreen extends StatelessWidget {
     );
   }
 
-  Widget _slider(
+  Widget _quranSlider(
     BuildContext context,
     String title,
     double value,
@@ -672,10 +760,7 @@ class SettingsHubScreen extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
+              child: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
             ),
             Text(
               value.round().toString(),
@@ -701,8 +786,7 @@ class SettingsHubScreen extends StatelessWidget {
     BuildContext context,
     SettingsProvider settings,
   ) async {
-    final prayerKeys = const ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-
+    const prayerKeys = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -753,7 +837,7 @@ class SettingsHubScreen extends StatelessWidget {
     BuildContext context,
     SettingsProvider settings,
   ) async {
-    final prayerKeys = const ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    const prayerKeys = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     final controllers = <String, TextEditingController>{
       for (final prayer in prayerKeys)
         prayer: TextEditingController(text: settings.getJamaat(prayer)),
@@ -786,10 +870,7 @@ class SettingsHubScreen extends StatelessWidget {
           FilledButton(
             onPressed: () async {
               for (final prayer in prayerKeys) {
-                await settings.setJamaatTime(
-                  prayer,
-                  controllers[prayer]!.text,
-                );
+                await settings.setJamaatTime(prayer, controllers[prayer]!.text);
               }
               if (dialogContext.mounted) Navigator.pop(dialogContext);
             },
@@ -798,7 +879,6 @@ class SettingsHubScreen extends StatelessWidget {
         ],
       ),
     );
-
     for (final controller in controllers.values) {
       controller.dispose();
     }
@@ -814,66 +894,45 @@ class SettingsHubScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Consumer<SettingsProvider>(
-            builder: (context, current, _) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    current.isEnglish ? 'Daily Content' : 'দৈনিক কনটেন্ট',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.w900),
-                  ),
-                  const SizedBox(height: 12),
-                  _switchTile(
-                    context,
-                    Icons.menu_book_outlined,
-                    current.isEnglish ? 'Daily Ayah' : 'দৈনিক আয়াত',
-                    '',
-                    current.showDailyAyah,
-                    (value) => current.setDailyContentPreferences(ayah: value),
-                  ),
-                  _switchTile(
-                    context,
-                    Icons.auto_stories_outlined,
-                    current.isEnglish ? 'Daily Hadith' : 'দৈনিক হাদিস',
-                    '',
-                    current.showDailyHadith,
-                    (value) => current.setDailyContentPreferences(hadith: value),
-                  ),
-                  _switchTile(
-                    context,
-                    Icons.volunteer_activism_outlined,
-                    current.isEnglish ? 'Daily Dua' : 'দৈনিক দোয়া',
-                    '',
-                    current.showDailyDua,
-                    (value) => current.setDailyContentPreferences(dua: value),
-                  ),
-                ],
-              );
-            },
+            builder: (context, current, _) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  current.isEnglish ? 'Daily Content' : 'দৈনিক কনটেন্ট',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 12),
+                _switchTile(
+                  context,
+                  Icons.menu_book_outlined,
+                  current.isEnglish ? 'Daily Ayah' : 'দৈনিক আয়াত',
+                  '',
+                  current.showDailyAyah,
+                  (value) => current.setDailyContentPreferences(ayah: value),
+                ),
+                _switchTile(
+                  context,
+                  Icons.auto_stories_outlined,
+                  current.isEnglish ? 'Daily Hadith' : 'দৈনিক হাদিস',
+                  '',
+                  current.showDailyHadith,
+                  (value) => current.setDailyContentPreferences(hadith: value),
+                ),
+                _switchTile(
+                  context,
+                  Icons.volunteer_activism_outlined,
+                  current.isEnglish ? 'Daily Dua' : 'দৈনিক দোয়া',
+                  '',
+                  current.showDailyDua,
+                  (value) => current.setDailyContentPreferences(dua: value),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
-
-  Future<void> _dateSheet(
-    BuildContext context,
-    SettingsProvider settings,
-  ) async {
-    final isEnglish = settings.isEnglish;
-    await showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) => _choiceList(
-        sheetContext,
-        isEnglish ? 'Date Preferences' : 'তারিখের পছন্দ',
-        const ['hijri', 'gregorian', 'both'],
-        (value) async {
-          await settings.setDateDisplayPreference(value);
-          if (sheetContext.mounted) Navigator.pop(sheetContext);
-        },
       ),
     );
   }
@@ -885,9 +944,7 @@ class SettingsHubScreen extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(
-          settings.isEnglish ? 'Reset settings?' : 'সেটিংস রিসেট করবেন?',
-        ),
+        title: Text(settings.isEnglish ? 'Reset settings?' : 'সেটিংস রিসেট করবেন?'),
         content: Text(
           settings.isEnglish
               ? 'All saved preferences will return to their default values.'
