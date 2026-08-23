@@ -16,6 +16,7 @@ import '../widgets/home/continue_reading_card.dart';
 import '../widgets/home/daily_content_section.dart';
 import '../widgets/home/islamic_info_card.dart';
 import '../widgets/home/islamic_ornamental_background.dart';
+import '../widgets/home/prayer_special_times_card.dart';
 import '../widgets/home/prayer_timeline_card.dart';
 import '../widgets/home/top_header.dart';
 import 'prayer/jamaat_settings_screen.dart';
@@ -360,6 +361,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       sunset: sunTimes?.sunsetString ?? controller.sunsetTime,
                       languageCode: languageCode,
                       onRefresh: controller.refreshLocation,
+                    ),
+                    const SizedBox(height: 10),
+                    PrayerSpecialTimesCard(
+                      languageCode: languageCode,
+                      prohibitedStart: controller.prohibitedStart,
+                      prohibitedEnd: controller.prohibitedEnd,
+                      makruhStart: controller.makruhStart,
+                      makruhEnd: controller.makruhEnd,
                     ),
                     const SizedBox(height: 14),
                     _continueReading(context, languageCode),
