@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'live_prayer_restriction_card.dart';
 import '../prayer/prayer_special_times_detail_card.dart';
 
-/// Shared special-times entry point.
+/// Informative Home / Prayer compatibility entry point.
 ///
-/// Home passes the live calculated windows and receives the compact live card.
-/// Prayer screens omit the window arguments and receive the detailed schedule.
+/// Informative Home supplies all four calculated window arguments and receives
+/// the compact live Home card. Prayer screens omit those arguments and receive
+/// the detailed special-times card.
 class PrayerSpecialTimesCard extends StatelessWidget {
   final String languageCode;
   final DateTime? prohibitedStart;
@@ -25,13 +26,16 @@ class PrayerSpecialTimesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasWindowArguments = prohibitedStart != null ||
-        prohibitedEnd != null ||
-        makruhStart != null ||
+    final hasCompleteHomeWindowInput =
+        prohibitedStart != null &&
+        prohibitedEnd != null &&
+        makruhStart != null &&
         makruhEnd != null;
 
-    return hasWindowArguments
-        ? LivePrayerRestrictionCard(languageCode: languageCode)
-        : PrayerSpecialTimesDetailCard(languageCode: languageCode);
+    if (hasCompleteHomeWindowInput) {
+      return LivePrayerRestrictionCard(languageCode: languageCode);
+    }
+
+    return PrayerSpecialTimesDetailCard(languageCode: languageCode);
   }
 }
