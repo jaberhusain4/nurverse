@@ -23,7 +23,7 @@ import 'screens/prayer_screen.dart';
 import 'screens/quran_screen.dart';
 import 'screens/hadith_screen.dart';
 import 'screens/tools_screen.dart';
-import 'screens/settings_hub_screen.dart';
+import 'screens/settings_hub_screen_v2.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -175,7 +175,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       const QuranScreen(),
       const HadithScreen(),
       const ToolsScreen(),
-      const SettingsHubScreen(),
+      const SettingsHubScreenV2(),
     ];
 
     return PopScope<Object?>(
