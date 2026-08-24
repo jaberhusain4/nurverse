@@ -1,0 +1,27 @@
+name: Final localization check
+
+on:
+  push:
+    branches: [fix/app-wide-localization]
+  pull_request:
+    branches: [fix/prayer-completion-tracker]
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Analyze project
+        run: |
+          flutter --version
+          flutter pub get
+          flutter analyze --no-fatal-warnings
