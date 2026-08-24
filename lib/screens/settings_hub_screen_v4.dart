@@ -80,7 +80,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
               isEnglish ? 'English' : isArabic ? 'العربية' : 'বাংলা',
               () => _showChoiceSheet(
                 context,
-                isEnglish ? 'Language' : 'ভাষা',
+                isEnglish ? 'Language' : isArabic ? 'اللغة' : 'ভাষা',
                 const ['bn', 'en', 'ar'],
                 settings.setLanguage,
                 selectedValue: settings.languageCode,
@@ -704,7 +704,9 @@ class SettingsHubScreenV4 extends StatelessWidget {
   String _quranTranslationLabel(String translation, bool isEnglish) => _choiceLabel(translation, isEnglish);
 
   Future<void> _showChoiceSheet(BuildContext context, String title, List<String> options, Future<void> Function(String) onSelected, {String? selectedValue}) async {
-    final isEnglish = Localizations.localeOf(context).languageCode == 'en';
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final isEnglish = languageCode == 'en';
+    final isArabic = languageCode == 'ar';
     await showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -720,7 +722,15 @@ class SettingsHubScreenV4 extends StatelessWidget {
             ),
             ...options.map(
               (option) => ListTile(
-                title: Text(_choiceLabel(option, isEnglish)),
+                title: Text(
+                  options.length == 3 && options.contains('bn') && options.contains('en') && options.contains('ar')
+                      ? (isEnglish
+                          ? ({'bn': 'Bangla', 'en': 'English', 'ar': 'Arabic'}[option] ?? option)
+                          : (isArabic
+                              ? ({'bn': 'البنغالية', 'en': 'الإنجليزية', 'ar': 'العربية'}[option] ?? option)
+                              : ({'bn': 'বাংলা', 'en': 'ইংরেজি', 'ar': 'আরবি'}[option] ?? option)))
+                      : _choiceLabel(option, isEnglish),
+                ),
                 trailing: option == selectedValue
                     ? const Icon(Icons.check_circle_rounded, color: AppColors.seaBlue)
                     : null,
