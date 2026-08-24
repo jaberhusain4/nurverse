@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../localization/app_localizations.dart';
+import '../../localization/app_localizations.dart';
 import '../../models/quran_surah.dart';
 import '../../services/last_read_service.dart';
 import '../../services/quran_data_service.dart';
@@ -228,6 +229,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   }
   Future<void> _showReadingSettings() async {
     final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -337,6 +339,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
 
   Future<void> _showTranslationPicker(QuranSurah surah) async {
     final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
     final selected = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -374,6 +377,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   }
 
   Future<void> _showTafsirPicker(QuranSurah surah) async {
+    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
     final selected = await showModalBottomSheet<String>(
       context: context,
@@ -447,6 +451,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
 
   Widget _buildPicker(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
     final query = _query.trim().toLowerCase();
     final surahs = _data.surahList.where((surah) {
       if (query.isEmpty) return true;
@@ -489,6 +494,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   }
 
   Widget _introCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
     return Container(
@@ -538,6 +544,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
 
   Widget _surahTile(BuildContext context, QuranSurah surah) {
     final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
     final meta = QuranMetadataService.forSurah(surah.number);
     final typeLabel = surah.type == 'meccan' ? _localizedText(l10n, 'মাক্কী', 'Meccan', 'مكية') : _localizedText(l10n, 'মাদানী', 'Medinan', 'مدنية');
@@ -581,6 +588,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   }
 
   Widget _buildReader(BuildContext context, QuranSurah surah) {
+    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
     return Column(
       children: [
@@ -655,9 +663,10 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
 
   Widget _surahHeader(BuildContext context, QuranSurah surah) {
     final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
     final meta = QuranMetadataService.forSurah(surah.number);
-    final typeLabel = surah.type == 'meccan' ? 'মাক্কী' : 'মাদানী';
+    final typeLabel = surah.type == 'meccan' ? _localizedText(l10n, 'মাক্কী', 'Meccan', 'مكية') : _localizedText(l10n, 'মাদানী', 'Medinan', 'مدنية');
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 2),
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
