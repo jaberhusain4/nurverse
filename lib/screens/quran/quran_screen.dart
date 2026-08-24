@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../localization/app_localizations.dart';
 import '../../theme/app_theme.dart';
 import 'hafezi_quran_screen.dart';
 import 'onudhabon_quran_screen.dart';
@@ -9,12 +10,14 @@ class QuranScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
         children: [
           Text(
-            'কুরআন',
+            l10n.tr('কুরআন', 'Quran'),
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontSize: 16,
               height: 1.2,
@@ -23,15 +26,25 @@ class QuranScreen extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            'দুইভাবে কুরআন পড়ুন — হিফজ ও অনুধাবন।',
+            l10n.isArabic
+                ? 'اقرأ القرآن بطريقتين — الحفظ والتدبر.'
+                : l10n.tr(
+                    'দুইভাবে কুরআন পড়ুন — হিফজ ও অনুধাবন।',
+                    'Read the Quran in two ways — Hifz and study.',
+                  ),
             style: TextStyle(fontSize: 13, color: context.secondaryTextColor),
           ),
           const SizedBox(height: 18),
           _QuranModeCard(
             icon: Icons.menu_book_rounded,
-            title: 'Hafezi Quran',
-            subtitle: '১৫ লাইনের অফলাইন হাফেজি/ইন্দো-পাক স্টাইল মুসহাফ',
-            badge: '15 লাইন',
+            title: l10n.isArabic ? 'القرآن الحفظي' : l10n.tr('হিফজি কুরআন', 'Hafezi Quran'),
+            subtitle: l10n.isArabic
+                ? 'مصحف إندوباك من 15 سطرًا يعمل دون اتصال بالإنترنت'
+                : l10n.tr(
+                    '১৫ লাইনের অফলাইন হাফেজি/ইন্দো-পাক স্টাইল মুসহাফ',
+                    '15-line offline Hifz/Indo-Pak style Mushaf',
+                  ),
+            badge: l10n.isArabic ? '15 سطرًا' : l10n.tr('15 লাইন', '15 lines'),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const HafeziQuranScreen()),
             ),
@@ -39,9 +52,14 @@ class QuranScreen extends StatelessWidget {
           const SizedBox(height: 12),
           _QuranModeCard(
             icon: Icons.auto_stories_rounded,
-            title: 'Onudhabon Quran',
-            subtitle: 'সূরা, আয়াত, বাংলা অনুবাদ ও অনুধাবনভিত্তিক পাঠ',
-            badge: 'পড়ার জন্য খুলুন',
+            title: l10n.isArabic ? 'قرآن التدبر' : l10n.tr('অনুধাবন কুরআন', 'Onudhabon Quran'),
+            subtitle: l10n.isArabic
+                ? 'السورة والآيات والترجمة والدراسة المتدبرة'
+                : l10n.tr(
+                    'সূরা, আয়াত, বাংলা অনুবাদ ও অনুধাবনভিত্তিক পাঠ',
+                    'Surah, Ayah, translation and study-based reading',
+                  ),
+            badge: l10n.isArabic ? 'افتح للقراءة' : l10n.tr('পড়ার জন্য খুলুন', 'Open to read'),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const OnudhabonQuranScreen(
