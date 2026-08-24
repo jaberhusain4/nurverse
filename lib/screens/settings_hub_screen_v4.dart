@@ -4,8 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../localization/app_localizations.dart';
 
-import '../localization/app_localizations.dart';
-
 import '../providers/premium_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/text_scale_provider.dart';
@@ -81,11 +79,11 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _tile(
               context,
               Icons.language_rounded,
-              isEnglish ? 'Language' : isArabic ? 'اللغة' : 'ভাষা',
-              isEnglish ? 'English' : isArabic ? 'العربية' : 'বাংলা',
+              l10n.language,
+              isArabic ? l10n.arabic : (isEnglish ? l10n.english : l10n.bangla),
               () => _showChoiceSheet(
                 context,
-                isEnglish ? 'Language' : isArabic ? 'اللغة' : 'ভাষা',
+                l10n.language,
                 const ['bn', 'en', 'ar'],
                 settings.setLanguage,
                 selectedValue: settings.languageCode,
@@ -96,8 +94,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
               context,
               Icons.text_fields_rounded,
               l10n.tr('অ্যাপের লেখা', 'App Text Size'),
-              _textSizeLabel(textScale.level, isEnglish),
-              () => _showTextSizeSheet(context, textScale, isEnglish),
+              _textSizeLabel(textScale.level, settings.languageCode),
+              () => _showTextSizeSheet(context, textScale, settings.languageCode),
             ),
             _divider(),
             _switchTile(
@@ -124,7 +122,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
               context,
               Icons.calculate_outlined,
               l10n.tr('সালাতের হিসাব পদ্ধতি', 'Prayer Calculation'),
-              _calculationLabel(settings.calculationMethod, isEnglish),
+              _calculationLabel(settings.calculationMethod, settings.languageCode),
               () => _showChoiceSheet(
                 context,
                 l10n.tr('সালাতের হিসাব পদ্ধতি', 'Prayer Calculation'),
@@ -159,7 +157,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
               context,
               Icons.tune_rounded,
               l10n.tr('সালাতের সময় সমন্বয়', 'Prayer Adjustments'),
-              _adjustmentLabel(settings, isEnglish),
+              _adjustmentLabel(settings, settings.languageCode),
               () => _showAdjustmentDialog(context, settings),
             ),
             _divider(),
@@ -185,7 +183,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
               context,
               Icons.translate_rounded,
               l10n.tr('অনুবাদ', 'Translation'),
-              _quranTranslationLabel(settings.quranTranslation, isEnglish),
+              _quranTranslationLabel(settings.quranTranslation, settings.languageCode),
               () => _showChoiceSheet(
                 context,
                 l10n.tr('অনুবাদ', 'Translation'),
@@ -239,7 +237,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
               context,
               Icons.calendar_month_outlined,
               l10n.tr('তারিখের পছন্দ', 'Date Preferences'),
-              _dateLabel(settings, isEnglish),
+              _dateLabel(settings, settings.languageCode),
               () => _showChoiceSheet(
                 context,
                 l10n.tr('তারিখের পছন্দ', 'Date Preferences'),
@@ -475,7 +473,6 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   Future<void> _openAccount(BuildContext context, User user) async {
     final l10n = AppLocalizations.of(context);
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final isEnglish = Localizations.localeOf(context).languageCode == 'en';
@@ -527,7 +524,6 @@ class SettingsHubScreenV4 extends StatelessWidget {
   }
 
   Future<void> _showPremiumStatus(BuildContext context, PremiumProvider premium, bool isEnglish) async {
-    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
     await showDialog<void>(
       context: context,
@@ -616,51 +612,69 @@ class SettingsHubScreenV4 extends StatelessWidget {
   Widget _divider() => const Divider(height: 1, indent: 70);
 
   String _themeLabel(SettingsProvider settings) {
-    if (settings.isAmoledMode) return settings.isEnglish ? 'AMOLED Black' : 'অ্যামোলেড কালো';
+    if (settings.isAmoledMode) {
+      if (settings.isArabic) return 'أسود AMOLED';
+      return settings.isEnglish ? 'AMOLED Black' : 'অ্যামোলেড কালো';
+    }
     switch (settings.themeMode) {
       case ThemeMode.light:
+        if (settings.isArabic) return 'الوضع الفاتح';
         return settings.isEnglish ? 'Light Mode' : 'লাইট মোড';
       case ThemeMode.dark:
+        if (settings.isArabic) return 'الوضع الداكن';
         return settings.isEnglish ? 'Dark Mode' : 'ডার্ক মোড';
       case ThemeMode.system:
+        if (settings.isArabic) return 'إعدادات النظام';
         return settings.isEnglish ? 'System Default' : 'সিস্টেম অনুযায়ী';
     }
   }
 
-  String _textSizeLabel(int level, bool isEnglish) {
+  String _textSizeLabel(int level, String languageCode) {
+    final isEnglish = languageCode == 'en';
+    final isArabic = languageCode == 'ar';
     switch (level) {
       case 0:
-        return isEnglish ? 'Small' : 'ছোট';
+        return isArabic ? 'صغير' : (isEnglish ? 'Small' : 'ছোট');
       case 2:
-        return isEnglish ? 'Large' : 'বড়';
+        return isArabic ? 'كبير' : (isEnglish ? 'Large' : 'বড়');
       case 3:
-        return isEnglish ? 'Very Large' : 'খুব বড়';
+        return isArabic ? 'كبير جدًا' : (isEnglish ? 'Very Large' : 'খুব বড়');
       default:
-        return isEnglish ? 'Normal' : 'স্বাভাবিক';
+        return isArabic ? 'عادي' : (isEnglish ? 'Normal' : 'স্বাভাবিক');
     }
   }
 
-  String _adjustmentLabel(SettingsProvider settings, bool isEnglish) {
+  String _adjustmentLabel(SettingsProvider settings, String languageCode) {
+    final isEnglish = languageCode == 'en';
+    final isArabic = languageCode == 'ar';
     final active = settings.prayerAdjustments.entries.where((entry) => entry.value != 0).toList();
-    if (active.isEmpty) return isEnglish ? 'No adjustments' : 'কোনো সমন্বয় নেই';
+    if (active.isEmpty) return isArabic ? 'لا توجد تعديلات' : (isEnglish ? 'No adjustments' : 'কোনো সমন্বয় নেই');
     final entry = active.first;
     final sign = entry.value > 0 ? '+' : '';
-    final prayer = _prayerLabel(entry.key, isEnglish);
-    return '$prayer: $sign${entry.value} ${isEnglish ? 'min' : 'মিনিট'}';
+    final prayer = _prayerLabel(entry.key, languageCode);
+    return '$prayer: $sign${entry.value} ${isArabic ? 'دقيقة' : (isEnglish ? 'min' : 'মিনিট')}';
   }
 
-  String _dateLabel(SettingsProvider settings, bool isEnglish) {
+  String _dateLabel(SettingsProvider settings, String languageCode) {
+    final isEnglish = languageCode == 'en';
+    final isArabic = languageCode == 'ar';
     switch (settings.dateDisplayPreference) {
       case 'hijri':
-        return isEnglish ? 'Hijri only' : 'শুধু হিজরি';
+        return isArabic ? 'هجري فقط' : (isEnglish ? 'Hijri only' : 'শুধু হিজরি');
       case 'gregorian':
-        return isEnglish ? 'Gregorian only' : 'শুধু গ্রেগরিয়ান';
+        return isArabic ? 'ميلادي فقط' : (isEnglish ? 'Gregorian only' : 'শুধু গ্রেগরিয়ান');
       default:
-        return isEnglish ? 'Both dates' : 'উভয় তারিখ';
+        return isArabic ? 'كلا التاريخين' : (isEnglish ? 'Both dates' : 'উভয় তারিখ');
     }
   }
 
-  String _choiceLabel(String option, bool isEnglish) {
+  String _choiceLabel(String option, String languageCode) {
+    final isEnglish = languageCode == 'en';
+    final isArabic = languageCode == 'ar';
+    if (isArabic) {
+      const arabic = <String, String>{'system': 'إعدادات النظام', 'light': 'الوضع الفاتح', 'dark': 'الوضع الداكن', 'amoled': 'أسود AMOLED', 'bn': 'البنغالية', 'en': 'الإنجليزية', 'Bangla': 'البنغالية', 'English': 'الإنجليزية', 'Default': 'افتراضي', 'hijri': 'هجري', 'gregorian': 'ميلادي', 'both': 'كلا التاريخين', 'Karachi': 'كراتشي', 'Muslim World League': 'رابطة العالم الإسلامي', 'Egyptian': 'المصري', 'Umm Al Qura': 'أم القرى', 'Dubai': 'دبي', 'Qatar': 'قطر', 'Kuwait': 'الكويت', 'Singapore': 'سنغافورة', 'North America': 'أمريكا الشمالية', 'Moonsighting Committee': 'لجنة تحري الهلال', 'Hanafi': 'حنفي', 'Shafi': 'شافعي'};
+      return arabic[option] ?? option;
+    }
     if (isEnglish) {
       if (option == 'bn') return 'Bangla';
       if (option == 'en') return 'English';
@@ -696,7 +710,13 @@ class SettingsHubScreenV4 extends StatelessWidget {
     return labels[option] ?? option;
   }
 
-  String _prayerLabel(String prayer, bool isEnglish) {
+  String _prayerLabel(String prayer, String languageCode) {
+    final isEnglish = languageCode == 'en';
+    final isArabic = languageCode == 'ar';
+    if (isArabic) {
+      const labels = <String, String>{'Fajr': 'الفجر', 'Dhuhr': 'الظهر', 'Asr': 'العصر', 'Maghrib': 'المغرب', 'Isha': 'العشاء'};
+      return labels[prayer] ?? prayer;
+    }
     if (isEnglish) return prayer;
     const labels = <String, String>{
       'Fajr': 'ফজর',
@@ -708,14 +728,13 @@ class SettingsHubScreenV4 extends StatelessWidget {
     return labels[prayer] ?? prayer;
   }
 
-  String _calculationLabel(String method, bool isEnglish) => _choiceLabel(method, isEnglish);
+  String _calculationLabel(String method, String languageCode) => _choiceLabel(method, languageCode);
 
-  String _madhabLabel(String madhab, bool isEnglish) => _choiceLabel(madhab, isEnglish);
+  String _madhabLabel(String madhab, String languageCode) => _choiceLabel(madhab, languageCode);
 
-  String _quranTranslationLabel(String translation, bool isEnglish) => _choiceLabel(translation, isEnglish);
+  String _quranTranslationLabel(String translation, String languageCode) => _choiceLabel(translation, languageCode);
 
   Future<void> _showChoiceSheet(BuildContext context, String title, List<String> options, Future<void> Function(String) onSelected, {String? selectedValue}) async {
-    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
     final languageCode = Localizations.localeOf(context).languageCode;
     final isEnglish = languageCode == 'en';
@@ -742,7 +761,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                           : (isArabic
                               ? ({'bn': 'البنغالية', 'en': 'الإنجليزية', 'ar': 'العربية'}[option] ?? option)
                               : ({'bn': 'বাংলা', 'en': 'ইংরেজি', 'ar': 'আরবি'}[option] ?? option)))
-                      : _choiceLabel(option, isEnglish),
+                      : _choiceLabel(option, languageCode),
                 ),
                 trailing: option == selectedValue
                     ? const Icon(Icons.check_circle_rounded, color: AppColors.seaBlue)
@@ -761,7 +780,6 @@ class SettingsHubScreenV4 extends StatelessWidget {
   }
 
   Future<void> _showTextSizeSheet(BuildContext context, TextScaleProvider provider, bool isEnglish) async {
-    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
     final labels = isEnglish ? const ['Small', 'Normal', 'Large', 'Very Large'] : const ['ছোট', 'স্বাভাবিক', 'বড়', 'খুব বড়'];
     await showModalBottomSheet<void>(
@@ -788,7 +806,6 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   Future<void> _showAdjustmentDialog(BuildContext context, SettingsProvider settings) async {
     final l10n = AppLocalizations.of(context);
-    final l10n = AppLocalizations.of(context);
     const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     await showDialog<void>(
       context: context,
@@ -799,7 +816,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
             children: [
               for (final prayer in prayers)
                 ListTile(
-                  title: Text(_prayerLabel(prayer, settings.isEnglish)),
+                  title: Text(_prayerLabel(prayer, settings.languageCode)),
                   subtitle: Text('${settings.prayerAdjustments[prayer] ?? 0} ${settings.isEnglish ? 'min' : 'মিনিট'}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -819,7 +836,6 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   Future<void> _showJamaatDialog(BuildContext context, SettingsProvider settings) async {
     final l10n = AppLocalizations.of(context);
-    final l10n = AppLocalizations.of(context);
     const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     final controllers = <String, TextEditingController>{
       for (final prayer in prayers) prayer: TextEditingController(text: settings.getJamaat(prayer)),
@@ -837,7 +853,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: TextField(
                       controller: controllers[prayer],
-                      decoration: InputDecoration(labelText: _prayerLabel(prayer, settings.isEnglish)),
+                      decoration: InputDecoration(labelText: _prayerLabel(prayer, settings.languageCode)),
                       keyboardType: TextInputType.datetime,
                     ),
                   ),
@@ -864,7 +880,6 @@ class SettingsHubScreenV4 extends StatelessWidget {
   }
 
   Future<void> _showQuranFontSheet(BuildContext context, SettingsProvider settings) async {
-    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
     await showModalBottomSheet<void>(
       context: context,
@@ -896,7 +911,6 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   Future<void> _showDailyContentSheet(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    final l10n = AppLocalizations.of(context);
     await showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -918,7 +932,6 @@ class SettingsHubScreenV4 extends StatelessWidget {
   }
 
   Future<void> _showResetDialog(BuildContext context, SettingsProvider settings) async {
-    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
     await showDialog<void>(
       context: context,
