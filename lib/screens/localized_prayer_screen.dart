@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../controllers/prayer_controller.dart';
 import '../localization/app_localizations.dart';
+import '../localization/app_localizations_x.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home/prayer_special_times_card.dart';
 
@@ -628,7 +629,13 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
     ];
     return Column(
       children: entries.map((e) {
-        final value = c.specialPrayerTimes[e['key']]?.toString() ?? '--:--';
+        final value = switch (e['key']) {
+          'ishraq' => c.ishraqTime,
+          'duha' => c.duhaTime,
+          'awwabin' => c.awwabinTime,
+          'tahajjud' => c.tahajjudTime,
+          _ => '--:--',
+        };
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: _card(
@@ -650,6 +657,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
   }
 
   Widget _error(BuildContext context, PrayerController c) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -658,9 +666,9 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
           children: [
             Icon(Icons.error_outline_rounded, size: 42, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 12),
-            Text(c.error ?? AppLocalizations.of(context).tr('কিছু একটা সমস্যা হয়েছে', 'Something went wrong'), textAlign: TextAlign.center),
+            Text(c.error ?? l10n.tr('কিছু একটা সমস্যা হয়েছে', 'Something went wrong'), textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            FilledButton.icon(onPressed: c.refreshPrayerTimes, icon: const Icon(Icons.refresh_rounded), label: Text(AppLocalizations.of(context).tryAgainLabel)),
+            FilledButton.icon(onPressed: c.refreshPrayerTimes, icon: const Icon(Icons.refresh_rounded), label: Text(l10n.tr('আবার চেষ্টা করুন', 'Try again'))),
           ],
         ),
       ),
