@@ -1,6 +1,6 @@
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 
 ARABIC = {
     'Home':'الرئيسية','Prayer':'الصلاة','Quran':'القرآن','Hadith':'الحديث','Tools':'الأدوات','More':'المزيد',
@@ -32,12 +32,12 @@ ARABIC = {
     'Calculate your Zakat':'احسب زكاتك','Your Islamic Tools':'أدواتك الإسلامية','Al-Quran':'القرآن الكريم',
     'Hifzi Quran':'القرآن الحفظي','15-line offline Hifzi Quran':'قرآن حفظي من 15 سطرًا بدون إنترنت',
     'Onudhabon Quran':'قرآن التدبر','Translation • Tafsir':'الترجمة • التفسير','Translation':'الترجمة',
-    'Audio Quran':'القرآن الصوتي','Offline cache':'التخزين المؤقت دون اتصال',
+    'Offline cache':'التخزين المؤقت دون اتصال',
 }
 
 
 def write_arabic_strings():
-    body = 'import \'dart:collection\';\n\nconst Map<String, String> kArabicStrings = UnmodifiableMapView<String, String>({\n'
+    body = "import 'dart:collection';\n\nconst Map<String, String> kArabicStrings = UnmodifiableMapView<String, String>({\n"
     for k, v in ARABIC.items():
         body += f"  {k!r}: {v!r},\n"
     body += '});\n'
@@ -88,9 +88,7 @@ def patch_settings_hub():
     replace_once(path, "appBar: AppBar(title: Text(isEnglish ? 'Settings' : 'সেটিংস'))", "appBar: AppBar(title: Text(isEnglish ? 'Settings' : isArabic ? 'الإعدادات' : 'সেটিংস'))")
     replace_once(path, "isEnglish ? 'Language' : 'ভাষা',\n              isEnglish ? 'English' : 'বাংলা',", "isEnglish ? 'Language' : isArabic ? 'اللغة' : 'ভাষা',\n              isEnglish ? 'English' : isArabic ? 'العربية' : 'বাংলা',")
     replace_once(path, "const ['bn', 'en'],", "const ['bn', 'en', 'ar'],")
-    replace_once(path, "'en': 'ইংরেজি',\n      'Bangla': 'বাংলা',", "'en': 'ইংরেজি',\n      'ar': 'العربية',\n      'Bangla': 'বাংলা',")
     replace_once(path, "if (option == 'en') return 'English';\n      return option;", "if (option == 'en') return 'English';\n      if (option == 'ar') return 'Arabic';\n      return option;")
-    replace_once(path, "'en': 'ইংরেজি',\n      'Bangla': 'বাংলা',", "'en': 'ইংরেজি',\n      'ar': 'العربية',\n      'Bangla': 'বাংলা',")
 
 
 write_arabic_strings()
