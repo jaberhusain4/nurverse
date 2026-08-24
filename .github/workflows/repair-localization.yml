@@ -1,0 +1,71 @@
+name: Repair localization compile blockers
+
+on:
+  push:
+    branches: [fix/app-wide-localization]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.event.head_commit.message != 'ci: remove localization repair workflow'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/app-wide-localization
+          fetch-depth: 0
+      - name: Repair generated localization residue
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          # Onudhabon: collapse accidental duplicate imports and local l10n declarations.
+          p = Path('lib/screens/quran/onudhabon_quran_reader.dart')
+          s = p.read_text(encoding='utf-8')
+          seen = set()
+          lines = []
+          for line in s.splitlines(keepends=True):
+              stripped = line.strip()
+              if stripped.startswith("import '../../localization/app_localizations.dart';"):
+                  if 'app_localizations' in seen:
+                      continue
+                  seen.add('app_localizations')
+              lines.append(line)
+          s = ''.join(lines)
+          s = re.sub(r'(\n\s*final l10n = AppLocalizations\.of\(context\);){2,}', r'\1', s)
+          # These containers now contain runtime localization expressions; const is invalid.
+          s = s.replace('const Padding(\n', 'Padding(\n')
+          s = s.replace('const Align(\n', 'Align(\n')
+          p.write_text(s, encoding='utf-8')
+
+          # Saved hadith: repair the closing parentheses of the empty-state Center/Padding/Column tree.
+          p = Path('lib/screens/hadith/saved_hadith_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('    ]));\n  }\n}', '    ])));\n  }\n}', 1)
+          p.write_text(s, encoding='utf-8')
+
+          # Settings: the existing helper API takes bool; keep the current UI API stable.
+          p = Path('lib/screens/settings_hub_screen_v4.dart')
+          s = p.read_text(encoding='utf-8')
+          s = re.sub(r'(\n\s*final l10n = AppLocalizations\.of\(context\);){2,}', r'\1', s)
+          s = s.replace('_textSizeLabel(textScale.level, settings.languageCode)', '_textSizeLabel(textScale.level, settings.isEnglish)')
+          s = s.replace('_showTextSizeSheet(context, textScale, settings.languageCode)', '_showTextSizeSheet(context, textScale, settings.isEnglish)')
+          p.write_text(s, encoding='utf-8')
+
+          # Remove obsolete repair workflows after their job has completed.
+          workflow_dir = Path('.github/workflows')
+          for name in ['repair-localization.yml']:
+              # Leave the current workflow to be deleted explicitly in the commit below.
+              pass
+
+      - name: Commit repaired code
+        run: |
+          git config user.name "nurverse-localization-bot"
+          git config user.email "actions@github.com"
+          git add lib/screens/quran/onudhabon_quran_reader.dart lib/screens/hadith/saved_hadith_screen.dart lib/screens/settings_hub_screen_v4.dart
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "fix: remove localization compile blockers"
+          git push origin fix/app-wide-localization
