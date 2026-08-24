@@ -14,6 +14,7 @@ class AppLocalizations {
   }
 
   bool get isBangla => locale.languageCode == 'bn';
+  bool get isEnglish => locale.languageCode == 'en';
   bool get isArabic => locale.languageCode == 'ar';
   String _text(String bn, String en) => isArabic ? (kArabicStrings[en] ?? en) : (isBangla ? bn : en);
   String tr(String bn, String en) => _text(bn, en);

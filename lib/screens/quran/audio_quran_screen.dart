@@ -145,7 +145,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
         : l10n.isBangla
             ? (current?.banglaName ?? current?.transliteration ?? l10n.tr('সূরা', 'Surah'))
             : (current?.transliteration ?? l10n.tr('সূরা', 'Surah'));
-    final reciterName = l10n.isArabic ? _selectedReciter.nameEn : l10n.isEnglish ? _selectedReciter.nameEn : _selectedReciter.nameBn;
+    final reciterName = l10n.isArabic ? _selectedReciter.nameBn : l10n.isEnglish ? _selectedReciter.nameBn : _selectedReciter.nameBn;
     return Material(
       color: context.cardColor,
       child: Padding(

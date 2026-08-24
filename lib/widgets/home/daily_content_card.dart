@@ -34,12 +34,12 @@ class DailyContentCard extends StatelessWidget {
 
   String _body(AppLocalizations l10n) {
     if (l10n.isArabic) return content.arabic;
-    return l10n.isEnglish ? content.english : content.bangla;
+    return !l10n.isBangla && !l10n.isArabic ? content.english : content.bangla;
   }
 
   String _reference(AppLocalizations l10n) {
     if (l10n.isArabic) return content.englishReference;
-    return l10n.isEnglish ? content.englishReference : content.reference;
+    return !l10n.isBangla && !l10n.isArabic ? content.englishReference : content.reference;
   }
 
   @override
