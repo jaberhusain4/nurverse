@@ -1,0 +1,117 @@
+name: NurVerse Arabic Localization v4
+
+on:
+  pull_request:
+    branches:
+      - fix/prayer-completion-tracker
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  arabic:
+    if: github.event.pull_request.head.ref == 'feature/arabic-localization' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+
+      - name: Apply Arabic localization
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def replace_once(path, old, new):
+              p=Path(path); s=p.read_text(encoding='utf-8')
+              if old in s:
+                  p.write_text(s.replace(old,new,1), encoding='utf-8'); return True
+              return False
+
+          # -----------------------------------------------------------------
+          # Core localization
+          # -----------------------------------------------------------------
+          replace_once('lib/localization/app_localizations.dart', "import 'package:flutter/material.dart';\n", "import 'package:flutter/material.dart';\n\nimport 'arabic_strings.dart';\n")
+          replace_once('lib/localization/app_localizations.dart', "static const supportedLocales = [Locale('bn'), Locale('en')];", "static const supportedLocales = [Locale('bn'), Locale('en'), Locale('ar')];")
+          replace_once('lib/localization/app_localizations.dart', "bool get isBangla => locale.languageCode == 'bn';", "bool get isBangla => locale.languageCode == 'bn';\n  bool get isArabic => locale.languageCode == 'ar';")
+          replace_once('lib/localization/app_localizations.dart', "String _text(String bn, String en) => isBangla ? bn : en;", "String _text(String bn, String en) => isArabic ? (kArabicStrings[en] ?? en) : (isBangla ? bn : en);")
+          replace_once('lib/localization/app_localizations.dart', "['bn', 'en'].contains(locale.languageCode)", "['bn', 'en', 'ar'].contains(locale.languageCode)")
+
+          ar = {
+            'Home':'الرئيسية','Prayer':'الصلاة','Quran':'القرآن','Hadith':'الحديث','Tools':'الأدوات','More':'المزيد','Refresh':'تحديث','Refresh prayer times':'تحديث أوقات الصلاة','Try Again':'حاول مرة أخرى','Cancel':'إلغاء','Save':'حفظ','Close':'إغلاق','Done':'تم','Search':'بحث','Settings':'الإعدادات','Current Prayer':'الصلاة الحالية','Next Prayer':'الصلاة التالية','Prayer Time':'وقت الصلاة','Today':'اليوم','Sunrise':'الشروق','Sunset':'الغروب','Current Location':'الموقع الحالي','Today’s Prayer':'صلوات اليوم','Complete prayer schedule':'جدول الصلاة الكامل','Prayer Times':'أوقات الصلاة','Previous Prayer':'الصلاة السابقة','Current':'الحالي','Next':'التالي','Completed':'تمت','No prayer window':'لا يوجد وقت للصلاة','Start':'البداية','End':'النهاية','Jama’ah':'الجماعة','Friday':'الجمعة','Important Times Today':'أهم أوقات اليوم','Solar Noon':'الزوال','Makruh Time':'وقت الكراهة','Prohibited Time':'الوقت المنهي عنه','Nafl & Other Prayers':'النوافل والصلوات الأخرى','Important times for optional worship':'أهم أوقات العبادات الاختيارية','Ishraq':'الإشراق','Duha':'الضحى','Awwabin':'الأوابين','Tahajjud':'التهجد','Prayer Tracker':'متابعة الصلوات','Mark the prayers you have performed':'حدد الصلوات التي أديتها','Could not load prayer information':'تعذر تحميل معلومات الصلاة','Prayer times may vary depending on location, date, and calculation method.':'قد تختلف أوقات الصلاة حسب الموقع والتاريخ وطريقة الحساب.','Fajr':'الفجر','Dhuhr':'الظهر','Asr':'العصر','Maghrib':'المغرب','Isha':'العشاء','Jumu’ah':'الجمعة','Qibla':'القبلة','Tasbih':'التسبيح','Asma ul Husna':'أسماء الله الحسنى','Ruqyah':'الرقية','Zakat Calculator':'حاسبة الزكاة','Islamic Calendar':'التقويم الإسلامي','Nearby Mosque':'مسجد قريب','Islamic Books':'الكتب الإسلامية','Ayah of the Day':'آية اليوم','Hadith of the Day':'حديث اليوم','Dua of the Day':'دعاء اليوم','Continue Reading':'متابعة القراءة','Last Read':'آخر قراءة','See All':'عرض الكل','Language':'اللغة','Theme':'المظهر','Light':'فاتح','Dark':'داكن','AMOLED':'أموليد','System':'النظام','Bangla':'البنغالية','English':'الإنجليزية','Arabic':'العربية','Location unavailable':'الموقع غير متاح','No data available':'لا توجد بيانات','Something went wrong':'حدث خطأ ما','Loading...':'جارٍ التحميل...','Islamic Tools':'الأدوات الإسلامية','Worship & Practice':'العبادة والممارسة','Essential tools for daily worship':'أدوات أساسية للعبادة اليومية','Dua':'الدعاء','Dua and supplication':'الدعاء والمناجاة','Dhikr counting and practice':'عد الذكر والممارسة','Quran and authentic duas':'القرآن والأدعية الصحيحة','99 Names of Allah':'أسماء الله الحسنى الـ99','Quran & Hadith':'القرآن والحديث','Reading, audio and saved knowledge':'القراءة والصوت والمعرفة المحفوظة','Audio Quran':'القرآن الصوتي','Listen to Quran recitation':'استمع إلى تلاوة القرآن','Saved Hadith':'الأحاديث المحفوظة','Your favorite hadith':'أحاديثك المفضلة','Islamic knowledge library':'مكتبة المعرفة الإسلامية','Time & Direction':'الوقت والاتجاه','Islamic time, date and Qibla':'الوقت والتاريخ والقبلة الإسلامية','Find the direction of the Kaaba':'حدد اتجاه الكعبة','Calendar':'التقويم','Hijri and Islamic dates':'التواريخ الهجرية والإسلامية','Islamic Calculations':'الحسابات الإسلامية','Essential calculations for financial worship':'حسابات أساسية للعبادات المالية','Calculate your Zakat':'احسب زكاتك','Your Islamic Tools':'أدواتك الإسلامية','Worship, knowledge and daily needs—all in one place.':'العبادة والمعرفة والاحتياجات اليومية — كلها في مكان واحد.','Al-Quran':'القرآن الكريم','Hifzi reading, understanding and recitation — three distinct experiences.':'قراءة الحفظ والفهم والتلاوة — ثلاث تجارب مختلفة.','Hafezi Quran':'قرآن الحفظ','15-line offline Hifzi Quran':'قرآن حفظ من 15 سطرًا دون اتصال','15 lines • Offline':'15 سطرًا • دون اتصال','Onudhabon Quran':'قرآن التدبر','Arabic verses, Bangla translation and Tafsir':'آيات عربية وترجمة بنغالية وتفسير','Translation • Tafsir':'الترجمة • التفسير','Listen and cache recitation offline':'استمع إلى التلاوة واحفظها دون اتصال','Offline cache':'ذاكرة التخزين المؤقت دون اتصال'}
+          p=Path('lib/localization/arabic_strings.dart')
+          lines=['const Map<String, String> kArabicStrings = <String, String>{']
+          for k,v in ar.items():
+              lines.append("  %r: %r," % (k,v))
+          lines.append('};\n')
+          p.write_text('\n'.join(lines), encoding='utf-8')
+
+          # -----------------------------------------------------------------
+          # Settings provider + legacy controller
+          # -----------------------------------------------------------------
+          p=Path('lib/providers/settings_provider.dart'); s=p.read_text(encoding='utf-8')
+          if 'bool get isArabic =>' not in s:
+              s=s.replace("bool get isEnglish => _languageCode == 'en';", "bool get isEnglish => _languageCode == 'en';\n\n  bool get isArabic => _languageCode == 'ar';", 1)
+          s=s.replace("if (savedLanguage == 'en') {\n        _languageCode = 'en';\n      } else {", "if (savedLanguage == 'en') {\n        _languageCode = 'en';\n      } else if (savedLanguage == 'ar') {\n        _languageCode = 'ar';\n      } else {", 1)
+          s=s.replace("if (normalizedCode != 'bn' && normalizedCode != 'en') {", "if (normalizedCode != 'bn' && normalizedCode != 'en' && normalizedCode != 'ar') {", 1)
+          p.write_text(s, encoding='utf-8')
+
+          p=Path('lib/controllers/language_controller.dart')
+          if p.exists():
+              s=p.read_text(encoding='utf-8')
+              if 'bool get isArabic =>' not in s:
+                  s=s.replace("bool get isEnglish => _locale.languageCode == 'en';", "bool get isEnglish => _locale.languageCode == 'en';\n\n  bool get isArabic => _locale.languageCode == 'ar';", 1)
+              s=s.replace("if (savedLanguage == 'en') {\n        _locale = const Locale('en');\n      } else {", "if (savedLanguage == 'en') {\n        _locale = const Locale('en');\n      } else if (savedLanguage == 'ar') {\n        _locale = const Locale('ar');\n      } else {", 1)
+              s=s.replace("if (normalizedCode != 'bn' && normalizedCode != 'en') {", "if (normalizedCode != 'bn' && normalizedCode != 'en' && normalizedCode != 'ar') {", 1)
+              p.write_text(s, encoding='utf-8')
+
+          replace_once('lib/main.dart', "await initializeDateFormatting('bn');", "await initializeDateFormatting('bn');\n  await initializeDateFormatting('ar');")
+
+          # -----------------------------------------------------------------
+          # Settings Hub: preserve existing Bangla/English behavior and add Arabic only.
+          # -----------------------------------------------------------------
+          p=Path('lib/screens/settings_hub_screen_v4.dart'); s=p.read_text(encoding='utf-8')
+          if 'final isArabic = settings.isArabic;' not in s:
+              s=s.replace('final isEnglish = settings.isEnglish;\n', 'final isEnglish = settings.isEnglish;\n    final isArabic = settings.isArabic;\n', 1)
+          s=s.replace("appBar: AppBar(title: Text(isEnglish ? 'Settings' : 'সেটিংস'))", "appBar: AppBar(title: Text(isArabic ? 'الإعدادات' : (isEnglish ? 'Settings' : 'সেটিংস')))", 1)
+          s=s.replace("isEnglish ? 'Language' : 'ভাষা'", "isArabic ? 'اللغة' : (isEnglish ? 'Language' : 'ভাষা')", 1)
+          s=s.replace("isEnglish ? 'English' : 'বাংলা'", "isArabic ? 'العربية' : (isEnglish ? 'English' : 'বাংলা')", 1)
+          s=s.replace("const ['bn', 'en']", "const ['bn', 'en', 'ar']", 1)
+          # Choice sheet gets Arabic labels without changing the existing helper's BN/EN behavior.
+          needle="final isEnglish = Localizations.localeOf(context).languageCode == 'en';"
+          if needle in s and 'final isArabic = Localizations.localeOf(context).languageCode == \'ar\';' not in s:
+              s=s.replace(needle, "final languageCode = Localizations.localeOf(context).languageCode;\n    final isEnglish = languageCode == 'en';\n    final isArabic = languageCode == 'ar';", 1)
+          s=s.replace("Text(_choiceLabel(option, isEnglish))", "Text(isArabic ? _arabicChoiceLabel(option) : _choiceLabel(option, isEnglish))", 1)
+          marker="String _choiceLabel(String option, bool isEnglish) {"
+          if marker in s and 'String _arabicChoiceLabel(String option)' not in s:
+              insert="""String _arabicChoiceLabel(String option) {\n    const labels = <String, String>{\n      'bn': 'البنغالية', 'en': 'الإنجليزية', 'ar': 'العربية',\n      'system': 'النظام', 'light': 'الوضع الفاتح', 'dark': 'الوضع الداكن', 'amoled': 'أموليد أسود',\n      'Default': 'افتراضي', 'hijri': 'الهجري', 'gregorian': 'الميلادي', 'both': 'كلا التاريخين',\n      'Hanafi': 'حنفي', 'Shafi': 'شافعي', 'Bangla': 'البنغالية', 'English': 'الإنجليزية',\n      'Karachi': 'كراتشي', 'Muslim World League': 'رابطة العالم الإسلامي', 'Egyptian': 'المصري',\n      'Umm Al Qura': 'أم القرى', 'Dubai': 'دبي', 'Qatar': 'قطر', 'Kuwait': 'الكويت',\n      'Singapore': 'سنغافورة', 'North America': 'أمريكا الشمالية', 'Moonsighting Committee': 'لجنة رؤية الهلال',\n    };\n    return labels[option] ?? option;\n  }\n\n  """
+              s=s.replace(marker, insert+marker, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Format and analyze
+        run: |
+          flutter pub get
+          dart format lib/localization/app_localizations.dart lib/localization/arabic_strings.dart lib/providers/settings_provider.dart lib/controllers/language_controller.dart lib/main.dart lib/screens/settings_hub_screen_v4.dart
+          flutter analyze
+
+      - name: Commit generated Arabic changes
+        if: github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/localization/app_localizations.dart lib/localization/arabic_strings.dart lib/providers/settings_provider.dart lib/controllers/language_controller.dart lib/main.dart lib/screens/settings_hub_screen_v4.dart
+          git diff --cached --quiet || git commit -m 'feat: add Arabic app language'
+          git push origin HEAD:feature/arabic-localization
