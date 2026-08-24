@@ -165,6 +165,8 @@ class SettingsProvider extends ChangeNotifier {
 
   bool get isEnglish => _languageCode == 'en';
 
+  bool get isArabic => _languageCode == 'ar';
+
   String get calculationMethod => _calculationMethod;
 
   String get madhhab => _madhab;
@@ -352,6 +354,8 @@ class SettingsProvider extends ChangeNotifier {
 
       if (savedLanguage == 'en') {
         _languageCode = 'en';
+      } else if (savedLanguage == 'ar') {
+        _languageCode = 'ar';
       } else {
         _languageCode = 'bn';
       }
@@ -600,7 +604,7 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setLanguage(String code) async {
     final String normalizedCode = code.toLowerCase().trim();
 
-    if (normalizedCode != 'bn' && normalizedCode != 'en') {
+    if (normalizedCode != 'bn' && normalizedCode != 'en' && normalizedCode != 'ar') {
       return;
     }
 
@@ -625,6 +629,10 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<void> setEnglish() async {
     await setLanguage('en');
+  }
+
+  Future<void> setArabic() async {
+    await setLanguage('ar');
   }
 
   // ==========================================================================
