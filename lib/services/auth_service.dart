@@ -20,7 +20,9 @@ class AuthService {
     );
   }
 
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
+  /// Emits on sign-in/sign-out as well as profile updates (display name,
+  /// profile photo, reloads), which the Premium account button relies on.
+  Stream<User?> get authStateChanges => _auth.userChanges();
 
   User? get currentUser => _auth.currentUser;
 
