@@ -29,6 +29,86 @@ class CurrentPrayerCard extends StatelessWidget {
     this.sunset,
   });
 
+  String _prayerLabel(AppLocalizations l10n, String value) {
+    final raw = value.trim();
+    switch (raw.toLowerCase()) {
+      case 'fajr':
+      case 'ফজর':
+        return l10n.fajr;
+      case 'dhuhr':
+      case 'যোহর':
+        return l10n.dhuhr;
+      case 'asr':
+      case 'আসর':
+        return l10n.asr;
+      case 'maghrib':
+      case 'magrib':
+      case 'মাগরিব':
+        return l10n.maghrib;
+      case 'isha':
+      case 'ইশা':
+        return l10n.isha;
+      case 'ishraq':
+      case 'ইশরাক':
+        return l10n.ishraq;
+      case 'duha':
+      case 'chasht':
+      case 'চাশত':
+      case 'দুহা':
+        return l10n.duha;
+      case 'awwabin':
+      case 'আউওয়াবীন':
+        return l10n.awwabin;
+      case 'tahajjud':
+      case 'তাহাজ্জুদ':
+        return l10n.tahajjud;
+      case 'jumuah':
+      case 'jumu’ah':
+      case "jumu'ah":
+      case 'জুমু‘আ':
+      case 'জুমু\'আ':
+      case 'জুমুআ':
+        return l10n.jumuah;
+      default:
+        return l10n.prayerName(raw);
+    }
+  }
+
+  String _statusLabel(AppLocalizations l10n, String value) {
+    final raw = value.trim();
+    const english = <String, String>{
+      'ইশার ওয়াক্ত চলছে': 'Isha time is active',
+      'ইশরাকের ওয়াক্ত চলছে': 'Ishraq time is active',
+      'ইশরাক ওয়াক্ত চলছে': 'Ishraq time is active',
+      'তাহাজ্জুদের ওয়াক্ত চলছে': 'Tahajjud time is active',
+      'তাহাজ্জুদ ওয়াক্ত চলছে': 'Tahajjud time is active',
+      'মাগরিবের ওয়াক্ত চলছে': 'Maghrib time is active',
+      'Ishar Waqto Cholche': 'Isha time is active',
+      'Ishar Waqt Cholche': 'Isha time is active',
+      'Magrib time is active': 'Maghrib time is active',
+    };
+    if (l10n.isArabic) {
+      const arabic = <String, String>{
+        'ইশার ওয়াক্ত চলছে': 'وقت العشاء جارٍ',
+        'ইশরাকের ওয়াক্ত চলছে': 'وقت الإشراق جارٍ',
+        'ইশরাক ওয়াক্ত চলছে': 'وقت الإشراق جارٍ',
+        'তাহাজ্জুদের ওয়াক্ত চলছে': 'وقت التهجد جارٍ',
+        'তাহাজ্জুদ ওয়াক্ত চলছে': 'وقت التهجد جارٍ',
+        'মাগরিবের ওয়াক্ত চলছে': 'وقت المغرب جارٍ',
+        'Ishar Waqto Cholche': 'وقت العشاء جارٍ',
+        'Ishar Waqt Cholche': 'وقت العشاء جارٍ',
+        'Magrib time is active': 'وقت المغرب جارٍ',
+        'Isha time is active': 'وقت العشاء جارٍ',
+        'Maghrib time is active': 'وقت المغرب جارٍ',
+        'Tahajjud time is active': 'وقت التهجد جارٍ',
+        'Ishraq time is active': 'وقت الإشراق جارٍ',
+      };
+      return arabic[raw] ?? l10n.prayerStatus(raw);
+    }
+    if (l10n.isEnglish) return english[raw] ?? l10n.prayerStatus(raw);
+    return raw;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -40,7 +120,7 @@ class CurrentPrayerCard extends StatelessWidget {
         isDark ? Colors.black.withValues(alpha: .35) : const Color(0x140288D1);
     final infoBg = theme.cardColor;
 
-    final localizedStatus = l10n.prayerStatus(status);
+    final localizedStatus = _statusLabel(l10n, status);
     final statusForColor = status.toLowerCase();
     final chipBg = statusForColor.contains('মাকরুহ') ||
             statusForColor.contains('makruh')
@@ -56,6 +136,8 @@ class CurrentPrayerCard extends StatelessWidget {
                 statusForColor.contains('jama')
             ? Colors.orange
             : Colors.green;
+    final currentPrayerLabel = _prayerLabel(l10n, currentPrayer);
+    final nextPrayerLabel = _prayerLabel(l10n, nextPrayer);
 
     return Container(
       width: double.infinity,
@@ -102,7 +184,7 @@ class CurrentPrayerCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      l10n.prayerName(currentPrayer),
+                      currentPrayerLabel,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -144,7 +226,7 @@ class CurrentPrayerCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '${l10n.next} • ${l10n.prayerName(nextPrayer)}  •  $nextPrayerTime',
+            '${l10n.next} • $nextPrayerLabel  •  $nextPrayerTime',
             style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
           ),
           const SizedBox(height: 20),
@@ -163,7 +245,7 @@ class CurrentPrayerCard extends StatelessWidget {
               Expanded(
                 child: _InfoItem(
                   title: l10n.next,
-                  value: l10n.prayerName(nextPrayer),
+                  value: nextPrayerLabel,
                   backgroundColor: infoBg,
                 ),
               ),
