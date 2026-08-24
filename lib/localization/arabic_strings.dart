@@ -1,6 +1,4 @@
-import 'dart:collection';
-
-const Map<String, String> kArabicStrings = UnmodifiableMapView<String, String>({
+const Map<String, String> kArabicStrings = {
   'Home': 'الرئيسية',
   'Prayer': 'الصلاة',
   'Quran': 'القرآن',
@@ -110,4 +108,4 @@ const Map<String, String> kArabicStrings = UnmodifiableMapView<String, String>({
   'Translation • Tafsir': 'الترجمة • التفسير',
   'Translation': 'الترجمة',
   'Offline cache': 'التخزين المؤقت دون اتصال',
-});
+};
