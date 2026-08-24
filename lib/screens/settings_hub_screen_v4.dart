@@ -619,11 +619,14 @@ class SettingsHubScreenV4 extends StatelessWidget {
     switch (settings.themeMode) {
       case ThemeMode.light:
         if (settings.isArabic) return 'الوضع الفاتح';
+        if (settings.isArabic) return 'الوضع الفاتح';
         return settings.isEnglish ? 'Light Mode' : 'লাইট মোড';
       case ThemeMode.dark:
         if (settings.isArabic) return 'الوضع الداكن';
+        if (settings.isArabic) return 'الوضع الداكن';
         return settings.isEnglish ? 'Dark Mode' : 'ডার্ক মোড';
       case ThemeMode.system:
+        if (settings.isArabic) return 'إعدادات النظام';
         if (settings.isArabic) return 'إعدادات النظام';
         return settings.isEnglish ? 'System Default' : 'সিস্টেম অনুযায়ী';
     }
