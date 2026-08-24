@@ -3,11 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../localization/app_localizations.dart';
 import '../../models/saved_hadith.dart';
 import '../../services/hadith_bookmark_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
-import '../../localization/app_localizations.dart';
 
 class SavedHadithScreen extends StatefulWidget {
   const SavedHadithScreen({super.key});
@@ -29,14 +29,25 @@ class _SavedHadithScreenState extends State<SavedHadithScreen> {
 
   String _body(SavedHadith item, AppLocalizations l10n) {
     if (l10n.isArabic) return item.arabic.trim();
-    if (l10n.locale.languageCode == 'en') {
+    if (l10n.isEnglish) {
       return item.english.trim().isNotEmpty ? item.english.trim() : item.bangla.trim();
     }
     return item.bangla.trim();
   }
 
   String _bookTitle(SavedHadith item, AppLocalizations l10n) {
-    return l10n.isBangla ? item.bookNameBn : item.bookKey == 'bukhari' && l10n.isArabic ? 'صحيح البخاري' : item.bookNameBn;
+    if (l10n.isBangla) return item.bookNameBn;
+    if (l10n.isArabic) {
+      switch (item.bookKey) {
+        case 'bukhari':
+          return 'صحيح البخاري';
+        case 'muslim':
+          return 'صحيح مسلم';
+        default:
+          return item.bookNameBn;
+      }
+    }
+    return item.bookNameBn;
   }
 
   Future<void> _load() async {
@@ -98,7 +109,7 @@ class _SavedHadithScreenState extends State<SavedHadithScreen> {
     if (item.grade.trim().isNotEmpty) {
       buffer.writeln('${l10n.tr('মান', 'Grade')}: ${item.grade.trim()}');
     }
-    final book = l10n.isBangla ? item.bookNameBn : item.bookKey == 'bukhari' && l10n.isArabic ? 'صحيح البخاري' : item.bookNameBn;
+    final book = _bookTitle(item, l10n);
     buffer.writeln('$book • ${l10n.tr('হাদিস নং', 'Hadith No.')} ${item.hadithNo}');
     buffer.writeln('\nNurVerse');
     await SharePlus.instance.share(ShareParams(text: buffer.toString().trim()));
@@ -169,14 +180,10 @@ class _SavedHadithCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final body = l10n.isArabic
         ? item.arabic.trim()
-        : l10n.locale.languageCode == 'en'
+        : l10n.isEnglish
             ? (item.english.trim().isNotEmpty ? item.english.trim() : item.bangla.trim())
             : item.bangla.trim();
-    final bookTitle = l10n.isBangla
-        ? item.bookNameBn
-        : l10n.isArabic && item.bookKey == 'bukhari'
-            ? 'صحيح البخاري'
-            : item.bookNameBn;
+    final bookTitle = _bookTitle(item, l10n);
     return NvCard(
       padding: const EdgeInsets.all(16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -208,6 +215,21 @@ class _SavedHadithCard extends StatelessWidget {
       ]),
     );
   }
+
+  String _bookTitle(SavedHadith item, AppLocalizations l10n) {
+    if (l10n.isBangla) return item.bookNameBn;
+    if (l10n.isArabic) {
+      switch (item.bookKey) {
+        case 'bukhari':
+          return 'صحيح البخاري';
+        case 'muslim':
+          return 'صحيح مسلم';
+        default:
+          return item.bookNameBn;
+      }
+    }
+    return item.bookNameBn;
+  }
 }
 
 class _EmptySavedState extends StatelessWidget {
@@ -224,6 +246,6 @@ class _EmptySavedState extends StatelessWidget {
       Text(hasQuery ? l10n.tr('কোনো হাদিস পাওয়া যায়নি', 'No hadith found') : l10n.tr('এখনো কোনো হাদিস সংরক্ষণ করা হয়নি', 'No hadith has been saved yet'), textAlign: TextAlign.center, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.primaryTextColor)),
       const SizedBox(height: 8),
       Text(hasQuery ? l10n.tr('অন্য কোনো শব্দ দিয়ে আবার খুঁজে দেখুন।', 'Try searching with another word.') : l10n.tr('গুরুত্বপূর্ণ হাদিসের পাশে সংরক্ষণ আইকনে চাপলে এখানে পাওয়া যাবে।', 'Saved hadiths will appear here when you tap the save icon.'), textAlign: TextAlign.center, style: TextStyle(fontSize: 13, height: 1.55, color: context.secondaryTextColor)),
-    ]));
+    ])));
   }
 }
