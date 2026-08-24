@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../localization/app_localizations.dart';
 import '../../models/quran_surah.dart';
 import '../../services/last_read_service.dart';
 import '../../services/quran_data_service.dart';
@@ -24,6 +25,8 @@ class OnudhabonQuranReader extends StatefulWidget {
 }
 
 class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
+  String _localizedText(AppLocalizations l10n, String bn, String en, String ar) => l10n.isArabic ? ar : l10n.tr(bn, en);
+
   final _data = QuranDataService.instance;
   final _translation = QuranTranslationService.instance;
   final _tafsir = QuranTafsirService.instance;
@@ -224,6 +227,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
     _saveSettings();
   }
   Future<void> _showReadingSettings() async {
+    final l10n = AppLocalizations.of(context);
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -238,8 +242,8 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                   children: [
                     const Icon(Icons.text_fields_rounded),
                     const SizedBox(width: 8),
-                    const Text(
-                      'পড়ার সেটিংস',
+                    Text(
+                      _localizedText(l10n, 'পড়ার সেটিংস', 'Reading settings', 'إعدادات القراءة'),
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                     ),
                     const Spacer(),
@@ -252,7 +256,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                         _saveSettings();
                         setSheetState(() {});
                       },
-                      child: const Text('ডিফল্ট'),
+                      child: Text(_localizedText(l10n, 'ডিফল্ট', 'Default', 'افتراضي')),
                     ),
                   ],
                 ),
@@ -286,12 +290,12 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),                _slider('আরবি আয়াত', _arabicSize, 16, 28, (v) {
+                const SizedBox(height: 8),                _slider(_localizedText(l10n, 'আরবি আয়াত', 'Arabic Ayah', 'الآية العربية'), _arabicSize, 16, 28, (v) {
                   setState(() => _arabicSize = v);
                   _saveSettings();
                   setSheetState(() {});
                 }),
-                _slider('অনুবাদ', _translationSize, 12, 21, (v) {
+                _slider(_localizedText(l10n, 'অনুবাদ', 'Translation', 'الترجمة'), _translationSize, 12, 21, (v) {
                   setState(() => _translationSize = v);
                   _saveSettings();
                   setSheetState(() {});
@@ -332,6 +336,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   }
 
   Future<void> _showTranslationPicker(QuranSurah surah) async {
+    final l10n = AppLocalizations.of(context);
     final selected = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -344,7 +349,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'অনুবাদ নির্বাচন করুন',
+                  _localizedText(l10n, 'অনুবাদ নির্বাচন করুন', 'Select translation', 'اختر الترجمة'),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                 ),
               ),
@@ -369,6 +374,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   }
 
   Future<void> _showTafsirPicker(QuranSurah surah) async {
+    final l10n = AppLocalizations.of(context);
     final selected = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -381,7 +387,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'ব্যাখ্যা / তাফসির নির্বাচন করুন',
+                  _localizedText(l10n, 'ব্যাখ্যা / তাফসির নির্বাচন করুন', 'Select Tafsir / Explanation', 'اختر التفسير / الشرح'),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                 ),
               ),
@@ -406,14 +412,15 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final selected = _selectedSurah == null ? null : _data.getSurah(_selectedSurah!);
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'অনুধাবন কুরআন',
+        title: Text(
+          _localizedText(l10n, 'অনুধাবন কুরআন', 'Onudhabon Quran', 'قرآن الفهم'),
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
         centerTitle: true,
@@ -439,6 +446,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   }
 
   Widget _buildPicker(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final query = _query.trim().toLowerCase();
     final surahs = _data.surahList.where((surah) {
       if (query.isEmpty) return true;
@@ -457,7 +465,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
           controller: _searchController,
           onChanged: (value) => setState(() => _query = value),
           decoration: InputDecoration(
-            hintText: 'সূরা খুঁজুন...',
+            hintText: _localizedText(l10n, 'সূরা খুঁজুন...', 'Search surah...', 'ابحث عن السورة...'),
             prefixIcon: const Icon(Icons.search_rounded, size: 20),
             filled: true,
             fillColor: context.cardColor,
@@ -469,7 +477,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         ),
         const SizedBox(height: 14),
         Text(
-          'সূরা নির্বাচন করুন',
+          _localizedText(l10n, 'সূরা নির্বাচন করুন', 'Select a surah', 'اختر سورة'),
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -481,6 +489,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   }
 
   Widget _introCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
     return Container(
       padding: const EdgeInsets.all(18),
@@ -511,12 +520,12 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'পড়ুন, বুঝুন, অনুধাবন করুন',
+                  _localizedText(l10n, 'পড়ুন, বুঝুন, অনুধাবন করুন', 'Read, Understand, Reflect', 'اقرأ وافهم وتدبر'),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'আরবি আয়াত, ওয়াকফ চিহ্ন, বিভিন্ন অনুবাদ এবং নির্বাচিত ব্যাখ্যা—একটি premium reading experience.',
+                  _localizedText(l10n, 'আরবি আয়াত, ওয়াকফ চিহ্ন, বিভিন্ন অনুবাদ এবং নির্বাচিত ব্যাখ্যা—একটি উন্নত রিডিং অভিজ্ঞতা।', 'Arabic verses, pause signs, translations and selected explanations in one reading experience.', 'آيات عربية وعلامات الوقف وترجمات وشروحات مختارة في تجربة قراءة متكاملة.'),
                   style: TextStyle(fontSize: 12, height: 1.45),
                 ),
               ],
@@ -528,9 +537,10 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   }
 
   Widget _surahTile(BuildContext context, QuranSurah surah) {
+    final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
     final meta = QuranMetadataService.forSurah(surah.number);
-    final typeLabel = surah.type == 'meccan' ? 'মাক্কী' : 'মাদানী';
+    final typeLabel = surah.type == 'meccan' ? _localizedText(l10n, 'মাক্কী', 'Meccan', 'مكية') : _localizedText(l10n, 'মাদানী', 'Medinan', 'مدنية');
     return Container(
       margin: const EdgeInsets.only(bottom: 9),
       decoration: BoxDecoration(
@@ -558,7 +568,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
         ),
         subtitle: Text(
-          '${_bn(surah.totalVerses)} আয়াত • ${_bn(meta.rukuCount)} রুকু • ${_bn(meta.sajdaCount)} সিজদা • $typeLabel',
+          '${l10n.isBangla ? _bn(surah.totalVerses) : surah.totalVerses} ${_localizedText(l10n, 'আয়াত', 'verses', 'آيات')} • ${l10n.isBangla ? _bn(meta.rukuCount) : meta.rukuCount} ${_localizedText(l10n, 'রুকু', 'ruku', 'ركوع')} • ${l10n.isBangla ? _bn(meta.sajdaCount) : meta.sajdaCount} ${_localizedText(l10n, 'সিজদা', 'sajdah', 'سجود')} • $typeLabel',
           style: const TextStyle(fontSize: 12),
         ),
         trailing: Text(
@@ -571,6 +581,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   }
 
   Widget _buildReader(BuildContext context, QuranSurah surah) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         if (_loadingSources)
@@ -579,7 +590,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         if (_tafsirError != null)
           _error(
             context,
-            '?? ?????????? ??? ????? ?????? ???? ???????? ???????? ???? ??????',
+            _localizedText(l10n, 'তাফসির লোড করা যায়নি। আবার চেষ্টা করুন।', 'Could not load Tafsir. Please try again.', 'تعذر تحميل التفسير. حاول مرة أخرى.'),
           ),
         Expanded(
           child: Builder(
@@ -643,6 +654,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   }
 
   Widget _surahHeader(BuildContext context, QuranSurah surah) {
+    final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
     final meta = QuranMetadataService.forSurah(surah.number);
     final typeLabel = surah.type == 'meccan' ? 'মাক্কী' : 'মাদানী';
@@ -690,9 +702,9 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
             spacing: 7,
             runSpacing: 7,
             children: [
-              _chip(context, _bn(surah.totalVerses), 'আয়াত'),
-              _chip(context, _bn(meta.rukuCount), 'রুকু'),
-              _chip(context, _bn(meta.sajdaCount), 'সিজদা'),
+              _chip(context, l10n.isBangla ? _bn(surah.totalVerses) : surah.totalVerses.toString(), _localizedText(l10n, 'আয়াত', 'verses', 'آيات')),
+              _chip(context, l10n.isBangla ? _bn(meta.rukuCount) : meta.rukuCount.toString(), _localizedText(l10n, 'রুকু', 'ruku', 'ركوع')),
+              _chip(context, l10n.isBangla ? _bn(meta.sajdaCount) : meta.sajdaCount.toString(), _localizedText(l10n, 'সিজদা', 'sajdah', 'سجود')),
               _chip(context, typeLabel, ''),
             ],
           ),
@@ -719,7 +731,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                 child: TextButton.icon(
                   onPressed: () => _showTafsirPicker(surah),
                   icon: const Icon(Icons.menu_book_rounded, size: 17),
-                  label: const Text('তাফসির / ব্যাখ্যা', maxLines: 1),
+                  label: Text(_localizedText(l10n, 'তাফসির / ব্যাখ্যা', 'Tafsir / Explanation', 'التفسير / الشرح'), maxLines: 1),
 
                   style: TextButton.styleFrom(
                     foregroundColor: primary,
