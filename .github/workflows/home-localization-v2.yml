@@ -1,0 +1,85 @@
+name: Repair active Home localization
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [fix/prayer-completion-tracker]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Patch Simple Home and Informative Home
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('lib/screens/simple_home_screen_nova.dart')
+          s = p.read_text(encoding='utf-8')
+
+          # Make the local translation helper truly tri-lingual.
+          s = re.sub(
+              r"String _tr\(String bn, String en, String lang\) => lang == 'en' \? en : bn;",
+              """String _tr(String bn, String en, String lang) {\n    if (lang == 'en') return en;\n    if (lang == 'ar') {\n      const ar = <String, String>{\n        'লোকেশন': 'الموقع', 'Location': 'الموقع',\n        'লোকেশন পাওয়া যায়নি': 'الموقع غير متاح', 'Location unavailable': 'الموقع غير متاح',\n        'বর্তমান লোকেশন আপডেট করুন': 'تحديث الموقع الحالي', 'Update current location': 'تحديث الموقع الحالي',\n        'ঢাকা': 'دكا', 'Dhaka': 'دكا', 'আপনার কুরআন': 'القرآن الخاص بك', 'Your Quran': 'القرآن الخاص بك',\n      };\n      return ar[bn] ?? ar[en] ?? en;\n    }\n    return bn;\n  }""",
+              s,
+              count=1,
+          )
+
+          # Extend prayer labels to Arabic and raw variants.
+          marker = "    const en = <String, String>{\n      'fajr': 'Fajr',\n      'dhuhr': 'Dhuhr',\n      'jumuah': 'Jumuah',\n      'asr': 'Asr',\n      'maghrib': 'Maghrib',\n      'isha': 'Isha',\n    };"
+          replacement = marker + """\n    const ar = <String, String>{\n      'fajr': 'الفجر', 'dhuhr': 'الظهر', 'jumuah': 'الجمعة', 'asr': 'العصر',\n      'maghrib': 'المغرب', 'magrib': 'المغرب', 'isha': 'العشاء',\n      'ishraq': 'الإشراق', 'duha': 'الضحى', 'awwabin': 'الأوابين', 'tahajjud': 'التهجد',\n    };\n    if (lang == 'ar') return ar[key] ?? value;"""
+          if marker in s and "final ar = <String, String>" not in s:
+              s = s.replace(marker, replacement, 1)
+          s = s.replace("      'isha': 'ইশা',\n    };", "      'isha': 'ইশা',\n      'ishraq': 'ইশরাক',\n      'duha': 'চাশত / দুহা',\n      'awwabin': 'আউওয়াবীন',\n      'tahajjud': 'তাহাজ্জুদ',\n    };", 1)
+
+          # Tri-lingualize the visible Hero labels without touching layout.
+          pairs = {
+              "language == 'en' ? 'PRAYER NOW' : 'সালাত চলছে'": "language == 'en' ? 'PRAYER NOW' : language == 'ar' ? 'الصلاة الآن' : 'সালাত চলছে'",
+              "language == 'en' ? 'Next Prayer' : 'পরবর্তী সালাত'": "language == 'en' ? 'Next Prayer' : language == 'ar' ? 'الصلاة التالية' : 'পরবর্তী সালাত'",
+              "language == 'en' ? 'time remaining' : 'সময় বাকি'": "language == 'en' ? 'time remaining' : language == 'ar' ? 'الوقت المتبقي' : 'সময় বাকি'",
+              "language == 'en' ? 'Current' : 'বর্তমান'": "language == 'en' ? 'Current' : language == 'ar' ? 'الحالي' : 'বর্তমান'",
+              "language == 'en' ? 'Next' : 'পরবর্তী'": "language == 'en' ? 'Next' : language == 'ar' ? 'التالي' : 'পরবর্তী'",
+              "language == 'en' ? 'Sunrise' : 'সূর্যোদয়'": "language == 'en' ? 'Sunrise' : language == 'ar' ? 'الشروق' : 'সূর্যোদয়'",
+              "language == 'en' ? 'Sunset' : 'সূর্যাস্ত'": "language == 'en' ? 'Sunset' : language == 'ar' ? 'الغروب' : 'সূর্যাস্ত'",
+          }
+          for old, new in pairs.items():
+              s = s.replace(old, new)
+
+          # Prayer rail must not fall back to Bangla for Arabic.
+          rail = """    if (language == 'en') return name;\n    const bn = <String, String>{"""
+          rail_repl = """    if (language == 'en') return name;\n    if (language == 'ar') {\n      const ar = <String, String>{'Fajr': 'الفجر', 'Dhuhr': 'الظهر', 'Asr': 'العصر', 'Maghrib': 'المغرب', 'Isha': 'العشاء'};\n      return ar[name] ?? name;\n    }\n    const bn = <String, String>{"""
+          if rail in s:
+              s = s.replace(rail, rail_repl, 1)
+
+          # Status is a raw controller string; translate common runtime variants here.
+          old_status = "  final String status;\n\n  @override\n  Widget build(BuildContext context) {"
+          new_status = """  final String status;\n\n  String _statusLabel() {\n    final raw = status.trim();\n    if (language == 'en') {\n      const en = <String, String>{\n        'ইশার ওয়াক্ত চলছে': 'Isha time is active', 'ইশরাকের ওয়াক্ত চলছে': 'Ishraq time is active',\n        'তাহাজ্জুদের ওয়াক্ত চলছে': 'Tahajjud time is active', 'মাগরিবের ওয়াক্ত চলছে': 'Maghrib time is active',\n        'Ishar Waqto Cholche': 'Isha time is active',\n      };\n      return en[raw] ?? raw;\n    }\n    if (language == 'ar') {\n      const ar = <String, String>{\n        'ইশার ওয়াক্ত চলছে': 'وقت العشاء جارٍ', 'ইশরাকের ওয়াক্ত চলছে': 'وقت الإشراق جارٍ',\n        'তাহাজ্জুদের ওয়াক্ত চলছে': 'وقت التهجد جارٍ', 'মাগরিবের ওয়াক্ত চলছে': 'وقت المغرب جارٍ',\n        'Ishar Waqto Cholche': 'وقت العشاء جارٍ',\n      };\n      return ar[raw] ?? raw;\n    }\n    return raw;\n  }\n\n  @override\n  Widget build(BuildContext context) {"""
+          if old_status in s:
+              s = s.replace(old_status, new_status, 1)
+          s = s.replace("                      status,", "                      _statusLabel(),", 1)
+
+          p.write_text(s, encoding='utf-8')
+
+          # Informative Home: keep the same structure, but make its remaining languageCode ternaries Arabic-aware.
+          hp = Path('lib/screens/home_screen.dart')
+          hs = hp.read_text(encoding='utf-8')
+          hs = hs.replace("languageCode == 'en' ? en : bn", "languageCode == 'en' ? en : languageCode == 'ar' ? ar : bn")
+          hp.write_text(hs, encoding='utf-8')
+
+      - name: Validate changes and remove workflow
+        shell: bash
+        run: |
+          git diff --check
+          rm -f .github/workflows/home-localization-v2.yml
+          git add lib/screens/simple_home_screen_nova.dart lib/screens/home_screen.dart .github/workflows/home-localization-v2.yml
+          git commit -m "fix: localize active home screen hardcoded text"
+          git push origin HEAD:${{ github.head_ref }}
