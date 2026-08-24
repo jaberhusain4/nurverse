@@ -13,13 +13,125 @@ import 'home_mode_settings_screen.dart';
 class SettingsHubScreenV4 extends StatelessWidget {
   const SettingsHubScreenV4({super.key});
 
+  static const Map<String, String> _ar = {
+    'Settings': 'الإعدادات',
+    'Personalization': 'التخصيص',
+    'Home Screen': 'الشاشة الرئيسية',
+    'Choose Simple or Informative Home': 'اختر الصفحة الرئيسية البسيطة أو التفصيلية',
+    'Appearance': 'المظهر',
+    'Theme': 'السمة',
+    'Language': 'اللغة',
+    'English': 'الإنجليزية',
+    'Bangla': 'البنغالية',
+    'Arabic': 'العربية',
+    'App Text Size': 'حجم نص التطبيق',
+    'Show seconds': 'إظهار الثواني',
+    'Show seconds where supported': 'إظهار الثواني حيثما كانت مدعومة',
+    'Vibration': 'الاهتزاز',
+    'Allow supported haptic feedback': 'السماح بالتغذية اللمسية المدعومة',
+    'Prayer & Adhan': 'الصلاة والأذان',
+    'Prayer Calculation': 'حساب أوقات الصلاة',
+    'Madhhab': 'المذهب',
+    'Adhan Notifications': 'إشعارات الأذان',
+    'Enable prayer-time notifications': 'تفعيل إشعارات أوقات الصلاة',
+    'Prayer Adjustments': 'تعديلات أوقات الصلاة',
+    'Jamaat Times': 'أوقات الجماعة',
+    'Set local Jamaat times': 'تعيين أوقات الجماعة المحلية',
+    'Quran': 'القرآن',
+    'Quran Reading': 'قراءة القرآن',
+    'Translation': 'الترجمة',
+    'Arabic Font': 'الخط العربي',
+    'Auto-play next': 'التشغيل التلقائي التالي',
+    'Continue with the next supported audio item': 'المتابعة مع العنصر الصوتي التالي المدعوم',
+    'Wi-Fi only downloads': 'التنزيل عبر Wi-Fi فقط',
+    'Prefer Wi-Fi for downloadable Quran resources': 'تفضيل Wi-Fi لموارد القرآن القابلة للتنزيل',
+    'Worship & Dates': 'العبادة والتواريخ',
+    'Daily Content': 'المحتوى اليومي',
+    'Ayah, Hadith and Dua visibility': 'إظهار الآية والحديث والدعاء',
+    'Date Preferences': 'تفضيلات التاريخ',
+    'Data & App': 'البيانات والتطبيق',
+    'Reset Settings': 'إعادة ضبط الإعدادات',
+    'Restore configurable preferences': 'إعادة التفضيلات القابلة للتكوين إلى الوضع الافتراضي',
+    'About NurVerse': 'حول نورفيرس',
+    'Open Source Licenses': 'تراخيص المصادر المفتوحة',
+    'Libraries used by NurVerse': 'المكتبات المستخدمة في نورفيرس',
+    'NurVerse': 'نورفيرس',
+    'NurVerse Premium': 'نورفيرس بريميوم',
+    'ACTIVE': 'نشط',
+    'Your premium experience is active': 'تجربة بريميوم الخاصة بك مفعلة',
+    'Unlock a richer, calmer NurVerse': 'اكتشف تجربة نورفيرس أكثر ثراءً وهدوءًا',
+    'AMOLED': 'AMOLED',
+    'Premium Themes': 'سمات بريميوم',
+    'Recitations': 'تلاوات',
+    'Cloud Sync': 'مزامنة سحابية',
+    'Manage Premium': 'إدارة بريميوم',
+    'Explore Premium': 'استكشاف بريميوم',
+    'NurVerse User': 'مستخدم نورفيرس',
+    'Logout': 'تسجيل الخروج',
+    'Premium is active.': 'بريميوم مفعّل.',
+    'Done': 'تم',
+    'Light Mode': 'الوضع الفاتح',
+    'Dark Mode': 'الوضع الداكن',
+    'System Default': 'افتراضي النظام',
+    'AMOLED Black': 'أسود AMOLED',
+    'Small': 'صغير',
+    'Normal': 'عادي',
+    'Large': 'كبير',
+    'Very Large': 'كبير جدًا',
+    'No adjustments': 'لا توجد تعديلات',
+    'min': 'د',
+    'Hijri only': 'هجري فقط',
+    'Gregorian only': 'ميلادي فقط',
+    'Both dates': 'كلا التاريخين',
+    'system': 'افتراضي النظام',
+    'light': 'الوضع الفاتح',
+    'dark': 'الوضع الداكن',
+    'amoled': 'أسود AMOLED',
+    'Default': 'افتراضي',
+    'hijri': 'هجري',
+    'gregorian': 'ميلادي',
+    'both': 'كلاهما',
+    'Karachi': 'كراتشي',
+    'Muslim World League': 'رابطة العالم الإسلامي',
+    'Egyptian': 'المصري',
+    'Umm Al Qura': 'أم القرى',
+    'Dubai': 'دبي',
+    'Qatar': 'قطر',
+    'Kuwait': 'الكويت',
+    'Singapore': 'سنغافورة',
+    'North America': 'أمريكا الشمالية',
+    'Moonsighting Committee': 'لجنة رؤية الهلال',
+    'Hanafi': 'حنفي',
+    'Shafi': 'شافعي',
+    'Fajr': 'الفجر',
+    'Dhuhr': 'الظهر',
+    'Asr': 'العصر',
+    'Maghrib': 'المغرب',
+    'Isha': 'العشاء',
+    'Cancel': 'إلغاء',
+    'Save': 'حفظ',
+    'Reset': 'إعادة ضبط',
+    'Premium': 'بريميوم',
+    'Daily Ayah': 'آية اليوم',
+    'Daily Hadith': 'حديث اليوم',
+    'Daily Dua': 'دعاء اليوم',
+    'Quran Arabic': 'عربي القرآن',
+}
+
+  String _t(String languageCode, String bn, String en, [String? ar]) {
+    if (languageCode == 'ar') return ar ?? _ar[en] ?? en;
+    if (languageCode == 'en') return en;
+    return bn;
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final textScale = context.watch<TextScaleProvider>();
     final premium = context.watch<PremiumProvider>();
-    final isEnglish = settings.isEnglish;
-    final isArabic = settings.isArabic;
+    final languageCode = settings.languageCode;
+    final isEnglish = languageCode == 'en';
+    final isArabic = languageCode == 'ar';
 
     return Scaffold(
       appBar: AppBar(title: Text(isEnglish ? 'Settings' : isArabic ? 'الإعدادات' : 'সেটিংস')),
@@ -29,12 +141,12 @@ class SettingsHubScreenV4 extends StatelessWidget {
         children: [
           _buildPremiumHero(context, settings, premium),
           const SizedBox(height: 14),
-          _section(context, isEnglish ? 'Personalization' : 'ব্যক্তিগতকরণ', Icons.tune_rounded, [
+          _section(context, _t(languageCode, 'ব্যক্তিগতকরণ', 'Personalization'), Icons.tune_rounded, [
             _tile(
               context,
               Icons.dashboard_customize_outlined,
-              isEnglish ? 'Home Screen' : 'হোম স্ক্রিন',
-              isEnglish ? 'Choose Simple or Informative Home' : 'সহজ বা বিস্তারিত হোম স্ক্রিন বেছে নিন',
+              _t(languageCode, 'হোম স্ক্রিন', 'Home Screen'),
+              _t(languageCode, 'সহজ বা বিস্তারিত হোম স্ক্রিন বেছে নিন', 'Choose Simple or Informative Home'),
               () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(builder: (_) => const HomeModeSettingsScreen()),
@@ -43,15 +155,15 @@ class SettingsHubScreenV4 extends StatelessWidget {
             ),
           ]),
           const SizedBox(height: 20),
-          _section(context, isEnglish ? 'Appearance' : 'অ্যাপের চেহারা', Icons.palette_outlined, [
+          _section(context, _t(languageCode, 'অ্যাপের চেহারা', 'Appearance'), Icons.palette_outlined, [
             _tile(
               context,
               Icons.palette_outlined,
-              isEnglish ? 'Theme' : 'থিম',
+              _t(languageCode, 'থিম', 'Theme'),
               _themeLabel(settings),
               () => _showChoiceSheet(
                 context,
-                isEnglish ? 'Theme' : 'থিম',
+                _t(languageCode, 'থিম', 'Theme'),
                 const ['system', 'light', 'dark', 'amoled'],
                 (value) async {
                   switch (value) {
@@ -76,11 +188,11 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _tile(
               context,
               Icons.language_rounded,
-              isEnglish ? 'Language' : isArabic ? 'اللغة' : 'ভাষা',
-              isEnglish ? 'English' : isArabic ? 'العربية' : 'বাংলা',
+              _t(languageCode, 'ভাষা', 'Language', 'اللغة'),
+              _t(languageCode, 'বাংলা', 'English', 'العربية'),
               () => _showChoiceSheet(
                 context,
-                isEnglish ? 'Language' : isArabic ? 'اللغة' : 'ভাষা',
+                _t(languageCode, 'ভাষা', 'Language', 'اللغة'),
                 const ['bn', 'en', 'ar'],
                 settings.setLanguage,
                 selectedValue: settings.languageCode,
@@ -90,16 +202,16 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _tile(
               context,
               Icons.text_fields_rounded,
-              isEnglish ? 'App Text Size' : 'অ্যাপের লেখা',
-              _textSizeLabel(textScale.level, isEnglish),
+              _t(languageCode, 'অ্যাপের লেখা', 'App Text Size'),
+              _textSizeLabel(textScale.level, languageCode),
               () => _showTextSizeSheet(context, textScale, isEnglish),
             ),
             _divider(),
             _switchTile(
               context,
               Icons.timer_outlined,
-              isEnglish ? 'Show seconds' : 'সেকেন্ড দেখান',
-              isEnglish ? 'Show seconds where supported' : 'যেখানে সমর্থিত সেখানে সেকেন্ড দেখাবে',
+              _t(languageCode, 'সেকেন্ড দেখান', 'Show seconds'),
+              _t(languageCode, 'যেখানে সমর্থিত সেখানে সেকেন্ড দেখাবে', 'Show seconds where supported'),
               settings.showSeconds,
               settings.toggleShowSeconds,
             ),
@@ -107,22 +219,22 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _switchTile(
               context,
               Icons.vibration_rounded,
-              isEnglish ? 'Vibration' : 'ভাইব্রেশন',
-              isEnglish ? 'Allow supported haptic feedback' : 'সমর্থিত অ্যাকশনে হ্যাপটিক ফিডব্যাক চালু রাখুন',
+              _t(languageCode, 'ভাইব্রেশন', 'Vibration'),
+              _t(languageCode, 'সমর্থিত অ্যাকশনে হ্যাপটিক ফিডব্যাক চালু রাখুন', 'Allow supported haptic feedback'),
               settings.vibrationEnabled,
               settings.toggleVibration,
             ),
           ]),
           const SizedBox(height: 20),
-          _section(context, isEnglish ? 'Prayer & Adhan' : 'সালাত ও আজান', Icons.mosque_outlined, [
+          _section(context, _t(languageCode, 'সালাত ও আজান', 'Prayer & Adhan'), Icons.mosque_outlined, [
             _tile(
               context,
               Icons.calculate_outlined,
-              isEnglish ? 'Prayer Calculation' : 'সালাতের হিসাব পদ্ধতি',
-              _calculationLabel(settings.calculationMethod, isEnglish),
+              _t(languageCode, 'সালাতের হিসাব পদ্ধতি', 'Prayer Calculation'),
+              _calculationLabel(settings.calculationMethod, languageCode),
               () => _showChoiceSheet(
                 context,
-                isEnglish ? 'Prayer Calculation' : 'সালাতের হিসাব পদ্ধতি',
+                _t(languageCode, 'সালাতের হিসাব পদ্ধতি', 'Prayer Calculation'),
                 SettingsProvider.calculationMethods,
                 settings.setCalculationMethod,
               ),
@@ -131,11 +243,11 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _tile(
               context,
               Icons.mosque_outlined,
-              isEnglish ? 'Madhhab' : 'মাযহাব',
-              _madhabLabel(settings.madhab, isEnglish),
+              _t(languageCode, 'মাযহাব', 'Madhhab'),
+              _madhabLabel(settings.madhab, languageCode),
               () => _showChoiceSheet(
                 context,
-                isEnglish ? 'Madhhab' : 'মাযহাব',
+                _t(languageCode, 'মাযহাব', 'Madhhab'),
                 SettingsProvider.madhabs,
                 settings.setMadhhab,
               ),
@@ -144,8 +256,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _switchTile(
               context,
               Icons.notifications_active_outlined,
-              isEnglish ? 'Adhan Notifications' : 'আজান নোটিফিকেশন',
-              isEnglish ? 'Enable prayer-time notifications' : 'সালাতের সময়ের নোটিফিকেশন চালু রাখুন',
+              _t(languageCode, 'আজান নোটিফিকেশন', 'Adhan Notifications'),
+              _t(languageCode, 'সালাতের সময়ের নোটিফিকেশন চালু রাখুন', 'Enable prayer-time notifications'),
               settings.isAdhanNotificationEnabled,
               settings.toggleAdhanNotification,
             ),
@@ -153,25 +265,25 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _tile(
               context,
               Icons.tune_rounded,
-              isEnglish ? 'Prayer Adjustments' : 'সালাতের সময় সমন্বয়',
-              _adjustmentLabel(settings, isEnglish),
+              _t(languageCode, 'সালাতের সময় সমন্বয়', 'Prayer Adjustments'),
+              _adjustmentLabel(settings, languageCode),
               () => _showAdjustmentDialog(context, settings),
             ),
             _divider(),
             _tile(
               context,
               Icons.access_time_rounded,
-              isEnglish ? 'Jamaat Times' : 'জামাতের সময়',
-              isEnglish ? 'Set local Jamaat times' : 'নিজের এলাকার জামাতের সময় সেট করুন',
+              _t(languageCode, 'জামাতের সময়', 'Jamaat Times'),
+              _t(languageCode, 'নিজের এলাকার জামাতের সময় সেট করুন', 'Set local Jamaat times'),
               () => _showJamaatDialog(context, settings),
             ),
           ]),
           const SizedBox(height: 20),
-          _section(context, isEnglish ? 'Quran' : 'কুরআন', Icons.menu_book_outlined, [
+          _section(context, _t(languageCode, 'কুরআন', 'Quran'), Icons.menu_book_outlined, [
             _tile(
               context,
               Icons.format_size_rounded,
-              isEnglish ? 'Quran Reading' : 'কুরআন পড়ার সেটিংস',
+              _t(languageCode, 'কুরআন পড়ার সেটিংস', 'Quran Reading'),
               '${settings.quranFontSize.round()} / ${settings.translationFontSize.round()}',
               () => _showQuranFontSheet(context, settings),
             ),
@@ -179,11 +291,11 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _tile(
               context,
               Icons.translate_rounded,
-              isEnglish ? 'Translation' : 'অনুবাদ',
-              _quranTranslationLabel(settings.quranTranslation, isEnglish),
+              _t(languageCode, 'অনুবাদ', 'Translation'),
+              _quranTranslationLabel(settings.quranTranslation, languageCode),
               () => _showChoiceSheet(
                 context,
-                isEnglish ? 'Translation' : 'অনুবাদ',
+                _t(languageCode, 'অনুবাদ', 'Translation'),
                 const ['Bangla', 'English'],
                 settings.setQuranTranslation,
               ),
@@ -192,11 +304,11 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _tile(
               context,
               Icons.font_download_outlined,
-              isEnglish ? 'Arabic Font' : 'আরবি ফন্ট',
+              _t(languageCode, 'আরবি ফন্ট', 'Arabic Font'),
               settings.quranArabicFont == 'Default' && !isEnglish ? 'ডিফল্ট' : settings.quranArabicFont,
               () => _showChoiceSheet(
                 context,
-                isEnglish ? 'Arabic Font' : 'আরবি ফন্ট',
+                _t(languageCode, 'আরবি ফন্ট', 'Arabic Font'),
                 const ['Default', 'Amiri', 'Scheherazade'],
                 settings.setQuranArabicFont,
               ),
@@ -205,8 +317,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _switchTile(
               context,
               Icons.skip_next_rounded,
-              isEnglish ? 'Auto-play next' : 'পরেরটি স্বয়ংক্রিয় চালান',
-              isEnglish ? 'Continue with the next supported audio item' : 'সমর্থিত অডিওতে পরেরটি স্বয়ংক্রিয়ভাবে চালাবে',
+              _t(languageCode, 'পরেরটি স্বয়ংক্রিয় চালান', 'Auto-play next'),
+              _t(languageCode, 'সমর্থিত অডিওতে পরেরটি স্বয়ংক্রিয়ভাবে চালাবে', 'Continue with the next supported audio item'),
               settings.autoPlayNext,
               settings.toggleAutoPlayNext,
             ),
@@ -214,53 +326,53 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _switchTile(
               context,
               Icons.wifi_outlined,
-              isEnglish ? 'Wi-Fi only downloads' : 'শুধু ওয়াই-ফাই ডাউনলোড',
-              isEnglish ? 'Prefer Wi-Fi for downloadable Quran resources' : 'ডাউনলোডযোগ্য কুরআন রিসোর্সে ওয়াই-ফাই অগ্রাধিকার দিন',
+              _t(languageCode, 'শুধু ওয়াই-ফাই ডাউনলোড', 'Wi-Fi only downloads'),
+              _t(languageCode, 'ডাউনলোডযোগ্য কুরআন রিসোর্সে ওয়াই-ফাই অগ্রাধিকার দিন', 'Prefer Wi-Fi for downloadable Quran resources'),
               settings.downloadWifiOnly,
               settings.toggleDownloadWifiOnly,
             ),
           ]),
           const SizedBox(height: 20),
-          _section(context, isEnglish ? 'Worship & Dates' : 'ইবাদত ও তারিখ', Icons.event_available_outlined, [
+          _section(context, _t(languageCode, 'ইবাদত ও তারিখ', 'Worship & Dates'), Icons.event_available_outlined, [
             _tile(
               context,
               Icons.today_outlined,
-              isEnglish ? 'Daily Content' : 'দৈনিক কনটেন্ট',
-              isEnglish ? 'Ayah, Hadith and Dua visibility' : 'আয়াত, হাদিস ও দোয়ার দৃশ্যমানতা',
+              _t(languageCode, 'দৈনিক কনটেন্ট', 'Daily Content'),
+              _t(languageCode, 'আয়াত, হাদিস ও দোয়ার দৃশ্যমানতা', 'Ayah, Hadith and Dua visibility'),
               () => _showDailyContentSheet(context),
             ),
             _divider(),
             _tile(
               context,
               Icons.calendar_month_outlined,
-              isEnglish ? 'Date Preferences' : 'তারিখের পছন্দ',
-              _dateLabel(settings, isEnglish),
+              _t(languageCode, 'তারিখের পছন্দ', 'Date Preferences'),
+              _dateLabel(settings, languageCode),
               () => _showChoiceSheet(
                 context,
-                isEnglish ? 'Date Preferences' : 'তারিখের পছন্দ',
+                _t(languageCode, 'তারিখের পছন্দ', 'Date Preferences'),
                 const ['hijri', 'gregorian', 'both'],
                 settings.setDateDisplayPreference,
               ),
             ),
           ]),
           const SizedBox(height: 20),
-          _section(context, isEnglish ? 'Data & App' : 'ডেটা ও অ্যাপ', Icons.settings_applications_outlined, [
+          _section(context, _t(languageCode, 'ডেটা ও অ্যাপ', 'Data & App'), Icons.settings_applications_outlined, [
             _tile(
               context,
               Icons.restart_alt_rounded,
-              isEnglish ? 'Reset Settings' : 'সেটিংস রিসেট',
-              isEnglish ? 'Restore configurable preferences' : 'সব কনফিগারযোগ্য সেটিংস ডিফল্টে ফিরিয়ে দিন',
+              _t(languageCode, 'সেটিংস রিসেট', 'Reset Settings'),
+              _t(languageCode, 'সব কনফিগারযোগ্য সেটিংস ডিফল্টে ফিরিয়ে দিন', 'Restore configurable preferences'),
               () => _showResetDialog(context, settings),
             ),
             _divider(),
             _tile(
               context,
               Icons.info_outline_rounded,
-              isEnglish ? 'About NurVerse' : 'নূরভার্স সম্পর্কে',
-              isEnglish ? 'Version 1.0.0' : 'সংস্করণ ১.০.০',
+              _t(languageCode, 'নূরভার্স সম্পর্কে', 'About NurVerse'),
+              _t(languageCode, 'সংস্করণ ১.০.০', 'Version 1.0.0'),
               () => showAboutDialog(
                 context: context,
-                applicationName: isEnglish ? 'NurVerse' : 'নূরভার্স',
+                applicationName: _t(languageCode, 'নূরভার্স', 'NurVerse'),
                 applicationVersion: '1.0.0',
               ),
             ),
@@ -268,11 +380,11 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _tile(
               context,
               Icons.code_rounded,
-              isEnglish ? 'Open Source Licenses' : 'ওপেন সোর্স লাইসেন্স',
-              isEnglish ? 'Libraries used by NurVerse' : 'নূরভার্সে ব্যবহৃত লাইব্রেরি',
+              _t(languageCode, 'ওপেন সোর্স লাইসেন্স', 'Open Source Licenses'),
+              _t(languageCode, 'নূরভার্সে ব্যবহৃত লাইব্রেরি', 'Libraries used by NurVerse'),
               () => showLicensePage(
                 context: context,
-                applicationName: isEnglish ? 'NurVerse' : 'নূরভার্স',
+                applicationName: _t(languageCode, 'নূরভার্স', 'NurVerse'),
                 applicationVersion: '1.0.0',
               ),
             ),
@@ -283,7 +395,9 @@ class SettingsHubScreenV4 extends StatelessWidget {
   }
 
   Widget _buildPremiumHero(BuildContext context, SettingsProvider settings, PremiumProvider premium) {
-    final isEnglish = settings.languageCode == 'en';
+    final languageCode = settings.languageCode;
+    final isEnglish = languageCode == 'en';
+    final isArabic = languageCode == 'ar';
     final isActive = premium.isPremium;
 
     return StreamBuilder<User?>(
@@ -333,7 +447,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                           children: [
                             Flexible(
                               child: Text(
-                                isEnglish ? 'NurVerse Premium' : 'নূরভার্স প্রিমিয়াম',
+                                _t(languageCode, 'নূরভার্স প্রিমিয়াম', 'NurVerse Premium'),
                                 style: const TextStyle(color: AppColors.seaBlue, fontSize: 18, fontWeight: FontWeight.w900),
                               ),
                             ),
@@ -345,7 +459,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                                   color: AppColors.seaBlue.withValues(alpha: .12),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Text(isEnglish ? 'ACTIVE' : 'সক্রিয়', style: const TextStyle(color: AppColors.seaBlue, fontSize: 8, fontWeight: FontWeight.w900)),
+                                child: Text(_t(languageCode, 'সক্রিয়', 'ACTIVE'), style: const TextStyle(color: AppColors.seaBlue, fontSize: 8, fontWeight: FontWeight.w900)),
                               ),
                             ],
                           ],
@@ -353,8 +467,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           isActive
-                              ? (isEnglish ? 'Your premium experience is active' : 'আপনার প্রিমিয়াম অভিজ্ঞতা সক্রিয়')
-                              : (isEnglish ? 'Unlock a richer, calmer NurVerse' : 'আরও সমৃদ্ধ ও সুন্দর নূরভার্স উপভোগ করুন'),
+                              ? (_t(languageCode, 'আপনার প্রিমিয়াম অভিজ্ঞতা সক্রিয়', 'Your premium experience is active'))
+                              : (_t(languageCode, 'আরও সমৃদ্ধ ও সুন্দর নূরভার্স উপভোগ করুন', 'Unlock a richer, calmer NurVerse')),
                           style: TextStyle(fontSize: 11, height: 1.4, color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: .70)),
                         ),
                       ],
@@ -369,10 +483,10 @@ class SettingsHubScreenV4 extends StatelessWidget {
                 spacing: 7,
                 runSpacing: 7,
                 children: [
-                  _premiumChip(Icons.contrast_rounded, isEnglish ? 'AMOLED' : 'অ্যামোলেড'),
-                  _premiumChip(Icons.palette_outlined, isEnglish ? 'Premium Themes' : 'প্রিমিয়াম থিম'),
-                  _premiumChip(Icons.headphones_outlined, isEnglish ? 'Recitations' : 'তেলাওয়াত'),
-                  _premiumChip(Icons.cloud_outlined, isEnglish ? 'Cloud Sync' : 'ক্লাউড সিঙ্ক'),
+                  _premiumChip(Icons.contrast_rounded, _t(languageCode, 'অ্যামোলেড', 'AMOLED')),
+                  _premiumChip(Icons.palette_outlined, _t(languageCode, 'প্রিমিয়াম থিম', 'Premium Themes')),
+                  _premiumChip(Icons.headphones_outlined, _t(languageCode, 'তেলাওয়াত', 'Recitations')),
+                  _premiumChip(Icons.cloud_outlined, _t(languageCode, 'ক্লাউড সিঙ্ক', 'Cloud Sync')),
                 ],
               ),
               const SizedBox(height: 18),
@@ -388,8 +502,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
                   },
                   icon: Icon(premium.isPremium ? Icons.settings_rounded : Icons.auto_awesome_rounded, size: 18),
                   label: Text(premium.isPremium
-                      ? (isEnglish ? 'Manage Premium' : 'প্রিমিয়াম পরিচালনা করুন')
-                      : (isEnglish ? 'Explore Premium' : 'প্রিমিয়াম দেখুন')),
+                      ? (_t(languageCode, 'প্রিমিয়াম পরিচালনা করুন', 'Manage Premium'))
+                      : (_t(languageCode, 'প্রিমিয়াম দেখুন', 'Explore Premium'))),
                 ),
               ),
             ],
@@ -469,7 +583,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   Future<void> _openAccount(BuildContext context, User user) async {
     final theme = Theme.of(context);
-    final isEnglish = Localizations.localeOf(context).languageCode == 'en';
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final isEnglish = languageCode == 'en';
     final photoUrl = user.photoURL?.trim();
     await showModalBottomSheet<void>(
       context: context,
@@ -489,7 +604,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  user.displayName?.trim().isNotEmpty == true ? user.displayName! : (isEnglish ? 'NurVerse User' : 'নূরভার্স ব্যবহারকারী'),
+                  user.displayName?.trim().isNotEmpty == true ? user.displayName! : (_t(languageCode, 'নূরভার্স ব্যবহারকারী', 'NurVerse User')),
                   style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                   textAlign: TextAlign.center,
                 ),
@@ -506,7 +621,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                       await AuthService.instance.signOut();
                     },
                     icon: const Icon(Icons.logout_rounded),
-                    label: Text(isEnglish ? 'Logout' : 'লগআউট'),
+                    label: Text(_t(languageCode, 'লগআউট', 'Logout')),
                   ),
                 ),
               ],
@@ -521,10 +636,10 @@ class SettingsHubScreenV4 extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(isEnglish ? 'NurVerse Premium' : 'নূরভার্স প্রিমিয়াম'),
-        content: Text(isEnglish ? 'Premium is active.' : 'প্রিমিয়াম সক্রিয় আছে।'),
+        title: Text(_t(languageCode, 'নূরভার্স প্রিমিয়াম', 'NurVerse Premium')),
+        content: Text(_t(languageCode, 'প্রিমিয়াম সক্রিয় আছে।', 'Premium is active.')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(isEnglish ? 'Done' : 'ঠিক আছে')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(_t(languageCode, 'ঠিক আছে', 'Done'))),
         ],
       ),
     );
@@ -605,56 +720,59 @@ class SettingsHubScreenV4 extends StatelessWidget {
   Widget _divider() => const Divider(height: 1, indent: 70);
 
   String _themeLabel(SettingsProvider settings) {
-    if (settings.isAmoledMode) return settings.isEnglish ? 'AMOLED Black' : 'অ্যামোলেড কালো';
+    if (settings.isAmoledMode) return settings._t(languageCode, 'অ্যামোলেড কালো', 'AMOLED Black');
     switch (settings.themeMode) {
       case ThemeMode.light:
-        return settings.isEnglish ? 'Light Mode' : 'লাইট মোড';
+        return settings._t(languageCode, 'লাইট মোড', 'Light Mode');
       case ThemeMode.dark:
-        return settings.isEnglish ? 'Dark Mode' : 'ডার্ক মোড';
+        return settings._t(languageCode, 'ডার্ক মোড', 'Dark Mode');
       case ThemeMode.system:
-        return settings.isEnglish ? 'System Default' : 'সিস্টেম অনুযায়ী';
+        return settings._t(languageCode, 'সিস্টেম অনুযায়ী', 'System Default');
     }
   }
 
-  String _textSizeLabel(int level, bool isEnglish) {
+  String _textSizeLabel(int level, String languageCode) {
     switch (level) {
       case 0:
-        return isEnglish ? 'Small' : 'ছোট';
+        return _t(languageCode, 'ছোট', 'Small');
       case 2:
-        return isEnglish ? 'Large' : 'বড়';
+        return _t(languageCode, 'বড়', 'Large');
       case 3:
-        return isEnglish ? 'Very Large' : 'খুব বড়';
+        return _t(languageCode, 'খুব বড়', 'Very Large');
       default:
-        return isEnglish ? 'Normal' : 'স্বাভাবিক';
+        return _t(languageCode, 'স্বাভাবিক', 'Normal');
     }
   }
 
-  String _adjustmentLabel(SettingsProvider settings, bool isEnglish) {
+  String _adjustmentLabel(SettingsProvider settings, String languageCode) {
     final active = settings.prayerAdjustments.entries.where((entry) => entry.value != 0).toList();
-    if (active.isEmpty) return isEnglish ? 'No adjustments' : 'কোনো সমন্বয় নেই';
+    if (active.isEmpty) return _t(languageCode, 'কোনো সমন্বয় নেই', 'No adjustments');
     final entry = active.first;
     final sign = entry.value > 0 ? '+' : '';
-    final prayer = _prayerLabel(entry.key, isEnglish);
-    return '$prayer: $sign${entry.value} ${isEnglish ? 'min' : 'মিনিট'}';
+    final prayer = _prayerLabel(entry.key, languageCode);
+    return '$prayer: $sign${entry.value} ${_t(languageCode, 'মিনিট', 'min')}';
   }
 
-  String _dateLabel(SettingsProvider settings, bool isEnglish) {
+  String _dateLabel(SettingsProvider settings, String languageCode) {
     switch (settings.dateDisplayPreference) {
       case 'hijri':
-        return isEnglish ? 'Hijri only' : 'শুধু হিজরি';
+        return _t(languageCode, 'শুধু হিজরি', 'Hijri only');
       case 'gregorian':
-        return isEnglish ? 'Gregorian only' : 'শুধু গ্রেগরিয়ান';
+        return _t(languageCode, 'শুধু গ্রেগরিয়ান', 'Gregorian only');
       default:
-        return isEnglish ? 'Both dates' : 'উভয় তারিখ';
+        return _t(languageCode, 'উভয় তারিখ', 'Both dates');
     }
   }
 
-  String _choiceLabel(String option, bool isEnglish) {
-    if (isEnglish) {
+  String _choiceLabel(String option, String languageCode) {
+    if (languageCode == 'en') {
       if (option == 'bn') return 'Bangla';
       if (option == 'en') return 'English';
       if (option == 'ar') return 'Arabic';
       return option;
+    }
+    if (languageCode == 'ar') {
+      return _ar[option] ?? option;
     }
     const labels = <String, String>{
       'system': 'সিস্টেম অনুযায়ী',
@@ -685,8 +803,9 @@ class SettingsHubScreenV4 extends StatelessWidget {
     return labels[option] ?? option;
   }
 
-  String _prayerLabel(String prayer, bool isEnglish) {
-    if (isEnglish) return prayer;
+  String _prayerLabel(String prayer, String languageCode) {
+    if (languageCode == 'en') return prayer;
+    if (languageCode == 'ar') return _ar[prayer] ?? prayer;
     const labels = <String, String>{
       'Fajr': 'ফজর',
       'Dhuhr': 'জোহর',
@@ -697,11 +816,11 @@ class SettingsHubScreenV4 extends StatelessWidget {
     return labels[prayer] ?? prayer;
   }
 
-  String _calculationLabel(String method, bool isEnglish) => _choiceLabel(method, isEnglish);
+  String _calculationLabel(String method, String languageCode) => _choiceLabel(method, languageCode);
 
-  String _madhabLabel(String madhab, bool isEnglish) => _choiceLabel(madhab, isEnglish);
+  String _madhabLabel(String madhab, String languageCode) => _choiceLabel(madhab, languageCode);
 
-  String _quranTranslationLabel(String translation, bool isEnglish) => _choiceLabel(translation, isEnglish);
+  String _quranTranslationLabel(String translation, String languageCode) => _choiceLabel(translation, languageCode);
 
   Future<void> _showChoiceSheet(BuildContext context, String title, List<String> options, Future<void> Function(String) onSelected, {String? selectedValue}) async {
     final languageCode = Localizations.localeOf(context).languageCode;
@@ -729,7 +848,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                           : (isArabic
                               ? ({'bn': 'البنغالية', 'en': 'الإنجليزية', 'ar': 'العربية'}[option] ?? option)
                               : ({'bn': 'বাংলা', 'en': 'ইংরেজি', 'ar': 'আরবি'}[option] ?? option)))
-                      : _choiceLabel(option, isEnglish),
+                      : _choiceLabel(option, languageCode),
                 ),
                 trailing: option == selectedValue
                     ? const Icon(Icons.check_circle_rounded, color: AppColors.seaBlue)
@@ -748,14 +867,15 @@ class SettingsHubScreenV4 extends StatelessWidget {
   }
 
   Future<void> _showTextSizeSheet(BuildContext context, TextScaleProvider provider, bool isEnglish) async {
-    final labels = isEnglish ? const ['Small', 'Normal', 'Large', 'Very Large'] : const ['ছোট', 'স্বাভাবিক', 'বড়', 'খুব বড়'];
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final labels = languageCode == 'en' ? const ['Small', 'Normal', 'Large', 'Very Large'] : languageCode == 'ar' ? const ['صغير', 'عادي', 'كبير', 'كبير جدًا'] : const ['ছোট', 'স্বাভাবিক', 'বড়', 'খুব বড়'];
     await showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(padding: const EdgeInsets.all(18), child: Text(isEnglish ? 'App Text Size' : 'অ্যাপের লেখা', style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900))),
+            Padding(padding: const EdgeInsets.all(18), child: Text(_t(languageCode, 'অ্যাপের লেখা', 'App Text Size'), style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900))),
             for (int index = 0; index < labels.length; index++)
               ListTile(
                 title: Text(labels[index]),
@@ -776,14 +896,14 @@ class SettingsHubScreenV4 extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(settings.isEnglish ? 'Prayer Adjustments' : 'সালাতের সময় সমন্বয়'),
+        title: Text(settings._t(languageCode, 'সালাতের সময় সমন্বয়', 'Prayer Adjustments')),
         content: SingleChildScrollView(
           child: Column(
             children: [
               for (final prayer in prayers)
                 ListTile(
-                  title: Text(_prayerLabel(prayer, settings.isEnglish)),
-                  subtitle: Text('${settings.prayerAdjustments[prayer] ?? 0} ${settings.isEnglish ? 'min' : 'মিনিট'}'),
+                  title: Text(_prayerLabel(prayer, settings.languageCode)),
+                  subtitle: Text('${settings.prayerAdjustments[prayer] ?? 0} ${settings._t(languageCode, 'মিনিট', 'min')}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -795,7 +915,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
             ],
           ),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(settings.isEnglish ? 'Done' : 'সম্পন্ন'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(settings._t(languageCode, 'সম্পন্ন', 'Done')))],
       ),
     );
   }
@@ -809,7 +929,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: Text(settings.isEnglish ? 'Jamaat Times' : 'জামাতের সময়'),
+          title: Text(settings._t(languageCode, 'জামাতের সময়', 'Jamaat Times')),
           content: SingleChildScrollView(
             child: Column(
               children: [
@@ -818,7 +938,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: TextField(
                       controller: controllers[prayer],
-                      decoration: InputDecoration(labelText: _prayerLabel(prayer, settings.isEnglish)),
+                      decoration: InputDecoration(labelText: _prayerLabel(prayer, settings.languageCode)),
                       keyboardType: TextInputType.datetime,
                     ),
                   ),
@@ -826,7 +946,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(settings.isEnglish ? 'Cancel' : 'বাতিল')),
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(settings._t(languageCode, 'বাতিল', 'Cancel'))),
             FilledButton(
               onPressed: () async {
                 for (final prayer in prayers) {
@@ -834,7 +954,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                 }
                 if (dialogContext.mounted) Navigator.pop(dialogContext);
               },
-              child: Text(settings.isEnglish ? 'Save' : 'সংরক্ষণ'),
+              child: Text(settings._t(languageCode, 'সংরক্ষণ', 'Save')),
             ),
           ],
         ),
@@ -853,9 +973,9 @@ class SettingsHubScreenV4 extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _slider(sheetContext, settings.isEnglish ? 'Quran Arabic' : 'কুরআন আরবি', settings.quranFontSize, 14, 50, settings.updateQuranFontSize),
+              _slider(sheetContext, settings._t(languageCode, 'কুরআন আরবি', 'Quran Arabic'), settings.quranFontSize, 14, 50, settings.updateQuranFontSize),
               const SizedBox(height: 14),
-              _slider(sheetContext, settings.isEnglish ? 'Translation' : 'অনুবাদ', settings.translationFontSize, 10, 30, settings.updateTranslationFontSize),
+              _slider(sheetContext, settings._t(languageCode, 'অনুবাদ', 'Translation'), settings.translationFontSize, 10, 30, settings.updateTranslationFontSize),
             ],
           ),
         ),
@@ -883,9 +1003,9 @@ class SettingsHubScreenV4 extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _switchTile(context, Icons.menu_book_outlined, current.isEnglish ? 'Daily Ayah' : 'দৈনিক আয়াত', '', current.showDailyAyah, (v) => current.setDailyContentPreferences(ayah: v)),
-                _switchTile(context, Icons.auto_stories_outlined, current.isEnglish ? 'Daily Hadith' : 'দৈনিক হাদিস', '', current.showDailyHadith, (v) => current.setDailyContentPreferences(hadith: v)),
-                _switchTile(context, Icons.volunteer_activism_outlined, current.isEnglish ? 'Daily Dua' : 'দৈনিক দোয়া', '', current.showDailyDua, (v) => current.setDailyContentPreferences(dua: v)),
+                _switchTile(context, Icons.menu_book_outlined, current._t(languageCode, 'দৈনিক আয়াত', 'Daily Ayah'), '', current.showDailyAyah, (v) => current.setDailyContentPreferences(ayah: v)),
+                _switchTile(context, Icons.auto_stories_outlined, current._t(languageCode, 'দৈনিক হাদিস', 'Daily Hadith'), '', current.showDailyHadith, (v) => current.setDailyContentPreferences(hadith: v)),
+                _switchTile(context, Icons.volunteer_activism_outlined, current._t(languageCode, 'দৈনিক দোয়া', 'Daily Dua'), '', current.showDailyDua, (v) => current.setDailyContentPreferences(dua: v)),
               ],
             ),
           ),
@@ -898,16 +1018,16 @@ class SettingsHubScreenV4 extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(settings.isEnglish ? 'Reset settings?' : 'সেটিংস রিসেট করবেন?'),
-        content: Text(settings.isEnglish ? 'All saved preferences will return to their default values.' : 'সব সংরক্ষিত সেটিংস ডিফল্ট অবস্থায় ফিরে যাবে।'),
+        title: Text(settings._t(languageCode, 'সেটিংস রিসেট করবেন?', 'Reset settings?')),
+        content: Text(settings._t(languageCode, 'সব সংরক্ষিত সেটিংস ডিফল্ট অবস্থায় ফিরে যাবে।', 'All saved preferences will return to their default values.')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(settings.isEnglish ? 'Cancel' : 'বাতিল')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(settings._t(languageCode, 'বাতিল', 'Cancel'))),
           FilledButton(
             onPressed: () async {
               await settings.resetSettings();
               if (dialogContext.mounted) Navigator.pop(dialogContext);
             },
-            child: Text(settings.isEnglish ? 'Reset' : 'রিসেট'),
+            child: Text(settings._t(languageCode, 'রিসেট', 'Reset')),
           ),
         ],
       ),
