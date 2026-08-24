@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../localization/app_localizations.dart';
 import '../../models/daily_content_model.dart';
 
 class DailyContentCard extends StatelessWidget {
@@ -20,27 +21,30 @@ class DailyContentCard extends StatelessWidget {
     this.onShare,
   });
 
-  String get _title {
-    if (languageCode == 'en') {
-      switch (content.type) {
-        case DailyContentType.ayah:
-          return 'Today’s Ayah';
-        case DailyContentType.hadith:
-          return 'Today’s Hadith';
-        case DailyContentType.dua:
-          return 'Today’s Dua';
-      }
+  String _title(AppLocalizations l10n) {
+    switch (content.type) {
+      case DailyContentType.ayah:
+        return l10n.isArabic ? 'آية اليوم' : l10n.tr('আজকের আয়াত', 'Today’s Ayah');
+      case DailyContentType.hadith:
+        return l10n.isArabic ? 'حديث اليوم' : l10n.tr('আজকের হাদিস', 'Today’s Hadith');
+      case DailyContentType.dua:
+        return l10n.isArabic ? 'دعاء اليوم' : l10n.tr('আজকের দোয়া', 'Today’s Dua');
     }
-    return content.title;
   }
 
-  String get _body => languageCode == 'en' ? content.english : content.bangla;
+  String _body(AppLocalizations l10n) {
+    if (l10n.isArabic) return content.arabic;
+    return l10n.isEnglish ? content.english : content.bangla;
+  }
 
-  String get _reference =>
-      languageCode == 'en' ? content.englishReference : content.reference;
+  String _reference(AppLocalizations l10n) {
+    if (l10n.isArabic) return content.englishReference;
+    return l10n.isEnglish ? content.englishReference : content.reference;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final glassCard = theme.cardColor.withValues(alpha: isDark ? .58 : .70);
@@ -73,7 +77,7 @@ class DailyContentCard extends StatelessWidget {
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
-                  _title,
+                  _title(l10n),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall?.copyWith(
@@ -112,7 +116,8 @@ class DailyContentCard extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Text(
-            _body,
+            _body(l10n),
+            textAlign: l10n.isArabic ? TextAlign.right : TextAlign.start,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 15.5,
               height: 1.48,
@@ -120,7 +125,8 @@ class DailyContentCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            _reference,
+            _reference(l10n),
+            textAlign: l10n.isArabic ? TextAlign.right : TextAlign.start,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.hintColor,
               fontSize: 13,
