@@ -34,12 +34,11 @@ class DailyContentCard extends StatelessWidget {
 
   String _body(AppLocalizations l10n) {
     if (l10n.isArabic) return content.arabic;
-    return !l10n.isBangla && !l10n.isArabic ? content.english : content.bangla;
+    return l10n.isBangla ? content.bangla : content.english;
   }
 
   String _reference(AppLocalizations l10n) {
-    if (l10n.isArabic) return content.englishReference;
-    return !l10n.isBangla && !l10n.isArabic ? content.englishReference : content.reference;
+    return l10n.isBangla ? content.reference : content.englishReference;
   }
 
   @override
@@ -60,9 +59,7 @@ class DailyContentCard extends StatelessWidget {
         border: Border.all(color: primary.withValues(alpha: .10)),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: .18)
-                : Colors.black.withValues(alpha: .035),
+            color: isDark ? Colors.black.withValues(alpha: .18) : Colors.black.withValues(alpha: .035),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -80,10 +77,7 @@ class DailyContentCard extends StatelessWidget {
                   _title(l10n),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: theme.textTheme.titleSmall?.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
               if (onBookmark != null)
@@ -108,30 +102,19 @@ class DailyContentCard extends StatelessWidget {
           SelectableText(
             content.arabic,
             textAlign: TextAlign.right,
-            style: const TextStyle(
-              fontFamily: 'Amiri',
-              fontSize: 19,
-              height: 1.65,
-            ),
+            style: const TextStyle(fontFamily: 'Amiri', fontSize: 19, height: 1.65),
           ),
           const SizedBox(height: 7),
           Text(
             _body(l10n),
             textAlign: l10n.isArabic ? TextAlign.right : TextAlign.start,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontSize: 15.5,
-              height: 1.48,
-            ),
+            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 15.5, height: 1.48),
           ),
           const SizedBox(height: 6),
           Text(
             _reference(l10n),
             textAlign: l10n.isArabic ? TextAlign.right : TextAlign.start,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.hintColor,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: 13, fontWeight: FontWeight.w600),
           ),
         ],
       ),
