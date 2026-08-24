@@ -305,7 +305,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
               context,
               Icons.font_download_outlined,
               _t(languageCode, 'আরবি ফন্ট', 'Arabic Font'),
-              settings.quranArabicFont == 'Default' && !isEnglish ? 'ডিফল্ট' : settings.quranArabicFont,
+              settings.quranArabicFont == 'Default' ? _t(languageCode, 'ডিফল্ট', 'Default') : settings.quranArabicFont,
               () => _showChoiceSheet(
                 context,
                 _t(languageCode, 'আরবি ফন্ট', 'Arabic Font'),
@@ -633,6 +633,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
   }
 
   Future<void> _showPremiumStatus(BuildContext context, PremiumProvider premium, bool isEnglish) async {
+    final languageCode = Localizations.localeOf(context).languageCode;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -720,14 +721,14 @@ class SettingsHubScreenV4 extends StatelessWidget {
   Widget _divider() => const Divider(height: 1, indent: 70);
 
   String _themeLabel(SettingsProvider settings) {
-    if (settings.isAmoledMode) return settings._t(languageCode, 'অ্যামোলেড কালো', 'AMOLED Black');
+    if (settings.isAmoledMode) return _t(settings.languageCode, 'অ্যামোলেড কালো', 'AMOLED Black');
     switch (settings.themeMode) {
       case ThemeMode.light:
-        return settings._t(languageCode, 'লাইট মোড', 'Light Mode');
+        return _t(settings.languageCode, 'লাইট মোড', 'Light Mode');
       case ThemeMode.dark:
-        return settings._t(languageCode, 'ডার্ক মোড', 'Dark Mode');
+        return _t(settings.languageCode, 'ডার্ক মোড', 'Dark Mode');
       case ThemeMode.system:
-        return settings._t(languageCode, 'সিস্টেম অনুযায়ী', 'System Default');
+        return _t(settings.languageCode, 'সিস্টেম অনুযায়ী', 'System Default');
     }
   }
 
@@ -896,14 +897,14 @@ class SettingsHubScreenV4 extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(settings._t(languageCode, 'সালাতের সময় সমন্বয়', 'Prayer Adjustments')),
+        title: Text(_t(settings.languageCode, 'সালাতের সময় সমন্বয়', 'Prayer Adjustments')),
         content: SingleChildScrollView(
           child: Column(
             children: [
               for (final prayer in prayers)
                 ListTile(
                   title: Text(_prayerLabel(prayer, settings.languageCode)),
-                  subtitle: Text('${settings.prayerAdjustments[prayer] ?? 0} ${settings._t(languageCode, 'মিনিট', 'min')}'),
+                  subtitle: Text('${settings.prayerAdjustments[prayer] ?? 0} ${_t(settings.languageCode, 'মিনিট', 'min')}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -915,7 +916,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
             ],
           ),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(settings._t(languageCode, 'সম্পন্ন', 'Done')))],
+        actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(_t(settings.languageCode, 'সম্পন্ন', 'Done')))],
       ),
     );
   }
@@ -929,7 +930,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: Text(settings._t(languageCode, 'জামাতের সময়', 'Jamaat Times')),
+          title: Text(_t(settings.languageCode, 'জামাতের সময়', 'Jamaat Times')),
           content: SingleChildScrollView(
             child: Column(
               children: [
@@ -946,7 +947,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(settings._t(languageCode, 'বাতিল', 'Cancel'))),
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(_t(settings.languageCode, 'বাতিল', 'Cancel'))),
             FilledButton(
               onPressed: () async {
                 for (final prayer in prayers) {
@@ -954,7 +955,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                 }
                 if (dialogContext.mounted) Navigator.pop(dialogContext);
               },
-              child: Text(settings._t(languageCode, 'সংরক্ষণ', 'Save')),
+              child: Text(_t(settings.languageCode, 'সংরক্ষণ', 'Save')),
             ),
           ],
         ),
@@ -973,9 +974,9 @@ class SettingsHubScreenV4 extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _slider(sheetContext, settings._t(languageCode, 'কুরআন আরবি', 'Quran Arabic'), settings.quranFontSize, 14, 50, settings.updateQuranFontSize),
+              _slider(sheetContext, _t(settings.languageCode, 'কুরআন আরবি', 'Quran Arabic'), settings.quranFontSize, 14, 50, settings.updateQuranFontSize),
               const SizedBox(height: 14),
-              _slider(sheetContext, settings._t(languageCode, 'অনুবাদ', 'Translation'), settings.translationFontSize, 10, 30, settings.updateTranslationFontSize),
+              _slider(sheetContext, _t(settings.languageCode, 'অনুবাদ', 'Translation'), settings.translationFontSize, 10, 30, settings.updateTranslationFontSize),
             ],
           ),
         ),
@@ -1003,9 +1004,9 @@ class SettingsHubScreenV4 extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _switchTile(context, Icons.menu_book_outlined, current._t(languageCode, 'দৈনিক আয়াত', 'Daily Ayah'), '', current.showDailyAyah, (v) => current.setDailyContentPreferences(ayah: v)),
-                _switchTile(context, Icons.auto_stories_outlined, current._t(languageCode, 'দৈনিক হাদিস', 'Daily Hadith'), '', current.showDailyHadith, (v) => current.setDailyContentPreferences(hadith: v)),
-                _switchTile(context, Icons.volunteer_activism_outlined, current._t(languageCode, 'দৈনিক দোয়া', 'Daily Dua'), '', current.showDailyDua, (v) => current.setDailyContentPreferences(dua: v)),
+                _switchTile(context, Icons.menu_book_outlined, _t(current.languageCode, 'দৈনিক আয়াত', 'Daily Ayah'), '', current.showDailyAyah, (v) => current.setDailyContentPreferences(ayah: v)),
+                _switchTile(context, Icons.auto_stories_outlined, _t(current.languageCode, 'দৈনিক হাদিস', 'Daily Hadith'), '', current.showDailyHadith, (v) => current.setDailyContentPreferences(hadith: v)),
+                _switchTile(context, Icons.volunteer_activism_outlined, _t(current.languageCode, 'দৈনিক দোয়া', 'Daily Dua'), '', current.showDailyDua, (v) => current.setDailyContentPreferences(dua: v)),
               ],
             ),
           ),
@@ -1018,16 +1019,16 @@ class SettingsHubScreenV4 extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(settings._t(languageCode, 'সেটিংস রিসেট করবেন?', 'Reset settings?')),
-        content: Text(settings._t(languageCode, 'সব সংরক্ষিত সেটিংস ডিফল্ট অবস্থায় ফিরে যাবে।', 'All saved preferences will return to their default values.')),
+        title: Text(_t(settings.languageCode, 'সেটিংস রিসেট করবেন?', 'Reset settings?')),
+        content: Text(_t(settings.languageCode, 'সব সংরক্ষিত সেটিংস ডিফল্ট অবস্থায় ফিরে যাবে।', 'All saved preferences will return to their default values.')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(settings._t(languageCode, 'বাতিল', 'Cancel'))),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(_t(settings.languageCode, 'বাতিল', 'Cancel'))),
           FilledButton(
             onPressed: () async {
               await settings.resetSettings();
               if (dialogContext.mounted) Navigator.pop(dialogContext);
             },
-            child: Text(settings._t(languageCode, 'রিসেট', 'Reset')),
+            child: Text(_t(settings.languageCode, 'রিসেট', 'Reset')),
           ),
         ],
       ),
