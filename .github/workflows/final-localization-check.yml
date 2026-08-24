@@ -25,3 +25,4 @@ jobs:
           flutter --version
           flutter pub get
           flutter analyze --no-fatal-warnings
+          flutter analyze --no-fatal-warnings
