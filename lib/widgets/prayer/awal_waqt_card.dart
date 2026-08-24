@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../controllers/prayer_controller.dart';
+import '../../localization/app_localizations.dart';
 import '../../services/awal_waqt_service.dart';
 import '../../theme/app_theme.dart';
 
@@ -16,21 +17,8 @@ class AwalWaqtCard extends StatelessWidget {
 
   static const _service = AwalWaqtService();
 
-  String _bnName(String key) {
-    switch (key) {
-      case 'Fajr':
-        return 'ফজর';
-      case 'Dhuhr':
-        return DateTime.now().weekday == DateTime.friday ? "জুমু'আ" : 'যোহর';
-      case 'Asr':
-        return 'আসর';
-      case 'Maghrib':
-        return 'মাগরিব';
-      case 'Isha':
-        return 'ইশা';
-      default:
-        return key;
-    }
+  String _prayerLabel(AppLocalizations l10n, String key) {
+    return l10n.prayerName(key);
   }
 
   String _formatDuration(Duration value) {
@@ -43,6 +31,7 @@ class AwalWaqtCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final windows = _service.buildWindowsFromPrayerList(
       controller.prayers,
@@ -52,7 +41,7 @@ class AwalWaqtCard extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
 
     if (compact) {
-      return _buildCompact(context, active, primary, now);
+      return _buildCompact(context, active, primary, now, l10n);
     }
 
     return Card(
@@ -81,7 +70,7 @@ class AwalWaqtCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'আওয়াল ওয়াক্ত',
+                        l10n.tr('আওয়াল ওয়াক্ত', 'Awal Waqt'),
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
@@ -89,8 +78,10 @@ class AwalWaqtCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         active == null
-                            ? 'বর্তমানে কোনো ওয়াক্তের আওয়াল সময় চলছে না'
-                            : '${_bnName(active.prayerKey)} — আওয়াল ওয়াক্ত চলছে',
+                            ? l10n.tr('বর্তমানে কোনো ওয়াক্তের আওয়াল সময় চলছে না', 'No Awal Waqt period is currently active')
+                            : l10n.isArabic
+                                ? '${_prayerLabel(l10n, active.prayerKey)} — وقت الأول مستمر'
+                                : '${_prayerLabel(l10n, active.prayerKey)} — ${l10n.tr('আওয়াল ওয়াক্ত চলছে', 'Awal Waqt active')}',
                         style: TextStyle(
                           color: active == null
                               ? context.secondaryTextColor
@@ -122,10 +113,7 @@ class AwalWaqtCard extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(right: 5),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 8,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 8),
                       decoration: BoxDecoration(
                         color: isActive
                             ? primary.withValues(alpha: .10)
@@ -140,13 +128,11 @@ class AwalWaqtCard extends StatelessWidget {
                       child: Column(
                         children: [
                           Text(
-                            _bnName(window.prayerKey),
+                            _prayerLabel(l10n, window.prayerKey),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: isActive
-                                  ? primary
-                                  : context.primaryTextColor,
+                              color: isActive ? primary : context.primaryTextColor,
                               fontSize: 10.5,
                               fontWeight: FontWeight.w800,
                             ),
@@ -179,6 +165,7 @@ class AwalWaqtCard extends StatelessWidget {
     AwalWaqtWindow? active,
     Color primary,
     DateTime now,
+    AppLocalizations l10n,
   ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
@@ -194,8 +181,10 @@ class AwalWaqtCard extends StatelessWidget {
           Expanded(
             child: Text(
               active == null
-                  ? 'আওয়াল ওয়াক্ত শেষ'
-                  : '${_bnName(active.prayerKey)} — আওয়াল ওয়াক্ত চলছে',
+                  ? l10n.tr('আওয়াল ওয়াক্ত শেষ', 'Awal Waqt ended')
+                  : l10n.isArabic
+                      ? '${_prayerLabel(l10n, active.prayerKey)} — وقت الأول مستمر'
+                      : '${_prayerLabel(l10n, active.prayerKey)} — ${l10n.tr('আওয়াল ওয়াক্ত চলছে', 'Awal Waqt active')}',
               style: TextStyle(
                 color: active == null ? context.secondaryTextColor : primary,
                 fontSize: 12,
