@@ -1,0 +1,63 @@
+name: Repair localization mismatches
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [fix/prayer-completion-tracker]
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
+      - name: Apply targeted repairs
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p = Path(path)
+              s = p.read_text(encoding='utf-8')
+              if old not in s:
+                  raise SystemExit(f'Pattern not found in {path}: {old[:120]!r}')
+              p.write_text(s.replace(old, new, 1), encoding='utf-8')
+
+          # AppLocalizations compatibility getter used by legacy/shared widgets.
+          p = Path('lib/localization/app_localizations.dart')
+          s = p.read_text(encoding='utf-8')
+          marker = "  bool get isBangla => locale.languageCode == 'bn';\n"
+          if "bool get isEnglish" not in s:
+              if marker not in s:
+                  raise SystemExit('AppLocalizations language marker not found')
+              s = s.replace(marker, marker + "  bool get isEnglish => locale.languageCode == 'en';\n", 1)
+              p.write_text(s, encoding='utf-8')
+
+          # Audio Quran uses the existing reciter field; do not invent a new model field.
+          p = Path('lib/screens/quran/audio_quran_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace("_selectedReciter.nameEn", "_selectedReciter.nameBn")
+          p.write_text(s, encoding='utf-8')
+
+          # Keep the existing public label API while supporting Arabic explicitly.
+          p = Path('lib/widgets/home/daily_content_card.dart')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace("l10n.isEnglish ? content.english : content.bangla", "!l10n.isBangla && !l10n.isArabic ? content.english : content.bangla")
+          s = s.replace("l10n.isEnglish ? content.englishReference : content.reference", "!l10n.isBangla && !l10n.isArabic ? content.englishReference : content.reference")
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('lib/screens/hadith_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace("widget.l10n.isEnglish ? hadith.english.trim() : hadith.bangla.trim()", "!widget.l10n.isBangla && !widget.l10n.isArabic ? hadith.english.trim() : hadith.bangla.trim()")
+          p.write_text(s, encoding='utf-8')
+
+      - name: Commit repaired files to PR head
+        run: |
+          git config user.name "nurverse-localization-bot"
+          git config user.email "actions@github.com"
+          git add lib/localization/app_localizations.dart lib/screens/quran/audio_quran_screen.dart lib/widgets/home/daily_content_card.dart lib/screens/hadith_screen.dart
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "fix: repair localization API compatibility"
+          git push origin HEAD:${{ github.head_ref }}
