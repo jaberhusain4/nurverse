@@ -140,7 +140,12 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
   Widget _buildPlayer(BuildContext context, QuranSurah? current) {
     final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
-    final title = l10n.isBangla ? (current?.banglaName ?? current?.transliteration ?? l10n.tr('সূরা', 'Surah')) : (current?.transliteration ?? l10n.tr('সূরা', 'Surah'));
+    final title = l10n.isArabic
+        ? (current?.arabicName ?? current?.transliteration ?? l10n.tr('সূরা', 'Surah'))
+        : l10n.isBangla
+            ? (current?.banglaName ?? current?.transliteration ?? l10n.tr('সূরা', 'Surah'))
+            : (current?.transliteration ?? l10n.tr('সূরা', 'Surah'));
+    final reciterName = l10n.isArabic ? _selectedReciter.nameEn : l10n.isEnglish ? _selectedReciter.nameEn : _selectedReciter.nameBn;
     return Material(
       color: context.cardColor,
       child: Padding(
@@ -151,12 +156,12 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-              Text('${current?.transliteration ?? ''} • ${_selectedReciter.nameBn}', style: TextStyle(fontSize: 11, color: context.secondaryTextColor)),
+              Text('${current?.transliteration ?? ''} • $reciterName', style: TextStyle(fontSize: 11, color: context.secondaryTextColor)),
             ])),
             PopupMenuButton<QuranReciter>(
               tooltip: l10n.tr('ক্বারী নির্বাচন', 'Select reciter'),
               onSelected: _changeReciter,
-              itemBuilder: (_) => [for (final reciter in kReciters) PopupMenuItem<QuranReciter>(value: reciter, child: Text(reciter.nameBn)),],
+              itemBuilder: (_) => [for (final reciter in kReciters) PopupMenuItem<QuranReciter>(value: reciter, child: Text(l10n.isArabic || l10n.isEnglish ? reciter.nameEn : reciter.nameBn)),],
               icon: const Icon(Icons.person_outline_rounded),
             ),
           ]),
@@ -223,13 +228,15 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
         final surah = filtered[index - 1];
         final selected = surah.number == _selectedSurah;
         final primary = Theme.of(context).colorScheme.primary;
+        final number = l10n.isBangla ? _bnNumber(surah.number) : surah.number.toString();
+        final surahTitle = l10n.isArabic ? surah.arabicName : l10n.isBangla ? (surah.banglaName ?? surah.transliteration) : surah.transliteration;
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(17), border: Border.all(color: selected ? primary.withValues(alpha: .28) : primary.withValues(alpha: .06))),
           child: ListTile(
             onTap: () => _selectSurah(surah.number),
-            leading: CircleAvatar(backgroundColor: primary.withValues(alpha: .10), foregroundColor: primary, child: Text(l10n.isBangla ? _bnNumber(surah.number) : surah.number.toString(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800))),
-            title: Text(l10n.isBangla ? (surah.banglaName ?? surah.transliteration) : surah.transliteration, style: const TextStyle(fontWeight: FontWeight.w800)),
+            leading: CircleAvatar(backgroundColor: primary.withValues(alpha: .10), foregroundColor: primary, child: Text(number, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800))),
+            title: Text(surahTitle, style: const TextStyle(fontWeight: FontWeight.w800)),
             subtitle: Text('${surah.transliteration} • ${surah.totalVerses} ${l10n.tr('আয়াত', 'verses')}'),
             trailing: Icon(selected ? Icons.equalizer_rounded : Icons.play_circle_outline_rounded, color: selected ? primary : context.secondaryTextColor),
           ),
