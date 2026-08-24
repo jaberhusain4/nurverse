@@ -3,7 +3,74 @@ import 'app_localizations.dart';
 /// Small app-wide localization helpers used by screens that need dynamic
 /// labels without duplicating the main localization dictionary.
 extension AppLocalizationsX on AppLocalizations {
-  String tr(String bn, String en) => isBangla ? bn : en;
+  String tr(String bn, String en) {
+    if (isArabic) return _arabicLabel(en);
+    return isBangla ? bn : en;
+  }
+
+  String _arabicLabel(String english) {
+    const map = <String, String>{
+      'Fajr': 'الفجر',
+      'Dhuhr': 'الظهر',
+      'Asr': 'العصر',
+      'Maghrib': 'المغرب',
+      'Isha': 'العشاء',
+      'Jumu’ah': 'الجمعة',
+      'Jama’ah': 'الجماعة',
+      'Ishraq': 'الإشراق',
+      'Duha': 'الضحى',
+      'Awwabin': 'الأوابين',
+      'Tahajjud': 'التهجد',
+      'Calculating prayer times...': 'جارٍ حساب أوقات الصلاة...',
+      'Prayer times will appear when a location is available.': 'ستظهر أوقات الصلاة عند توفر الموقع.',
+      'Times will appear when a location is available.': 'ستظهر الأوقات عند توفر الموقع.',
+      'Fajr is about to begin': 'سيبدأ وقت الفجر قريبًا',
+      'Fajr time is in progress': 'وقت الفجر جارٍ',
+      'Fajr time is active': 'وقت الفجر جارٍ',
+      'Next prayer: Jumu’ah': 'الصلاة التالية: الجمعة',
+      'Next prayer: Dhuhr': 'الصلاة التالية: الظهر',
+      'Jumu’ah time is in progress': 'وقت الجمعة جارٍ',
+      'Jumu’ah time is active': 'وقت الجمعة جارٍ',
+      'Dhuhr time is in progress': 'وقت الظهر جارٍ',
+      'Dhuhr time is active': 'وقت الظهر جارٍ',
+      'Asr time is in progress': 'وقت العصر جارٍ',
+      'Asr time is active': 'وقت العصر جارٍ',
+      'Maghrib time is in progress': 'وقت المغرب جارٍ',
+      'Maghrib time is active': 'وقت المغرب جارٍ',
+      'Isha time is in progress': 'وقت العشاء جارٍ',
+      'Isha time is active': 'وقت العشاء جارٍ',
+      'Unknown location': 'موقع غير معروف',
+      'Location': 'الموقع',
+      'Refresh': 'تحديث',
+      'Quick Actions': 'إجراءات سريعة',
+      'Next': 'التالي',
+      'Previous Prayer': 'الصلاة السابقة',
+      'Current': 'الحالي',
+      'Start': 'البداية',
+      'End': 'النهاية',
+      'Friday': 'الجمعة',
+      'Current Prayer': 'الصلاة الحالية',
+      'Prayer Time': 'وقت الصلاة',
+      'An unknown problem occurred.': 'حدثت مشكلة غير معروفة.',
+      'Could not load prayer information': 'تعذر تحميل معلومات الصلاة',
+      'Location unavailable': 'الموقع غير متاح',
+      'Try Again': 'حاول مرة أخرى',
+      'Important Times Today': 'أهم أوقات اليوم',
+      'Solar Noon': 'الزوال',
+      'Makruh Time': 'وقت الكراهة',
+      'Prohibited Time': 'الوقت المنهي عنه',
+      'Nafl & Other Prayers': 'النوافل والصلوات الأخرى',
+      'Important times for optional worship': 'أهم أوقات العبادات النافلة',
+      'Today’s Prayer Tracker': 'متابعة صلوات اليوم',
+      'Mark the prayers you have performed': 'حدد الصلوات التي أديتها',
+      'Prayer times may vary depending on location, date, and calculation method.': 'قد تختلف أوقات الصلاة حسب الموقع والتاريخ وطريقة الحساب.',
+      'Shortly after sunrise': 'بعد الشروق بقليل',
+      'From morning until before noon': 'من الصباح إلى ما قبل الظهر',
+      'After Maghrib': 'بعد المغرب',
+      'The latter part of the night': 'الجزء الأخير من الليل',
+    };
+    return map[english] ?? english;
+  }
 
   String prayerName(String value) {
     switch (value.trim()) {
@@ -21,11 +88,21 @@ extension AppLocalizationsX on AppLocalizations {
       case 'জুমু‘আ':
       case 'Jumu’ah':
       case "Jumu'ah": return tr('জুমু‘আ', 'Jumu’ah');
-      default: return value;
+      case 'ইশরাক':
+      case 'Ishraq': return tr('ইশরাক', 'Ishraq');
+      case 'চাশত':
+      case 'দুহা':
+      case 'Duha': return tr('চাশত / দুহা', 'Duha');
+      case 'আউওয়াবীন':
+      case 'Awwabin': return tr('আউওয়াবীন', 'Awwabin');
+      case 'তাহাজ্জুদ':
+      case 'Tahajjud': return tr('তাহাজ্জুদ', 'Tahajjud');
+      default: return isArabic ? _arabicLabel(value) : value;
     }
   }
 
   String prayerStatus(String value) {
+    if (isArabic) return _arabicLabel(value);
     if (isBangla) return value;
     const map = <String, String>{
       'সালাতের সময় গণনা করা হচ্ছে...': 'Calculating prayer times...',
@@ -78,9 +155,12 @@ extension AppLocalizationsX on AppLocalizations {
       case 'duha': return tr('সকাল থেকে দুপুরের পূর্ব পর্যন্ত', 'From morning until before noon');
       case 'awwalabin': return tr('মাগরিবের পর', 'After Maghrib');
       case 'tahajjud': return tr('রাতের শেষাংশ', 'The latter part of the night');
-      default: return key;
+      default: return isArabic ? _arabicLabel(key) : key;
     }
   }
 
-  String hadithCount(int count) => isBangla ? '$countটি হাদিস' : '$count hadiths';
+  String hadithCount(int count) {
+    if (isArabic) return '$count حديث';
+    return isBangla ? '$countটি হাদিস' : '$count hadiths';
+  }
 }
