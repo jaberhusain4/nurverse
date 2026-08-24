@@ -1,0 +1,82 @@
+name: Localize active Quran reader
+on:
+  pull_request:
+    branches: [fix/prayer-completion-tracker]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - name: Patch Onudhabon reader localization
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/screens/quran/onudhabon_quran_reader.dart')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace("import '../../models/quran_surah.dart';\n", "import '../../localization/app_localizations.dart';\nimport '../../models/quran_surah.dart';\n", 1)
+          if 'String _localizedText(AppLocalizations l10n' not in s:
+              marker = "class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {\n"
+              helper = "  String _localizedText(AppLocalizations l10n, String bn, String en, String ar) => l10n.isArabic ? ar : l10n.tr(bn, en);\n\n"
+              s = s.replace(marker, marker + helper, 1)
+
+          # Reading settings sheet.
+          s = s.replace("  Future<void> _showReadingSettings() async {\n", "  Future<void> _showReadingSettings() async {\n    final l10n = AppLocalizations.of(context);\n", 1)
+          s = s.replace("const Text(\n                      'পড়ার সেটিংস',", "Text(\n                      _localizedText(l10n, 'পড়ার সেটিংস', 'Reading settings', 'إعدادات القراءة'),", 1)
+          s = s.replace("child: const Text('ডিফল্ট'),", "child: Text(_localizedText(l10n, 'ডিফল্ট', 'Default', 'افتراضي')),", 1)
+          s = s.replace("child: Text(\n                    'কি কি দেখাবেন',", "child: Text(\n                    _localizedText(l10n, 'কি কি দেখাবেন', 'What to show', 'ماذا تريد أن تعرض'),", 1)
+          s = s.replace("label: const Text('আয়াত'),", "label: Text(_localizedText(l10n, 'আয়াত', 'Ayah', 'الآية')),")
+          s = s.replace("label: const Text('অনুবাদ'),", "label: Text(_localizedText(l10n, 'অনুবাদ', 'Translation', 'الترجمة')),")
+          s = s.replace("_slider('আরবি আয়াত',", "_slider(_localizedText(l10n, 'আরবি আয়াত', 'Arabic Ayah', 'الآية العربية'),")
+          s = s.replace("_slider('অনুবাদ',", "_slider(_localizedText(l10n, 'অনুবাদ', 'Translation', 'الترجمة'),")
+
+          # Translation and tafsir pickers.
+          s = s.replace("  Future<void> _showTranslationPicker(QuranSurah surah) async {\n", "  Future<void> _showTranslationPicker(QuranSurah surah) async {\n    final l10n = AppLocalizations.of(context);\n", 1)
+          s = s.replace("child: Text(\n                  'অনুবাদ নির্বাচন করুন',", "child: Text(\n                  _localizedText(l10n, 'অনুবাদ নির্বাচন করুন', 'Select translation', 'اختر الترجمة'),", 1)
+          s = s.replace("  Future<void> _showTafsirPicker(QuranSurah surah) async {\n", "  Future<void> _showTafsirPicker(QuranSurah surah) async {\n    final l10n = AppLocalizations.of(context);\n", 1)
+          s = s.replace("child: Text(\n                  'ব্যাখ্যা / তাফসির নির্বাচন করুন',", "child: Text(\n                  _localizedText(l10n, 'ব্যাখ্যা / তাফসির নির্বাচন করুন', 'Select Tafsir / Explanation', 'اختر التفسير / الشرح'),", 1)
+
+          # Reader app bar and picker.
+          s = s.replace("  Widget build(BuildContext context) {\n    if (_loading) {", "  Widget build(BuildContext context) {\n    final l10n = AppLocalizations.of(context);\n    if (_loading) {", 1)
+          s = s.replace("title: const Text(\n          'অনুধাবন কুরআন',", "title: Text(\n          _localizedText(l10n, 'অনুধাবন কুরআন', 'Onudhabon Quran', 'قرآن الفهم'),", 1)
+
+          s = s.replace("  Widget _buildPicker(BuildContext context) {\n", "  Widget _buildPicker(BuildContext context) {\n    final l10n = AppLocalizations.of(context);\n", 1)
+          s = s.replace("hintText: 'সূরা খুঁজুন...',", "hintText: _localizedText(l10n, 'সূরা খুঁজুন...', 'Search surah...', 'ابحث عن السورة...'),", 1)
+          s = s.replace("          'সূরা নির্বাচন করুন',", "          _localizedText(l10n, 'সূরা নির্বাচন করুন', 'Select a surah', 'اختر سورة'),", 1)
+
+          s = s.replace("  Widget _introCard(BuildContext context) {\n", "  Widget _introCard(BuildContext context) {\n    final l10n = AppLocalizations.of(context);\n", 1)
+          s = s.replace("child: const Column(\n", "child: Column(\n", 1)
+          s = s.replace("                  'পড়ুন, বুঝুন, অনুধাবন করুন',", "                  _localizedText(l10n, 'পড়ুন, বুঝুন, অনুধাবন করুন', 'Read, Understand, Reflect', 'اقرأ وافهم وتدبر'),", 1)
+          s = s.replace("                  'আরবি আয়াত, ওয়াকফ চিহ্ন, বিভিন্ন অনুবাদ এবং নির্বাচিত ব্যাখ্যা—একটি premium reading experience.',", "                  _localizedText(l10n, 'আরবি আয়াত, ওয়াকফ চিহ্ন, বিভিন্ন অনুবাদ এবং নির্বাচিত ব্যাখ্যা—একটি উন্নত রিডিং অভিজ্ঞতা।', 'Arabic verses, pause signs, translations and selected explanations in one reading experience.', 'آيات عربية وعلامات الوقف وترجمات وشروحات مختارة في تجربة قراءة متكاملة.'),", 1)
+
+          # Surah picker metadata.
+          s = s.replace("  Widget _surahTile(BuildContext context, QuranSurah surah) {\n", "  Widget _surahTile(BuildContext context, QuranSurah surah) {\n    final l10n = AppLocalizations.of(context);\n", 1)
+          s = s.replace("    final typeLabel = surah.type == 'meccan' ? 'মাক্কী' : 'মাদানী';", "    final typeLabel = surah.type == 'meccan' ? _localizedText(l10n, 'মাক্কী', 'Meccan', 'مكية') : _localizedText(l10n, 'মাদানী', 'Medinan', 'مدنية');", 1)
+          s = s.replace("'${_bn(surah.totalVerses)} আয়াত • ${_bn(meta.rukuCount)} রুকু • ${_bn(meta.sajdaCount)} সিজদা • $typeLabel'", "'${l10n.isBangla ? _bn(surah.totalVerses) : surah.totalVerses} ${_localizedText(l10n, 'আয়াত', 'verses', 'آيات')} • ${l10n.isBangla ? _bn(meta.rukuCount) : meta.rukuCount} ${_localizedText(l10n, 'রুকু', 'ruku', 'ركوع')} • ${l10n.isBangla ? _bn(meta.sajdaCount) : meta.sajdaCount} ${_localizedText(l10n, 'সিজদা', 'sajdah', 'سجود')} • $typeLabel'", 1)
+
+          # Reader body labels.
+          s = s.replace("  Widget _buildReader(BuildContext context, QuranSurah surah) {\n", "  Widget _buildReader(BuildContext context, QuranSurah surah) {\n    final l10n = AppLocalizations.of(context);\n", 1)
+          s = s.replace("'?? ?????????? ??? ????? ?????? ???? ???????? ???????? ???? ??????',", "_localizedText(l10n, 'তাফসির লোড করা যায়নি। আবার চেষ্টা করুন।', 'Could not load Tafsir. Please try again.', 'تعذر تحميل التفسير. حاول مرة أخرى.'),", 1)
+
+          # Surah header labels.
+          s = s.replace("  Widget _surahHeader(BuildContext context, QuranSurah surah) {\n", "  Widget _surahHeader(BuildContext context, QuranSurah surah) {\n    final l10n = AppLocalizations.of(context);\n", 1)
+          s = s.replace("_chip(context, _bn(surah.totalVerses), 'আয়াত')", "_chip(context, l10n.isBangla ? _bn(surah.totalVerses) : surah.totalVerses.toString(), _localizedText(l10n, 'আয়াত', 'verses', 'آيات'))", 1)
+          s = s.replace("_chip(context, _bn(meta.rukuCount), 'রুকু')", "_chip(context, l10n.isBangla ? _bn(meta.rukuCount) : meta.rukuCount.toString(), _localizedText(l10n, 'রুকু', 'ruku', 'ركوع'))", 1)
+          s = s.replace("_chip(context, _bn(meta.sajdaCount), 'সিজদা')", "_chip(context, l10n.isBangla ? _bn(meta.sajdaCount) : meta.sajdaCount.toString(), _localizedText(l10n, 'সিজদা', 'sajdah', 'سجود'))", 1)
+          s = s.replace("label: const Text('তাফসির / ব্যাখ্যা'", "label: Text(_localizedText(l10n, 'তাফসির / ব্যাখ্যা', 'Tafsir / Explanation', 'التفسير / الشرح')", 1)
+          s = s.replace("_showTafsir ? 'তাফসির লুকান' : 'তাফসির দেখান'", "_showTafsir ? _localizedText(l10n, 'তাফসির লুকান', 'Hide Tafsir', 'إخفاء التفسير') : _localizedText(l10n, 'তাফসির দেখান', 'Show Tafsir', 'عرض التفسير')", 1)
+
+          p.write_text(s, encoding='utf-8')
+
+      - name: Commit patch
+        run: |
+          git config user.name "nurverse-localization-bot"
+          git config user.email "actions@github.com"
+          git add lib/screens/quran/onudhabon_quran_reader.dart
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "fix: localize active Onudhabon Quran reader"
+          git push origin HEAD:${{ github.head_ref }}
