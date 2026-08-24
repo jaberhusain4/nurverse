@@ -20,36 +20,20 @@ jobs:
           p = Path('lib/screens/settings_hub_screen_v4.dart')
           s = p.read_text(encoding='utf-8')
           s = s.replace("import 'package:provider/provider.dart';\n", "import 'package:provider/provider.dart';\n\nimport '../localization/app_localizations.dart';\n", 1)
-          if "final l10n = AppLocalizations.of(context);" not in s:
-              s = s.replace("    final settings = context.watch<SettingsProvider>();\n", "    final settings = context.watch<SettingsProvider>();\n    final l10n = AppLocalizations.of(context);\n", 1)
-
-          # Main settings screen: preserve all widgets/spacing/actions, only replace labels.
+          s = s.replace("    final settings = context.watch<SettingsProvider>();\n", "    final settings = context.watch<SettingsProvider>();\n    final l10n = AppLocalizations.of(context);\n", 1) if "final l10n = AppLocalizations.of(context);" not in s else s
+          pattern = re.compile(r"isEnglish \? '([^']+)' : '([^']+)'")
           start = s.index('  @override\n  Widget build(BuildContext context) {')
           end = s.index('  Widget _buildPremiumHero', start)
-          build = s[start:end]
-          pattern = re.compile(r"isEnglish \? '([^']+)' : '([^']+)'")
-          build = pattern.sub(lambda m: "l10n.tr('%s', '%s')" % (m.group(2), m.group(1)), build)
-          # Existing 3-way language selector stays intact.
-          s = s[:start] + build + s[end:]
-
-          # Premium hero.
+          block = s[start:end]
+          block = pattern.sub(lambda m: "l10n.tr('%s', '%s')" % (m.group(2), m.group(1)), block)
+          s = s[:start] + block + s[end:]
           start = s.index('  Widget _buildPremiumHero')
           end = s.index('  Widget _premiumChip', start)
           block = s[start:end]
-          block = block.replace("    final isEnglish = settings.languageCode == 'en';\n", "    final l10n = AppLocalizations.of(context);\n    final isEnglish = settings.languageCode == 'en';\n", 1)
+          if 'final l10n = AppLocalizations.of(context);' not in block:
+              block = block.replace("    final isEnglish = settings.languageCode == 'en';\n", "    final l10n = AppLocalizations.of(context);\n    final isEnglish = settings.languageCode == 'en';\n", 1)
           block = pattern.sub(lambda m: "l10n.tr('%s', '%s')" % (m.group(2), m.group(1)), block)
-          # Active/inactive premium messages have separate branches.
-          block = block.replace("isActive ? (l10n.tr('আপনার প্রিমিয়াম অভিজ্ঞতা সক্রিয়', 'Your premium experience is active')) : (l10n.tr('আরও সমৃদ্ধ ও সুন্দর নূরভার্স উপভোগ করুন', 'Unlock a richer, calmer NurVerse'))", "isActive ? l10n.tr('আপনার প্রিমিয়াম অভিজ্ঞতা সক্রিয়', 'Your premium experience is active') : l10n.tr('আরও সমৃদ্ধ ও সুন্দর নূরভার্স উপভোগ করুন', 'Unlock a richer, calmer NurVerse')")
           s = s[:start] + block + s[end:]
-
-          # Dialog/sheet methods which have BuildContext.
-          replacements = {
-            "    final isEnglish = Localizations.localeOf(context).languageCode == 'en';\n": "    final l10n = AppLocalizations.of(context);\n    final isEnglish = Localizations.localeOf(context).languageCode == 'en';\n",
-          }
-          for old, new in replacements.items():
-              s = s.replace(old, new, 1)
-
-          # Methods with context can use AppLocalizations directly.
           for signature in [
               '  Future<void> _openAccount(BuildContext context, User user) async {',
               '  Future<void> _showPremiumStatus(BuildContext context, PremiumProvider premium, bool isEnglish) async {',
@@ -62,32 +46,19 @@ jobs:
               '  Future<void> _showResetDialog(BuildContext context, SettingsProvider settings) async {',
           ]:
               if signature in s:
-                  s = s.replace(signature, signature + "\n    final l10n = AppLocalizations.of(context);", 1)
-
-          # Convert simple binary labels in those methods to centralized localization.
-          method_names = [
-              '_openAccount', '_showPremiumStatus', '_showChoiceSheet', '_showTextSizeSheet',
-              '_showAdjustmentDialog', '_showJamaatDialog', '_showQuranFontSheet',
-              '_showDailyContentSheet', '_showResetDialog'
-          ]
-          for name in method_names:
+                  tail = s[s.index(signature):]
+                  if 'final l10n = AppLocalizations.of(context);' not in tail.split('\n  ', 3)[0:3]:
+                      s = s.replace(signature, signature + "\n    final l10n = AppLocalizations.of(context);", 1)
+          for name in ['_openAccount','_showPremiumStatus','_showChoiceSheet','_showTextSizeSheet','_showAdjustmentDialog','_showJamaatDialog','_showQuranFontSheet','_showDailyContentSheet','_showResetDialog']:
               token = '  Future<void> ' + name
               pos = s.find(token)
               if pos < 0: continue
               next_pos = s.find('\n  ', pos + len(token))
               if next_pos < 0: next_pos = len(s)
-              block = s[pos:next_pos]
-              block = pattern.sub(lambda m: "l10n.tr('%s', '%s')" % (m.group(2), m.group(1)), block)
-              s = s[:pos] + block + s[next_pos:]
-
-          # Text-size helper stays pure; Arabic falls back to the English labels only when no separate Arabic UI is needed.
-          s = s.replace("return isEnglish ? 'Small' : 'ছোট';", "return isEnglish ? 'Small' : 'ছোট';")
-          s = s.replace("return isEnglish ? 'Large' : 'বড়';", "return isEnglish ? 'Large' : 'বড়';")
-          s = s.replace("return isEnglish ? 'Very Large' : 'খুব বড়';", "return isEnglish ? 'Very Large' : 'খুব বড়';")
-          s = s.replace("return isEnglish ? 'Normal' : 'স্বাভাবিক';", "return isEnglish ? 'Normal' : 'স্বাভাবিক';")
-
+              chunk = s[pos:next_pos]
+              chunk = pattern.sub(lambda m: "l10n.tr('%s', '%s')" % (m.group(2), m.group(1)), chunk)
+              s = s[:pos] + chunk + s[next_pos:]
           p.write_text(s, encoding='utf-8')
-
       - name: Commit patch
         run: |
           git config user.name "nurverse-localization-bot"
