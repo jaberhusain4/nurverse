@@ -14,6 +14,7 @@ extension AppLocalizationsX on AppLocalizations {
       'Dhuhr': 'الظهر',
       'Asr': 'العصر',
       'Maghrib': 'المغرب',
+      'Magrib': 'المغرب',
       'Isha': 'العشاء',
       'Jumu’ah': 'الجمعة',
       'Jama’ah': 'الجماعة',
@@ -21,6 +22,16 @@ extension AppLocalizationsX on AppLocalizations {
       'Duha': 'الضحى',
       'Awwabin': 'الأوابين',
       'Tahajjud': 'التهجد',
+      'Ishar Waqto Cholche': 'وقت العشاء جارٍ',
+      'Ishar Waqt Cholche': 'وقت العشاء جارٍ',
+      'Isha time is active': 'وقت العشاء جارٍ',
+      'Isha time is in progress': 'وقت العشاء جارٍ',
+      'Maghrib time is active': 'وقت المغرب جارٍ',
+      'Maghrib time is in progress': 'وقت المغرب جارٍ',
+      'Tahajjud time is active': 'وقت التهجد جارٍ',
+      'Tahajjud time is in progress': 'وقت التهجد جارٍ',
+      'Ishraq time is active': 'وقت الإشراق جارٍ',
+      'Ishraq time is in progress': 'وقت الإشراق جارٍ',
       'Calculating prayer times...': 'جارٍ حساب أوقات الصلاة...',
       'Prayer times will appear when a location is available.': 'ستظهر أوقات الصلاة عند توفر الموقع.',
       'Times will appear when a location is available.': 'ستظهر الأوقات عند توفر الموقع.',
@@ -35,10 +46,6 @@ extension AppLocalizationsX on AppLocalizations {
       'Dhuhr time is active': 'وقت الظهر جارٍ',
       'Asr time is in progress': 'وقت العصر جارٍ',
       'Asr time is active': 'وقت العصر جارٍ',
-      'Maghrib time is in progress': 'وقت المغرب جارٍ',
-      'Maghrib time is active': 'وقت المغرب جارٍ',
-      'Isha time is in progress': 'وقت العشاء جارٍ',
-      'Isha time is active': 'وقت العشاء جارٍ',
       'Unknown location': 'موقع غير معروف',
       'Location': 'الموقع',
       'Refresh': 'تحديث',
@@ -73,52 +80,93 @@ extension AppLocalizationsX on AppLocalizations {
   }
 
   String prayerName(String value) {
-    switch (value.trim()) {
+    final raw = value.trim();
+    switch (raw.toLowerCase()) {
+      case 'fajr':
       case 'ফজর':
-      case 'Fajr': return tr('ফজর', 'Fajr');
+        return tr('ফজর', 'Fajr');
+      case 'dhuhr':
       case 'যোহর':
-      case 'Dhuhr': return tr('যোহর', 'Dhuhr');
+        return tr('যোহর', 'Dhuhr');
+      case 'asr':
       case 'আসর':
-      case 'Asr': return tr('আসর', 'Asr');
+        return tr('আসর', 'Asr');
+      case 'maghrib':
+      case 'magrib':
       case 'মাগরিব':
-      case 'Maghrib': return tr('মাগরিব', 'Maghrib');
+        return tr('মাগরিব', 'Maghrib');
+      case 'isha':
       case 'ইশা':
-      case 'Isha': return tr('ইশা', 'Isha');
+        return tr('ইশা', 'Isha');
+      case "jumu'ah":
+      case 'jumu’ah':
       case "জুমু'আ":
       case 'জুমু‘আ':
-      case 'Jumu’ah':
-      case "Jumu'ah": return tr('জুমু‘আ', 'Jumu’ah');
+        return tr('জুমু‘আ', 'Jumu’ah');
+      case 'ishraq':
       case 'ইশরাক':
-      case 'Ishraq': return tr('ইশরাক', 'Ishraq');
+        return tr('ইশরাক', 'Ishraq');
+      case 'chasht':
+      case 'duha':
       case 'চাশত':
       case 'দুহা':
-      case 'Duha': return tr('চাশত / দুহা', 'Duha');
+        return tr('চাশত / দুহা', 'Duha');
+      case 'awwabin':
       case 'আউওয়াবীন':
-      case 'Awwabin': return tr('আউওয়াবীন', 'Awwabin');
+        return tr('আউওয়াবীন', 'Awwabin');
+      case 'tahajjud':
       case 'তাহাজ্জুদ':
-      case 'Tahajjud': return tr('তাহাজ্জুদ', 'Tahajjud');
-      default: return isArabic ? _arabicLabel(value) : value;
+        return tr('তাহাজ্জুদ', 'Tahajjud');
+      default:
+        return isArabic ? _arabicLabel(raw) : raw;
     }
   }
 
   String prayerStatus(String value) {
-    if (isArabic) return _arabicLabel(value);
-    if (isBangla) return value;
+    final raw = value.trim();
+    if (isArabic) {
+      const arabicStatuses = <String, String>{
+        'ইশার ওয়াক্ত চলছে': 'وقت العشاء جارٍ',
+        'ইশরাকের ওয়াক্ত চলছে': 'وقت الإشراق جارٍ',
+        'ইশরাক ওয়াক্ত চলছে': 'وقت الإشراق جارٍ',
+        'তাহাজ্জুদের ওয়াক্ত চলছে': 'وقت التهجد جارٍ',
+        'তাহাজ্জুদ ওয়াক্ত চলছে': 'وقت التهجد جارٍ',
+        'মাগরিবের ওয়াক্ত চলছে': 'وقت المغرب جارٍ',
+        'Magrib time is active': 'وقت المغرب جارٍ',
+        'Ishar Waqto Cholche': 'وقت العشاء جارٍ',
+        'Ishar Waqt Cholche': 'وقت العشاء جارٍ',
+        'Isha time is active': 'وقت العشاء جارٍ',
+        'Isha time is in progress': 'وقت العشاء جارٍ',
+        'Ishraq time is active': 'وقت الإشراق جارٍ',
+        'Ishraq time is in progress': 'وقت الإشراق جارٍ',
+        'Tahajjud time is active': 'وقت التهجد جارٍ',
+        'Tahajjud time is in progress': 'وقت التهجد جارٍ',
+      };
+      return arabicStatuses[raw] ?? _arabicLabel(raw);
+    }
+    if (isBangla) return raw;
     const map = <String, String>{
       'সালাতের সময় গণনা করা হচ্ছে...': 'Calculating prayer times...',
       'লোকেশন পাওয়া গেলে সালাতের সময় দেখানো হবে': 'Prayer times will appear when a location is available.',
       'লোকেশন পাওয়া গেলে সময় দেখানো হবে': 'Times will appear when a location is available.',
       'ফজরের সময় শুরু হতে চলেছে': 'Fajr is about to begin',
-      'ফজরের ওয়াক্ত চলছে': 'Fajr time is in progress',
-      'পরবর্তী সালাত: জুমু\'আ': 'Next prayer: Jumu’ah',
+      'ফজরের ওয়াক্ত চলছে': 'Fajr time is active',
+      'পরবর্তী সালাত: জুমু‘আ': 'Next prayer: Jumu’ah',
       'পরবর্তী সালাত: যোহর': 'Next prayer: Dhuhr',
-      'জুমু\'আর ওয়াক্ত চলছে': 'Jumu’ah time is in progress',
-      'যোহরের ওয়াক্ত চলছে': 'Dhuhr time is in progress',
-      'আসরের ওয়াক্ত চলছে': 'Asr time is in progress',
-      'মাগরিবের ওয়াক্ত চলছে': 'Maghrib time is in progress',
-      'ইশার ওয়াক্ত চলছে': 'Isha time is in progress',
+      'জুমু‘আর ওয়াক্ত চলছে': 'Jumu’ah time is active',
+      'যোহরের ওয়াক্ত চলছে': 'Dhuhr time is active',
+      'আসরের ওয়াক্ত চলছে': 'Asr time is active',
+      'মাগরিবের ওয়াক্ত চলছে': 'Maghrib time is active',
+      'ইশার ওয়াক্ত চলছে': 'Isha time is active',
+      'ইশরাকের ওয়াক্ত চলছে': 'Ishraq time is active',
+      'ইশরাক ওয়াক্ত চলছে': 'Ishraq time is active',
+      'তাহাজ্জুদের ওয়াক্ত চলছে': 'Tahajjud time is active',
+      'তাহাজ্জুদ ওয়াক্ত চলছে': 'Tahajjud time is active',
+      'Ishar Waqto Cholche': 'Isha time is active',
+      'Ishar Waqt Cholche': 'Isha time is active',
+      'Magrib time is active': 'Maghrib time is active',
     };
-    return map[value] ?? value;
+    return map[raw] ?? raw;
   }
 
   String prayerTrackerName(String value) => prayerName(value);
