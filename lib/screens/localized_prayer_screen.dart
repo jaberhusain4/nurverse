@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../controllers/prayer_controller.dart';
 import '../localization/app_localizations.dart';
+import '../localization/app_localizations_x.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home/prayer_special_times_card.dart';
 
@@ -628,7 +629,13 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
     ];
     return Column(
       children: entries.map((e) {
-        final value = c.specialPrayerTimes[e['key']]?.toString() ?? '--:--';
+        final value = switch (e['key']) {
+          'ishraq' => c.ishraqTime,
+          'duha' => c.duhaTime,
+          'awwabin' => c.awwabinTime,
+          'tahajjud' => c.tahajjudTime,
+          _ => '--:--',
+        };
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: _card(
