@@ -12,6 +12,8 @@ class LanguageController extends ChangeNotifier {
 
   bool get isEnglish => _locale.languageCode == 'en';
 
+  bool get isArabic => _locale.languageCode == 'ar';
+
   // ============================================================
   // LOAD SAVED LANGUAGE
   // ============================================================
@@ -24,6 +26,8 @@ class LanguageController extends ChangeNotifier {
 
       if (savedLanguage == 'en') {
         _locale = const Locale('en');
+      } else if (savedLanguage == 'ar') {
+        _locale = const Locale('ar');
       } else {
         _locale = const Locale('bn');
       }
@@ -42,7 +46,7 @@ class LanguageController extends ChangeNotifier {
     final normalizedCode = languageCode.toLowerCase();
 
     // NurVerse currently supports Bangla and English.
-    if (normalizedCode != 'bn' && normalizedCode != 'en') {
+    if (normalizedCode != 'bn' && normalizedCode != 'en' && normalizedCode != 'ar') {
       return;
     }
 
@@ -75,5 +79,9 @@ class LanguageController extends ChangeNotifier {
 
   Future<void> setEnglish() async {
     await setLanguage('en');
+  }
+
+  Future<void> setArabic() async {
+    await setLanguage('ar');
   }
 }

@@ -19,9 +19,10 @@ class SettingsHubScreenV4 extends StatelessWidget {
     final textScale = context.watch<TextScaleProvider>();
     final premium = context.watch<PremiumProvider>();
     final isEnglish = settings.isEnglish;
+    final isArabic = settings.isArabic;
 
     return Scaffold(
-      appBar: AppBar(title: Text(isEnglish ? 'Settings' : 'সেটিংস')),
+      appBar: AppBar(title: Text(isEnglish ? 'Settings' : isArabic ? 'الإعدادات' : 'সেটিংস')),
       body: ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -75,12 +76,12 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _tile(
               context,
               Icons.language_rounded,
-              isEnglish ? 'Language' : 'ভাষা',
-              isEnglish ? 'English' : 'বাংলা',
+              isEnglish ? 'Language' : isArabic ? 'اللغة' : 'ভাষা',
+              isEnglish ? 'English' : isArabic ? 'العربية' : 'বাংলা',
               () => _showChoiceSheet(
                 context,
                 isEnglish ? 'Language' : 'ভাষা',
-                const ['bn', 'en'],
+                const ['bn', 'en', 'ar'],
                 settings.setLanguage,
                 selectedValue: settings.languageCode,
               ),
@@ -652,6 +653,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
     if (isEnglish) {
       if (option == 'bn') return 'Bangla';
       if (option == 'en') return 'English';
+      if (option == 'ar') return 'Arabic';
       return option;
     }
     const labels = <String, String>{

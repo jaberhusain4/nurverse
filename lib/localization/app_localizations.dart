@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'arabic_strings.dart';
 
 class AppLocalizations {
   final Locale locale;
   const AppLocalizations(this.locale);
-  static const supportedLocales = [Locale('bn'), Locale('en')];
+  static const supportedLocales = [Locale('bn'), Locale('en'), Locale('ar')];
   static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   static AppLocalizations of(BuildContext context) {
@@ -13,7 +14,8 @@ class AppLocalizations {
   }
 
   bool get isBangla => locale.languageCode == 'bn';
-  String _text(String bn, String en) => isBangla ? bn : en;
+  bool get isArabic => locale.languageCode == 'ar';
+  String _text(String bn, String en) => isArabic ? (kArabicStrings[en] ?? en) : (isBangla ? bn : en);
   String tr(String bn, String en) => _text(bn, en);
 
   String get appName => 'NurVerse';
@@ -113,6 +115,7 @@ class AppLocalizations {
   String get systemTheme => _text('সিস্টেম', 'System');
   String get bangla => _text('বাংলা', 'Bangla');
   String get english => _text('ইংরেজি', 'English');
+  String get arabic => isArabic ? 'العربية' : (isBangla ? 'আরবি' : 'Arabic');
   String get locationUnavailable => _text('অবস্থান পাওয়া যায়নি', 'Location unavailable');
   String get noData => _text('কোনো তথ্য পাওয়া যায়নি', 'No data available');
   String get somethingWentWrong => _text('কিছু একটা সমস্যা হয়েছে', 'Something went wrong');
@@ -158,7 +161,7 @@ class AppLocalizations {
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
-  @override bool isSupported(Locale locale) => ['bn', 'en'].contains(locale.languageCode);
+  @override bool isSupported(Locale locale) => ['bn', 'en', 'ar'].contains(locale.languageCode);
   @override Future<AppLocalizations> load(Locale locale) async => AppLocalizations(locale);
   @override bool shouldReload(_AppLocalizationsDelegate old) => false;
 }

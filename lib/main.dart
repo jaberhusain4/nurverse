@@ -31,6 +31,7 @@ Future<void> main() async {
   await AuthService.instance.initializeGoogleSignIn();
   await initializeDateFormatting('en');
   await initializeDateFormatting('bn');
+  await initializeDateFormatting('ar');
   await NotificationService().init();
 
   runApp(
