@@ -1,6 +1,8 @@
 // lib/widgets/prayer/prayer_error_state.dart
 
 import 'package:flutter/material.dart';
+
+import '../../localization/app_localizations.dart';
 import '../../theme/app_theme.dart';
 
 class PrayerErrorState extends StatelessWidget {
@@ -15,6 +17,7 @@ class PrayerErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
 
@@ -39,7 +42,7 @@ class PrayerErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'সালাতের তথ্য লোড করা যায়নি',
+              l10n.prayerLoadError,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
@@ -58,7 +61,7 @@ class PrayerErrorState extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('পুনরায় চেষ্টা করুন'),
+              label: Text(l10n.retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primary,
                 foregroundColor: Colors.white,
