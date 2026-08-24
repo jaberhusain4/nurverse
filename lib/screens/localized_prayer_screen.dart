@@ -264,7 +264,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  c.prayerStatus,
+                  l10n.prayerStatus(c.prayerStatus),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
