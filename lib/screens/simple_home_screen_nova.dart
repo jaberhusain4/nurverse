@@ -9,6 +9,7 @@ import '../providers/settings_provider.dart';
 import '../services/date_service.dart';
 import '../services/last_read_service.dart';
 import '../theme/app_theme.dart';
+import '../localization/app_localizations.dart';
 import '../widgets/home/continue_reading_card.dart';
 import 'dua/dua_screen.dart';
 import 'qibla/qibla_screen.dart';
@@ -63,7 +64,25 @@ class _SimpleHomeScreenNovaState extends State<SimpleHomeScreenNova> {
     if (mounted) await _loadLastRead();
   }
 
-  String _tr(String bn, String en, String lang) => lang == 'en' ? en : bn;
+  String _tr(String bn, String en, String lang) {
+    if (lang == 'en') return en;
+    if (lang == 'ar') {
+      const ar = <String, String>{
+        'লোকেশন': 'الموقع',
+        'Location': 'الموقع',
+        'লোকেশন পাওয়া যায়নি': 'الموقع غير متاح',
+        'Location unavailable': 'الموقع غير متاح',
+        'বর্তমান লোকেশন আপডেট করুন': 'تحديث الموقع الحالي',
+        'Update current location': 'تحديث الموقع الحالي',
+        'ঢাকা': 'دكا',
+        'Dhaka': 'دكا',
+        'আপনার কুরআন': 'القرآن الخاص بك',
+        'Your Quran': 'القرآن الخاص بك',
+      };
+      return ar[bn] ?? ar[en] ?? en;
+    }
+    return bn;
+  }
 
   String _prayerLabel(String value, String lang) {
     final key = value.trim().toLowerCase();
@@ -78,11 +97,29 @@ class _SimpleHomeScreenNovaState extends State<SimpleHomeScreenNova> {
     const en = <String, String>{
       'fajr': 'Fajr',
       'dhuhr': 'Dhuhr',
-      'jumuah': 'Jumuah',
+      'jumuah': 'Jumu’ah',
       'asr': 'Asr',
       'maghrib': 'Maghrib',
       'isha': 'Isha',
+      'ishraq': 'Ishraq',
+      'duha': 'Duha',
+      'awwabin': 'Awwabin',
+      'tahajjud': 'Tahajjud',
     };
+    const ar = <String, String>{
+      'fajr': 'الفجر',
+      'dhuhr': 'الظهر',
+      'jumuah': 'الجمعة',
+      'asr': 'العصر',
+      'maghrib': 'المغرب',
+      'magrib': 'المغرب',
+      'isha': 'العشاء',
+      'ishraq': 'الإشراق',
+      'duha': 'الضحى',
+      'awwabin': 'الأوابين',
+      'tahajjud': 'التهجد',
+    };
+    if (lang == 'ar') return ar[key] ?? value;
     return (lang == 'en' ? en : bn)[key] ?? value;
   }
 
@@ -357,7 +394,7 @@ class _PrayerStage extends StatelessWidget {
                       vertical: 6,
                     ),
                     child: Text(
-                      language == 'en' ? 'PRAYER NOW' : 'সালাত চলছে',
+                      language == 'en' ? 'PRAYER NOW' : language == 'ar' ? 'الصلاة الآن' : 'সালাত চলছে',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 9,
@@ -379,7 +416,7 @@ class _PrayerStage extends StatelessWidget {
                 children: [
                   Text(
                     activePrayer.isEmpty
-                        ? (language == 'en' ? 'Next Prayer' : 'পরবর্তী সালাত')
+                        ? (language == 'en' ? 'Next Prayer' : language == 'ar' ? 'الصلاة التالية' : 'পরবর্তী সালাত')
                         : activePrayer,
                     style: const TextStyle(
                       color: Colors.white,
@@ -389,7 +426,7 @@ class _PrayerStage extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    language == 'en' ? 'time remaining' : 'সময় বাকি',
+                    language == 'en' ? 'time remaining' : language == 'ar' ? 'الوقت المتبقي' : 'সময় বাকি',
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 12,
@@ -420,7 +457,7 @@ class _PrayerStage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _StageMeta(
-                          title: language == 'en' ? 'Current' : 'বর্তমান',
+                          title: language == 'en' ? 'Current' : language == 'ar' ? 'الحالي' : 'বর্তমান',
                           value: activePrayer,
                         ),
                       ),
@@ -429,7 +466,7 @@ class _PrayerStage extends StatelessWidget {
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: _StageMeta(
-                            title: language == 'en' ? 'Next' : 'পরবর্তী',
+                            title: language == 'en' ? 'Next' : language == 'ar' ? 'التالي' : 'পরবর্তী',
                             value: nextPrayer,
                             alignEnd: true,
                           ),
@@ -533,7 +570,7 @@ class _ContextRail extends StatelessWidget {
               children: [
                 _SunValue(
                   icon: Icons.wb_sunny_outlined,
-                  label: language == 'en' ? 'Sunrise' : 'সূর্যোদয়',
+                  label: language == 'en' ? 'Sunrise' : language == 'ar' ? 'الشروق' : 'সূর্যোদয়',
                   value: sunrise,
                 ),
                 Container(
@@ -543,7 +580,7 @@ class _ContextRail extends StatelessWidget {
                 ),
                 _SunValue(
                   icon: Icons.nights_stay_outlined,
-                  label: language == 'en' ? 'Sunset' : 'সূর্যাস্ত',
+                  label: language == 'en' ? 'Sunset' : language == 'ar' ? 'الغروب' : 'সূর্যাস্ত',
                   value: sunset,
                 ),
               ],
@@ -652,6 +689,17 @@ class _PrayerRail extends StatelessWidget {
 
   String _label(String name) {
     if (language == 'en') return name;
+    if (language == 'ar') {
+      const ar = <String, String>{
+        'Fajr': 'الفجر', 'Dhuhr': 'الظهر', 'Asr': 'العصر',
+        'Maghrib': 'المغرب', 'Isha': 'العشاء',
+      };
+      return ar[name] ?? name;
+    }
+    if (language == 'ar') {
+      const ar = <String, String>{'Fajr': 'الفجر', 'Dhuhr': 'الظهر', 'Asr': 'العصر', 'Maghrib': 'المغرب', 'Isha': 'العشاء'};
+      return ar[name] ?? name;
+    }
     const bn = <String, String>{
       'Fajr': 'ফজর',
       'Dhuhr': 'যোহর',
