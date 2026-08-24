@@ -176,6 +176,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
   }
 
   Widget _currentCard(BuildContext context, PrayerController c, bool friday) {
+    final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
     final secondary = context.secondaryTextColor;
     return _card(
@@ -202,7 +203,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      AppLocalizations.of(context).prayerName(c.currentPrayer),
+                      l10n.prayerName(c.currentPrayer),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -213,8 +214,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
                   ],
                 ),
               ),
-              if (friday)
-                _badge(primary, AppLocalizations.of(context).fridayLabel),
+              if (friday) _badge(primary, l10n.fridayLabel),
             ],
           ),
           const SizedBox(height: 13),
@@ -292,7 +292,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
                       const SizedBox(width: 7),
                       Expanded(
                         child: Text(
-                          '${_label(context, 'পরবর্তী', 'Next')}: ${AppLocalizations.of(context).prayerName(c.nextPrayerName)}',
+                          '${_label(context, 'পরবর্তী', 'Next')}: ${l10n.prayerName(c.nextPrayerName)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -430,313 +430,87 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
     );
   }
 
-  Widget _prayerTile(BuildContext context, Map<String, dynamic> p, bool friday) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final current = p['isCurrent'] == true;
-    final nameRaw = p['nameBn']?.toString() ?? p['name']?.toString() ?? '';
-    final name = AppLocalizations.of(context).prayerName(nameRaw);
-    final start = p['start']?.toString() ?? '';
-    final end = p['end']?.toString() ?? '';
-    final jamaat = p['jamaat']?.toString() ?? '';
-    final isJumuah = friday && p['name']?.toString() == 'Jumuah';
-
+  Widget _card(
+    BuildContext context, {
+    required Widget child,
+    EdgeInsetsGeometry padding = const EdgeInsets.all(15),
+    double radius = 18,
+  }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 7),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: current ? primary.withValues(alpha: .07) : context.cardColor,
-        borderRadius: BorderRadius.circular(17),
-        border: Border.all(
-          color: current
-              ? primary.withValues(alpha: .18)
-              : primary.withValues(alpha: .06),
-        ),
-      ),
-      child: Row(
-        children: [
-          _iconBox(
-            current ? primary : context.secondaryTextColor,
-            isJumuah ? Icons.groups_rounded : Icons.access_time_rounded,
-            size: 40,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: current
-                              ? FontWeight.w800
-                              : FontWeight.w600,
-                          color: current ? primary : null,
-                        ),
-                      ),
-                    ),
-                    if (current) ...[
-                      const SizedBox(width: 6),
-                      _badge(
-                        primary,
-                        _label(context, 'চলছে', 'Active'),
-                        small: true,
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '$start – $end',
-                  style: TextStyle(
-                    color: context.secondaryTextColor,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (jamaat.isNotEmpty && jamaat != '--:--') ...[
-            const SizedBox(width: 7),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  jamaat,
-                  style: TextStyle(
-                    color: current ? primary : null,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                Text(
-                  _label(context, 'জামাত', 'Jamaat'),
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    color: context.secondaryTextColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _naflSection(BuildContext context, PrayerController c) {
-    final items = <_NaflData>[
-      _NaflData(
-        _label(context, 'ইশরাক', 'Ishraq'),
-        _label(context, 'সূর্যোদয়ের পর শুরু হয়', 'Begins after sunrise'),
-        c.ishraqTime,
-        Icons.wb_sunny_outlined,
-      ),
-      _NaflData(
-        _label(context, 'দুহা / চাশত', 'Duha / Chasht'),
-        _label(
-          context,
-          'ইশরাকের পর থেকে জাওয়ালের আগে',
-          'After Ishraq and before Zawal',
-        ),
-        c.duhaTime,
-        Icons.wb_sunny_rounded,
-      ),
-      _NaflData(
-        _label(context, 'আওয়াবিন', 'Awwabin'),
-        _label(
-          context,
-          'মাগরিবের পর থেকে ইশার আগে',
-          'After Maghrib and before Isha',
-        ),
-        c.awwabinTime,
-        Icons.nightlight_outlined,
-      ),
-      _NaflData(
-        _label(context, 'তাহাজ্জুদ', 'Tahajjud'),
-        _label(context, 'রাতের শেষ তৃতীয়াংশ', 'Last third of the night'),
-        c.tahajjudTime,
-        Icons.nights_stay_rounded,
-      ),
-    ];
-
-    final valid = items
-        .where((e) => e.time.isNotEmpty && e.time != '--:--')
-        .toList();
-    if (valid.isEmpty) {
-      return _empty(
-        context,
-        _label(
-          context,
-          'নফল সময়ের গণনা পাওয়া যায়নি',
-          'No calculated Nafl times available yet',
-        ),
-      );
-    }
-    return Column(
-      children: valid.map((item) => _nafl(context, item)).toList(),
-    );
-  }
-
-  Widget _nafl(BuildContext context, _NaflData item) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 7),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: padding,
       decoration: BoxDecoration(
         color: context.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: primary.withValues(alpha: .06)),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: context.borderColor),
       ),
-      child: Row(
-        children: [
-          Icon(item.icon, color: primary, size: 22),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  item.description,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: context.secondaryTextColor,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              item.time,
-              textAlign: TextAlign.end,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: primary,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
-      ),
+      child: child,
     );
   }
 
-  Widget _empty(BuildContext context, String text) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: context.cardColor,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: context.secondaryTextColor,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
-
-  Widget _sectionTitle(
-    BuildContext context,
-    String title,
-    String subtitle,
-    IconData icon,
-  ) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final secondary = context.secondaryTextColor;
-    return Row(
-      children: [
-        _iconBox(primary, icon, size: 38),
-        const SizedBox(width: 9),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 15.5,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: secondary,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _mini(BuildContext context, IconData icon, String title, String value) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final secondary = context.secondaryTextColor;
+  Widget _iconBox(Color primary, IconData icon, {double size = 38}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 9),
+      width: size,
+      height: size,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: primary.withValues(alpha: .055),
-        borderRadius: BorderRadius.circular(13),
+        color: primary.withValues(alpha: .10),
+        borderRadius: BorderRadius.circular(size * .35),
+      ),
+      child: Icon(icon, color: primary, size: size * .52),
+    );
+  }
+
+  Widget _badge(Color primary, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: .10),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: primary,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  Widget _mini(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.borderColor),
       ),
       child: Column(
         children: [
-          Icon(icon, color: primary, size: 20),
+          Icon(icon, size: 17, color: context.secondaryTextColor),
           const SizedBox(height: 4),
           Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            label,
+            textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11,
-              color: secondary,
+              fontSize: 10.5,
+              color: context.secondaryTextColor,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 3),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              value.isEmpty ? '--:--' : value,
-              maxLines: 1,
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 13.5,
-              ),
-            ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -746,241 +520,178 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
   Widget _dailyTime(
     BuildContext context,
     IconData icon,
-    String title,
+    String label,
     String value,
-    Color color,
-  ) => Column(
-        children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(height: 5),
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: context.secondaryTextColor,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 2),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              value.isEmpty ? '--:--' : value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 13.5,
-              ),
-            ),
-          ),
-        ],
-      );
+    Color primary,
+  ) {
+    return Column(
+      children: [
+        Icon(icon, color: primary, size: 20),
+        const SizedBox(height: 5),
+        Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 10.5, color: context.secondaryTextColor, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 3),
+        Text(value, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
+      ],
+    );
+  }
 
-  Widget _footer(BuildContext context) => _card(
-        context,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.info_outline_rounded,
-              size: 18,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _label(
-                  context,
-                  'সালাতের সময় আপনার লোকেশন, গণনা পদ্ধতি ও মাজহাবের সেটিং অনুযায়ী হিসাব করা হয়।',
-                  'Prayer times are calculated from your location, calculation method and madhhab settings.',
-                ),
-                style: TextStyle(
-                  color: context.secondaryTextColor,
-                  height: 1.4,
-                  fontSize: 11.5,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
+  Widget _divider(BuildContext context) {
+    return Container(width: 1, height: 46, color: context.borderColor);
+  }
 
-  Widget _error(BuildContext context, PrayerController c) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+  Widget _sectionTitle(BuildContext context, String title, String subtitle, IconData icon) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Row(
+      children: [
+        _iconBox(primary, icon, size: 36),
+        const SizedBox(width: 9),
+        Expanded(
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.error_outline_rounded,
-                size: 50,
-                color: Colors.redAccent,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _label(
-                  context,
-                  'সালাতের সময় লোড করা যায়নি',
-                  'Could not load prayer times',
-                ),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 7),
-              Text(
-                c.error ?? _label(context, 'অজানা সমস্যা', 'Unknown problem'),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: context.secondaryTextColor,
-                  fontSize: 12.5,
-                ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: c.refreshPrayerTimes,
-                icon: const Icon(Icons.refresh_rounded),
-                label: Text(_label(context, 'আবার চেষ্টা করুন', 'Try again')),
-              ),
+              Text(title, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 2),
+              Text(subtitle, style: TextStyle(fontSize: 11.5, color: context.secondaryTextColor)),
             ],
           ),
         ),
-      );
+      ],
+    );
+  }
 
-  Widget _card(
-    BuildContext context, {
-    required Widget child,
-    EdgeInsetsGeometry padding = const EdgeInsets.all(15),
-    double radius = 20,
-  }) => Container(
-        padding: padding,
-        decoration: BoxDecoration(
-          color: context.cardColor,
-          borderRadius: BorderRadius.circular(radius),
-          border: Border.all(
-            color: Theme.of(context)
-                .colorScheme
-                .primary
-                .withValues(alpha: .07),
-          ),
-        ),
-        child: child,
-      );
-
-  Widget _iconBox(Color color, IconData icon, {double size = 38}) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: .10),
-          borderRadius: BorderRadius.circular(size * .30),
-        ),
-        child: Icon(icon, color: color, size: size * .55),
-      );
-
-  Widget _badge(Color color, String text, {bool small = false}) => Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: small ? 6 : 8,
-          vertical: small ? 3 : 4,
-        ),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: .10),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          text,
-          maxLines: 1,
-          style: TextStyle(
-            color: color,
-            fontSize: small ? 9.5 : 10.5,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      );
-
-  Widget _divider(BuildContext context) => Container(
-        width: 1,
-        height: 38,
-        color: Theme.of(context).dividerColor.withValues(alpha: .30),
-      );
-}
-
-class _NaflData {
-  final String title;
-  final String description;
-  final String time;
-  final IconData icon;
-
-  const _NaflData(this.title, this.description, this.time, this.icon);
-}
-
-class _PrayerTrackerCard extends StatelessWidget {
-  const _PrayerTrackerCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = context.watch<PrayerController>();
+  Widget _prayerTile(BuildContext context, Map<String, dynamic> prayer, bool friday) {
+    final l10n = AppLocalizations.of(context);
+    final name = (prayer['name'] ?? '').toString();
+    final time = (prayer['time'] ?? '').toString();
+    final start = (prayer['start'] ?? time).toString();
+    final end = (prayer['end'] ?? '').toString();
+    final isCurrent = prayer['isCurrent'] == true;
     final primary = Theme.of(context).colorScheme.primary;
-    final progress = controller.prayerProgress.clamp(0.0, 1.0);
-
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: primary.withValues(alpha: .07)),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: _card(
+        context,
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+        radius: 16,
+        child: Row(
+          children: [
+            _iconBox(primary, Icons.access_time_rounded, size: 38),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          l10n.prayerName(name),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      if (friday && name.toLowerCase().contains('dhuhr')) ...[
+                        const SizedBox(width: 6),
+                        _badge(primary, l10n.fridayLabel),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${_label(context, 'শুরু', 'Start')}: $start${end.isEmpty ? '' : '  •  ${_label(context, 'শেষ', 'End')}: $end'}',
+                    style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
+                  ),
+                ],
+              ),
+            ),
+            if (isCurrent)
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: _badge(primary, _label(context, 'চলছে', 'Active')),
+              ),
+            const SizedBox(width: 8),
+            Text(time, style: TextStyle(color: primary, fontSize: 14, fontWeight: FontWeight.w800)),
+          ],
+        ),
       ),
-      child: Row(
+    );
+  }
+
+  Widget _naflSection(BuildContext context, PrayerController c) {
+    final l10n = AppLocalizations.of(context);
+    final entries = <Map<String, String>>[
+      {'key': 'ishraq', 'name': l10n.tr('ইশরাক', 'Ishraq')},
+      {'key': 'duha', 'name': l10n.tr('চাশত / দুহা', 'Duha')},
+      {'key': 'awwabin', 'name': l10n.tr('আউওয়াবীন', 'Awwabin')},
+      {'key': 'tahajjud', 'name': l10n.tr('তাহাজ্জুদ', 'Tahajjud')},
+    ];
+    return Column(
+      children: entries.map((e) {
+        final value = c.specialPrayerTimes[e['key']]?.toString() ?? '--:--';
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: _card(
+            context,
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+            radius: 15,
+            child: Row(
+              children: [
+                _iconBox(Theme.of(context).colorScheme.primary, Icons.auto_awesome_rounded, size: 36),
+                const SizedBox(width: 10),
+                Expanded(child: Text(e['name']!, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800))),
+                Text(value, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 13, fontWeight: FontWeight.w800)),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _error(BuildContext context, PrayerController c) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline_rounded, size: 42, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(height: 12),
+            Text(c.error ?? AppLocalizations.of(context).tr('কিছু একটা সমস্যা হয়েছে', 'Something went wrong'), textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            FilledButton.icon(onPressed: c.refreshPrayerTimes, icon: const Icon(Icons.refresh_rounded), label: Text(AppLocalizations.of(context).tryAgainLabel)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _footer(BuildContext context) {
+    return Center(
+      child: Text(
+        _label(context, 'সময় ও হিসাব বাস্তব তথ্যের ভিত্তিতে', 'Times and calculations use live data'),
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 11, color: context.secondaryTextColor),
+      ),
+    );
+  }
+
+  Widget _PrayerTrackerCard() {
+    final l10n = AppLocalizations.of(context);
+    return _card(
+      context,
+      child: Column(
         children: [
-          SizedBox(
-            width: 52,
-            height: 52,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CircularProgressIndicator(
-                  value: progress,
-                  strokeWidth: 5,
-                  backgroundColor: primary.withValues(alpha: .10),
-                  color: primary,
-                ),
-                Text(
-                  '${controller.prayerProgressPercentage}%',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: primary,
-                  ),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              Icon(Icons.check_circle_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 22),
+              const SizedBox(width: 8),
+              Expanded(child: Text(l10n.trackerTitle, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800))),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppLocalizations.of(context).trackerTitle,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  AppLocalizations.of(context).trackerSubtitle,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: context.secondaryTextColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 8),
+          Text(l10n.trackerSubtitle, style: TextStyle(fontSize: 12, color: context.secondaryTextColor)),
         ],
       ),
     );
