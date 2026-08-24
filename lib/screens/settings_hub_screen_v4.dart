@@ -649,7 +649,11 @@ class SettingsHubScreenV4 extends StatelessWidget {
   }
 
   String _choiceLabel(String option, bool isEnglish) {
-    if (isEnglish) return option;
+    if (isEnglish) {
+      if (option == 'bn') return 'Bangla';
+      if (option == 'en') return 'English';
+      return option;
+    }
     const labels = <String, String>{
       'system': 'সিস্টেম অনুযায়ী',
       'light': 'লাইট মোড',
