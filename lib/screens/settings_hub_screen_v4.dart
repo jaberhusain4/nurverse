@@ -69,6 +69,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                       break;
                   }
                 },
+                selectedValue: settings.isAmoledMode ? 'amoled' : settings.themeMode.name,
               ),
             ),
             _divider(),
@@ -644,21 +645,38 @@ class SettingsHubScreenV4 extends StatelessWidget {
     }
   }
 
-  Future<void> _showChoiceSheet(BuildContext context, String title, List<String> options, Future<void> Function(String) onSelected) async {
+  Future<void> _showChoiceSheet(
+    BuildContext context,
+    String title,
+    List<String> options,
+    Future<void> Function(String) onSelected, {
+    String? selectedValue,
+  }) async {
     await showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(padding: const EdgeInsets.all(18), child: Text(title, style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900))),
-            ...options.map((option) => ListTile(
-              title: Text(option),
-              onTap: () async {
-                await onSelected(option);
-                if (sheetContext.mounted) Navigator.pop(sheetContext);
-              },
-            )),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Text(
+                title,
+                style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ),
+            ),
+            ...options.map(
+              (option) => ListTile(
+                title: Text(option),
+                trailing: option == selectedValue
+                    ? const Icon(Icons.check_circle_rounded, color: AppColors.seaBlue)
+                    : null,
+                onTap: () async {
+                  await onSelected(option);
+                  if (sheetContext.mounted) Navigator.pop(sheetContext);
+                },
+              ),
+            ),
             const SizedBox(height: 8),
           ],
         ),
