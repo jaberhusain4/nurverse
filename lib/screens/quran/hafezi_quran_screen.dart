@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../localization/app_localizations.dart';
 import '../../services/hafezi_quran_service.dart';
 import 'hafezi_page_screen.dart';
 
@@ -61,6 +62,7 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
   Future<void> _showParaPageSearch() async {
     var selectedJuz = _service.locationForPdfPage(_lastPdfPage).juzNumber;
     var selectedPage = _service.locationForPdfPage(_lastPdfPage).pageInJuz;
+    final l10n = AppLocalizations.of(context);
 
     await showDialog<void>(
       context: context,
@@ -72,21 +74,21 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
             if (selectedPage > maxPage) selectedPage = maxPage;
 
             return AlertDialog(
-              title: const Text('পারা ও পৃষ্ঠা খুঁজুন'),
+              title: Text(l10n.isArabic ? 'ابحث عن الجزء والصفحة' : l10n.tr('পারা ও পৃষ্ঠা খুঁজুন', 'Find Juz & Page')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<int>(
                     initialValue: selectedJuz,
                     decoration: const InputDecoration(
-                      labelText: 'পারা',
+                      labelText: l10n.isArabic ? 'الجزء' : l10n.tr('পারা', 'Juz'),
                       border: OutlineInputBorder(),
                     ),
                     items: List.generate(
                       30,
                       (index) => DropdownMenuItem<int>(
                         value: index + 1,
-                        child: Text('পারা ${index + 1}'),
+                        child: Text(l10n.isArabic ? 'الجزء ${index + 1}' : l10n.tr('পারা ${index + 1}', 'Juz ${index + 1}')),
                       ),
                     ),
                     onChanged: (value) {
@@ -104,8 +106,8 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
                   DropdownButtonFormField<int>(
                     initialValue: selectedPage,
                     decoration: const InputDecoration(
-                      labelText: 'পৃষ্ঠা',
-                      hintText: 'English digit: 1, 2, 3 ...',
+                      labelText: l10n.isArabic ? 'الصفحة' : l10n.tr('পৃষ্ঠা', 'Page'),
+                      hintText: l10n.tr('English digit: 1, 2, 3 ...', 'English digits: 1, 2, 3 ...'),
                       border: OutlineInputBorder(),
                     ),
                     items: List.generate(
@@ -127,7 +129,7 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('বাতিল'),
+                  child: Text(l10n.tr('বাতিল', 'Cancel')),
                 ),
                 FilledButton(
                   onPressed: () {
@@ -138,7 +140,7 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
                     Navigator.pop(dialogContext);
                     _openPdfPage(pdfPage);
                   },
-                  child: const Text('খুলুন'),
+                  child: Text(l10n.tr('খুলুন', 'Open')),
                 ),
               ],
             );
@@ -176,13 +178,12 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Hafezi Quran',
+        title: Text(l10n.isArabic ? 'القرآن الحفظي' : l10n.tr('হিফজি কুরআন', 'Hafezi Quran'),
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
           IconButton(
-            tooltip: 'পারা ও পৃষ্ঠা খুঁজুন',
+            tooltip: l10n.tr('পারা ও পৃষ্ঠা খুঁজুন', 'Find Juz & Page'),
             onPressed: _showGlobalPdfSearchCompatibility,
             icon: const Icon(Icons.search_rounded),
           ),
@@ -197,9 +198,8 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
                 Expanded(
                   child: _ActionCard(
                     icon: Icons.menu_book_rounded,
-                    title: 'Last Read',
-                    subtitle:
-                        'পারা ${lastLocation.juzNumber} • পৃষ্ঠা ${lastLocation.pageInJuz}',
+                    title: l10n.tr('শেষবার পড়া', 'Last Read'),
+                    subtitle: l10n.isArabic ? 'الجزء ${lastLocation.juzNumber} • الصفحة ${lastLocation.pageInJuz}' : l10n.tr('পারা ${lastLocation.juzNumber} • পৃষ্ঠা ${lastLocation.pageInJuz}', 'Juz ${lastLocation.juzNumber} • Page ${lastLocation.pageInJuz}'),
                     onTap: _openLastRead,
                   ),
                 ),
@@ -207,8 +207,8 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
                 Expanded(
                   child: _ActionCard(
                     icon: Icons.search_rounded,
-                    title: 'Search',
-                    subtitle: 'পারা + পৃষ্ঠা',
+                    title: l10n.tr('খুঁজুন', 'Search'),
+                    subtitle: l10n.isArabic ? 'الجزء + الصفحة' : l10n.tr('পারা + পৃষ্ঠা', 'Juz + Page'),
                     onTap: _showParaPageSearch,
                   ),
                 ),
@@ -221,9 +221,9 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
             unselectedLabelColor: secondary,
             indicatorColor: primary,
             tabs: const [
-              Tab(text: 'সূরা'),
-              Tab(text: 'পারা'),
-              Tab(text: 'বুকমার্ক'),
+              Tab(text: l10n.isArabic ? 'السور' : l10n.tr('সূরা', 'Surah')),
+              Tab(text: l10n.isArabic ? 'الأجزاء' : l10n.tr('পারা', 'Juz')),
+              Tab(text: l10n.isArabic ? 'العلامات المرجعية' : l10n.tr('বুকমার্ক', 'Bookmarks')),
             ],
           ),
           Expanded(
@@ -332,6 +332,7 @@ class _ParaList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       itemCount: 30,
@@ -362,7 +363,7 @@ class _ParaList extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'পারা ${juz.juz}',
+                          l10n.isArabic ? 'الجزء ${juz.juz}' : l10n.tr('পারা ${juz.juz}', 'Juz ${juz.juz}'),
                           style: const TextStyle(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 2),
@@ -372,7 +373,7 @@ class _ParaList extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          '${juz.pageCount} পৃষ্ঠা',
+                          l10n.isArabic ? '${juz.pageCount} صفحة' : l10n.tr('${juz.pageCount} পৃষ্ঠা', '${juz.pageCount} pages'),
                           style: TextStyle(
                             color: primaryColor,
                             fontSize: 11,
@@ -419,8 +420,9 @@ class _SurahList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (service.surahs.isEmpty) {
-      return const Center(child: Text('সূরা তথ্য পাওয়া যাচ্ছে না'));
+      return Center(child: Text(l10n.tr('সূরা তথ্য পাওয়া যাচ্ছে না', 'Surah information is unavailable')));
     }
 
     return ListView.separated(
@@ -446,7 +448,7 @@ class _SurahList extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               subtitle: Text(
-                '${surah.revelationType == 'meccan' ? 'মাক্কী' : 'মাদানী'} · ${surah.verses} আয়াত',
+                l10n.isArabic ? '${surah.revelationType == 'meccan' ? 'مكية' : 'مدنية'} · ${surah.verses} آيات' : l10n.tr('${surah.revelationType == 'meccan' ? 'মাক্কী' : 'মাদানী'} · ${surah.verses} আয়াত', '${surah.revelationType == 'meccan' ? 'Meccan' : 'Medinan'} · ${surah.verses} verses'),
                 style: TextStyle(color: secondaryColor),
               ),
               trailing: Text(
@@ -484,8 +486,9 @@ class _BookmarkList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (bookmarks.isEmpty) {
-      return const Center(child: Text('এখনও কোনো বুকমার্ক নেই'));
+      return Center(child: Text(l10n.tr('এখনও কোনো বুকমার্ক নেই', 'No bookmarks yet')));
     }
 
     final pages = bookmarks.toList()..sort();
@@ -507,11 +510,11 @@ class _BookmarkList extends StatelessWidget {
             child: ListTile(
               leading: Icon(Icons.bookmark_rounded, color: primaryColor),
               title: Text(
-                'পারা ${location.juzNumber} • পৃষ্ঠা ${location.pageInJuz}',
+                l10n.isArabic ? 'الجزء ${location.juzNumber} • الصفحة ${location.pageInJuz}' : l10n.tr('পারা ${location.juzNumber} • পৃষ্ঠা ${location.pageInJuz}', 'Juz ${location.juzNumber} • Page ${location.pageInJuz}'),
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               subtitle: Text(
-                'PDF page ${location.pdfPage}',
+                l10n.isArabic ? 'صفحة PDF ${location.pdfPage}' : l10n.tr('PDF page ${location.pdfPage}', 'PDF page ${location.pdfPage}'),
                 style: TextStyle(color: secondaryColor, fontSize: 11),
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
