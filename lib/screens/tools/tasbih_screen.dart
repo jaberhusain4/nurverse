@@ -75,7 +75,9 @@ class _TasbihScreenState extends State<TasbihScreen> {
     final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(l10n.tr('আলহামদুলিল্লাহ! $targetValue বার পাঠ সম্পন্ন হয়েছে। কাউন্ট রিসেট হয়েছে.', 'Alhamdulillah! $targetValue repetitions completed. Counter reset.')),
+      content: Text(l10n.isArabic
+          ? 'الحمد لله! تم إكمال $targetValue تكرارًا. تمت إعادة العداد.'
+          : l10n.tr('আলহামদুলিল্লাহ! $targetValue বার পাঠ সম্পন্ন হয়েছে। কাউন্ট রিসেট হয়েছে.', 'Alhamdulillah! $targetValue repetitions completed. Counter reset.')),
       duration: const Duration(seconds: 2),
       backgroundColor: AppColors.seaBlue,
     ));
@@ -119,7 +121,7 @@ class _TasbihScreenState extends State<TasbihScreen> {
                   const SizedBox(width: 8),
                   ChoiceChip(
                     avatar: const Icon(Icons.edit_note_rounded, size: 18),
-                    label: Text(l10n.tr('নন-তাসবিহ', 'Non-Tasbih')),
+                    label: Text(l10n.isArabic ? 'عداد فارغ' : l10n.tr('নন-তাসবিহ', 'Non-Tasbih')),
                     selected: _blankMode,
                     selectedColor: AppColors.seaBlue.withValues(alpha: .2),
                     labelStyle: TextStyle(color: _blankMode ? AppColors.seaBlue : text, fontWeight: _blankMode ? FontWeight.bold : FontWeight.normal),
@@ -135,9 +137,9 @@ class _TasbihScreenState extends State<TasbihScreen> {
                   ? Column(children: [
                       Icon(Icons.touch_app_rounded, size: 42, color: AppColors.seaBlue),
                       const SizedBox(height: 8),
-                      Text(l10n.tr('খালি কাউন্টার', 'Blank Counter'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: text)),
+                      Text(l10n.isArabic ? 'عداد فارغ' : l10n.tr('খালি কাউন্টার', 'Blank Counter'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: text)),
                       const SizedBox(height: 5),
-                      Text(l10n.tr('যেকোনো দোয়া, যিকির বা আমল পড়তে এই কাউন্টার ব্যবহার করুন।', 'Use this counter for any dua, dhikr, or other recitation.'), textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: secondary)),
+                      Text(l10n.isArabic ? 'استخدم هذا العداد لأي دعاء أو ذكر أو عبادة.' : l10n.tr('যেকোনো দোয়া, যিকির বা আমল পড়তে এই কাউন্টার ব্যবহার করুন.', 'Use this counter for any dua, dhikr, or other recitation.'), textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: secondary)),
                     ])
                   : Column(children: [
                       Text(currentDhikr['arabic']!, style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: AppColors.seaBlue), textAlign: TextAlign.center),
@@ -150,7 +152,7 @@ class _TasbihScreenState extends State<TasbihScreen> {
             const Spacer(flex: 2),
             Column(children: [
               Text('$_counter', style: const TextStyle(fontSize: 46, fontWeight: FontWeight.w800, color: AppColors.seaBlue)),
-              Text('${l10n.tr('বার', 'repetitions')} / $_target', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: secondary)),
+              Text(l10n.isArabic ? '$_counter / $_target تكرار' : '${l10n.tr('বার', 'repetitions')} / $_target', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: secondary)),
             ]),
             const SizedBox(height: 48),
             GestureDetector(
@@ -173,7 +175,7 @@ class _TasbihScreenState extends State<TasbihScreen> {
               Expanded(child: FilledButton.icon(onPressed: () => _showTargetDialog(context, l10n), icon: const Icon(Icons.flag_outlined), label: Text(l10n.tr('টার্গেট', 'Target')))),
             ])),
             const SizedBox(height: 12),
-            Text(l10n.isBangla ? 'টার্গেট: $_target' : 'Target: $_target', style: TextStyle(fontSize: 12, color: secondary)),
+            Text(l10n.isArabic ? 'الهدف: $_target' : l10n.tr('টার্গেট: $_target', 'Target: $_target'), style: TextStyle(fontSize: 12, color: secondary)),
             const SizedBox(height: 16),
           ],
         ),
@@ -184,7 +186,7 @@ class _TasbihScreenState extends State<TasbihScreen> {
   Future<void> _showTargetDialog(BuildContext context, AppLocalizations l10n) async {
     const options = <int>[33, 100, 500, 1000];
     final selected = await showModalBottomSheet<int>(context: context, builder: (sheetContext) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      Padding(padding: const EdgeInsets.fromLTRB(20, 18, 20, 8), child: Text(l10n.tr('টার্গেট নির্বাচন করুন', 'Select target'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800))),
+      Padding(padding: const EdgeInsets.fromLTRB(20, 18, 20, 8), child: Text(l10n.isArabic ? 'اختر الهدف' : l10n.tr('টার্গেট নির্বাচন করুন', 'Select target'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800))),
       ...options.map((value) => ListTile(leading: Icon(value == _target ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, color: value == _target ? AppColors.seaBlue : context.secondaryTextColor), title: Text('$value'), trailing: value == _target ? const Icon(Icons.check_rounded, color: AppColors.seaBlue) : null, onTap: () => Navigator.pop(sheetContext, value))),
       const SizedBox(height: 8),
     ])));
