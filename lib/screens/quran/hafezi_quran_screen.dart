@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../localization/app_localizations.dart';
+import '../../localization/app_localizations.dart';
 import '../../services/hafezi_quran_service.dart';
 import 'hafezi_page_screen.dart';
 
@@ -62,6 +63,7 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
   Future<void> _showParaPageSearch() async {
     var selectedJuz = _service.locationForPdfPage(_lastPdfPage).juzNumber;
     var selectedPage = _service.locationForPdfPage(_lastPdfPage).pageInJuz;
+    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
 
     await showDialog<void>(
@@ -363,7 +365,7 @@ class _ParaList extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n.isArabic ? 'الجزء ${juz.juz}' : l10n.tr('পারা ${juz.juz}', 'Juz ${juz.juz}'),
+                          l10n.isArabic ? 'الجزء ${juz.juz}' : l10n.tr(l10n.isArabic ? 'الجزء ${juz.juz}' : l10n.tr('পারা ${juz.juz}', 'Juz ${juz.juz}'), 'Juz ${juz.juz}'),
                           style: const TextStyle(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 2),
@@ -373,7 +375,7 @@ class _ParaList extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          l10n.isArabic ? '${juz.pageCount} صفحة' : l10n.tr('${juz.pageCount} পৃষ্ঠা', '${juz.pageCount} pages'),
+                          l10n.isArabic ? '${juz.pageCount} صفحة' : l10n.tr(l10n.isArabic ? '${juz.pageCount} صفحة' : l10n.tr('${juz.pageCount} পৃষ্ঠা', '${juz.pageCount} pages'), '${juz.pageCount} pages'),
                           style: TextStyle(
                             color: primaryColor,
                             fontSize: 11,
@@ -448,7 +450,7 @@ class _SurahList extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               subtitle: Text(
-                l10n.isArabic ? '${surah.revelationType == 'meccan' ? 'مكية' : 'مدنية'} · ${surah.verses} آيات' : l10n.tr('${surah.revelationType == 'meccan' ? 'মাক্কী' : 'মাদানী'} · ${surah.verses} আয়াত', '${surah.revelationType == 'meccan' ? 'Meccan' : 'Medinan'} · ${surah.verses} verses'),
+                l10n.isArabic ? '${surah.revelationType == 'meccan' ? 'مكية' : 'مدنية'} · ${surah.verses} آيات' : l10n.tr(l10n.isArabic ? '${surah.revelationType == 'meccan' ? 'مكية' : 'مدنية'} · ${surah.verses} آيات' : l10n.tr('${surah.revelationType == 'meccan' ? 'মাক্কী' : 'মাদানী'} · ${surah.verses} আয়াত', '${surah.revelationType == 'meccan' ? 'Meccan' : 'Medinan'} · ${surah.verses} verses'), '${surah.revelationType == 'meccan' ? 'Meccan' : 'Medinan'} · ${surah.verses} verses'),
                 style: TextStyle(color: secondaryColor),
               ),
               trailing: Text(
@@ -510,11 +512,11 @@ class _BookmarkList extends StatelessWidget {
             child: ListTile(
               leading: Icon(Icons.bookmark_rounded, color: primaryColor),
               title: Text(
-                l10n.isArabic ? 'الجزء ${location.juzNumber} • الصفحة ${location.pageInJuz}' : l10n.tr('পারা ${location.juzNumber} • পৃষ্ঠা ${location.pageInJuz}', 'Juz ${location.juzNumber} • Page ${location.pageInJuz}'),
+                l10n.isArabic ? 'الجزء ${location.juzNumber} • الصفحة ${location.pageInJuz}' : l10n.tr(l10n.isArabic ? 'الجزء ${location.juzNumber} • الصفحة ${location.pageInJuz}' : l10n.tr('পারা ${location.juzNumber} • পৃষ্ঠা ${location.pageInJuz}', 'Juz ${location.juzNumber} • Page ${location.pageInJuz}'), 'Juz ${location.juzNumber} • Page ${location.pageInJuz}'),
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               subtitle: Text(
-                l10n.isArabic ? 'صفحة PDF ${location.pdfPage}' : l10n.tr('PDF page ${location.pdfPage}', 'PDF page ${location.pdfPage}'),
+                l10n.isArabic ? 'صفحة PDF ${location.pdfPage}' : l10n.tr(l10n.isArabic ? 'صفحة PDF ${location.pdfPage}' : l10n.tr('PDF page ${location.pdfPage}', 'PDF page ${location.pdfPage}'), l10n.isArabic ? 'صفحة PDF ${location.pdfPage}' : l10n.tr('PDF page ${location.pdfPage}', 'PDF page ${location.pdfPage}')),
                 style: TextStyle(color: secondaryColor, fontSize: 11),
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
