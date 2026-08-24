@@ -8,6 +8,7 @@ class SavedHadith {
   final String hadithNo;
   final String arabic;
   final String bangla;
+  final String english;
   final String narrator;
   final String reference;
   final String grade;
@@ -21,6 +22,7 @@ class SavedHadith {
     required this.hadithNo,
     required this.arabic,
     required this.bangla,
+    this.english = '',
     required this.narrator,
     required this.reference,
     required this.grade,
@@ -35,6 +37,7 @@ class SavedHadith {
         'hadithNo': hadithNo,
         'arabic': arabic,
         'bangla': bangla,
+        'english': english,
         'narrator': narrator,
         'reference': reference,
         'grade': grade,
@@ -50,6 +53,7 @@ class SavedHadith {
       hadithNo: json['hadithNo']?.toString() ?? '',
       arabic: json['arabic']?.toString() ?? '',
       bangla: json['bangla']?.toString() ?? '',
+      english: json['english']?.toString() ?? '',
       narrator: json['narrator']?.toString() ?? '',
       reference: json['reference']?.toString() ?? '',
       grade: json['grade']?.toString() ?? '',
