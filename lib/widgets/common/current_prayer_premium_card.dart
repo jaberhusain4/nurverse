@@ -30,28 +30,44 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
   String _prayerName(String value) {
     final key = value.trim().toLowerCase();
     const bn = <String, String>{
-      'fajr': 'ফজর', 'dhuhr': 'যোহর', 'jumuah': 'জুমুআ', 'jumu\'ah': 'জুমুআ',
-      'asr': 'আসর', 'maghrib': 'মাগরিব', 'magrib': 'মাগরিব', 'isha': 'ইশা',
-      'ishraq': 'ইশরাক', 'duha': 'চাশত / দুহা', 'awwabin': 'আউওয়াবীন',
-      'tahajjud': 'তাহাজ্জুদ',
+      'fajr': 'ফজর', 'ফজর': 'ফজর',
+      'dhuhr': 'যোহর', 'যোহর': 'যোহর',
+      'jumuah': 'জুমুআ', 'jumu\'ah': 'জুমুআ', 'জুমুআ': 'জুমুআ', "জুমু'আ": 'জুমুআ',
+      'asr': 'আসর', 'আসর': 'আসর',
+      'maghrib': 'মাগরিব', 'magrib': 'মাগরিব', 'মাগরিব': 'মাগরিব',
+      'isha': 'ইশা', 'ইশা': 'ইশা',
+      'ishraq': 'ইশরাক', 'ইশরাক': 'ইশরাক',
+      'duha': 'চাশত / দুহা', 'দুহা': 'চাশত / দুহা', 'চাশত': 'চাশত / দুহা',
+      'awwabin': 'আউওয়াবীন', 'আউওয়াবীন': 'আউওয়াবীন',
+      'tahajjud': 'তাহাজ্জুদ', 'তাহাজ্জুদ': 'তাহাজ্জুদ',
     };
     const en = <String, String>{
-      'fajr': 'Fajr', 'dhuhr': 'Dhuhr', 'jumuah': 'Jumuah', 'jumu\'ah': 'Jumuah',
-      'asr': 'Asr', 'maghrib': 'Maghrib', 'magrib': 'Maghrib', 'isha': 'Isha',
-      'ishraq': 'Ishraq', 'duha': 'Duha', 'awwabin': 'Awwabin', 'tahajjud': 'Tahajjud',
+      'fajr': 'Fajr', 'ফজর': 'Fajr',
+      'dhuhr': 'Dhuhr', 'যোহর': 'Dhuhr',
+      'jumuah': 'Jumuah', 'jumu\'ah': 'Jumuah', 'জুমুআ': 'Jumuah', "জুমু'আ": 'Jumuah',
+      'asr': 'Asr', 'আসর': 'Asr',
+      'maghrib': 'Maghrib', 'magrib': 'Maghrib', 'মাগরিব': 'Maghrib',
+      'isha': 'Isha', 'ইশা': 'Isha',
+      'ishraq': 'Ishraq', 'ইশরাক': 'Ishraq',
+      'duha': 'Duha', 'দুহা': 'Duha', 'চাশত': 'Duha', 'চাশত / দুহা': 'Duha',
+      'awwabin': 'Awwabin', 'আউওয়াবীন': 'Awwabin',
+      'tahajjud': 'Tahajjud', 'তাহাজ্জুদ': 'Tahajjud',
     };
     const ar = <String, String>{
-      'fajr': 'الفجر', 'dhuhr': 'الظهر', 'jumuah': 'الجمعة', 'jumu\'ah': 'الجمعة',
-      'asr': 'العصر', 'maghrib': 'المغرب', 'magrib': 'المغرب', 'isha': 'العشاء',
-      'ishraq': 'الإشراق', 'duha': 'الضحى', 'awwabin': 'الأوابين', 'tahajjud': 'التهجد',
+      'fajr': 'الفجر', 'ফজর': 'الفجر',
+      'dhuhr': 'الظهر', 'যোহর': 'الظهر',
+      'jumuah': 'الجمعة', 'jumu\'ah': 'الجمعة', 'জুমুআ': 'الجمعة', "জুমু'আ": 'الجمعة',
+      'asr': 'العصر', 'আসর': 'العصر',
+      'maghrib': 'المغرب', 'magrib': 'المغرب', 'মাগরিব': 'المغرب',
+      'isha': 'العشاء', 'ইশা': 'العشاء',
+      'ishraq': 'الإشراق', 'ইশরাক': 'الإشراق',
+      'duha': 'الضحى', 'দুহা': 'الضحى', 'চাশত': 'الضحى', 'চাশত / দুহা': 'الضحى',
+      'awwabin': 'الأوابين', 'আউওয়াবীন': 'الأوابين',
+      'tahajjud': 'التهجد', 'তাহাজ্জুদ': 'التهجد',
     };
     if (languageCode == 'ar') return ar[key] ?? value;
     if (languageCode == 'en') return en[key] ?? value;
-    if (bn.containsKey(key)) return bn[key]!;
-    if (key == 'ইশা') return 'ইশা';
-    if (key == 'মাগরিব') return 'মাগরিব';
-    if (key == 'তাহাজ্জুদ') return 'তাহাজ্জুদ';
-    return value;
+    return bn[key] ?? value;
   }
 
   String _statusLabel() {
