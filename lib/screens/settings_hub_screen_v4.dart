@@ -26,6 +26,9 @@ class SettingsHubScreenV4 extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
+          // Premium is deliberately the first Settings block.
+          _buildPremiumHero(context, settings, premium),
+          const SizedBox(height: 14),
           _section(context, isEnglish ? 'Personalization' : 'ব্যক্তিগতকরণ', Icons.tune_rounded, [
             _tile(
               context,
@@ -39,8 +42,6 @@ class SettingsHubScreenV4 extends StatelessWidget {
               },
             ),
           ]),
-          const SizedBox(height: 14),
-          _buildPremiumHero(context, settings, premium),
           const SizedBox(height: 20),
           _section(context, isEnglish ? 'Appearance' : 'অ্যাপের চেহারা', Icons.palette_outlined, [
             _tile(
@@ -283,107 +284,114 @@ class SettingsHubScreenV4 extends StatelessWidget {
     final isEnglish = settings.languageCode == 'en';
     final isActive = premium.isPremium;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.seaBlue.withValues(alpha: .20)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.seaBlue.withValues(alpha: .07),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.userChanges(),
+      initialData: FirebaseAuth.instance.currentUser,
+      builder: (context, authSnapshot) {
+        final user = authSnapshot.data;
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: AppColors.seaBlue.withValues(alpha: .20)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.seaBlue.withValues(alpha: .07),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  color: AppColors.seaBlue.withValues(alpha: .14),
-                  borderRadius: BorderRadius.circular(17),
-                ),
-                child: Icon(
-                  isActive ? Icons.verified_rounded : Icons.workspace_premium_rounded,
-                  color: AppColors.seaBlue,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: AppColors.seaBlue.withValues(alpha: .14),
+                      borderRadius: BorderRadius.circular(17),
+                    ),
+                    child: Icon(
+                      isActive ? Icons.verified_rounded : Icons.workspace_premium_rounded,
+                      color: AppColors.seaBlue,
+                      size: 30,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Flexible(
-                          child: Text(
-                            'NurVerse Premium',
-                            style: const TextStyle(color: AppColors.seaBlue, fontSize: 18, fontWeight: FontWeight.w900),
-                          ),
-                        ),
-                        if (isActive) ...[
-                          const SizedBox(width: 7),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.seaBlue.withValues(alpha: .12),
-                              borderRadius: BorderRadius.circular(8),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                'NurVerse Premium',
+                                style: const TextStyle(color: AppColors.seaBlue, fontSize: 18, fontWeight: FontWeight.w900),
+                              ),
                             ),
-                            child: Text(isEnglish ? 'ACTIVE' : 'সক্রিয়', style: const TextStyle(color: AppColors.seaBlue, fontSize: 8, fontWeight: FontWeight.w900)),
-                          ),
-                        ],
+                            if (isActive) ...[
+                              const SizedBox(width: 7),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.seaBlue.withValues(alpha: .12),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(isEnglish ? 'ACTIVE' : 'সক্রিয়', style: const TextStyle(color: AppColors.seaBlue, fontSize: 8, fontWeight: FontWeight.w900)),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          isActive
+                              ? (isEnglish ? 'Your premium experience is active' : 'আপনার Premium অভিজ্ঞতা সক্রিয়')
+                              : (isEnglish ? 'Unlock a richer, calmer NurVerse' : 'আরও সমৃদ্ধ ও সুন্দর NurVerse উপভোগ করুন'),
+                          style: TextStyle(fontSize: 11, height: 1.4, color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: .70)),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      isActive
-                          ? (isEnglish ? 'Your premium experience is active' : 'আপনার Premium অভিজ্ঞতা সক্রিয়')
-                          : (isEnglish ? 'Unlock a richer, calmer NurVerse' : 'আরও সমৃদ্ধ ও সুন্দর NurVerse উপভোগ করুন'),
-                      style: TextStyle(fontSize: 11, height: 1.4, color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: .70)),
-                    ),
-                  ],
+                  ),
+                  const SizedBox(width: 10),
+                  _premiumAccountButton(context, user),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 7,
+                runSpacing: 7,
+                children: [
+                  _premiumChip(Icons.contrast_rounded, 'AMOLED'),
+                  _premiumChip(Icons.palette_outlined, isEnglish ? 'Premium Themes' : 'Premium থিম'),
+                  _premiumChip(Icons.headphones_outlined, isEnglish ? 'Recitations' : 'তেলাওয়াত'),
+                  _premiumChip(Icons.cloud_outlined, isEnglish ? 'Cloud Sync' : 'ক্লাউড সিঙ্ক'),
+                ],
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    if (premium.isPremium) {
+                      _showPremiumStatus(context, premium, isEnglish);
+                    } else {
+                      premium.activatePremium();
+                    }
+                  },
+                  icon: Icon(premium.isPremium ? Icons.settings_rounded : Icons.auto_awesome_rounded, size: 18),
+                  label: Text(premium.isPremium ? (isEnglish ? 'Manage Premium' : 'Premium পরিচালনা করুন') : (isEnglish ? 'Explore Premium' : 'Premium দেখুন')),
                 ),
               ),
-              const SizedBox(width: 10),
-              _premiumAccountButton(context),
             ],
           ),
-          const SizedBox(height: 18),
-          Wrap(
-            spacing: 7,
-            runSpacing: 7,
-            children: [
-              _premiumChip(Icons.contrast_rounded, 'AMOLED'),
-              _premiumChip(Icons.palette_outlined, isEnglish ? 'Premium Themes' : 'Premium থিম'),
-              _premiumChip(Icons.headphones_outlined, isEnglish ? 'Recitations' : 'তেলাওয়াত'),
-              _premiumChip(Icons.cloud_outlined, isEnglish ? 'Cloud Sync' : 'ক্লাউড সিঙ্ক'),
-            ],
-          ),
-          const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () {
-                if (premium.isPremium) {
-                  _showPremiumStatus(context, premium, isEnglish);
-                } else {
-                  premium.activatePremium();
-                }
-              },
-              icon: Icon(premium.isPremium ? Icons.settings_rounded : Icons.auto_awesome_rounded, size: 18),
-              label: Text(premium.isPremium ? (isEnglish ? 'Manage Premium' : 'Premium পরিচালনা করুন') : (isEnglish ? 'Explore Premium' : 'Premium দেখুন')),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -405,45 +413,43 @@ class SettingsHubScreenV4 extends StatelessWidget {
     );
   }
 
-  Widget _premiumAccountButton(BuildContext context) {
+  Widget _premiumAccountButton(BuildContext context, User? user) {
     final theme = Theme.of(context);
-    return StreamBuilder<User?>(
-      stream: AuthService.instance.authStateChanges,
-      initialData: AuthService.instance.currentUser,
-      builder: (context, snapshot) {
-        final user = snapshot.data;
-        final photoUrl = user?.photoURL?.trim();
-        final hasPhoto = user != null && photoUrl != null && photoUrl.isNotEmpty;
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _handleProfileTap(context, user),
+    final photoUrl = user?.photoURL?.trim();
+    final hasPhoto = user != null && photoUrl != null && photoUrl.isNotEmpty;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _handleProfileTap(context, user),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: AppColors.seaBlue.withValues(alpha: .10),
             borderRadius: BorderRadius.circular(14),
-            child: Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: AppColors.seaBlue.withValues(alpha: .10),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.seaBlue.withValues(alpha: .12)),
-              ),
-              child: hasPhoto
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(13),
-                      child: Image.network(
-                        photoUrl!,
-                        width: 42,
-                        height: 42,
-                        fit: BoxFit.cover,
-                        filterQuality: FilterQuality.high,
-                        errorBuilder: (_, __, ___) => Icon(Icons.person_rounded, color: theme.colorScheme.primary, size: 22),
-                      ),
-                    )
-                  : Icon(user != null ? Icons.person_rounded : Icons.person_outline_rounded, color: theme.colorScheme.primary, size: 22),
-            ),
+            border: Border.all(color: AppColors.seaBlue.withValues(alpha: .12)),
           ),
-        );
-      },
+          child: hasPhoto
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(13),
+                  child: Image.network(
+                    photoUrl!,
+                    width: 42,
+                    height: 42,
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
+                    errorBuilder: (_, __, ___) => Icon(Icons.person_rounded, color: theme.colorScheme.primary, size: 22),
+                  ),
+                )
+              : Icon(
+                  user != null ? Icons.person_rounded : Icons.person_outline_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 22,
+                ),
+        ),
+      ),
     );
   }
 
@@ -459,6 +465,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   Future<void> _openAccount(BuildContext context, User user) async {
     final theme = Theme.of(context);
+    final isEnglish = Localizations.localeOf(context).languageCode == 'en';
     final photoUrl = user.photoURL?.trim();
     await showModalBottomSheet<void>(
       context: context,
@@ -495,7 +502,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                       await AuthService.instance.signOut();
                     },
                     icon: const Icon(Icons.logout_rounded),
-                    label: Text(Theme.of(context).textTheme.bodyMedium?.locale?.languageCode == 'en' ? 'Logout' : 'Logout'),
+                    label: Text(isEnglish ? 'Logout' : 'লগআউট'),
                   ),
                 ),
               ],
@@ -511,7 +518,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('NurVerse Premium'),
-        content: Text(premium.purchaseDate == null ? (isEnglish ? 'Premium is active.' : 'Premium সক্রিয় আছে।') : (isEnglish ? 'Premium is active.' : 'Premium সক্রিয় আছে।')),
+        content: Text(isEnglish ? 'Premium is active.' : 'Premium সক্রিয় আছে।'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(isEnglish ? 'Done' : 'ঠিক আছে')),
         ],
@@ -645,15 +652,13 @@ class SettingsHubScreenV4 extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(padding: const EdgeInsets.all(18), child: Text(title, style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900))),
-            ...options.map(
-              (option) => ListTile(
-                title: Text(option),
-                onTap: () async {
-                  await onSelected(option);
-                  if (sheetContext.mounted) Navigator.pop(sheetContext);
-                },
-              ),
-            ),
+            ...options.map((option) => ListTile(
+              title: Text(option),
+              onTap: () async {
+                await onSelected(option);
+                if (sheetContext.mounted) Navigator.pop(sheetContext);
+              },
+            )),
             const SizedBox(height: 8),
           ],
         ),
