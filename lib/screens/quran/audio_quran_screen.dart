@@ -67,9 +67,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${l10n.tr('অডিও চালু করা যায়নি', 'Could not play audio')}: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.tr('অডিও চালু করা যায়নি', 'Could not play audio')}: $e')));
     }
   }
 
@@ -86,16 +84,12 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
       if (!mounted) return;
       setState(() => _downloading = false);
       final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ok ? l10n.tr('অফলাইনে অডিও সংরক্ষণ হয়েছে।', 'Audio saved offline.') : l10n.tr('ডাউনলোড ব্যর্থ হয়েছে। ইন্টারনেট সংযোগ পরীক্ষা করুন।', 'Download failed. Please check your internet connection.'))),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? l10n.tr('অফলাইনে অডিও সংরক্ষণ হয়েছে।', 'Audio saved offline.') : l10n.tr('ডাউনলোড ব্যর্থ হয়েছে। ইন্টারনেট সংযোগ পরীক্ষা করুন।', 'Download failed. Please check your internet connection.'))));
     } catch (e) {
       if (!mounted) return;
       setState(() => _downloading = false);
       final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${l10n.tr('ডাউনলোড করা যায়নি', 'Could not download')}: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.tr('ডাউনলোড করা যায়নি', 'Could not download')}: $e')));
     }
   }
 
@@ -129,10 +123,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
     final surahs = _data.surahList;
     final current = _currentSurah;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.tr('অডিও কুরআন', 'Audio Quran'), style: const TextStyle(fontWeight: FontWeight.w800)),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l10n.tr('অডিও কুরআন', 'Audio Quran'), style: const TextStyle(fontWeight: FontWeight.w800)), centerTitle: true),
       body: Column(children: [_buildPlayer(context, current), Expanded(child: _buildSurahList(context, surahs))]),
     );
   }
@@ -145,7 +136,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
         : l10n.isBangla
             ? (current?.banglaName ?? current?.transliteration ?? l10n.tr('সূরা', 'Surah'))
             : (current?.transliteration ?? l10n.tr('সূরা', 'Surah'));
-    final reciterName = l10n.isArabic ? _selectedReciter.nameBn : l10n.isEnglish ? _selectedReciter.nameBn : _selectedReciter.nameBn;
+    final reciterName = _selectedReciter.nameBn;
     return Material(
       color: context.cardColor,
       child: Padding(
@@ -161,7 +152,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
             PopupMenuButton<QuranReciter>(
               tooltip: l10n.tr('ক্বারী নির্বাচন', 'Select reciter'),
               onSelected: _changeReciter,
-              itemBuilder: (_) => [for (final reciter in kReciters) PopupMenuItem<QuranReciter>(value: reciter, child: Text(l10n.isArabic || l10n.isEnglish ? reciter.nameEn : reciter.nameBn)),],
+              itemBuilder: (_) => [for (final reciter in kReciters) PopupMenuItem<QuranReciter>(value: reciter, child: Text(reciter.nameBn))],
               icon: const Icon(Icons.person_outline_rounded),
             ),
           ]),
@@ -196,11 +187,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> {
             ),
             IconButton(onPressed: _selectedSurah < 114 ? _next : null, icon: const Icon(Icons.skip_next_rounded), iconSize: 30),
             const SizedBox(width: 4),
-            IconButton(
-              tooltip: l10n.tr('অফলাইনে ডাউনলোড', 'Download offline'),
-              onPressed: _downloading ? null : _downloadCurrent,
-              icon: _downloading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.download_for_offline_outlined),
-            ),
+            IconButton(tooltip: l10n.tr('অফলাইনে ডাউনলোড', 'Download offline'), onPressed: _downloading ? null : _downloadCurrent, icon: _downloading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.download_for_offline_outlined)),
           ]),
         ]),
       ),
