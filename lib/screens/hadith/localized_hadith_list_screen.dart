@@ -85,6 +85,7 @@ class _LocalizedHadithListScreenState extends State<LocalizedHadithListScreen> {
         hadithNo: h.hadithNo,
         arabic: h.arabic,
         bangla: h.bangla,
+        english: h.english,
         narrator: h.narrator,
         reference: h.reference,
         grade: h.grade,
