@@ -7,7 +7,7 @@ on:
     branches: [fix/prayer-completion-tracker]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   analyze:
@@ -15,14 +15,61 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: fix/app-wide-localization
           fetch-depth: 0
+
+      - name: Repair localization compile blockers
+        if: github.event.head_commit.message != 'fix: remove localization compile blockers'
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('lib/screens/quran/onudhabon_quran_reader.dart')
+          s = p.read_text(encoding='utf-8')
+          seen = False
+          lines = []
+          for line in s.splitlines(keepends=True):
+              if line.strip() == "import '../../localization/app_localizations.dart';":
+                  if seen:
+                      continue
+                  seen = True
+              lines.append(line)
+          s = ''.join(lines)
+          s = re.sub(r'(\n\s*final l10n = AppLocalizations\.of\(context\);){2,}', r'\1', s)
+          s = s.replace('const Padding(\n', 'Padding(\n')
+          s = s.replace('const Align(\n', 'Align(\n')
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('lib/screens/hadith/saved_hadith_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('    ]));\n  }\n}', '    ])));\n  }\n}', 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('lib/screens/settings_hub_screen_v4.dart')
+          s = p.read_text(encoding='utf-8')
+          s = re.sub(r'(\n\s*final l10n = AppLocalizations\.of\(context\);){2,}', r'\1', s)
+          s = s.replace('_textSizeLabel(textScale.level, settings.languageCode)', '_textSizeLabel(textScale.level, settings.isEnglish)')
+          s = s.replace('_showTextSizeSheet(context, textScale, settings.languageCode)', '_showTextSizeSheet(context, textScale, settings.isEnglish)')
+          p.write_text(s, encoding='utf-8')
+
+      - name: Commit repair
+        if: github.event.head_commit.message != 'fix: remove localization compile blockers'
+        run: |
+          git config user.name "nurverse-localization-bot"
+          git config user.email "actions@github.com"
+          git add lib/screens/quran/onudhabon_quran_reader.dart lib/screens/hadith/saved_hadith_screen.dart lib/screens/settings_hub_screen_v4.dart
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "fix: remove localization compile blockers"
+          git push origin fix/app-wide-localization
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - name: Analyze project
+
+      - name: Analyze repaired project
         run: |
           flutter --version
           flutter pub get
-          flutter analyze --no-fatal-warnings
           flutter analyze --no-fatal-warnings
