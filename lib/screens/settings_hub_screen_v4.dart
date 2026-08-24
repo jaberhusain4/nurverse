@@ -82,6 +82,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                 isEnglish ? 'Language' : 'ভাষা',
                 const ['bn', 'en'],
                 settings.setLanguage,
+                selectedValue: settings.languageCode,
               ),
             ),
             _divider(),
