@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../localization/app_localizations.dart';
-import '../../localization/app_localizations.dart';
 import '../../services/hafezi_quran_service.dart';
 import 'hafezi_page_screen.dart';
 
@@ -64,7 +63,6 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
     var selectedJuz = _service.locationForPdfPage(_lastPdfPage).juzNumber;
     var selectedPage = _service.locationForPdfPage(_lastPdfPage).pageInJuz;
     final l10n = AppLocalizations.of(context);
-    final l10n = AppLocalizations.of(context);
 
     await showDialog<void>(
       context: context,
@@ -82,7 +80,7 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
                 children: [
                   DropdownButtonFormField<int>(
                     initialValue: selectedJuz,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: l10n.isArabic ? 'الجزء' : l10n.tr('পারা', 'Juz'),
                       border: OutlineInputBorder(),
                     ),
@@ -107,7 +105,7 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
                   const SizedBox(height: 12),
                   DropdownButtonFormField<int>(
                     initialValue: selectedPage,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: l10n.isArabic ? 'الصفحة' : l10n.tr('পৃষ্ঠা', 'Page'),
                       hintText: l10n.tr('English digit: 1, 2, 3 ...', 'English digits: 1, 2, 3 ...'),
                       border: OutlineInputBorder(),
@@ -177,6 +175,7 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
     final primary = theme.colorScheme.primary;
     final card = theme.colorScheme.surface;
     final secondary = theme.colorScheme.onSurface.withValues(alpha: .62);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -222,7 +221,7 @@ class _HafeziQuranScreenState extends State<HafeziQuranScreen>
             labelColor: primary,
             unselectedLabelColor: secondary,
             indicatorColor: primary,
-            tabs: const [
+            tabs: [
               Tab(text: l10n.isArabic ? 'السور' : l10n.tr('সূরা', 'Surah')),
               Tab(text: l10n.isArabic ? 'الأجزاء' : l10n.tr('পারা', 'Juz')),
               Tab(text: l10n.isArabic ? 'العلامات المرجعية' : l10n.tr('বুকমার্ক', 'Bookmarks')),
@@ -446,7 +445,7 @@ class _SurahList extends StatelessWidget {
                 child: Text('${surah.number}'),
               ),
               title: Text(
-                surah.englishName,
+                l10n.isArabic ? surah.arabicName : surah.englishName,
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               subtitle: Text(
