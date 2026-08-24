@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/premium_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/text_scale_provider.dart';
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'auth/google_login_screen.dart';
 import 'home_mode_settings_screen.dart';
@@ -18,7 +19,6 @@ class SettingsHubScreenV4 extends StatelessWidget {
     final textScale = context.watch<TextScaleProvider>();
     final premium = context.watch<PremiumProvider>();
     final isEnglish = settings.isEnglish;
-    final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       appBar: AppBar(title: Text(isEnglish ? 'Settings' : 'সেটিংস')),
@@ -40,27 +40,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
             ),
           ]),
           const SizedBox(height: 14),
-          _premiumCard(context, premium, isEnglish, user),
-          const SizedBox(height: 14),
-          _section(context, isEnglish ? 'Account' : 'অ্যাকাউন্ট', Icons.account_circle_outlined, [
-            _tile(
-              context,
-              Icons.account_circle_outlined,
-              user == null
-                  ? (isEnglish ? 'Google Sign-in' : 'Google দিয়ে সাইন ইন')
-                  : (isEnglish ? 'Google Account' : 'Google অ্যাকাউন্ট'),
-              user == null
-                  ? (isEnglish ? 'Sign in to keep your account connected' : 'আপনার অ্যাকাউন্ট সংযুক্ত করতে Google দিয়ে সাইন ইন করুন')
-                  : (user.displayName?.isNotEmpty == true
-                      ? user.displayName!
-                      : (isEnglish ? 'Signed in with Google' : 'Google দিয়ে সাইন ইন করা আছে')),
-              () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const GoogleLoginScreen()),
-                );
-              },
-            ),
-          ]),
+          _buildPremiumHero(context, settings, premium),
           const SizedBox(height: 20),
           _section(context, isEnglish ? 'Appearance' : 'অ্যাপের চেহারা', Icons.palette_outlined, [
             _tile(
@@ -299,67 +279,242 @@ class SettingsHubScreenV4 extends StatelessWidget {
     );
   }
 
-  Widget _premiumCard(BuildContext context, PremiumProvider premium, bool isEnglish, User? user) {
-    return Card(
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      child: Container(
-        padding: const EdgeInsets.all(17),
-        decoration: BoxDecoration(
-          color: AppColors.seaBlueDark,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+  Widget _buildPremiumHero(BuildContext context, SettingsProvider settings, PremiumProvider premium) {
+    final isEnglish = settings.languageCode == 'en';
+    final isActive = premium.isPremium;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.seaBlue.withValues(alpha: .20)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.seaBlue.withValues(alpha: .07),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: AppColors.seaBlue.withValues(alpha: .14),
+                  borderRadius: BorderRadius.circular(17),
+                ),
+                child: Icon(
+                  isActive ? Icons.verified_rounded : Icons.workspace_premium_rounded,
+                  color: AppColors.seaBlue,
+                  size: 30,
+                ),
               ),
-              child: const Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 27),
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    premium.isPremium
-                        ? 'NurVerse Premium'
-                        : (isEnglish ? 'Unlock NurVerse Premium' : 'NurVerse Premium চালু করুন'),
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    premium.isPremium
-                        ? (isEnglish ? 'Premium is active' : 'Premium সক্রিয় আছে')
-                        : (isEnglish
-                            ? 'More Islamic tools, personalization and future premium features'
-                            : 'আরও ইসলামিক টুল, personalization ও ভবিষ্যতের premium feature'),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.76), fontSize: 11.5, height: 1.35),
-                  ),
-                ],
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            'NurVerse Premium',
+                            style: const TextStyle(color: AppColors.seaBlue, fontSize: 18, fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                        if (isActive) ...[
+                          const SizedBox(width: 7),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.seaBlue.withValues(alpha: .12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(isEnglish ? 'ACTIVE' : 'সক্রিয়', style: const TextStyle(color: AppColors.seaBlue, fontSize: 8, fontWeight: FontWeight.w900)),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isActive
+                          ? (isEnglish ? 'Your premium experience is active' : 'আপনার Premium অভিজ্ঞতা সক্রিয়')
+                          : (isEnglish ? 'Unlock a richer, calmer NurVerse' : 'আরও সমৃদ্ধ ও সুন্দর NurVerse উপভোগ করুন'),
+                      style: TextStyle(fontSize: 11, height: 1.4, color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: .70)),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              tooltip: user == null
-                  ? (isEnglish ? 'Sign in with Google' : 'Google দিয়ে সাইন ইন')
-                  : 'Google account',
+              const SizedBox(width: 10),
+              _premiumAccountButton(context),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              _premiumChip(Icons.contrast_rounded, 'AMOLED'),
+              _premiumChip(Icons.palette_outlined, isEnglish ? 'Premium Themes' : 'Premium থিম'),
+              _premiumChip(Icons.headphones_outlined, isEnglish ? 'Recitations' : 'তেলাওয়াত'),
+              _premiumChip(Icons.cloud_outlined, isEnglish ? 'Cloud Sync' : 'ক্লাউড সিঙ্ক'),
+            ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const GoogleLoginScreen()),
-                );
+                if (premium.isPremium) {
+                  _showPremiumStatus(context, premium, isEnglish);
+                } else {
+                  premium.activatePremium();
+                }
               },
-              icon: const _GoogleGIcon(),
+              icon: Icon(premium.isPremium ? Icons.settings_rounded : Icons.auto_awesome_rounded, size: 18),
+              label: Text(premium.isPremium ? (isEnglish ? 'Manage Premium' : 'Premium পরিচালনা করুন') : (isEnglish ? 'Explore Premium' : 'Premium দেখুন')),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, color: Colors.white.withValues(alpha: 0.7), size: 15),
-          ],
-        ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _premiumChip(IconData icon, String title) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: AppColors.seaBlue.withValues(alpha: .09),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.seaBlue),
+          const SizedBox(width: 5),
+          Text(title, style: const TextStyle(color: AppColors.seaBlue, fontSize: 10, fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+
+  Widget _premiumAccountButton(BuildContext context) {
+    final theme = Theme.of(context);
+    return StreamBuilder<User?>(
+      stream: AuthService.instance.authStateChanges,
+      initialData: AuthService.instance.currentUser,
+      builder: (context, snapshot) {
+        final user = snapshot.data;
+        final photoUrl = user?.photoURL?.trim();
+        final hasPhoto = user != null && photoUrl != null && photoUrl.isNotEmpty;
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _handleProfileTap(context, user),
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppColors.seaBlue.withValues(alpha: .10),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.seaBlue.withValues(alpha: .12)),
+              ),
+              child: hasPhoto
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(13),
+                      child: Image.network(
+                        photoUrl!,
+                        width: 42,
+                        height: 42,
+                        fit: BoxFit.cover,
+                        filterQuality: FilterQuality.high,
+                        errorBuilder: (_, __, ___) => Icon(Icons.person_rounded, color: theme.colorScheme.primary, size: 22),
+                      ),
+                    )
+                  : Icon(user != null ? Icons.person_rounded : Icons.person_outline_rounded, color: theme.colorScheme.primary, size: 22),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleProfileTap(BuildContext context, User? user) async {
+    if (user == null) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const GoogleLoginScreen()),
+      );
+      return;
+    }
+    await _openAccount(context, user);
+  }
+
+  Future<void> _openAccount(BuildContext context, User user) async {
+    final theme = Theme.of(context);
+    final photoUrl = user.photoURL?.trim();
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 36,
+                  backgroundColor: theme.colorScheme.primary.withValues(alpha: .10),
+                  backgroundImage: photoUrl != null && photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                  child: photoUrl == null || photoUrl.isEmpty ? Icon(Icons.account_circle_rounded, size: 48, color: theme.colorScheme.primary) : null,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  user.displayName?.trim().isNotEmpty == true ? user.displayName! : 'NurVerse User',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                  textAlign: TextAlign.center,
+                ),
+                if (user.email?.isNotEmpty == true) ...[
+                  const SizedBox(height: 4),
+                  Text(user.email!, style: theme.textTheme.bodyMedium?.copyWith(color: context.secondaryTextColor), textAlign: TextAlign.center),
+                ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      Navigator.of(sheetContext).pop();
+                      await AuthService.instance.signOut();
+                    },
+                    icon: const Icon(Icons.logout_rounded),
+                    label: Text(Theme.of(context).textTheme.bodyMedium?.locale?.languageCode == 'en' ? 'Logout' : 'Logout'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showPremiumStatus(BuildContext context, PremiumProvider premium, bool isEnglish) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('NurVerse Premium'),
+        content: Text(premium.purchaseDate == null ? (isEnglish ? 'Premium is active.' : 'Premium সক্রিয় আছে।') : (isEnglish ? 'Premium is active.' : 'Premium সক্রিয় আছে।')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(isEnglish ? 'Done' : 'ঠিক আছে')),
+        ],
       ),
     );
   }
@@ -452,10 +607,14 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   String _textSizeLabel(int level, bool isEnglish) {
     switch (level) {
-      case 0: return isEnglish ? 'Small' : 'ছোট';
-      case 2: return isEnglish ? 'Large' : 'বড়';
-      case 3: return isEnglish ? 'Very Large' : 'খুব বড়';
-      default: return isEnglish ? 'Normal' : 'স্বাভাবিক';
+      case 0:
+        return isEnglish ? 'Small' : 'ছোট';
+      case 2:
+        return isEnglish ? 'Large' : 'বড়';
+      case 3:
+        return isEnglish ? 'Very Large' : 'খুব বড়';
+      default:
+        return isEnglish ? 'Normal' : 'স্বাভাবিক';
     }
   }
 
@@ -469,9 +628,12 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   String _dateLabel(SettingsProvider settings, bool isEnglish) {
     switch (settings.dateDisplayPreference) {
-      case 'hijri': return isEnglish ? 'Hijri only' : 'শুধু হিজরি';
-      case 'gregorian': return isEnglish ? 'Gregorian only' : 'শুধু ইংরেজি';
-      default: return isEnglish ? 'Both dates' : 'উভয় তারিখ';
+      case 'hijri':
+        return isEnglish ? 'Hijri only' : 'শুধু হিজরি';
+      case 'gregorian':
+        return isEnglish ? 'Gregorian only' : 'শুধু ইংরেজি';
+      default:
+        return isEnglish ? 'Both dates' : 'উভয় তারিখ';
     }
   }
 
@@ -483,13 +645,15 @@ class SettingsHubScreenV4 extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(padding: const EdgeInsets.all(18), child: Text(title, style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900))),
-            ...options.map((option) => ListTile(
-              title: Text(option),
-              onTap: () async {
-                await onSelected(option);
-                if (sheetContext.mounted) Navigator.pop(sheetContext);
-              },
-            )),
+            ...options.map(
+              (option) => ListTile(
+                title: Text(option),
+                onTap: () async {
+                  await onSelected(option);
+                  if (sheetContext.mounted) Navigator.pop(sheetContext);
+                },
+              ),
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -661,21 +825,6 @@ class SettingsHubScreenV4 extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _GoogleGIcon extends StatelessWidget {
-  const _GoogleGIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 34,
-      height: 34,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-      child: const Text('G', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.blue)),
     );
   }
 }
