@@ -1,4 +1,4 @@
-name: temporary Arabic label fix
+name: one-shot Arabic Settings localization
 on:
   push:
     branches: [fix/prayer-completion-tracker]
@@ -11,12 +11,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Patch language labels
-        run: python .github/label_fix.py
-      - name: Commit patched file
+      - name: Apply Arabic Settings localization
+        run: python .github/settings_arabic_fix.py
+      - name: Commit and clean temporary fixer
         run: |
-          git config user.name "nurverse-label-bot"
+          git config user.name "nurverse-localization-bot"
           git config user.email "actions@github.com"
           git add lib/screens/settings_hub_screen_v4.dart
-          git commit -m "fix: localize Arabic language selector labels"
+          git diff --cached --exit-code && echo "No Settings changes produced" && exit 0
+          git rm .github/settings_arabic_fix.py .github/workflows/label_fix.yml
+          git add lib/screens/settings_hub_screen_v4.dart
+          git commit -m "fix: fully localize Arabic Settings UI"
           git push
