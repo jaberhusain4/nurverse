@@ -3,13 +3,15 @@ name: Repair localization compile blockers
 on:
   push:
     branches: [fix/app-wide-localization]
+  pull_request:
+    branches: [fix/prayer-completion-tracker]
 
 permissions:
   contents: write
 
 jobs:
   repair:
-    if: github.event.head_commit.message != 'ci: remove localization repair workflow'
+    if: github.event.head_commit.message != 'fix: remove localization compile blockers'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
