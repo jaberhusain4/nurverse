@@ -1,0 +1,22 @@
+name: temporary Arabic label fix
+on:
+  push:
+    branches: [fix/prayer-completion-tracker]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch language labels
+        run: python .github/label_fix.py
+      - name: Commit patched file
+        run: |
+          git config user.name "nurverse-label-bot"
+          git config user.email "actions@github.com"
+          git add lib/screens/settings_hub_screen_v4.dart
+          git commit -m "fix: localize Arabic language selector labels"
+          git push
