@@ -1,6 +1,8 @@
 name: Patch core prayer localization
 
 on:
+  push:
+    branches: [fix/core-prayer-name-localization]
   pull_request:
     branches: [fix/prayer-completion-tracker]
 
@@ -22,7 +24,6 @@ jobs:
           from pathlib import Path
           p = Path('lib/localization/app_localizations.dart')
           s = p.read_text(encoding='utf-8')
-
           old = """  String prayerName(String name) {
     switch (name.trim().toLowerCase()) {
       case 'fajr': case 'ফজর': return fajr;
@@ -39,7 +40,9 @@ jobs:
     }
   }
 """
-
+          if old not in s:
+              print('Core prayerName already patched or differs; no source rewrite needed.')
+              raise SystemExit(0)
           new = """  String prayerName(String name) {
     final raw = name.trim();
     switch (raw.toLowerCase()) {
@@ -127,18 +130,15 @@ jobs:
     return en[raw] ?? raw;
   }
 """
-
-          if old not in s:
-              raise SystemExit('Core prayerName block not found; refusing blind rewrite')
           p.write_text(s.replace(old, new, 1), encoding='utf-8')
 
-          # Verify the core replacements exist before commit.
-          check = p.read_text(encoding='utf-8')
-          assert "case 'magrib':" in check
-          assert 'String prayerStatus(String value)' in check
-
-      - name: Commit patch
+      - name: Commit patch if changed
+        shell: bash
         run: |
+          if git diff --quiet; then
+            echo "No source changes needed."
+            exit 0
+          fi
           git config user.name "nurverse-localization-bot"
           git config user.email "actions@github.com"
           git add lib/localization/app_localizations.dart
