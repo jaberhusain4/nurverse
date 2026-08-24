@@ -135,7 +135,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                 context,
                 isEnglish ? 'Madhhab' : 'মাযহাব',
                 SettingsProvider.madhabs,
-                settings.setMadhab,
+                settings.setMadhhab,
               ),
             ),
             _divider(),
