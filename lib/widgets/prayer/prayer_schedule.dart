@@ -1,7 +1,9 @@
 // lib/widgets/prayer/prayer_schedule.dart
 
 import 'package:flutter/material.dart';
+
 import '../../controllers/prayer_controller.dart';
+import '../../localization/app_localizations.dart';
 import '../../theme/app_theme.dart';
 
 class PrayerSchedule extends StatelessWidget {
@@ -16,21 +18,24 @@ class PrayerSchedule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children:
           controller.prayers.map((prayer) {
             final bool isCurrent = prayer['isCurrent'] == true;
 
-            final String name =
-                prayer['nameBn']?.toString() ??
+            final String rawName =
                 prayer['name']?.toString() ??
+                prayer['nameBn']?.toString() ??
+                prayer['nameAr']?.toString() ??
                 '';
 
+            final String name = l10n.prayerName(rawName);
             final String start = prayer['start']?.toString() ?? '';
-
             final String end = prayer['end']?.toString() ?? '';
-
             final String jamaat = prayer['jamaat']?.toString() ?? '';
+            final bool fridayPrayer = isFriday &&
+                (rawName == "জুমু'আ" || rawName == 'জুমু‘আ' || rawName.toLowerCase() == 'jumuah');
 
             return PrayerScheduleTile(
               name: name,
@@ -38,7 +43,7 @@ class PrayerSchedule extends StatelessWidget {
               end: end,
               jamaat: jamaat,
               isCurrent: isCurrent,
-              isFriday: isFriday && name == "জুমু'আ",
+              isFriday: fridayPrayer,
             );
           }).toList(),
     );
@@ -65,6 +70,7 @@ class PrayerScheduleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
 
@@ -75,10 +81,9 @@ class PrayerScheduleTile extends StatelessWidget {
         color: isCurrent ? primary.withValues(alpha: .07) : context.cardColor,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color:
-              isCurrent
-                  ? primary.withValues(alpha: .18)
-                  : primary.withValues(alpha: .06),
+          color: isCurrent
+              ? primary.withValues(alpha: .18)
+              : primary.withValues(alpha: .06),
         ),
       ),
       child: Row(
@@ -87,10 +92,9 @@ class PrayerScheduleTile extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color:
-                  isCurrent
-                      ? primary.withValues(alpha: .12)
-                      : theme.dividerColor.withValues(alpha: .30),
+              color: isCurrent
+                  ? primary.withValues(alpha: .12)
+                  : theme.dividerColor.withValues(alpha: .30),
               borderRadius: BorderRadius.circular(13),
             ),
             child: Icon(
@@ -99,9 +103,7 @@ class PrayerScheduleTile extends StatelessWidget {
               color: isCurrent ? primary : context.secondaryTextColor,
             ),
           ),
-
           const SizedBox(width: 11),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,7 +121,6 @@ class PrayerScheduleTile extends StatelessWidget {
                         ),
                       ),
                     ),
-
                     if (isCurrent) ...[
                       const SizedBox(width: 7),
                       Container(
@@ -131,9 +132,9 @@ class PrayerScheduleTile extends StatelessWidget {
                           color: primary,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Text(
-                          'বর্তমান',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.current,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 8,
                             fontWeight: FontWeight.bold,
@@ -143,9 +144,7 @@ class PrayerScheduleTile extends StatelessWidget {
                     ],
                   ],
                 ),
-
                 const SizedBox(height: 4),
-
                 Text(
                   '$start - $end',
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -155,9 +154,7 @@ class PrayerScheduleTile extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(width: 10),
-
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -170,7 +167,7 @@ class PrayerScheduleTile extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'জামাআত',
+                l10n.jamaat,
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontSize: 9,
                   color: context.secondaryTextColor,
