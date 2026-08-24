@@ -1,0 +1,63 @@
+name: Localize Hafezi Quran
+on:
+  pull_request:
+    branches: [fix/prayer-completion-tracker]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Patch Hafezi labels
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/screens/quran/hafezi_quran_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace("import '../../services/hafezi_quran_service.dart';\n", "import '../../localization/app_localizations.dart';\nimport '../../services/hafezi_quran_service.dart';\n", 1)
+          s = s.replace("    var selectedPage = _service.locationForPdfPage(_lastPdfPage).pageInJuz;\n", "    var selectedPage = _service.locationForPdfPage(_lastPdfPage).pageInJuz;\n    final l10n = AppLocalizations.of(context);\n", 1)
+          replacements = {
+            "title: const Text('পারা ও পৃষ্ঠা খুঁজুন')": "title: Text(l10n.isArabic ? 'ابحث عن الجزء والصفحة' : l10n.tr('পারা ও পৃষ্ঠা খুঁজুন', 'Find Juz & Page'))",
+            "labelText: 'পারা'": "labelText: l10n.isArabic ? 'الجزء' : l10n.tr('পারা', 'Juz')",
+            "child: Text('পারা \\\${index + 1}')": "child: Text(l10n.isArabic ? 'الجزء \\\${index + 1}' : l10n.tr('পারা \\\${index + 1}', 'Juz \\\${index + 1}'))",
+            "labelText: 'পৃষ্ঠা'": "labelText: l10n.isArabic ? 'الصفحة' : l10n.tr('পৃষ্ঠা', 'Page')",
+            "hintText: 'English digit: 1, 2, 3 ...'": "hintText: l10n.tr('English digit: 1, 2, 3 ...', 'English digits: 1, 2, 3 ...')",
+            "child: const Text('বাতিল')": "child: Text(l10n.tr('বাতিল', 'Cancel'))",
+            "child: const Text('খুলুন')": "child: Text(l10n.tr('খুলুন', 'Open'))",
+            "title: const Text(\n          'Hafezi Quran',": "title: Text(l10n.isArabic ? 'القرآن الحفظي' : l10n.tr('হিফজি কুরআন', 'Hafezi Quran'),",
+            "tooltip: 'পারা ও পৃষ্ঠা খুঁজুন'": "tooltip: l10n.tr('পারা ও পৃষ্ঠা খুঁজুন', 'Find Juz & Page')",
+            "title: 'Last Read'": "title: l10n.tr('শেষবার পড়া', 'Last Read')",
+            "subtitle:\n                        'পারা \\${lastLocation.juzNumber} • পৃষ্ঠা \\${lastLocation.pageInJuz}'": "subtitle: l10n.isArabic ? 'الجزء \\${lastLocation.juzNumber} • الصفحة \\${lastLocation.pageInJuz}' : l10n.tr('পারা \\${lastLocation.juzNumber} • পৃষ্ঠা \\${lastLocation.pageInJuz}', 'Juz \\${lastLocation.juzNumber} • Page \\${lastLocation.pageInJuz}')",
+            "title: 'Search'": "title: l10n.tr('খুঁজুন', 'Search')",
+            "subtitle: 'পারা + পৃষ্ঠা'": "subtitle: l10n.isArabic ? 'الجزء + الصفحة' : l10n.tr('পারা + পৃষ্ঠা', 'Juz + Page')",
+            "Tab(text: 'সূরা')": "Tab(text: l10n.isArabic ? 'السور' : l10n.tr('সূরা', 'Surah'))",
+            "Tab(text: 'পারা')": "Tab(text: l10n.isArabic ? 'الأجزاء' : l10n.tr('পারা', 'Juz'))",
+            "Tab(text: 'বুকমার্ক')": "Tab(text: l10n.isArabic ? 'العلامات المرجعية' : l10n.tr('বুকমার্ক', 'Bookmarks'))",
+          }
+          for old, new in replacements.items():
+              if old in s:
+                  s = s.replace(old, new)
+          # Add localization to child list builders.
+          for marker in ["  Widget build(BuildContext context) {\n    return ListView.separated(", "  Widget build(BuildContext context) {\n    if (service.surahs.isEmpty)", "  Widget build(BuildContext context) {\n    if (bookmarks.isEmpty)"]:
+              if marker in s and "final l10n = AppLocalizations.of(context);" not in s[s.find(marker):s.find(marker)+140]:
+                  s = s.replace(marker, marker.replace("  Widget build(BuildContext context) {\n", "  Widget build(BuildContext context) {\n    final l10n = AppLocalizations.of(context);\n", 1), 1)
+          s = s.replace("'পারা \\${juz.juz}'", "l10n.isArabic ? 'الجزء \\${juz.juz}' : l10n.tr('পারা \\${juz.juz}', 'Juz \\${juz.juz}')")
+          s = s.replace("'\\${juz.pageCount} পৃষ্ঠা'", "l10n.isArabic ? '\\${juz.pageCount} صفحة' : l10n.tr('\\${juz.pageCount} পৃষ্ঠা', '\\${juz.pageCount} pages')")
+          s = s.replace("const Center(child: Text('সূরা তথ্য পাওয়া যাচ্ছে না'))", "Center(child: Text(l10n.tr('সূরা তথ্য পাওয়া যাচ্ছে না', 'Surah information is unavailable')))" )
+          s = s.replace("'\\${surah.revelationType == 'meccan' ? 'মাক্কী' : 'মাদানী'} · \\${surah.verses} আয়াত'", "l10n.isArabic ? '\\${surah.revelationType == 'meccan' ? 'مكية' : 'مدنية'} · \\${surah.verses} آيات' : l10n.tr('\\${surah.revelationType == 'meccan' ? 'মাক্কী' : 'মাদানী'} · \\${surah.verses} আয়াত', '\\${surah.revelationType == 'meccan' ? 'Meccan' : 'Medinan'} · \\${surah.verses} verses')")
+          s = s.replace("const Center(child: Text('এখনও কোনো বুকমার্ক নেই'))", "Center(child: Text(l10n.tr('এখনও কোনো বুকমার্ক নেই', 'No bookmarks yet')))" )
+          s = s.replace("'পারা \\${location.juzNumber} • পৃষ্ঠা \\${location.pageInJuz}'", "l10n.isArabic ? 'الجزء \\${location.juzNumber} • الصفحة \\${location.pageInJuz}' : l10n.tr('পারা \\${location.juzNumber} • পৃষ্ঠা \\${location.pageInJuz}', 'Juz \\${location.juzNumber} • Page \\${location.pageInJuz}')")
+          s = s.replace("'PDF page \\${location.pdfPage}'", "l10n.isArabic ? 'صفحة PDF \\${location.pdfPage}' : l10n.tr('PDF page \\${location.pdfPage}', 'PDF page \\${location.pdfPage}')")
+          p.write_text(s, encoding='utf-8')
+      - name: Validate and commit
+        run: |
+          flutter=false
+          git config user.name "nurverse-localization-bot"
+          git config user.email "actions@github.com"
+          git add lib/screens/quran/hafezi_quran_screen.dart
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "fix: localize Hafezi Quran controls"
+          git push origin HEAD:fix/app-wide-localization
