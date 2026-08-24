@@ -86,6 +86,14 @@ class TopHeader extends StatelessWidget {
     }
   }
 
+  String _userFallback(String language) {
+    switch (language) {
+      case 'bn': return 'নূরভার্স ব্যবহারকারী';
+      case 'ar': return 'مستخدم نورفيرس';
+      case 'en': default: return 'NurVerse User';
+    }
+  }
+
   Future<void> _openAccount(BuildContext context, User user) async {
     await showModalBottomSheet<void>(
       context: context,
@@ -108,7 +116,7 @@ class TopHeader extends StatelessWidget {
                   child: photoUrl == null || photoUrl.isEmpty ? Icon(Icons.account_circle_rounded, size: 48, color: theme.colorScheme.primary) : null,
                 ),
                 const SizedBox(height: 12),
-                Text(user.displayName?.trim().isNotEmpty == true ? user.displayName! : 'NurVerse User', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800), textAlign: TextAlign.center),
+                Text(user.displayName?.trim().isNotEmpty == true ? user.displayName! : _userFallback(language), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800), textAlign: TextAlign.center),
                 if (user.email?.isNotEmpty == true) ...[
                   const SizedBox(height: 4),
                   Text(user.email!, style: theme.textTheme.bodyMedium?.copyWith(color: context.secondaryTextColor), textAlign: TextAlign.center),
