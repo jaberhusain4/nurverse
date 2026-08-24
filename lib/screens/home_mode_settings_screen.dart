@@ -46,7 +46,6 @@ class HomeModeSettingsScreen extends StatelessWidget {
                     ? 'More details, prayer information and daily content.'
                     : 'আরও তথ্য, সালাতের তথ্য ও দৈনিক কনটেন্টসহ বিস্তারিত হোম।',
                 badge: isEnglish ? 'Detailed' : 'বিস্তারিত',
-                selectedLabel: isEnglish ? 'SELECTED' : 'নির্বাচিত',
                 onTap: () => service.setSimple(false),
               ),
               const SizedBox(height: 10),
@@ -58,7 +57,6 @@ class HomeModeSettingsScreen extends StatelessWidget {
                     ? 'Clean, calm and focused on everyday essentials.'
                     : 'পরিষ্কার, শান্ত এবং প্রতিদিনের প্রয়োজনীয় বিষয়গুলোকে গুরুত্ব দেয়।',
                 badge: isEnglish ? 'Clean' : 'সহজ',
-                selectedLabel: isEnglish ? 'SELECTED' : 'নির্বাচিত',
                 onTap: () => service.setSimple(true),
               ),
               const SizedBox(height: 16),
@@ -110,7 +108,6 @@ class _ModeCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.badge,
-    required this.selectedLabel,
     required this.onTap,
   });
 
@@ -119,7 +116,6 @@ class _ModeCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String badge;
-  final String selectedLabel;
   final VoidCallback onTap;
 
   @override
@@ -136,21 +132,12 @@ class _ModeCard extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.all(13),
           decoration: BoxDecoration(
-            color: selected ? primary.withValues(alpha: .10) : context.cardColor,
+            color: selected ? primary.withValues(alpha: .07) : context.cardColor,
             borderRadius: BorderRadius.circular(19),
             border: Border.all(
-              color: selected ? primary.withValues(alpha: .55) : primary.withValues(alpha: .08),
-              width: selected ? 1.7 : 1,
+              color: selected ? primary.withValues(alpha: .35) : primary.withValues(alpha: .08),
+              width: selected ? 1.2 : 1,
             ),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: primary.withValues(alpha: .10),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -159,14 +146,10 @@ class _ModeCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: primary.withValues(alpha: selected ? .16 : .10),
+                  color: primary.withValues(alpha: .10),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(
-                  icon,
-                  color: primary,
-                  size: 22,
-                ),
+                child: Icon(icon, color: primary, size: 22),
               ),
               const SizedBox(width: 11),
               Expanded(
@@ -178,11 +161,7 @@ class _ModeCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             title,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              height: 1.15,
-                            ),
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, height: 1.15),
                           ),
                         ),
                         Container(
@@ -193,11 +172,7 @@ class _ModeCard extends StatelessWidget {
                           ),
                           child: Text(
                             badge,
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              color: primary,
-                              fontWeight: FontWeight.w800,
-                            ),
+                            style: TextStyle(fontSize: 9.5, color: primary, fontWeight: FontWeight.w800),
                           ),
                         ),
                       ],
@@ -207,45 +182,16 @@ class _ModeCard extends StatelessWidget {
                       subtitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        height: 1.35,
-                        color: context.secondaryTextColor,
-                      ),
+                      style: TextStyle(fontSize: 11.5, height: 1.35, color: context.secondaryTextColor),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 160),
-                child: selected
-                    ? Column(
-                        key: const ValueKey('selected'),
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.check_circle_rounded,
-                            color: primary,
-                            size: 23,
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            selectedLabel,
-                            style: TextStyle(
-                              color: primary,
-                              fontSize: 7.5,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
-                      )
-                    : Icon(
-                        Icons.radio_button_off_rounded,
-                        key: const ValueKey('unselected'),
-                        color: context.secondaryTextColor,
-                        size: 21,
-                      ),
+              Icon(
+                selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+                color: selected ? primary : context.secondaryTextColor,
+                size: 21,
               ),
             ],
           ),
