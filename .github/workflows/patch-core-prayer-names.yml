@@ -1,0 +1,146 @@
+name: Patch core prayer localization
+
+on:
+  pull_request:
+    branches: [fix/prayer-completion-tracker]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/core-prayer-name-localization
+          fetch-depth: 0
+
+      - name: Patch core AppLocalizations prayer names/status
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/localization/app_localizations.dart')
+          s = p.read_text(encoding='utf-8')
+
+          old = """  String prayerName(String name) {
+    switch (name.trim().toLowerCase()) {
+      case 'fajr': case 'ফজর': return fajr;
+      case 'dhuhr': case 'যোহর': return dhuhr;
+      case 'asr': case 'আসর': return asr;
+      case 'maghrib': case 'মাগরিব': return maghrib;
+      case 'isha': case 'ইশা': return isha;
+      case 'jumuah': case 'জুমু‘আ': case 'জুমুআ': return jumuah;
+      case 'ishraq': case 'ইশরাক': return ishraq;
+      case 'duha': case 'চাশত': case 'দুহা': return duha;
+      case 'awwabin': case 'আউওয়াবীন': return awwabin;
+      case 'tahajjud': case 'তাহাজ্জুদ': return tahajjud;
+      default: return name;
+    }
+  }
+"""
+
+          new = """  String prayerName(String name) {
+    final raw = name.trim();
+    switch (raw.toLowerCase()) {
+      case 'fajr':
+      case 'ফজর':
+        return fajr;
+      case 'dhuhr':
+      case 'যোহর':
+        return dhuhr;
+      case 'asr':
+      case 'আসর':
+        return asr;
+      case 'maghrib':
+      case 'magrib':
+      case 'মাগরিব':
+        return maghrib;
+      case 'isha':
+      case 'ইশা':
+        return isha;
+      case 'jumuah':
+      case 'jumu’ah':
+      case \"jumu'ah\":
+      case 'জুমু‘আ':
+      case 'জুমু\'আ':
+      case 'জুমুআ':
+        return jumuah;
+      case 'ishraq':
+      case 'ইশরাক':
+        return ishraq;
+      case 'duha':
+      case 'chasht':
+      case 'চাশত':
+      case 'দুহা':
+        return duha;
+      case 'awwabin':
+      case 'আউওয়াবীন':
+        return awwabin;
+      case 'tahajjud':
+      case 'তাহাজ্জুদ':
+        return tahajjud;
+      default:
+        return raw;
+    }
+  }
+
+  String prayerStatus(String value) {
+    final raw = value.trim();
+    if (isArabic) {
+      const ar = <String, String>{
+        'ইশার ওয়াক্ত চলছে': 'وقت العشاء جارٍ',
+        'ইশরাকের ওয়াক্ত চলছে': 'وقت الإشراق جارٍ',
+        'ইশরাক ওয়াক্ত চলছে': 'وقت الإشراق جارٍ',
+        'তাহাজ্জুদের ওয়াক্ত চলছে': 'وقت التهجد جارٍ',
+        'তাহাজ্জুদ ওয়াক্ত চলছে': 'وقت التهجد جارٍ',
+        'মাগরিবের ওয়াক্ত চলছে': 'وقت المغرب جارٍ',
+        'ইশার সময় চলছে': 'وقت العشاء جارٍ',
+        'ইশরাকের সময় চলছে': 'وقت الإشراق جارٍ',
+        'তাহাজ্জুদের সময় চলছে': 'وقت التهجد جارٍ',
+        'Ishar Waqto Cholche': 'وقت العشاء جارٍ',
+        'Ishar Waqt Cholche': 'وقت العشاء جارٍ',
+        'Isha time is active': 'وقت العشاء جارٍ',
+        'Isha time is in progress': 'وقت العشاء جارٍ',
+        'Magrib time is active': 'وقت المغرب جارٍ',
+        'Maghrib time is active': 'وقت المغرب جارٍ',
+        'Tahajjud time is active': 'وقت التهجد جارٍ',
+        'Tahajjud time is in progress': 'وقت التهجد جارٍ',
+      };
+      return ar[raw] ?? raw;
+    }
+    if (isBangla) return raw;
+    const en = <String, String>{
+      'ইশার ওয়াক্ত চলছে': 'Isha time is active',
+      'ইশরাকের ওয়াক্ত চলছে': 'Ishraq time is active',
+      'ইশরাক ওয়াক্ত চলছে': 'Ishraq time is active',
+      'তাহাজ্জুদের ওয়াক্ত চলছে': 'Tahajjud time is active',
+      'তাহাজ্জুদ ওয়াক্ত চলছে': 'Tahajjud time is active',
+      'মাগরিবের ওয়াক্ত চলছে': 'Maghrib time is active',
+      'ইশার সময় চলছে': 'Isha time is active',
+      'ইশরাকের সময় চলছে': 'Ishraq time is active',
+      'তাহাজ্জুদের সময় চলছে': 'Tahajjud time is active',
+      'Ishar Waqto Cholche': 'Isha time is active',
+      'Ishar Waqt Cholche': 'Isha time is active',
+      'Magrib time is active': 'Maghrib time is active',
+    };
+    return en[raw] ?? raw;
+  }
+"""
+
+          if old not in s:
+              raise SystemExit('Core prayerName block not found; refusing blind rewrite')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+
+          # Verify the core replacements exist before commit.
+          check = p.read_text(encoding='utf-8')
+          assert "case 'magrib':" in check
+          assert 'String prayerStatus(String value)' in check
+
+      - name: Commit patch
+        run: |
+          git config user.name "nurverse-localization-bot"
+          git config user.email "actions@github.com"
+          git add lib/localization/app_localizations.dart
+          git commit -m "fix: normalize core prayer names and statuses"
+          git push origin fix/core-prayer-name-localization
