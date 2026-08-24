@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../localization/app_localizations.dart';
 
+import '../localization/app_localizations.dart';
+
 import '../providers/premium_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/text_scale_provider.dart';
@@ -473,6 +475,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   Future<void> _openAccount(BuildContext context, User user) async {
     final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final isEnglish = Localizations.localeOf(context).languageCode == 'en';
@@ -524,6 +527,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
   }
 
   Future<void> _showPremiumStatus(BuildContext context, PremiumProvider premium, bool isEnglish) async {
+    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
     await showDialog<void>(
       context: context,
@@ -712,6 +716,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   Future<void> _showChoiceSheet(BuildContext context, String title, List<String> options, Future<void> Function(String) onSelected, {String? selectedValue}) async {
     final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
     final languageCode = Localizations.localeOf(context).languageCode;
     final isEnglish = languageCode == 'en';
     final isArabic = languageCode == 'ar';
@@ -757,6 +762,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   Future<void> _showTextSizeSheet(BuildContext context, TextScaleProvider provider, bool isEnglish) async {
     final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
     final labels = isEnglish ? const ['Small', 'Normal', 'Large', 'Very Large'] : const ['ছোট', 'স্বাভাবিক', 'বড়', 'খুব বড়'];
     await showModalBottomSheet<void>(
       context: context,
@@ -781,6 +787,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
   }
 
   Future<void> _showAdjustmentDialog(BuildContext context, SettingsProvider settings) async {
+    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
     const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     await showDialog<void>(
@@ -811,6 +818,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
   }
 
   Future<void> _showJamaatDialog(BuildContext context, SettingsProvider settings) async {
+    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
     const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     final controllers = <String, TextEditingController>{
@@ -857,6 +865,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   Future<void> _showQuranFontSheet(BuildContext context, SettingsProvider settings) async {
     final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
     await showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -887,6 +896,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   Future<void> _showDailyContentSheet(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
     await showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -908,6 +918,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
   }
 
   Future<void> _showResetDialog(BuildContext context, SettingsProvider settings) async {
+    final l10n = AppLocalizations.of(context);
     final l10n = AppLocalizations.of(context);
     await showDialog<void>(
       context: context,
