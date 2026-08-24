@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 
+import '../localization/app_localizations.dart';
 import '../services/home_mode_service.dart';
 import '../theme/app_theme.dart';
 
 class HomeModeSettingsScreen extends StatelessWidget {
   const HomeModeSettingsScreen({super.key});
 
-  String _title(bool isEnglish) => isEnglish ? 'Home Screen' : 'হোম স্ক্রিন';
-
   @override
   Widget build(BuildContext context) {
     final service = HomeModeService.instance;
-    final isEnglish = Localizations.localeOf(context).languageCode == 'en';
+    final l10n = AppLocalizations.of(context);
 
     return AnimatedBuilder(
       animation: service,
       builder: (context, _) {
+        final isArabic = l10n.isArabic;
         return Scaffold(
           appBar: AppBar(
             title: Text(
-              _title(isEnglish),
+              l10n.tr('হোম স্ক্রিন', 'Home Screen'),
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
             ),
             centerTitle: true,
@@ -28,9 +28,12 @@ class HomeModeSettingsScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
             children: [
               Text(
-                isEnglish
-                    ? 'Choose the Home layout you prefer.'
-                    : 'আপনার পছন্দের হোম স্ক্রিনের ধরন নির্বাচন করুন।',
+                isArabic
+                    ? 'আপনার পছন্দের হোম স্ক্রিনের ধরন নির্বাচন করুন।'
+                    : l10n.tr(
+                        'আপনার পছন্দের হোম স্ক্রিনের ধরন নির্বাচন করুন।',
+                        'Choose the Home layout you prefer.',
+                      ),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: context.secondaryTextColor,
                   fontSize: 12,
@@ -41,22 +44,28 @@ class HomeModeSettingsScreen extends StatelessWidget {
               _ModeCard(
                 selected: !service.isSimple,
                 icon: Icons.dashboard_customize_rounded,
-                title: isEnglish ? 'Informative' : 'ইনফরমেটিভ',
-                subtitle: isEnglish
-                    ? 'More details, prayer information and daily content.'
-                    : 'আরও তথ্য, সালাতের তথ্য ও দৈনিক কনটেন্টসহ বিস্তারিত হোম।',
-                badge: isEnglish ? 'Detailed' : 'বিস্তারিত',
+                title: isArabic ? 'تفصيلي' : l10n.tr('ইনফরমেটিভ', 'Informative'),
+                subtitle: isArabic
+                    ? 'تفاصيل أكثر ومعلومات الصلاة والمحتوى اليومي.'
+                    : l10n.tr(
+                        'আরও তথ্য, সালাতের তথ্য ও দৈনিক কনটেন্টসহ বিস্তারিত হোম।',
+                        'More details, prayer information and daily content.',
+                      ),
+                badge: isArabic ? 'تفصيلي' : l10n.tr('বিস্তারিত', 'Detailed'),
                 onTap: () => service.setSimple(false),
               ),
               const SizedBox(height: 10),
               _ModeCard(
                 selected: service.isSimple,
                 icon: Icons.home_rounded,
-                title: isEnglish ? 'Simple' : 'সিম্পল',
-                subtitle: isEnglish
-                    ? 'Clean, calm and focused on everyday essentials.'
-                    : 'পরিষ্কার, শান্ত এবং প্রতিদিনের প্রয়োজনীয় বিষয়গুলোকে গুরুত্ব দেয়।',
-                badge: isEnglish ? 'Clean' : 'সহজ',
+                title: isArabic ? 'بسيط' : l10n.tr('সিম্পল', 'Simple'),
+                subtitle: isArabic
+                    ? 'تصميم هادئ ونظيف يركز على الأساسيات اليومية.'
+                    : l10n.tr(
+                        'পরিষ্কার, শান্ত এবং প্রতিদিনের প্রয়োজনীয় বিষয়গুলোকে গুরুত্ব দেয়।',
+                        'Clean, calm and focused on everyday essentials.',
+                      ),
+                badge: isArabic ? 'نظيف' : l10n.tr('সহজ', 'Clean'),
                 onTap: () => service.setSimple(true),
               ),
               const SizedBox(height: 16),
@@ -80,9 +89,12 @@ class HomeModeSettingsScreen extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        isEnglish
-                            ? 'You can change this choice anytime. Your prayer data and Quran progress stay unchanged.'
-                            : 'আপনি যেকোনো সময় এই পছন্দ পরিবর্তন করতে পারবেন। আপনার সালাতের তথ্য ও কুরআনের অগ্রগতি অপরিবর্তিত থাকবে।',
+                        isArabic
+                            ? 'يمكنك تغيير هذا الاختيار في أي وقت. ستبقى بيانات الصلاة وتقدم القرآن دون تغيير.'
+                            : l10n.tr(
+                                'আপনি যেকোনো সময় এই পছন্দ পরিবর্তন করতে পারবেন। আপনার সালাতের তথ্য ও কুরআনের অগ্রগতি অপরিবর্তিত থাকবে।',
+                                'You can change this choice anytime. Your prayer data and Quran progress stay unchanged.',
+                              ),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: 11.5,
                           color: context.secondaryTextColor,
