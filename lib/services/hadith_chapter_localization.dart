@@ -28,12 +28,15 @@ class HadithChapterLocalization {
     }
 
     final generated = _generateFromEnglish(en);
-    if (generated != null) {
+    if (generated != null && !_containsLatin(generated)) {
       return _withChapterNumber(chapterIndex, generated);
     }
 
     if (!genericEn && en.isNotEmpty) {
-      return _withChapterNumber(chapterIndex, _translateEnglishTitle(en));
+      final translated = _translateEnglishTitle(en);
+      if (!_containsLatin(translated)) {
+        return _withChapterNumber(chapterIndex, translated);
+      }
     }
 
     if (!genericAr && ar.isNotEmpty) {
@@ -43,7 +46,8 @@ class HadithChapterLocalization {
     return _withChapterNumber(chapterIndex, 'অন্যান্য বিষয়');
   }
 
-  static String _withChapterNumber(int chapterIndex, String title) => 'অধ্যায় ${_bnDigits(chapterIndex)} — $title';
+  static String _withChapterNumber(int chapterIndex, String title) =>
+      'অধ্যায় ${_bnDigits(chapterIndex)} — $title';
 
   static bool _containsLatin(String value) => RegExp(r'[A-Za-z]').hasMatch(value);
 
@@ -72,19 +76,40 @@ class HadithChapterLocalization {
     return _subjects[normalized] ?? _translateEnglishTitle(value);
   }
 
-  static bool genericEnglish(String value) => RegExp(r'^chapter\s*\d+$', caseSensitive: false).hasMatch(value);
+  static bool genericEnglish(String value) =>
+      RegExp(r'^chapter\s*\d+$', caseSensitive: false).hasMatch(value);
 
   static String _translateEnglishTitle(String value) {
     var text = _normalize(value);
     const phraseMap = <String, String>{
-      'the book of ': '', 'book of ': '', 'the ': '', 'of the ': 'এর ', 'and ': 'ও ',
-      'with ': 'সহ ', 'on ': 'সম্পর্কে ', 'about ': 'সম্পর্কে ', 'regarding ': 'সম্পর্কে ',
-      'during ': 'চলাকালীন ', 'after ': 'পর ', 'before ': 'আগে ', 'in ': 'এর মধ্যে ',
-      'from ': 'থেকে ', 'to ': 'প্রতি ', 'for ': 'জন্য ', 'according to ': 'অনুযায়ী ',
-      'virtues of ': 'এর ফযীলত ', 'merits of ': 'এর ফযীলত ', 'characteristics of ': 'এর বৈশিষ্ট্য ',
-      'description of ': 'এর বিবরণ ', 'times of ': 'এর সময়সমূহ ', 'chapter on ': '', 'chapters on ': '',
+      'the book of ': '',
+      'book of ': '',
+      'the ': '',
+      'of the ': 'এর ',
+      'and ': 'ও ',
+      'with ': 'সহ ',
+      'on ': 'সম্পর্কে ',
+      'about ': 'সম্পর্কে ',
+      'regarding ': 'সম্পর্কে ',
+      'during ': 'চলাকালীন ',
+      'after ': 'পর ',
+      'before ': 'আগে ',
+      'in ': 'এর মধ্যে ',
+      'from ': 'থেকে ',
+      'to ': 'প্রতি ',
+      'for ': 'জন্য ',
+      'according to ': 'অনুযায়ী ',
+      'virtues of ': 'এর ফযীলত ',
+      'merits of ': 'এর ফযীলত ',
+      'characteristics of ': 'এর বৈশিষ্ট্য ',
+      'description of ': 'এর বিবরণ ',
+      'times of ': 'এর সময়সমূহ ',
+      'chapter on ': '',
+      'chapters on ': '',
     };
-    for (final entry in phraseMap.entries) text = text.replaceAll(entry.key, entry.value);
+    for (final entry in phraseMap.entries) {
+      text = text.replaceAll(entry.key, entry.value);
+    }
 
     const tokenMap = <String, String>{
       'revelation': 'ওহী', 'faith': 'ঈমান', 'belief': 'আকীদা', 'knowledge': 'ইলম', 'purification': 'পবিত্রতা',
@@ -136,8 +161,55 @@ class HadithChapterLocalization {
       );
     }
 
-    text = text.replaceAll(RegExp(r'\s+'), ' ').replaceAll('  ', ' ').replaceAll(' ,', ',').replaceAll(' .', '.').trim();
-    return text.isEmpty ? 'অন্যান্য বিষয়' : text;
+    text = text
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceAll('  ', ' ')
+        .replaceAll(' ,', ',')
+        .replaceAll(' .', '.')
+        .trim();
+
+    if (text.isEmpty) return 'অন্যান্য বিষয়';
+    if (!_containsLatin(text)) return text;
+
+    return _transliterateLatin(text);
+  }
+
+  static String _transliterateLatin(String value) {
+    final words = value.split(RegExp(r'(\s+)'));
+    final output = StringBuffer();
+
+    const digraphs = <String, String>{
+      'tsh': 'টশ', 'sch': 'শ', 'sh': 'শ', 'ch': 'চ', 'kh': 'খ', 'gh': 'ঘ',
+      'ph': 'ফ', 'th': 'থ', 'dh': 'ধ', 'bh': 'ভ', 'jh': 'ঝ', 'ck': 'ক',
+      'qu': 'কু', 'oo': 'ু', 'ee': 'ী', 'aa': 'া', 'ai': 'ঐ', 'au': 'ঔ',
+    };
+
+    const letters = <String, String>{
+      'a': 'আ', 'b': 'ব', 'c': 'ক', 'd': 'দ', 'e': 'এ', 'f': 'ফ', 'g': 'গ', 'h': 'হ',
+      'i': 'ই', 'j': 'জ', 'k': 'ক', 'l': 'ল', 'm': 'ম', 'n': 'ন', 'o': 'ও', 'p': 'প',
+      'q': 'ক', 'r': 'র', 's': 'স', 't': 'ত', 'u': 'উ', 'v': 'ভ', 'w': 'ও', 'x': 'ক্স',
+      'y': 'ই', 'z': 'জ',
+    };
+
+    for (final rawWord in words) {
+      if (rawWord.trim().isEmpty || !_containsLatin(rawWord)) {
+        output.write(rawWord);
+        continue;
+      }
+
+      var word = rawWord.toLowerCase();
+      for (final entry in digraphs.entries) {
+        word = word.replaceAll(entry.key, entry.value);
+      }
+
+      for (final rune in word.runes) {
+        final ch = String.fromCharCode(rune);
+        output.write(letters[ch] ?? ch);
+      }
+    }
+
+    final result = output.toString();
+    return _containsLatin(result) ? 'অন্যান্য বিষয়' : result;
   }
 
   static const Map<String, String> _subjects = {
