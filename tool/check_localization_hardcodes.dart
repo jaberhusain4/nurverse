@@ -8,9 +8,7 @@ final _ternaryLanguage = RegExp(r'\b(?:isEnglish|isBangla|isArabic)\s*\?');
 final _textLiteral = RegExp(
   r'\b(?:Text|Tooltip|SnackBar|AlertDialog|SimpleDialog|showDialog|showModalBottomSheet)\s*\(',
 );
-final _localizationHelperCall = RegExp(
-  r'(?:\b_label\s*\(|\b(?:l10n\.)?tr\s*\(|\blocalizedValue\s*\()',
-);
+final _localizationCall = RegExp(r'\b(?:\.tr|\.localeText|localeText)\s*\(');
 
 bool _isUserFacingUiFile(String path) {
   return path.startsWith('lib/screens/') || path.startsWith('lib/widgets/');
@@ -39,19 +37,19 @@ void main() {
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i];
 
-      // Translation arguments are localization resources by design.
-      if (_localizationHelperCall.hasMatch(line)) continue;
-
+      // Translation arguments are localization data, not hardcoded UI.
+      final isLocalizationSource = _localizationCall.hasMatch(line);
       final uiContext = _textLiteral.hasMatch(line) ||
           line.contains('Text(') ||
           line.contains('label:') ||
           line.contains('title:') ||
           line.contains('subtitle:');
 
-      if (uiContext && _bangla.hasMatch(line)) {
+      if (!isLocalizationSource && uiContext && _bangla.hasMatch(line)) {
         findings.add('$path:${i + 1}: direct Bangla UI literal');
       }
-      if (_ternaryLanguage.hasMatch(line) || _directEnglishBranch.hasMatch(line)) {
+      if (!isLocalizationSource &&
+          (_ternaryLanguage.hasMatch(line) || _directEnglishBranch.hasMatch(line))) {
         findings.add('$path:${i + 1}: language-specific UI branching');
       }
     }
