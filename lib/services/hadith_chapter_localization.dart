@@ -17,29 +17,33 @@ class HadithChapterLocalization {
     final bn = bengali.trim();
     final en = english.trim();
 
-    // Some bundled Bengali editions contain a non-empty generic placeholder
-    // such as "অধ্যায় 12". Treat that as missing metadata so the real English
-    // chapter title can be localized instead of leaking the placeholder.
     final genericBn = RegExp(r'^(অধ্যায়|অধ্যায়)\s*\d+$').hasMatch(bn);
     final genericEn = RegExp(r'^chapter\s*\d+$', caseSensitive: false).hasMatch(en);
     final genericAr = RegExp(r'^الفصل\s*\d+$').hasMatch(arabic.trim());
 
-    if (bn.isNotEmpty && !_containsLatin(bn) && !genericBn) return bn;
-
-    final direct = _subjects[_normalize(bn)] ?? _subjects[_normalize(en)];
-    if (direct != null) return direct;
-
-    final generated = _generateFromEnglish(en);
-    if (generated != null) return generated;
-
-    // When a source has only generic chapter metadata, keep the Bengali UI
-    // deterministic and useful rather than leaking another language.
-    if (genericBn || genericEn || genericAr || bn.isEmpty) {
-      return 'অধ্যায় ${_bnDigits(chapterIndex)}';
+    if (bn.isNotEmpty && !_containsLatin(bn) && !genericBn) {
+      return _withChapterNumber(chapterIndex, bn);
     }
 
-    return bn.isNotEmpty ? bn : 'অধ্যায় ${_bnDigits(chapterIndex)}';
+    final direct = _subjects[_normalize(bn)] ?? _subjects[_normalize(en)];
+    if (direct != null) {
+      return _withChapterNumber(chapterIndex, direct);
+    }
+
+    final generated = _generateFromEnglish(en);
+    if (generated != null) {
+      return _withChapterNumber(chapterIndex, generated);
+    }
+
+    if (genericBn || genericEn || genericAr || bn.isEmpty) {
+      return _withChapterNumber(chapterIndex, 'নাম পাওয়া যায়নি');
+    }
+
+    return _withChapterNumber(chapterIndex, bn.isNotEmpty ? bn : 'নাম পাওয়া যায়নি');
   }
+
+  static String _withChapterNumber(int chapterIndex, String title) =>
+      'অধ্যায় ${_bnDigits(chapterIndex)} — $title';
 
   static bool _containsLatin(String value) => RegExp(r'[A-Za-z]').hasMatch(value);
 
@@ -54,7 +58,9 @@ class HadithChapterLocalization {
 
   static String? _generateFromEnglish(String value) {
     final normalized = _normalize(value);
-    if (normalized.isEmpty || RegExp(r'^chapter\s*\d+$').hasMatch(normalized)) return null;
+    if (normalized.isEmpty || RegExp(r'^chapter\s*\d+$').hasMatch(normalized)) {
+      return null;
+    }
 
     const prefixes = ['the book of ', 'book of '];
     for (final prefix in prefixes) {
