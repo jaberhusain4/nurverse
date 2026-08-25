@@ -58,15 +58,7 @@ class _LocalizedHadithChaptersScreenState extends State<LocalizedHadithChaptersS
     if (chapters.isEmpty) return Center(child: Text(l10n.tr('এই গ্রন্থের কোনো অধ্যায় পাওয়া যায়নি।', 'No chapters were found in this collection.'), textAlign: TextAlign.center, style: TextStyle(color: context.secondaryTextColor)));
     return RefreshIndicator(onRefresh: _load, child: ListView.builder(physics: const AlwaysScrollableScrollPhysics(), padding: const EdgeInsets.fromLTRB(AppSpacing.md, 12, AppSpacing.md, 24), itemCount: chapters.length, itemBuilder: (context, index) {
       final chapter = chapters[index];
-      final title = l10n.isBangla
-          ? HadithChapterLocalization.localize(
-              bengali: chapter.nameBn,
-              english: chapter.nameEn,
-              arabic: chapter.nameAr,
-              chapterIndex: index + 1,
-              bookKey: widget.book.key,
-            )
-          : (chapter.nameEn.trim().isNotEmpty ? chapter.nameEn.trim() : 'Chapter ${index + 1}');
+      final title = l10n.isBangla ? HadithChapterLocalization.localize(bengali: chapter.nameBn, english: chapter.nameEn, arabic: chapter.nameAr, chapterIndex: index + 1) : (chapter.nameEn.trim().isNotEmpty ? chapter.nameEn.trim() : 'Chapter ${index + 1}');
       final stats = _stats[chapter.id];
       return Padding(padding: const EdgeInsets.only(bottom: 10), child: _chapterCard(context, l10n, index, title, stats?.count ?? 0, () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => LocalizedHadithListScreen(book: widget.book, chapter: chapter)))));
     }));
