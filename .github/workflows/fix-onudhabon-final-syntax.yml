@@ -35,5 +35,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lib/screens/quran/onudhabon_quran_reader.dart
-          git commit -m "fix(quran): close final Onudhabon header widget" 
+          git commit -m "fix(quran): close final Onudhabon header widget"
           git push origin HEAD:fix/prayer-completion-tracker
+
+# trigger repair workflow
