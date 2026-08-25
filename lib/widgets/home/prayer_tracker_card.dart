@@ -27,7 +27,11 @@ class PrayerTrackerCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.tr('নামাজের অগ্রগতি', 'Prayer Progress'),
+            l10n.localeText(values: const {
+              'bn': 'নামাজের অগ্রগতি',
+              'en': 'Prayer Progress',
+              'ar': 'تقدم الصلاة',
+            }),
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: context.primaryTextColor),
           ),
           const SizedBox(height: 18),
@@ -35,14 +39,14 @@ class PrayerTrackerCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(l10n.tr('অতিবাহিত', 'Elapsed'), style: TextStyle(color: context.secondaryTextColor)),
+                  Text(l10n.localeText(values: const {'bn': 'অতিবাহিত', 'en': 'Elapsed', 'ar': 'منقضي'}), style: TextStyle(color: context.secondaryTextColor)),
                   const SizedBox(height: 4),
                   Text(_format(tracker.elapsed), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: context.primaryTextColor)),
                 ]),
               ),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                  Text(l10n.tr('বাকি', 'Remaining'), style: TextStyle(color: context.secondaryTextColor)),
+                  Text(l10n.localeText(values: const {'bn': 'বাকি', 'en': 'Remaining', 'ar': 'متبقي'}), style: TextStyle(color: context.secondaryTextColor)),
                   const SizedBox(height: 4),
                   Text(_format(tracker.remaining), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: context.primaryTextColor)),
                 ]),
