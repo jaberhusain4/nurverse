@@ -485,7 +485,32 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         ],
         if (_showTafsir && tafsir != null && tafsir.trim().isNotEmpty) ...[
           const SizedBox(height: 10),
-          Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: primary.withValues(alpha: .035), borderRadius: BorderRadius.circular(14)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(_tafsirTitle, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: primary)), const SizedBox(height: 6), Text(tafsir, style: const TextStyle(fontSize: 13.5, height: 1.55))])),
+          Container(
+  width: double.infinity,
+  padding: const EdgeInsets.all(12),
+  decoration: BoxDecoration(
+    color: primary.withValues(alpha: .035),
+    borderRadius: BorderRadius.circular(14),
+  ),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        _tafsirTitle,
+        style: TextStyle(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w800,
+          color: primary,
+        ),
+      ),
+      const SizedBox(height: 6),
+      Text(
+        tafsir,
+        style: const TextStyle(fontSize: 13.5, height: 1.55),
+      ),
+    ],
+  ),
+),
         ],
       ]),
     );
