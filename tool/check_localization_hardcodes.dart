@@ -8,6 +8,9 @@ final _ternaryLanguage = RegExp(r'\b(?:isEnglish|isBangla|isArabic)\s*\?');
 final _textLiteral = RegExp(
   r'\b(?:Text|Tooltip|SnackBar|AlertDialog|SimpleDialog|showDialog|showModalBottomSheet)\s*\(',
 );
+final _localizationHelperCall = RegExp(
+  r'(?:\b_label\s*\(|\b(?:l10n\.)?tr\s*\(|\blocalizedValue\s*\()',
+);
 
 bool _isUserFacingUiFile(String path) {
   return path.startsWith('lib/screens/') || path.startsWith('lib/widgets/');
@@ -35,6 +38,10 @@ void main() {
     final lines = entity.readAsLinesSync();
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i];
+
+      // Translation arguments are localization resources by design.
+      if (_localizationHelperCall.hasMatch(line)) continue;
+
       final uiContext = _textLiteral.hasMatch(line) ||
           line.contains('Text(') ||
           line.contains('label:') ||
