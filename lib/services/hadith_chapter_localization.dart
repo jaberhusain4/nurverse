@@ -284,7 +284,6 @@ class HadithChapterLocalization {
       'travel': 'সফর',
       'travelling': 'সফর',
       'journey': 'সফর',
-      'dress': 'পোশাক',
       'rings': 'আংটি',
       'ring': 'আংটি',
       'hair': 'চুল',
@@ -347,7 +346,7 @@ class HadithChapterLocalization {
     }
 
     text = text
-        .replaceAll(RegExp(r'\\s+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
         .replaceAll('  ', ' ')
         .replaceAll(' ,', ',')
         .replaceAll(' .', '.')
@@ -365,7 +364,7 @@ class HadithChapterLocalization {
   /// titles from leaking into the Bengali UI while retaining recognisable
   /// pronunciation.
   static String _transliterateRemaining(String value) {
-    final words = value.split(RegExp(r'(\\s+)'));
+    final words = value.split(RegExp(r'(\s+)'));
     final converted = <String>[];
 
     for (final word in words) {
