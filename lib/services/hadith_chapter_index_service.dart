@@ -5,8 +5,8 @@ import 'hadith_service.dart';
 /// Language-aware chapter index backed exclusively by the canonical bundled
 /// multilingual chapter catalog.
 ///
-/// The UI uses this service directly, so it must never invent chapter names
-/// through transliteration or word-by-word translation.
+/// Section 0 in the source catalog is an "Uncategorized" bucket, not a
+/// user-facing Hadith chapter. Real chapters start at section 1.
 class HadithChapterIndexService {
   HadithChapterIndexService._();
 
@@ -32,6 +32,8 @@ class HadithChapterIndexService {
     final result = <HadithChapter>[];
     for (final entry in catalog.entries) {
       final id = entry.key;
+      if (id <= 0) continue;
+
       final title = entry.value;
       final verifiedBangla = HadithBengaliTitleOverrides.resolve(title.en);
       final banglaTitle = verifiedBangla?.trim().isNotEmpty == true
@@ -62,7 +64,7 @@ class HadithChapterIndexService {
     }
 
     if (result.isEmpty) {
-      throw StateError('No chapter metadata found for $bookKey.');
+      throw StateError('No user-facing chapter metadata found for $bookKey.');
     }
 
     result.sort((a, b) {
