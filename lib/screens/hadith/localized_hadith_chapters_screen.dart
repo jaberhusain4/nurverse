@@ -121,30 +121,32 @@ class _LocalizedHadithChaptersScreenState extends State<LocalizedHadithChaptersS
 
     return RefreshIndicator(
       onRefresh: _load,
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(AppSpacing.md, 12, AppSpacing.md, 24),
-        itemCount: chapters.length,
-        itemBuilder: (context, index) {
-          final chapter = chapters[index];
-          final title = _chapterTitle(l10n, chapter, index);
-          final stats = _stats[chapter.id];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _chapterCard(
-              context,
-              l10n,
-              index,
-              title,
-              stats?.count ?? 0,
-              () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => LocalizedHadithListScreen(book: widget.book, chapter: chapter),
+      child: Scrollbar(
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, 12, AppSpacing.md, 24),
+          itemCount: chapters.length,
+          itemBuilder: (context, index) {
+            final chapter = chapters[index];
+            final title = _chapterTitle(l10n, chapter, index);
+            final stats = _stats[chapter.id];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _chapterCard(
+                context,
+                l10n,
+                index,
+                title,
+                stats?.count ?? 0,
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => LocalizedHadithListScreen(book: widget.book, chapter: chapter),
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
