@@ -35,11 +35,21 @@ class HadithChapterLocalization {
       return _withChapterNumber(chapterIndex, generated);
     }
 
-    if (genericBn || genericEn || genericAr || bn.isEmpty) {
-      return _withChapterNumber(chapterIndex, 'নাম পাওয়া যায়নি');
+    // Never fall back to a generic numbered placeholder. The bundled English
+    // metadata is the canonical source when a Bengali translation is missing.
+    if (!genericEn && en.isNotEmpty) {
+      return _withChapterNumber(chapterIndex, en);
     }
 
-    return _withChapterNumber(chapterIndex, bn.isNotEmpty ? bn : 'নাম পাওয়া যায়নি');
+    if (!genericAr && arabic.trim().isNotEmpty) {
+      return _withChapterNumber(chapterIndex, arabic.trim());
+    }
+
+    if (bn.isNotEmpty && !genericBn) {
+      return _withChapterNumber(chapterIndex, bn);
+    }
+
+    return _withChapterNumber(chapterIndex, 'Chapter ${chapterIndex}');
   }
 
   static String _withChapterNumber(int chapterIndex, String title) =>
