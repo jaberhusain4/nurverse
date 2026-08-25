@@ -4,6 +4,8 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
+import 'generated_hadith_chapter_metadata.dart';
+
 class HadithBook {
   final String key;
   final String nameBn;
@@ -138,12 +140,13 @@ class HadithService {
         ? arabic
         : await _loadEdition(bookKey, _assetLanguageCode(language));
 
-    final chapters = _extractChapters(
+    final extractedChapters = _extractChapters(
       arabic: arabic,
       requested: requested,
       english: english,
       languageCode: language,
     );
+    final chapters = _applyCanonicalChapterMetadata(bookKey, extractedChapters);
 
     _chapterCache[cacheKey] = chapters;
     return chapters;
