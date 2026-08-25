@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/prayer_controller.dart';
+import '../../localization/app_localizations.dart';
 import '../../services/prayer_engine_service.dart';
 
 class LivePrayerRestrictionCard extends StatefulWidget {
@@ -39,10 +40,12 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
     super.dispose();
   }
 
-  String _label(String bn, String en, String ar) {
-    if (widget.languageCode == 'en') return en;
-    if (widget.languageCode == 'ar') return ar;
-    return bn;
+  String _label(AppLocalizations l10n, {
+    required String bn,
+    required String en,
+    required String ar,
+  }) {
+    return l10n.localeText(values: {'bn': bn, 'en': en, 'ar': ar});
   }
 
   String _clock(DateTime value) {
@@ -102,15 +105,15 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
     return null;
   }
 
-  String _name(PrayerTimeWindow window) {
+  String _name(AppLocalizations l10n, PrayerTimeWindow window) {
     final hour = window.start.hour;
     if (hour < 10) {
-      return _label('সূর্যোদয়ের নিষিদ্ধ সময়', 'Sunrise prohibited time', 'وقت النهي عند الشروق');
+      return _label(l10n, bn: 'সূর্যোদয়ের নিষিদ্ধ সময়', en: 'Sunrise prohibited time', ar: 'وقت النهي عند الشروق');
     }
     if (hour >= 16) {
-      return _label('সূর্যাস্তের নিষিদ্ধ সময়', 'Sunset prohibited time', 'وقت النهي عند الغروب');
+      return _label(l10n, bn: 'সূর্যাস্তের নিষিদ্ধ সময়', en: 'Sunset prohibited time', ar: 'وقت النهي عند الغروب');
     }
-    return _label('জাওয়ালের নিষিদ্ধ সময়', 'Zawal prohibited time', 'وقت النهي عند الزوال');
+    return _label(l10n, bn: 'জাওয়ালের নিষিদ্ধ সময়', en: 'Zawal prohibited time', ar: 'وقت النهي عند الزوال');
   }
 
   Widget _timerRow({
@@ -151,22 +154,12 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                timer,
-                style: TextStyle(
-                  color: accent,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
+              Text(timer, style: TextStyle(color: accent, fontSize: 16, fontWeight: FontWeight.w900, fontFeatures: const [FontFeature.tabularFigures()])),
               const SizedBox(height: 2),
-              Text(
-                active
-                    ? _label('শেষ হবে', 'ends', 'ينتهي')
-                    : _label('শুরু হবে', 'starts', 'يبدأ'),
-                style: TextStyle(color: secondary, fontSize: 9.5, fontWeight: FontWeight.w700),
-              ),
+              Builder(builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return Text(active ? _label(l10n, bn: 'শেষ হবে', en: 'ends', ar: 'ينتهي') : _label(l10n, bn: 'শুরু হবে', en: 'starts', ar: 'يبدأ'), style: TextStyle(color: secondary, fontSize: 9.5, fontWeight: FontWeight.w700));
+              }),
             ],
           ),
         ],
@@ -177,6 +170,7 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<PrayerController>();
+    final l10n = AppLocalizations.of(context);
     final active = _activeWindow(controller);
     final next = _nextWindow(controller);
 
@@ -189,11 +183,7 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: .11)),
-      ),
+      decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(18), border: Border.all(color: theme.colorScheme.primary.withValues(alpha: .11))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -201,37 +191,17 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
             children: [
               Icon(Icons.block_rounded, size: 21, color: active != null ? theme.colorScheme.error : theme.colorScheme.primary),
               const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _label('নিষিদ্ধ সময়', 'Prohibited Prayer Times', 'أوقات النهي'),
-                  style: TextStyle(color: foreground, fontSize: 16, fontWeight: FontWeight.w800),
-                ),
-              ),
+              Expanded(child: Text(_label(l10n, bn: 'নিষিদ্ধ সময়', en: 'Prohibited Prayer Times', ar: 'أوقات النهي'), style: TextStyle(color: foreground, fontSize: 16, fontWeight: FontWeight.w800))),
             ],
           ),
           const SizedBox(height: 10),
           if (active != null)
-            _timerRow(
-              context: context,
-              title: _label('বর্তমান নিষিদ্ধ সময়', 'Current prohibited time', 'وقت النهي الحالي'),
-              subtitle: '${_name(active)} • ${_clock(active.start)} – ${_clock(active.end)}',
-              timer: _countdown(active.end.difference(_now)),
-              active: true,
-            ),
+            _timerRow(context: context, title: _label(l10n, bn: 'বর্তমান নিষিদ্ধ সময়', en: 'Current prohibited time', ar: 'وقت النهي الحالي'), subtitle: '${_name(l10n, active)} • ${_clock(active.start)} – ${_clock(active.end)}', timer: _countdown(active.end.difference(_now)), active: true),
           if (active != null && next != null) const SizedBox(height: 8),
           if (next != null)
-            _timerRow(
-              context: context,
-              title: _label('পরবর্তী নিষিদ্ধ সময়', 'Next prohibited time', 'وقت النهي التالي'),
-              subtitle: '${_name(next)} • ${_clock(next.start)} – ${_clock(next.end)}',
-              timer: _countdown(next.start.difference(_now)),
-              active: false,
-            ),
+            _timerRow(context: context, title: _label(l10n, bn: 'পরবর্তী নিষিদ্ধ সময়', en: 'Next prohibited time', ar: 'وقت النهي التالي'), subtitle: '${_name(l10n, next)} • ${_clock(next.start)} – ${_clock(next.end)}', timer: _countdown(next.start.difference(_now)), active: false),
           const SizedBox(height: 7),
-          Text(
-            _label('সময়গুলো প্রতি সেকেন্ডে লাইভ আপডেট হচ্ছে।', 'Times update live every second.', 'الأوقات تتحدث مباشرة كل ثانية.'),
-            style: TextStyle(color: secondary, fontSize: 10.5),
-          ),
+          Text(_label(l10n, bn: 'সময়গুলো প্রতি সেকেন্ডে লাইভ আপডেট হচ্ছে।', en: 'Times update live every second.', ar: 'الأوقات تتحدث مباشرة كل ثانية.'), style: TextStyle(color: secondary, fontSize: 10.5)),
         ],
       ),
     );
