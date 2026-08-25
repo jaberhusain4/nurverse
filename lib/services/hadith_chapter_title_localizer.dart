@@ -48,11 +48,9 @@ class HadithChapterTitleLocalizer {
 
     final generated = HadithBengaliTitleBuilder.build(chapter.nameEn).trim();
     final safeGenerated = _stripBengaliChapterPrefix(generated);
-    if (safeGenerated.isNotEmpty && !_containsLatin(safeGenerated)) {
-      return 'অধ্যায় ${_banglaDigits(number)} — $safeGenerated';
-    }
-
-    return 'অধ্যায় ${_banglaDigits(number)} — হাদিসের বিষয়';
+    return safeGenerated.isNotEmpty && !_containsLatin(safeGenerated)
+        ? 'অধ্যায় ${_banglaDigits(number)} — $safeGenerated'
+        : 'অধ্যায় ${_banglaDigits(number)} — হাদিসের বিষয়';
   }
 
   static String _stripBengaliChapterPrefix(String value) => value
@@ -71,8 +69,7 @@ class HadithChapterTitleLocalizer {
   static bool _genericBengali(String value) {
     final normalized = value.trim();
     if (normalized.isEmpty) return true;
-    return RegExp(r'^(অধ্যায়|অধ্যায়)\s*[০-৯0-9]+$', caseSensitive: false)
-            .hasMatch(normalized) ||
+    return RegExp(r'^(অধ্যায়|অধ্যায়)\s*[০-৯0-9]+$', caseSensitive: false).hasMatch(normalized) ||
         normalized.contains('অন্যান্য বিষয়') ||
         normalized.contains('অন্যান্য বিষয়');
   }
