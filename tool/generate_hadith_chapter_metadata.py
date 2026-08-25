@@ -108,8 +108,40 @@ def wire_service() -> None:
     if old in text:
         text = text.replace(old, new, 1)
 
-    method = '''  List<HadithChapter> _applyCanonicalChapterMetadata(\n    String bookKey,\n    List<HadithChapter> chapters,\n  ) {\n    final catalog = GeneratedHadithChapterMetadata.books[bookKey];\n    if (catalog == null || catalog.isEmpty) return chapters;\n\n    final merged = <int, HadithChapter>{\n      for (final chapter in chapters) chapter.id: chapter,\n    };\n\n    for (final entry in catalog.entries) {\n      final existing = merged[entry.key];\n      final title = entry.value;\n      merged[entry.key] = HadithChapter(\n        id: entry.key,\n        bookNumber: existing?.bookNumber ?? 0,\n        nameAr: title.ar,\n        nameBn: title.bn,\n        nameEn: title.en,\n      );\n    }\n\n    final result = merged.values.toList();\n    result.sort((a, b) {\n      final byBook = a.bookNumber.compareTo(b.bookNumber);\n      if (byBook != 0) return byBook;\n      return a.id.compareTo(b.id);\n    });\n    return result;\n  }\n\n'''
-    if '_applyCanonicalChapterMetadata(' not in text:
+    method = '''  List<HadithChapter> _applyCanonicalChapterMetadata(
+    String bookKey,
+    List<HadithChapter> chapters,
+  ) {
+    final catalog = GeneratedHadithChapterMetadata.books[bookKey];
+    if (catalog == null || catalog.isEmpty) return chapters;
+
+    final merged = <int, HadithChapter>{
+      for (final chapter in chapters) chapter.id: chapter,
+    };
+
+    for (final entry in catalog.entries) {
+      final existing = merged[entry.key];
+      final title = entry.value;
+      merged[entry.key] = HadithChapter(
+        id: entry.key,
+        bookNumber: existing?.bookNumber ?? 0,
+        nameAr: title.ar,
+        nameBn: title.bn,
+        nameEn: title.en,
+      );
+    }
+
+    final result = merged.values.toList();
+    result.sort((a, b) {
+      final byBook = a.bookNumber.compareTo(b.bookNumber);
+      if (byBook != 0) return byBook;
+      return a.id.compareTo(b.id);
+    });
+    return result;
+  }
+
+'''
+    if '  List<HadithChapter> _applyCanonicalChapterMetadata(' not in text:
         marker = '  void _setName(_ChapterBuilder builder, String language, String name) {\n'
         text = text.replace(marker, method + marker, 1)
 
