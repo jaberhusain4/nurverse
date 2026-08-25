@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/prayer_controller.dart';
+import '../../localization/app_localizations.dart';
+import '../../localization/locale_text_extension.dart';
 
 class CurrentPrayerPremiumCard extends StatelessWidget {
   final String previousPrayer, previousPrayerTime, currentPrayer, currentPrayerTime, nextPrayer, nextPrayerTime, remainingTime, iqamahTime, status, languageCode;
@@ -24,77 +26,54 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
     this.onJamaatTap,
   });
 
-  String _label({required String bn, required String en, required String ar}) =>
-      languageCode == 'en' ? en : languageCode == 'ar' ? ar : bn;
+  AppLocalizations _l10n(BuildContext context) => AppLocalizations.of(context);
 
-  String _prayerName(String value) {
+  String _prayerName(BuildContext context, String value) {
     final key = value.trim().toLowerCase();
-    const bn = <String, String>{
-      'fajr': 'ফজর', 'ফজর': 'ফজর',
-      'dhuhr': 'যোহর', 'যোহর': 'যোহর',
-      'jumuah': 'জুমুআ', 'jumu\'ah': 'জুমুআ', 'জুমুআ': 'জুমুআ', "জুমু'আ": 'জুমুআ',
-      'asr': 'আসর', 'আসর': 'আসর',
-      'maghrib': 'মাগরিব', 'magrib': 'মাগরিব', 'মাগরিব': 'মাগরিব',
-      'isha': 'ইশা', 'ইশা': 'ইশা',
-      'ishraq': 'ইশরাক', 'ইশরাক': 'ইশরাক',
-      'duha': 'চাশত / দুহা', 'দুহা': 'চাশত / দুহা', 'চাশত': 'চাশত / দুহা',
-      'awwabin': 'আউওয়াবীন', 'আউওয়াবীন': 'আউওয়াবীন',
-      'tahajjud': 'তাহাজ্জুদ', 'তাহাজ্জুদ': 'তাহাজ্জুদ',
+    const labels = <String, Map<String, String>>{
+      'fajr': {'bn': 'ফজর', 'en': 'Fajr', 'ar': 'الفجر'},
+      'dhuhr': {'bn': 'যোহর', 'en': 'Dhuhr', 'ar': 'الظهر'},
+      'jumuah': {'bn': 'জুমুআ', 'en': 'Jumuah', 'ar': 'الجمعة'},
+      'jumu\'ah': {'bn': 'জুমুআ', 'en': 'Jumuah', 'ar': 'الجمعة'},
+      'জুমুআ': {'bn': 'জুমুআ', 'en': 'Jumuah', 'ar': 'الجمعة'},
+      "জুমু'আ": {'bn': 'জুমুআ', 'en': 'Jumuah', 'ar': 'الجمعة'},
+      'asr': {'bn': 'আসর', 'en': 'Asr', 'ar': 'العصر'},
+      'maghrib': {'bn': 'মাগরিব', 'en': 'Maghrib', 'ar': 'المغرب'},
+      'magrib': {'bn': 'মাগরিব', 'en': 'Maghrib', 'ar': 'المغرب'},
+      'মাগরিব': {'bn': 'মাগরিব', 'en': 'Maghrib', 'ar': 'المغرب'},
+      'isha': {'bn': 'ইশা', 'en': 'Isha', 'ar': 'العشاء'},
+      'ইশা': {'bn': 'ইশা', 'en': 'Isha', 'ar': 'العشاء'},
+      'ishraq': {'bn': 'ইশরাক', 'en': 'Ishraq', 'ar': 'الإشراق'},
+      'ইশরাক': {'bn': 'ইশরাক', 'en': 'Ishraq', 'ar': 'الإشراق'},
+      'duha': {'bn': 'চাশত / দুহা', 'en': 'Duha', 'ar': 'الضحى'},
+      'দুহা': {'bn': 'চাশত / দুহা', 'en': 'Duha', 'ar': 'الضحى'},
+      'চাশত': {'bn': 'চাশত / দুহা', 'en': 'Duha', 'ar': 'الضحى'},
+      'চাশত / দুহা': {'bn': 'চাশত / দুহা', 'en': 'Duha', 'ar': 'الضحى'},
+      'awwabin': {'bn': 'আউওয়াবীন', 'en': 'Awwabin', 'ar': 'الأوابين'},
+      'আউওয়াবীন': {'bn': 'আউওয়াবীন', 'en': 'Awwabin', 'ar': 'الأوابين'},
+      'tahajjud': {'bn': 'তাহাজ্জুদ', 'en': 'Tahajjud', 'ar': 'التهجد'},
+      'তাহাজ্জুদ': {'bn': 'তাহাজ্জুদ', 'en': 'Tahajjud', 'ar': 'التهجد'},
     };
-    const en = <String, String>{
-      'fajr': 'Fajr', 'ফজর': 'Fajr',
-      'dhuhr': 'Dhuhr', 'যোহর': 'Dhuhr',
-      'jumuah': 'Jumuah', 'jumu\'ah': 'Jumuah', 'জুমুআ': 'Jumuah', "জুমু'আ": 'Jumuah',
-      'asr': 'Asr', 'আসর': 'Asr',
-      'maghrib': 'Maghrib', 'magrib': 'Maghrib', 'মাগরিব': 'Maghrib',
-      'isha': 'Isha', 'ইশা': 'Isha',
-      'ishraq': 'Ishraq', 'ইশরাক': 'Ishraq',
-      'duha': 'Duha', 'দুহা': 'Duha', 'চাশত': 'Duha', 'চাশত / দুহা': 'Duha',
-      'awwabin': 'Awwabin', 'আউওয়াবীন': 'Awwabin',
-      'tahajjud': 'Tahajjud', 'তাহাজ্জুদ': 'Tahajjud',
-    };
-    const ar = <String, String>{
-      'fajr': 'الفجر', 'ফজর': 'الفجر',
-      'dhuhr': 'الظهر', 'যোহর': 'الظهر',
-      'jumuah': 'الجمعة', 'jumu\'ah': 'الجمعة', 'জুমুআ': 'الجمعة', "জুমু'আ": 'الجمعة',
-      'asr': 'العصر', 'আসর': 'العصر',
-      'maghrib': 'المغرب', 'magrib': 'المغرب', 'মাগরিব': 'المغرب',
-      'isha': 'العشاء', 'ইশা': 'العشاء',
-      'ishraq': 'الإشراق', 'ইশরাক': 'الإشراق',
-      'duha': 'الضحى', 'দুহা': 'الضحى', 'চাশত': 'الضحى', 'চাশত / দুহা': 'الضحى',
-      'awwabin': 'الأوابين', 'আউওয়াবীন': 'الأوابين',
-      'tahajjud': 'التهجد', 'তাহাজ্জুদ': 'التهجد',
-    };
-    if (languageCode == 'ar') return ar[key] ?? value;
-    if (languageCode == 'en') return en[key] ?? value;
-    return bn[key] ?? value;
+    final direct = labels[key];
+    if (direct != null) return _l10n(context).localeText(values: direct);
+    for (final item in labels.values) {
+      if (item.values.contains(value)) return _l10n(context).localeText(values: item);
+    }
+    return value;
   }
 
-  String _statusLabel() {
+  String _statusLabel(BuildContext context) {
     final raw = status.trim();
-    if (languageCode == 'en') {
-      const en = <String, String>{
-        'ইশার ওয়াক্ত চলছে': 'Isha time is active',
-        'ইশার ওয়াক্ত শেষ': 'Isha time ended',
-        'ইশরাকের ওয়াক্ত চলছে': 'Ishraq time is active',
-        'তাহাজ্জুদের ওয়াক্ত চলছে': 'Tahajjud time is active',
-        'মাগরিবের ওয়াক্ত চলছে': 'Maghrib time is active',
-        'Ishar Waqto Cholche': 'Isha time is active',
-      };
-      return en[raw] ?? raw;
-    }
-    if (languageCode == 'ar') {
-      const ar = <String, String>{
-        'ইশার ওয়াক্ত চলছে': 'وقت العشاء جارٍ',
-        'ইশার ওয়াক্ত শেষ': 'انتهى وقت العشاء',
-        'ইশরাকের ওয়াক্ত চলছে': 'وقت الإشراق جارٍ',
-        'তাহাজ্জুদের ওয়াক্ত চলছে': 'وقت التهجد جارٍ',
-        'মাগরিবের ওয়াক্ত চলছে': 'وقت المغرب جارٍ',
-        'Ishar Waqto Cholche': 'وقت العشاء جارٍ',
-      };
-      return ar[raw] ?? raw;
-    }
-    return raw;
+    const labels = <String, Map<String, String>>{
+      'ইশার ওয়াক্ত চলছে': {'bn': 'ইশার ওয়াক্ত চলছে', 'en': 'Isha time is active', 'ar': 'وقت العشاء جارٍ'},
+      'ইশার ওয়াক্ত শেষ': {'bn': 'ইশার ওয়াক্ত শেষ', 'en': 'Isha time ended', 'ar': 'انتهى وقت العشاء'},
+      'ইশরাকের ওয়াক্ত চলছে': {'bn': 'ইশরাকের ওয়াক্ত চলছে', 'en': 'Ishraq time is active', 'ar': 'وقت الإشراق جارٍ'},
+      'তাহাজ্জুদের ওয়াক্ত চলছে': {'bn': 'তাহাজ্জুদের ওয়াক্ত চলছে', 'en': 'Tahajjud time is active', 'ar': 'وقت التهجد جارٍ'},
+      'মাগরিবের ওয়াক্ত চলছে': {'bn': 'মাগরিবের ওয়াক্ত চলছে', 'en': 'Maghrib time is active', 'ar': 'وقت المغرب جارٍ'},
+      'Ishar Waqto Cholche': {'bn': 'ইশার ওয়াক্ত চলছে', 'en': 'Isha time is active', 'ar': 'وقت العشاء جارٍ'},
+    };
+    final value = labels[raw];
+    return value == null ? raw : _l10n(context).localeText(values: value);
   }
 
   DateTime? _parseTime(String value, DateTime base) {
@@ -111,21 +90,26 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
 
   String _clock(DateTime time) => '${time.hour % 12 == 0 ? 12 : time.hour % 12}:${time.minute.toString().padLeft(2, '0')} ${time.hour >= 12 ? 'PM' : 'AM'}';
 
-  String _awalText(String actualEndTime) {
+  String _awalText(BuildContext context, String actualEndTime) {
     final now = DateTime.now();
     final start = _parseTime(currentPrayerTime, now);
     final end = _parseTime(actualEndTime, now);
     if (start == null || end == null) {
-      return _label(
-        bn: 'আওয়াল ওয়াক্তের তথ্য প্রস্তুত হচ্ছে',
-        en: 'Awal Waqt information is being prepared',
-        ar: 'جارٍ تجهيز وقت الأول',
-      );
+      return _l10n(context).localeText(values: {
+        'bn': 'আওয়াল ওয়াক্তের তথ্য প্রস্তুত হচ্ছে',
+        'en': 'Awal Waqt information is being prepared',
+        'ar': 'جارٍ تجهيز وقت الأول',
+      });
     }
     var endTime = end;
     if (!endTime.isAfter(start)) endTime = endTime.add(const Duration(days: 1));
     final active = !now.isBefore(start) && now.isBefore(endTime);
-    return '${_label(bn: active ? 'আওয়াল ওয়াক্ত চলছে' : 'আওয়াল ওয়াক্ত শেষ', en: active ? 'Awal Waqt active' : 'Awal Waqt ended', ar: active ? 'وقت الأول مستمر' : 'انتهى وقت الأول')} • ${_clock(start)} → ${_clock(endTime)}';
+    final label = _l10n(context).localeText(values: {
+      'bn': active ? 'আওয়াল ওয়াক্ত চলছে' : 'আওয়াল ওয়াক্ত শেষ',
+      'en': active ? 'Awal Waqt active' : 'Awal Waqt ended',
+      'ar': active ? 'وقت الأول مستمر' : 'انتهى وقت الأول',
+    });
+    return '$label • ${_clock(start)} → ${_clock(endTime)}';
   }
 
   @override
@@ -138,11 +122,12 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
     final secondary = theme.textTheme.bodySmall?.color?.withValues(alpha: .72) ?? theme.colorScheme.onSurface.withValues(alpha: .72);
     final safeProgress = progress.clamp(0.0, 1.0).toDouble();
     final percentage = (safeProgress * 100).round();
+    final l10n = _l10n(context);
 
-    final previous = previousPrayer.isEmpty ? '--' : _prayerName(previousPrayer);
-    final current = currentPrayer.isEmpty ? _label(bn: 'ওয়াক্ত নেই', en: 'No prayer', ar: 'لا صلاة') : _prayerName(currentPrayer);
-    final next = nextPrayer.isEmpty ? '--' : _prayerName(nextPrayer);
-    final localizedStatus = _statusLabel();
+    final previous = previousPrayer.isEmpty ? '--' : _prayerName(context, previousPrayer);
+    final current = currentPrayer.isEmpty ? l10n.localeText(values: {'bn': 'ওয়াক্ত নেই', 'en': 'No prayer', 'ar': 'لا صلاة'}) : _prayerName(context, currentPrayer);
+    final next = nextPrayer.isEmpty ? '--' : _prayerName(context, nextPrayer);
+    final localizedStatus = _statusLabel(context);
 
     return Container(
       width: double.infinity,
@@ -159,11 +144,11 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(child: _ContextPrayer(label: _label(bn: 'পূর্ববর্তী', en: 'Previous', ar: 'السابق'), prayer: previous, time: previousPrayerTime, icon: Icons.history_rounded, color: secondary, text: text)),
+                Expanded(child: _ContextPrayer(label: l10n.localeText(values: {'bn': 'পূর্ববর্তী', 'en': 'Previous', 'ar': 'السابق'}), prayer: previous, time: previousPrayerTime, icon: Icons.history_rounded, color: secondary, text: text)),
                 const SizedBox(width: 6),
-                Expanded(child: _ContextPrayer(label: _label(bn: 'বর্তমান', en: 'Current', ar: 'الحالية'), prayer: current, time: currentPrayerTime, icon: Icons.mosque_rounded, color: primary, text: text, labelColor: primary.withValues(alpha: .82))),
+                Expanded(child: _ContextPrayer(label: l10n.localeText(values: {'bn': 'বর্তমান', 'en': 'Current', 'ar': 'الحالية'}), prayer: current, time: currentPrayerTime, icon: Icons.mosque_rounded, color: primary, text: text, labelColor: primary.withValues(alpha: .82))),
                 const SizedBox(width: 6),
-                Expanded(child: _ContextPrayer(label: _label(bn: 'পরবর্তী', en: 'Next', ar: 'التالي'), prayer: next, time: nextPrayerTime, icon: Icons.arrow_forward_rounded, color: secondary, text: text)),
+                Expanded(child: _ContextPrayer(label: l10n.localeText(values: {'bn': 'পরবর্তী', 'en': 'Next', 'ar': 'التالي'}), prayer: next, time: nextPrayerTime, icon: Icons.arrow_forward_rounded, color: secondary, text: text)),
               ],
             ),
           ),
@@ -177,18 +162,18 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
             child: RichText(
               text: TextSpan(
                 children: [
-                  TextSpan(text: '${_label(bn: 'সময় বাকি', en: 'Time left', ar: 'الوقت المتبقي')}  ', style: TextStyle(color: secondary, fontSize: 14, fontWeight: FontWeight.w700)),
+                  TextSpan(text: '${l10n.localeText(values: {'bn': 'সময় বাকি', 'en': 'Time left', 'ar': 'الوقت المتبقي'})}  ', style: TextStyle(color: secondary, fontSize: 14, fontWeight: FontWeight.w700)),
                   TextSpan(text: remainingTime.isEmpty ? '--:--:--' : remainingTime, style: TextStyle(color: text, fontSize: 15, fontWeight: FontWeight.w800)),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 9),
-          Row(children: [Expanded(child: _TimeLabel(label: _label(bn: 'শুরু', en: 'Start', ar: 'البداية'), time: currentPrayerTime, color: secondary)), Expanded(child: Align(alignment: Alignment.centerRight, child: _TimeLabel(label: _label(bn: 'শেষ', en: 'End', ar: 'النهاية'), time: actualEndTime, color: secondary)))]),
+          Row(children: [Expanded(child: _TimeLabel(label: l10n.localeText(values: {'bn': 'শুরু', 'en': 'Start', 'ar': 'البداية'}), time: currentPrayerTime, color: secondary)), Expanded(child: Align(alignment: Alignment.centerRight, child: _TimeLabel(label: l10n.localeText(values: {'bn': 'শেষ', 'en': 'End', 'ar': 'النهاية'}), time: actualEndTime, color: secondary)))]),
           const SizedBox(height: 6),
           Row(children: [Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: safeProgress, minHeight: 7, backgroundColor: primary.withValues(alpha: .09), valueColor: AlwaysStoppedAnimation<Color>(primary)))), const SizedBox(width: 8), Text('$percentage%', style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.w800))]),
           const SizedBox(height: 9),
-          Row(children: [Icon(Icons.bolt_rounded, size: 19, color: primary), const SizedBox(width: 6), Expanded(child: Text(_awalText(actualEndTime), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w700)))]),
+          Row(children: [Icon(Icons.bolt_rounded, size: 19, color: primary), const SizedBox(width: 6), Expanded(child: Text(_awalText(context, actualEndTime), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w700)))]),
           if (localizedStatus.isNotEmpty) ...[const SizedBox(height: 5), Row(children: [Icon(Icons.info_outline_rounded, size: 17, color: secondary), const SizedBox(width: 6), Expanded(child: Text(localizedStatus, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 12.5, fontWeight: FontWeight.w600)))])],
           const SizedBox(height: 8),
           Material(
@@ -200,7 +185,7 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(color: primary.withValues(alpha: .045), borderRadius: BorderRadius.circular(12)),
-                child: Row(children: [Icon(Icons.groups_rounded, size: 19, color: primary), const SizedBox(width: 7), Text(_label(bn: 'জামাআত', en: 'Jamaat', ar: 'الجماعة'), style: TextStyle(color: secondary, fontSize: 13, fontWeight: FontWeight.w700)), const Spacer(), Text(iqamahTime.isEmpty ? '--:--' : iqamahTime, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800)), const SizedBox(width: 4), Icon(Icons.chevron_right_rounded, size: 18, color: secondary)]),
+                child: Row(children: [Icon(Icons.groups_rounded, size: 19, color: primary), const SizedBox(width: 7), Text(l10n.localeText(values: {'bn': 'জামাআত', 'en': 'Jamaat', 'ar': 'الجماعة'}), style: TextStyle(color: secondary, fontSize: 13, fontWeight: FontWeight.w700)), const Spacer(), Text(iqamahTime.isEmpty ? '--:--' : iqamahTime, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800)), const SizedBox(width: 4), Icon(Icons.chevron_right_rounded, size: 18, color: secondary)]),
               ),
             ),
           ),
