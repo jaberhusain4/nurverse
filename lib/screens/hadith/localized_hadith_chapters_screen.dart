@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../localization/app_localizations.dart';
 import '../../localization/app_localizations_x.dart';
+import '../../services/hadith_chapter_index_service.dart';
 import '../../services/hadith_chapter_stats_service.dart';
 import '../../services/hadith_chapter_title_localizer.dart';
 import '../../services/hadith_service.dart';
@@ -36,21 +37,21 @@ class _LocalizedHadithChaptersScreenState extends State<LocalizedHadithChaptersS
     final languageCode = AppLocalizations.of(context).locale.languageCode;
     if (mounted) setState(() { _loading = true; _error = null; });
     try {
-      final chapters = await HadithService.instance.getChapters(
+      final chapters = await HadithChapterIndexService.instance.getChapters(
         widget.book.key,
         languageCode: languageCode,
       );
       final stats = await HadithChapterStatsService.instance.getAllStats(widget.book.key);
       if (!mounted) return;
       setState(() { _chapters = chapters; _stats = stats; _loading = false; });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         _chapters = null;
         _stats = const {};
         _error = AppLocalizations.of(context).tr(
-          'অধ্যায় লোড করা যায়নি। আবার চেষ্টা করুন।',
-          'Could not load chapters. Please try again.',
+          'অধ্যায়ের নাম/তথ্য লোড করা যায়নি। আবার চেষ্টা করুন।',
+          'Could not load the complete chapter index. Please try again.',
         );
         _loading = false;
       });
