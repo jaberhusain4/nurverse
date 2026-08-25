@@ -77,6 +77,55 @@ class _LocalizedHadithChaptersScreenState extends State<LocalizedHadithChaptersS
     );
   }
 
+  String _chapterTitle(AppLocalizations l10n, HadithChapter chapter, int index) {
+    final chapterNumber = index + 1;
+    if (l10n.isBangla) {
+      return HadithChapterLocalization.localize(
+        bengali: chapter.nameBn,
+        english: chapter.nameEn,
+        arabic: chapter.nameAr,
+        chapterIndex: chapterNumber,
+      );
+    }
+    if (l10n.isArabic) {
+      final ar = chapter.nameAr.trim();
+      if (ar.isNotEmpty && !_looksGeneric(ar)) {
+        return 'الفصل ${_arabicDigits(chapterNumber)} — $ar';
+      }
+      final en = chapter.nameEn.trim();
+      if (en.isNotEmpty && !_looksGeneric(en)) {
+        return 'الفصل ${_arabicDigits(chapterNumber)} — ${HadithChapterLocalization.localize(
+          bengali: '',
+          english: en,
+          arabic: '',
+          chapterIndex: chapterNumber,
+        )}';
+      }
+      return 'الفصل ${_arabicDigits(chapterNumber)}';
+    }
+
+    final en = chapter.nameEn.trim();
+    if (en.isNotEmpty && !_looksGeneric(en)) {
+      return 'Chapter $chapterNumber — $en';
+    }
+    final ar = chapter.nameAr.trim();
+    if (ar.isNotEmpty && !_looksGeneric(ar)) {
+      return 'Chapter $chapterNumber — $ar';
+    }
+    return 'Chapter $chapterNumber';
+  }
+
+  bool _looksGeneric(String value) {
+    final text = value.trim();
+    return RegExp(r'^(অধ্যায়|অধ্যায়|chapter)\s*\d+$', caseSensitive: false).hasMatch(text) ||
+        RegExp(r'^الفصل\s*\d+$').hasMatch(text);
+  }
+
+  String _arabicDigits(int value) {
+    const digits = '٠١٢٣٤٥٦٧٨٩';
+    return value.toString().split('').map((d) => digits[int.parse(d)]).join();
+  }
+
   Widget _body(BuildContext context, AppLocalizations l10n) {
     if (_loading) {
       return Center(
@@ -112,16 +161,7 @@ class _LocalizedHadithChaptersScreenState extends State<LocalizedHadithChaptersS
         itemCount: chapters.length,
         itemBuilder: (context, index) {
           final chapter = chapters[index];
-          final title = l10n.isArabic
-              ? (chapter.nameAr.trim().isNotEmpty ? chapter.nameAr.trim() : 'الفصل ${index + 1}')
-              : l10n.isBangla
-                  ? HadithChapterLocalization.localize(
-                      bengali: chapter.nameBn,
-                      english: chapter.nameEn,
-                      arabic: chapter.nameAr,
-                      chapterIndex: index + 1,
-                    )
-                  : (chapter.nameEn.trim().isNotEmpty ? chapter.nameEn.trim() : 'Chapter ${index + 1}');
+          final title = _chapterTitle(l10n, chapter, index);
           final stats = _stats[chapter.id];
           return Padding(
             padding: const EdgeInsets.only(bottom: 10),
@@ -203,10 +243,7 @@ class _LocalizedHadithChaptersScreenState extends State<LocalizedHadithChaptersS
       const d = '০১২৩৪৫৬৭৮৯';
       return value.toString().split('').map((x) => d[int.parse(x)]).join();
     }
-    if (l10n.isArabic) {
-      const d = '٠١٢٣٤٥٦٧٨٩';
-      return value.toString().split('').map((x) => d[int.parse(x)]).join();
-    }
+    if (l10n.isArabic) return _arabicDigits(value);
     return value.toString();
   }
 
