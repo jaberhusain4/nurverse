@@ -5,6 +5,7 @@ import '../../localization/app_localizations.dart';
 import '../../localization/app_localizations_x.dart';
 import '../../models/saved_hadith.dart';
 import '../../services/hadith_bookmark_service.dart';
+import '../../services/hadith_chapter_localization.dart';
 import '../../services/hadith_service.dart';
 import '../../theme/app_theme.dart';
 import 'saved_hadith_screen.dart';
@@ -67,6 +68,35 @@ class _LocalizedHadithListScreenState extends State<LocalizedHadithListScreen> {
     return widget.book.nameEn;
   }
 
+  String _chapterTitle(AppLocalizations l10n) {
+    final index = widget.chapter.id > 0 ? widget.chapter.id : 1;
+
+    if (l10n.isBangla) {
+      final localized = HadithChapterLocalization.localize(
+        bengali: widget.chapter.nameBn,
+        english: widget.chapter.nameEn,
+        arabic: widget.chapter.nameAr,
+        chapterIndex: index,
+      );
+      return localized.replaceFirst(
+        RegExp(r'^অধ্যায়\s*[০-৯0-9]+\s*—\s*'),
+        '',
+      );
+    }
+
+    if (l10n.isArabic) {
+      final ar = widget.chapter.nameAr.trim();
+      if (ar.isNotEmpty) return ar;
+      final en = widget.chapter.nameEn.trim();
+      return en.isNotEmpty ? en : 'الفصل';
+    }
+
+    final en = widget.chapter.nameEn.trim();
+    if (en.isNotEmpty) return en;
+    final ar = widget.chapter.nameAr.trim();
+    return ar.isNotEmpty ? ar : 'Chapter';
+  }
+
   Future<void> _load() async {
     final l10n = AppLocalizations.of(context);
     final languageCode = l10n.locale.languageCode;
@@ -97,8 +127,8 @@ class _LocalizedHadithListScreenState extends State<LocalizedHadithListScreen> {
       setState(() {
         _hadiths = null;
         _error = AppLocalizations.of(context).tr(
-          'হাদিস লোড করা যায়নি। আবার চেষ্টা করুন।',
-          'Could not load hadith. Please try again.',
+          'হাদিস লোড করা যায়নি।',
+          'Could not load hadith.',
         );
         _loading = false;
       });
@@ -160,11 +190,7 @@ class _LocalizedHadithListScreenState extends State<LocalizedHadithListScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final title = l10n.isArabic
-        ? (widget.chapter.nameAr.trim().isNotEmpty ? widget.chapter.nameAr : 'الفصل')
-        : l10n.isBangla
-            ? widget.chapter.nameBn
-            : (widget.chapter.nameEn.trim().isNotEmpty ? widget.chapter.nameEn : 'Chapter');
+    final title = _chapterTitle(l10n);
     return Scaffold(
       appBar: AppBar(
         title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
