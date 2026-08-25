@@ -307,6 +307,38 @@ class HadithService {
     return result;
   }
 
+  List<HadithChapter> _applyCanonicalChapterMetadata(
+    String bookKey,
+    List<HadithChapter> chapters,
+  ) {
+    final catalog = GeneratedHadithChapterMetadata.books[bookKey];
+    if (catalog == null || catalog.isEmpty) return chapters;
+
+    final merged = <int, HadithChapter>{
+      for (final chapter in chapters) chapter.id: chapter,
+    };
+
+    for (final entry in catalog.entries) {
+      final existing = merged[entry.key];
+      final title = entry.value;
+      merged[entry.key] = HadithChapter(
+        id: entry.key,
+        bookNumber: existing?.bookNumber ?? 0,
+        nameAr: title.ar,
+        nameBn: title.bn,
+        nameEn: title.en,
+      );
+    }
+
+    final result = merged.values.toList();
+    result.sort((a, b) {
+      final byBook = a.bookNumber.compareTo(b.bookNumber);
+      if (byBook != 0) return byBook;
+      return a.id.compareTo(b.id);
+    });
+    return result;
+  }
+
   void _setName(_ChapterBuilder builder, String language, String name) {
     if (name.isEmpty || _isGenericChapterName(name)) return;
     switch (language) {
