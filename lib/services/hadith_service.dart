@@ -87,6 +87,14 @@ class HadithService {
   final Map<String, List<HadithChapter>> _chapterCache = {};
   final Map<String, List<HadithItem>> _hadithCache = {};
 
+  /// Clears all in-memory Hadith caches so refreshed chapter/index metadata
+  /// and bundled content are loaded again on the next request.
+  void clearCache() {
+    _editionCache.clear();
+    _chapterCache.clear();
+    _hadithCache.clear();
+  }
+
   Future<HadithItem> getTodayHadith() async {
     final now = DateTime.now();
     final seed = now.year * 10000 + now.month * 100 + now.day;
@@ -263,14 +271,9 @@ class HadithService {
       }
     }
 
-    // Arabic is the structural source; English is always loaded as the
-    // canonical fallback for every collection; the requested edition fills
-    // in Bengali/Arabic names when available.
     process(arabic, 'ar');
     process(english, 'en');
-    if (languageCode == 'ar') {
-      // Arabic already processed above.
-    } else {
+    if (languageCode != 'ar') {
       process(requested, languageCode);
     }
 
@@ -284,7 +287,12 @@ class HadithService {
             nameEn: chapter.nameEn,
           ),
         )
-        .where((chapter) => chapter.nameAr.isNotEmpty || chapter.nameBn.isNotEmpty || chapter.nameEn.isNotEmpty)
+        .where(
+          (chapter) =>
+              chapter.nameAr.isNotEmpty ||
+              chapter.nameBn.isNotEmpty ||
+              chapter.nameEn.isNotEmpty,
+        )
         .toList();
 
     result.sort((a, b) {
@@ -314,7 +322,10 @@ class HadithService {
   bool _isGenericChapterName(String value) {
     final normalized = value.trim();
     if (normalized.isEmpty) return true;
-    return RegExp(r'^(chapter\s*\d+|অধ্যায়\s*\d+|অধ্যায়\s*\d+|الفصل\s*\d+)(\s*-\s*.*)?$', caseSensitive: false).hasMatch(normalized);
+    return RegExp(
+      r'^(chapter\s*\d+|অধ্যায়\s*\d+|অধ্যায়\s*\d+|الفصل\s*\d+)(\s*-\s*.*)?$',
+      caseSensitive: false,
+    ).hasMatch(normalized);
   }
 
   Map<String, Map<String, dynamic>> _indexHadiths(
@@ -399,7 +410,9 @@ class HadithService {
       if (_intValue(rawSection) == null) rawSection,
     ]);
 
-    if (chapterId == null || chapterName.isEmpty || _intValue(chapterName) != null) {
+    if (chapterId == null ||
+        chapterName.isEmpty ||
+        _intValue(chapterName) != null) {
       return null;
     }
 
@@ -417,13 +430,15 @@ class HadithService {
 
     void addSection(dynamic rawKey, dynamic rawValue) {
       final index = _intValue(rawKey) ??
-          _intValue(_mapValue(rawValue, const [
-            'id',
-            'section',
-            'number',
-            'chapterId',
-            'chapter_id',
-          ]));
+          _intValue(
+            _mapValue(rawValue, const [
+              'id',
+              'section',
+              'number',
+              'chapterId',
+              'chapter_id',
+            ]),
+          );
       if (index == null) return;
 
       String name = '';
@@ -461,11 +476,15 @@ class HadithService {
       if (details is Map) {
         for (final entry in details.entries) {
           final index = _intValue(entry.key) ??
-              _intValue(_mapValue(entry.value, const ['id', 'section', 'number']));
+              _intValue(
+                _mapValue(entry.value, const ['id', 'section', 'number']),
+              );
           final value = entry.value;
           if (index == null || value is! Map) continue;
           final first = _intValue(
-            value['hadithnumber_first'] ?? value['hadith_first'] ?? value['first'],
+            value['hadithnumber_first'] ??
+                value['hadith_first'] ??
+                value['first'],
           );
           final last = _intValue(
             value['hadithnumber_last'] ?? value['hadith_last'] ?? value['last'],
@@ -481,13 +500,20 @@ class HadithService {
         for (final value in details) {
           if (value is! Map) continue;
           final index = _intValue(
-            _mapValue(value, const ['id', 'section', 'number', 'chapterId', 'chapter_id']),
+            _mapValue(
+              value,
+              const ['id', 'section', 'number', 'chapterId', 'chapter_id'],
+            ),
           );
           final first = _intValue(
-            value['hadithnumber_first'] ?? value['hadith_first'] ?? value['first'],
+            value['hadithnumber_first'] ??
+                value['hadith_first'] ??
+                value['first'],
           );
           final last = _intValue(
-            value['hadithnumber_last'] ?? value['hadith_last'] ?? value['last'],
+            value['hadithnumber_last'] ??
+                value['hadith_last'] ??
+                value['last'],
           );
           if (index != null && first != null && last != null) {
             sectionRanges[index] = _SectionRange(
