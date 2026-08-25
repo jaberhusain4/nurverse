@@ -1,0 +1,53 @@
+name: Repair Onudhabon final syntax
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-onudhabon-final.yml'
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/prayer-completion-tracker
+          fetch-depth: 1
+
+      - name: Repair exact malformed delimiters
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/screens/quran/onudhabon_quran_reader.dart')
+          text = p.read_text(encoding='utf-8')
+
+          replacements = [
+              ("          ]),\n        ],\n      ),\n    );\n  }\n\n  Widget _surahTile", "          ])),\n        ],\n      ),\n    );\n  }\n\n  Widget _surahTile"),
+              ("shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),\n          const SizedBox(width: 8),\n          Expanded(child: TextButton.icon", "shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),\n          const SizedBox(width: 8),\n          Expanded(child: TextButton.icon"),
+              ("shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),\n        ]),\n        Align", "shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),\n        ]),\n        Align"),
+              ("shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),\n      ]),\n    );\n  }\n\n  Widget _ayahCard", "shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),\n      ]),\n    );\n  }\n\n  Widget _ayahCard"),
+              ("Text(tafsir, style: const TextStyle(fontSize: 13.5, height: 1.55))]),\n        ],", "Text(tafsir, style: const TextStyle(fontSize: 13.5, height: 1.55))])),\n        ],"),
+          ]
+
+          original = text
+          for old, new in replacements:
+              text = text.replace(old, new, 1)
+
+          if text == original:
+              raise SystemExit('No expected malformed delimiter was found; refusing to write.')
+
+          p.write_text(text, encoding='utf-8', newline='')
+
+      - name: Commit repair and remove workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/quran/onudhabon_quran_reader.dart
+          git commit -m 'fix(quran): repair Onudhabon reader delimiters' || true
+          git push origin HEAD:fix/prayer-completion-tracker
+          git rm .github/workflows/repair-onudhabon-final.yml
+          git commit -m 'chore: remove one-time Onudhabon repair workflow'
+          git push origin HEAD:fix/prayer-completion-tracker
