@@ -1,4 +1,5 @@
 import '../localization/app_localizations.dart';
+import 'hadith_bengali_title_builder.dart';
 import 'hadith_chapter_localization.dart';
 import 'hadith_service.dart';
 
@@ -12,31 +13,33 @@ class HadithChapterTitleLocalizer {
   }) {
     final number = index + 1;
 
-    // Settings -> Arabic: use the Arabic chapter title only.
+    // Settings -> Arabic: always use the Arabic metadata title.
     if (l10n.isArabic) {
       final ar = chapter.nameAr.trim();
-      return ar.isNotEmpty && !_genericArabic(ar)
-          ? 'الفصل ${_arabicDigits(number)} — ${_stripArabicChapterPrefix(ar)}'
-          : 'الفصل ${_arabicDigits(number)}';
+      if (ar.isNotEmpty && !_genericArabic(ar)) {
+        return 'الفصل ${_arabicDigits(number)} — ${_stripArabicChapterPrefix(ar)}';
+      }
+      return 'الفصل ${_arabicDigits(number)}';
     }
 
-    // Settings -> English: use the English chapter title only.
+    // Settings -> English: always use the English metadata title.
     if (l10n.isEnglish) {
       final en = chapter.nameEn.trim();
-      return en.isNotEmpty && !_genericEnglish(en)
-          ? 'Chapter $number — ${_stripEnglishChapterPrefix(en)}'
-          : 'Chapter $number';
+      if (en.isNotEmpty && !_genericEnglish(en)) {
+        return 'Chapter $number — ${_stripEnglishChapterPrefix(en)}';
+      }
+      return 'Chapter $number';
     }
 
-    // Settings -> Bangla: prefer the real bundled Bengali title.
+    // Settings -> Bangla: use bundled Bengali metadata when it is a genuine
+    // Bengali title. Many bundled Bengali JSON files contain English section
+    // metadata, so that is deliberately rejected here.
     final bengali = chapter.nameBn.trim();
     if (bengali.isNotEmpty && !_genericBengali(bengali) && !_containsLatin(bengali)) {
       return 'অধ্যায় ${_banglaDigits(number)} — ${_stripBengaliChapterPrefix(bengali)}';
     }
 
-    // If the Bengali asset does not contain a usable title, use the existing
-    // offline Bengali localization map. Never fall back to English/Arabic in
-    // Bangla mode.
+    // First use the existing curated offline localization map.
     final localized = HadithChapterLocalization.localize(
       bengali: chapter.nameBn,
       english: chapter.nameEn,
@@ -51,9 +54,18 @@ class HadithChapterTitleLocalizer {
       return 'অধ্যায় ${_banglaDigits(number)} — $localizedTitle';
     }
 
-    // No cross-language fallback. Keep only the chapter number in the
-    // selected language instead of showing an English title in Bangla mode.
-    return 'অধ্যায় ${_banglaDigits(number)}';
+    // Final deterministic offline guarantee: every chapter receives a Bengali
+    // title generated from its canonical English metadata. This path never
+    // returns English text, an empty string, or “অন্যান্য বিষয়”.
+    final generated = HadithBengaliTitleBuilder.build(chapter.nameEn).trim();
+    final safeGenerated = _stripBengaliChapterPrefix(generated);
+    if (safeGenerated.isNotEmpty && !_containsLatin(safeGenerated)) {
+      return 'অধ্যায় ${_banglaDigits(number)} — $safeGenerated';
+    }
+
+    // This is intentionally only a last-resort invariant guard. The builder
+    // is deterministic and normally makes this branch unreachable.
+    return 'অধ্যায় ${_banglaDigits(number)} — হাদিসের বিষয়';
   }
 
   static String _stripBengaliChapterPrefix(String value) => value
