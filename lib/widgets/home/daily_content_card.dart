@@ -24,11 +24,11 @@ class DailyContentCard extends StatelessWidget {
   String _title(AppLocalizations l10n) {
     switch (content.type) {
       case DailyContentType.ayah:
-        return l10n.isArabic ? 'آية اليوم' : l10n.tr('আজকের আয়াত', 'Today’s Ayah');
+        return l10n.localeText(values: const {'bn': 'আজকের আয়াত', 'en': 'Today’s Ayah', 'ar': 'آية اليوم'});
       case DailyContentType.hadith:
-        return l10n.isArabic ? 'حديث اليوم' : l10n.tr('আজকের হাদিস', 'Today’s Hadith');
+        return l10n.localeText(values: const {'bn': 'আজকের হাদিস', 'en': 'Today’s Hadith', 'ar': 'حديث اليوم'});
       case DailyContentType.dua:
-        return l10n.isArabic ? 'دعاء اليوم' : l10n.tr('আজকের দোয়া', 'Today’s Dua');
+        return l10n.localeText(values: const {'bn': 'আজকের দোয়া', 'en': 'Today’s Dua', 'ar': 'دعاء اليوم'});
     }
   }
 
@@ -38,7 +38,9 @@ class DailyContentCard extends StatelessWidget {
   }
 
   String _reference(AppLocalizations l10n) {
-    return l10n.isBangla ? content.reference : content.englishReference;
+    if (l10n.isBangla) return content.reference;
+    if (l10n.isArabic) return content.arabicReference.isNotEmpty ? content.arabicReference : content.englishReference;
+    return content.englishReference;
   }
 
   @override
@@ -73,49 +75,18 @@ class DailyContentCard extends StatelessWidget {
               Icon(icon, color: iconColor, size: 19),
               const SizedBox(width: 7),
               Expanded(
-                child: Text(
-                  _title(l10n),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall?.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                child: Text(_title(l10n), maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleSmall?.copyWith(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
-              if (onBookmark != null)
-                IconButton(
-                  onPressed: onBookmark,
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                  icon: const Icon(Icons.bookmark_border_rounded, size: 19),
-                ),
-              if (onShare != null)
-                IconButton(
-                  onPressed: onShare,
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                  icon: const Icon(Icons.share_outlined, size: 19),
-                ),
+              if (onBookmark != null) IconButton(onPressed: onBookmark, visualDensity: VisualDensity.compact, padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 30, minHeight: 30), icon: const Icon(Icons.bookmark_border_rounded, size: 19)),
+              if (onShare != null) IconButton(onPressed: onShare, visualDensity: VisualDensity.compact, padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 30, minHeight: 30), icon: const Icon(Icons.share_outlined, size: 19)),
             ],
           ),
           const SizedBox(height: 6),
-          SelectableText(
-            content.arabic,
-            textAlign: TextAlign.right,
-            style: const TextStyle(fontFamily: 'Amiri', fontSize: 19, height: 1.65),
-          ),
+          SelectableText(content.arabic, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'Amiri', fontSize: 19, height: 1.65)),
           const SizedBox(height: 7),
-          Text(
-            _body(l10n),
-            textAlign: l10n.isArabic ? TextAlign.right : TextAlign.start,
-            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 15.5, height: 1.48),
-          ),
+          Text(_body(l10n), textAlign: l10n.isArabic ? TextAlign.right : TextAlign.start, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 15.5, height: 1.48)),
           const SizedBox(height: 6),
-          Text(
-            _reference(l10n),
-            textAlign: l10n.isArabic ? TextAlign.right : TextAlign.start,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: 13, fontWeight: FontWeight.w600),
-          ),
+          Text(_reference(l10n), textAlign: l10n.isArabic ? TextAlign.right : TextAlign.start, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: 13, fontWeight: FontWeight.w600)),
         ],
       ),
     );
