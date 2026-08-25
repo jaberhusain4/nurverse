@@ -148,6 +148,16 @@ class AppTheme {
         ),
       ),
       dividerTheme: DividerThemeData(color: border, thickness: 1, space: 1),
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStatePropertyAll(primary.withValues(alpha: .72)),
+        trackColor: WidgetStatePropertyAll(primary.withValues(alpha: .07)),
+        trackBorderColor: WidgetStatePropertyAll(primary.withValues(alpha: .12)),
+        thickness: const WidgetStatePropertyAll(7),
+        radius: const Radius.circular(10),
+        minThumbLength: 52,
+        thumbVisibility: const WidgetStatePropertyAll(true),
+        interactive: true,
+      ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: card,
         selectedItemColor: primary,
