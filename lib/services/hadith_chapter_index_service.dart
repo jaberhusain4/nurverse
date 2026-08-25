@@ -224,7 +224,7 @@ class HadithChapterIndexService {
       text = text.replaceAll(RegExp(r'\b' + RegExp.escape(entry.key) + r'\b', caseSensitive: false), entry.value);
     }
 
-    text = text.replaceAllMapped(RegExp(r'[a-z][a-z\'`-]*', caseSensitive: false), (m) {
+    text = text.replaceAllMapped(RegExp(r"[a-z][a-z'-]*", caseSensitive: false), (m) {
       final word = m.group(0)!;
       final chars = word.split('').map((c) {
         const map = <String, String>{
