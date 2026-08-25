@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../../controllers/prayer_controller.dart';
+import '../../localization/app_localizations.dart';
 import '../../theme/app_theme.dart';
 
 class PrayerTimeSummary extends StatelessWidget {
@@ -13,6 +14,7 @@ class PrayerTimeSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(17),
@@ -28,14 +30,14 @@ class PrayerTimeSummary extends StatelessWidget {
               Icon(Icons.access_time_rounded, color: primary, size: 20),
               const SizedBox(width: 8),
               Text(
-                'সালাতের সময়',
+                l10n.prayerTime,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const Spacer(),
               Text(
-                'পরবর্তী ${controller.nextPrayerName}',
+                '${l10n.next} ${l10n.prayerName(controller.nextPrayerName)}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: context.secondaryTextColor,
                 ),
@@ -49,8 +51,8 @@ class PrayerTimeSummary extends StatelessWidget {
             children: [
               Expanded(
                 child: _TimeBox(
-                  title: 'বিগত সালাত',
-                  prayer: controller.previousPrayer,
+                  title: l10n.previousPrayer,
+                  prayer: l10n.prayerName(controller.previousPrayer),
                   time: controller.previousPrayerTime,
                   icon: Icons.history_rounded,
                 ),
@@ -58,8 +60,8 @@ class PrayerTimeSummary extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: _TimeBox(
-                  title: 'বর্তমান',
-                  prayer: controller.currentPrayer,
+                  title: l10n.current,
+                  prayer: l10n.prayerName(controller.currentPrayer),
                   time: controller.currentPrayerStart,
                   icon: Icons.mosque_outlined,
                 ),
@@ -67,8 +69,8 @@ class PrayerTimeSummary extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: _TimeBox(
-                  title: 'পরবর্তী',
-                  prayer: controller.nextPrayerName,
+                  title: l10n.next,
+                  prayer: l10n.prayerName(controller.nextPrayerName),
                   time: controller.nextPrayerTime,
                   icon: Icons.arrow_forward_rounded,
                 ),
