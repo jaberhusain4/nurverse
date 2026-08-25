@@ -7,8 +7,9 @@ class HomeModeService extends ChangeNotifier {
   static final HomeModeService instance = HomeModeService._();
 
   static const String _key = 'home_screen_mode';
+  static const String _defaultMigrationKey = 'home_mode_informative_default_applied_v1';
 
-  // Informative Home is NurVerse's default for new installs.
+  // Informative Home is the current NurVerse default.
   bool _isSimple = false;
   bool _loaded = false;
 
@@ -20,10 +21,19 @@ class HomeModeService extends ChangeNotifier {
 
     try {
       final prefs = await SharedPreferences.getInstance();
+      final migrationApplied = prefs.getBool(_defaultMigrationKey) ?? false;
       final stored = prefs.getString(_key);
-      // Preserve an explicitly saved user choice. New installs/default state
-      // use Informative Home until the user selects Simple Home.
-      _isSimple = stored == 'simple';
+
+      // One-time migration: installs that previously used the old Simple
+      // default are moved to Informative once. Afterward explicit user choice
+      // is preserved normally.
+      if (!migrationApplied) {
+        _isSimple = false;
+        await prefs.setString(_key, 'informative');
+        await prefs.setBool(_defaultMigrationKey, true);
+      } else {
+        _isSimple = stored == 'simple';
+      }
     } catch (_) {
       _isSimple = false;
     } finally {
@@ -40,6 +50,7 @@ class HomeModeService extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_key, value ? 'simple' : 'informative');
+      await prefs.setBool(_defaultMigrationKey, true);
     } catch (_) {
       // Keep the in-memory choice active even if persistence fails.
     }
