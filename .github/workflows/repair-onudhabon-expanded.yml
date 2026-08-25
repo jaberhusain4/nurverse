@@ -1,0 +1,43 @@
+name: Repair Onudhabon Expanded closures
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-onudhabon-expanded.yml'
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/prayer-completion-tracker
+          fetch-depth: 1
+      - name: Repair missing Expanded parentheses
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('lib/screens/quran/onudhabon_quran_reader.dart')
+          text = path.read_text(encoding='utf-8')
+          start = text.index('  Widget _surahHeader(BuildContext context, QuranSurah surah) {')
+          end = text.index('  Widget _ayahCard(BuildContext context, QuranSurah surah, QuranVerse verse) {', start)
+          block = text[start:end]
+          old1 = 'shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),\n          const SizedBox(width: 8),'
+          new1 = 'shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),\n          const SizedBox(width: 8),'
+          old2 = 'shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),\n        ]),'
+          new2 = 'shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),\n        ]),'
+          if old1 not in block or old2 not in block:
+              raise SystemExit('Expected closure patterns not found; refusing to modify file.')
+          block = block.replace(old1, new1, 1)
+          block = block.replace(old2, new2, 1)
+          path.write_text(text[:start] + block + text[end:], encoding='utf-8')
+      - name: Commit repair
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/quran/onudhabon_quran_reader.dart
+          git commit -m "fix(quran): close Onudhabon header Expanded widgets" || exit 0
+          git push origin HEAD:fix/prayer-completion-tracker
