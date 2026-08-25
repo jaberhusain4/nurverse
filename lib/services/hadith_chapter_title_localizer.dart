@@ -13,6 +13,7 @@ class HadithChapterTitleLocalizer {
     required int index,
   }) {
     final number = index + 1;
+    final english = chapter.nameEn.trim();
 
     if (l10n.isArabic) {
       final ar = chapter.nameAr.trim();
@@ -22,42 +23,65 @@ class HadithChapterTitleLocalizer {
     }
 
     if (l10n.isEnglish) {
-      final en = chapter.nameEn.trim();
-      return en.isNotEmpty && !_genericEnglish(en)
-          ? 'Chapter $number — ${_stripEnglishChapterPrefix(en)}'
+      return english.isNotEmpty && !_genericEnglish(english)
+          ? 'Chapter $number — ${_stripEnglishChapterPrefix(english)}'
           : 'Chapter $number';
     }
 
-    final bengali = chapter.nameBn.trim();
-    if (bengali.isNotEmpty && !_genericBengali(bengali) && !_containsLatin(bengali)) {
-      return 'অধ্যায় ${_banglaDigits(number)} — ${_stripBengaliChapterPrefix(bengali)}';
+    // Bangla is the default language. Show the canonical English chapter
+    // name together with its verified Bengali meaning, so users can identify
+    // the exact subject even where the Bengali asset has weak metadata.
+    if (english.isNotEmpty && !_genericEnglish(english)) {
+      String? meaning = HadithBengaliTitleOverrides.resolve(english)?.trim();
+
+      if (meaning == null || meaning.isEmpty) {
+        final bengali = chapter.nameBn.trim();
+        if (bengali.isNotEmpty &&
+            !_genericBengali(bengali) &&
+            !_containsLatin(bengali)) {
+          meaning = _stripBengaliChapterPrefix(bengali);
+        }
+      }
+
+      if (meaning == null || meaning.isEmpty) {
+        final localized = HadithChapterLocalization.localize(
+          bengali: chapter.nameBn,
+          english: chapter.nameEn,
+          arabic: chapter.nameAr,
+          chapterIndex: number,
+        ).trim();
+        final localizedTitle = _stripBengaliChapterPrefix(localized);
+        if (localizedTitle.isNotEmpty &&
+            !_containsLatin(localizedTitle) &&
+            !_genericBengali(localizedTitle)) {
+          meaning = localizedTitle;
+        }
+      }
+
+      if (meaning == null || meaning.isEmpty) {
+        final generated = HadithBengaliTitleBuilder.build(english).trim();
+        final safeGenerated = _stripBengaliChapterPrefix(generated);
+        if (safeGenerated.isNotEmpty && !_containsLatin(safeGenerated)) {
+          meaning = safeGenerated;
+        }
+      }
+
+      if (meaning != null &&
+          meaning.isNotEmpty &&
+          !_containsLatin(meaning) &&
+          !_genericBengali(meaning)) {
+        return 'অধ্যায় ${_banglaDigits(number)} — ${_stripEnglishChapterPrefix(english)} ($meaning)';
+      }
+
+      return 'অধ্যায় ${_banglaDigits(number)} — ${_stripEnglishChapterPrefix(english)}';
     }
 
-    // Curated title has priority over generic translation/transliteration.
-    final override = HadithBengaliTitleOverrides.resolve(chapter.nameEn);
-    if (override != null && override.trim().isNotEmpty) {
-      return 'অধ্যায় ${_banglaDigits(number)} — ${override.trim()}';
+    final ar = chapter.nameAr.trim();
+    if (ar.isNotEmpty && !_genericArabic(ar)) {
+      return 'অধ্যায় ${_banglaDigits(number)} — $ar';
     }
 
-    final localized = HadithChapterLocalization.localize(
-      bengali: chapter.nameBn,
-      english: chapter.nameEn,
-      arabic: chapter.nameAr,
-      chapterIndex: number,
-    ).trim();
-    final localizedTitle = _stripBengaliChapterPrefix(localized);
-
-    if (localizedTitle.isNotEmpty &&
-        !_containsLatin(localizedTitle) &&
-        !_genericBengali(localizedTitle)) {
-      return 'অধ্যায় ${_banglaDigits(number)} — $localizedTitle';
-    }
-
-    final generated = HadithBengaliTitleBuilder.build(chapter.nameEn).trim();
-    final safeGenerated = _stripBengaliChapterPrefix(generated);
-    return safeGenerated.isNotEmpty && !_containsLatin(safeGenerated)
-        ? 'অধ্যায় ${_banglaDigits(number)} — $safeGenerated'
-        : 'অধ্যায় ${_banglaDigits(number)} — হাদিসের বিষয়';
+    return 'অধ্যায় ${_banglaDigits(number)} — হাদিসের বিষয়';
   }
 
   static String _stripBengaliChapterPrefix(String value) => value
