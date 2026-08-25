@@ -1,7 +1,7 @@
 import 'dart:io';
 
 final _bangla = RegExp(r'[\u0980-\u09FF]');
-final _directEnglishBranch = RegExp(r'\b(?:isEnglish|isBangla|isArabic|languageCode|language)\s*==?\s*[\'\"](?:en|bn|ar)[\'\"]');
+final _directEnglishBranch = RegExp(r"\b(?:isEnglish|isBangla|isArabic|languageCode|language)\s*==?\s*['\"](?:en|bn|ar)['\"]");
 final _ternaryLanguage = RegExp(r'\b(?:isEnglish|isBangla|isArabic)\s*\?');
 final _textLiteral = RegExp(r'\b(?:Text|Tooltip|SnackBar|AlertDialog|SimpleDialog|showDialog|showModalBottomSheet)\s*\(');
 
