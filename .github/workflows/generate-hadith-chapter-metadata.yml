@@ -7,7 +7,7 @@ on:
 
 jobs:
   generate:
-    if: github.actor != 'github-actions[bot]'
+    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -15,140 +15,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Generate canonical multilingual chapter metadata
+      - name: Generate canonical metadata and wire HadithService
         env:
           SOURCE_BASE: https://raw.githubusercontent.com/HsnSaboor/hadith-api-toon/main/editions
-        run: |
-          python - <<'PY'
-          import csv
-          import json
-          import os
-          import re
-          import urllib.request
-          from pathlib import Path
+        run: python tool/generate_hadith_chapter_metadata.py
 
-          books = ['bukhari','muslim','abudawud','tirmidhi','nasai','ibnmajah','malik']
-          base = os.environ['SOURCE_BASE']
-          out = {}
-
-          def parse_info(book):
-              url = f'{base}/{book}/info.toon'
-              with urllib.request.urlopen(url, timeout=60) as response:
-                  text = response.read().decode('utf-8')
-
-              match = re.search(r'sections\[(\d+)\]\{([^}]+)\}:\s*\n(.*)', text, re.DOTALL)
-              if not match:
-                  raise RuntimeError(f'No sections table found for {book}')
-
-              columns = [x.strip() for x in match.group(2).split(',')]
-              rows = []
-              for line in match.group(3).splitlines():
-                  if not line.strip().startswith('"'):
-                      if rows:
-                          break
-                      continue
-                  parsed = next(csv.reader([line]))
-                  if len(parsed) < len(columns):
-                      parsed += [''] * (len(columns) - len(parsed))
-                  rows.append(dict(zip(columns, parsed)))
-
-              catalog = {}
-              for row in rows:
-                  sid = row.get('id', '').strip()
-                  if not sid.isdigit():
-                      continue
-                  ar = row.get('name_ar', '').strip()
-                  bn = row.get('name_bn', '').strip()
-                  en = row.get('name_en', '').strip()
-                  if not ar or not bn or not en:
-                      raise RuntimeError(f'Missing multilingual title: {book} section {sid}')
-                  catalog[sid] = {'ar': ar, 'bn': bn, 'en': en}
-
-              if not catalog:
-                  raise RuntimeError(f'No chapter titles extracted for {book}')
-              return catalog
-
-          for book in books:
-              out[book] = parse_info(book)
-
-          dart = '''// GENERATED FILE. DO NOT EDIT BY HAND.\n// Source: HsnSaboor/hadith-api-toon multilingual section metadata.\n\nclass GeneratedHadithChapterMetadata {\n  const GeneratedHadithChapterMetadata._();\n\n  static const Map<String, Map<int, GeneratedHadithChapterTitle>> books = {\n'''
-          for book in books:
-              dart += f"    '{book}': {{\n"
-              for sid, title in out[book].items():
-                  dart += f"      {int(sid)}: GeneratedHadithChapterTitle(ar: {json.dumps(title['ar'], ensure_ascii=False)}, bn: {json.dumps(title['bn'], ensure_ascii=False)}, en: {json.dumps(title['en'], ensure_ascii=False)}),\n"
-              dart += "    },\n"
-          dart += '''  };\n}\n\nclass GeneratedHadithChapterTitle {\n  final String ar;\n  final String bn;\n  final String en;\n\n  const GeneratedHadithChapterTitle({\n    required this.ar,\n    required this.bn,\n    required this.en,\n  });\n}\n'''
-
-          Path('lib/services/generated_hadith_chapter_metadata.dart').write_text(dart, encoding='utf-8')
-          print('Generated canonical metadata:', {k: len(v) for k, v in out.items()})
-          PY
-
-      - name: Wire HadithService to canonical metadata
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path('lib/services/hadith_service.dart')
-          text = path.read_text(encoding='utf-8')
-
-          import_line = "import 'generated_hadith_chapter_metadata.dart';\n"
-          if import_line not in text:
-              text = text.replace(
-                  "import 'package:flutter/services.dart' show rootBundle;\n",
-                  "import 'package:flutter/services.dart' show rootBundle;\n\n" + import_line,
-              )
-
-          old = """    final chapters = _extractChapters(\n      arabic: arabic,\n      requested: requested,\n      english: english,\n      languageCode: language,\n    );\n\n    _chapterCache[cacheKey] = chapters;\n    return chapters;\n"""
-          new = """    final extractedChapters = _extractChapters(\n      arabic: arabic,\n      requested: requested,\n      english: english,\n      languageCode: language,\n    );\n    final chapters = _applyCanonicalChapterMetadata(bookKey, extractedChapters);\n\n    _chapterCache[cacheKey] = chapters;\n    return chapters;\n"""
-          if old in text and 'final extractedChapters = _extractChapters(' not in text:
-              text = text.replace(old, new)
-
-          marker = "  void _setName(_ChapterBuilder builder, String language, String name) {\n"
-          method = r'''  List<HadithChapter> _applyCanonicalChapterMetadata(
-    String bookKey,
-    List<HadithChapter> chapters,
-  ) {
-    final catalog = GeneratedHadithChapterMetadata.books[bookKey];
-    if (catalog == null || catalog.isEmpty) return chapters;
-
-    final merged = <int, HadithChapter>{
-      for (final chapter in chapters) chapter.id: chapter,
-    };
-
-    for (final entry in catalog.entries) {
-      final existing = merged[entry.key];
-      final title = entry.value;
-      merged[entry.key] = HadithChapter(
-        id: entry.key,
-        bookNumber: existing?.bookNumber ?? 0,
-        nameAr: title.ar,
-        nameBn: title.bn,
-        nameEn: title.en,
-      );
-    }
-
-    final result = merged.values.toList();
-    result.sort((a, b) {
-      final byBook = a.bookNumber.compareTo(b.bookNumber);
-      if (byBook != 0) return byBook;
-      return a.id.compareTo(b.id);
-    });
-    return result;
-  }
-
-'''
-          if method.strip() not in text:
-              text = text.replace(marker, method + marker)
-
-          path.write_text(text, encoding='utf-8')
-          PY
-
-      - name: Verify Dart changes
+      - name: Format and verify
         run: |
           git diff --check
-          dart format --output=none lib/services/generated_hadith_chapter_metadata.dart lib/services/hadith_service.dart
+          dart format lib/services/generated_hadith_chapter_metadata.dart lib/services/hadith_service.dart
 
-      - name: Commit generated metadata and wiring
+      - name: Commit generated metadata
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
