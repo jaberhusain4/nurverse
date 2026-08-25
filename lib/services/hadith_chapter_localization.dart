@@ -13,21 +13,48 @@ class HadithChapterLocalization {
     required String english,
     required String arabic,
     required int chapterIndex,
+    String? bookKey,
   }) {
     final bn = bengali.trim();
-    if (bn.isNotEmpty && !_containsLatin(bn)) return bn;
+    final normalizedBn = _normalize(bn);
 
-    final direct = _subjects[_normalize(bn)] ?? _subjects[_normalize(english)];
+    // Some bundled Bengali metadata contains a generic placeholder such as
+    // “অধ্যায় ২১ - অন্যান্য বিষয়”. Never surface that placeholder when a
+    // collection-specific title is available.
+    final isPlaceholder = _isGenericPlaceholder(normalizedBn);
+
+    if (bn.isNotEmpty && !_containsLatin(bn) && !isPlaceholder) return bn;
+
+    // Sahih al-Bukhari book metadata has a few generic Bengali placeholders.
+    // Use the canonical Bengali book titles for those positions instead of
+    // leaking “অন্যান্য বিষয়” into the chapter list.
+    if (bookKey == 'bukhari') {
+      final bukhariTitle = _bukhariBookTitles[chapterIndex];
+      if (bukhariTitle != null) return bukhariTitle;
+    }
+
+    final direct = _subjects[normalizedBn] ?? _subjects[_normalize(english)];
     if (direct != null) return direct;
 
     final generated = _generateFromEnglish(english);
     if (generated != null) return generated;
 
-    // Never leak English or Arabic metadata into the Bengali chapter list.
+    // Never leak English, Arabic, or a generic placeholder into the Bengali
+    // chapter list.
     return 'অধ্যায় ${_bnDigits(chapterIndex)}';
   }
 
   static bool _containsLatin(String value) => RegExp(r'[A-Za-z]').hasMatch(value);
+
+  static bool _isGenericPlaceholder(String value) {
+    if (value.isEmpty) return false;
+
+    return value.contains('অন্যান্য বিষয়') ||
+        value.contains('অন্যান্য বিষয়') ||
+        value.contains('other topics') ||
+        value.contains('other subjects') ||
+        value.contains('miscellaneous');
+  }
 
   static String _normalize(String value) => value
       .trim()
@@ -40,7 +67,7 @@ class HadithChapterLocalization {
 
   static String? _generateFromEnglish(String value) {
     final normalized = _normalize(value);
-    if (normalized.isEmpty) return null;
+    if (normalized.isEmpty || _isGenericPlaceholder(normalized)) return null;
 
     const prefixes = ['the book of ', 'book of '];
     for (final prefix in prefixes) {
@@ -53,6 +80,15 @@ class HadithChapterLocalization {
 
     return _subjects[normalized];
   }
+
+  // Canonical Bengali names for Sahih al-Bukhari books 21 and 22. These are
+  // the titles used by the Bengali HadithBD edition and correspond to the
+  // canonical English books “Actions while Praying” and “Forgetfulness in
+  // Prayer”.
+  static const Map<int, String> _bukhariBookTitles = {
+    21: 'সালাতের সাথে সংশ্লিষ্ট কাজ',
+    22: 'সাহু সিজদা',
+  };
 
   static const Map<String, String> _subjects = {
     'revelation': 'ওহীর সূচনা',
