@@ -1,0 +1,17 @@
+name: Localization Guard
+
+on:
+  pull_request:
+  push:
+    branches:
+      - fix/prayer-completion-tracker
+
+jobs:
+  localization-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: dart tool/check_localization_hardcodes.dart
