@@ -1,5 +1,6 @@
-import 'hadith_service.dart';
 import 'generated_hadith_chapter_metadata.dart';
+import 'hadith_bengali_title_overrides.dart';
+import 'hadith_service.dart';
 
 /// Language-aware chapter index backed exclusively by the canonical bundled
 /// multilingual chapter catalog.
@@ -32,13 +33,18 @@ class HadithChapterIndexService {
     for (final entry in catalog.entries) {
       final id = entry.key;
       final title = entry.value;
+      final verifiedBangla = HadithBengaliTitleOverrides.resolve(title.en);
+      final banglaTitle = verifiedBangla?.trim().isNotEmpty == true
+          ? verifiedBangla!.trim()
+          : title.bn.trim();
+
       final name = switch (language) {
-        'ar' => title.ar,
-        'en' => title.en,
-        _ => title.bn,
+        'ar' => title.ar.trim(),
+        'en' => title.en.trim(),
+        _ => banglaTitle,
       };
 
-      if (name.trim().isEmpty) {
+      if (name.isEmpty) {
         throw StateError(
           'Missing ${_languageName(language)} chapter title: $bookKey/$id',
         );
@@ -49,7 +55,7 @@ class HadithChapterIndexService {
           id: id,
           bookNumber: id,
           nameAr: title.ar,
-          nameBn: title.bn,
+          nameBn: banglaTitle,
           nameEn: title.en,
         ),
       );
