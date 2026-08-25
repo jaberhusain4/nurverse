@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../../controllers/prayer_controller.dart';
+import '../../localization/app_localizations.dart';
 import '../../theme/app_theme.dart';
 
 class NaflSection extends StatelessWidget {
@@ -11,30 +12,32 @@ class NaflSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       children: [
         NaflTile(
-          title: 'ইশরাক',
-          description: 'সূর্যোদয়ের কিছুক্ষণ পর',
+          title: l10n.ishraq,
+          description: l10n.tr('সূর্যোদয়ের কিছুক্ষণ পর', 'Shortly after sunrise'),
           time: controller.sunriseTime,
           icon: Icons.wb_sunny_outlined,
         ),
         NaflTile(
-          title: 'চাশত / দুহা',
-          description: 'সকাল থেকে দুপুরের পূর্ব পর্যন্ত',
-          time: 'সূর্যোদয়ের পর',
+          title: l10n.duha,
+          description: l10n.tr('সকাল থেকে দুপুরের পূর্ব পর্যন্ত', 'From morning until before noon'),
+          time: l10n.tr('সূর্যোদয়ের পর', 'After sunrise'),
           icon: Icons.wb_sunny_rounded,
         ),
         NaflTile(
-          title: 'আউওয়াবীন',
-          description: 'মাগরিবের পর',
+          title: l10n.awwabin,
+          description: l10n.tr('মাগরিবের পর', 'After Maghrib'),
           time: controller.sunsetTime,
           icon: Icons.nightlight_outlined,
         ),
         NaflTile(
-          title: 'তাহাজ্জুদ',
-          description: 'রাতের শেষাংশ',
-          time: 'শেষ তৃতীয়াংশ',
+          title: l10n.tahajjud,
+          description: l10n.tr('রাতের শেষাংশ', 'The latter part of the night'),
+          time: l10n.tr('শেষ তৃতীয়াংশ', 'Last third of the night'),
           icon: Icons.nights_stay_rounded,
         ),
       ],
@@ -80,9 +83,7 @@ class NaflTile extends StatelessWidget {
             ),
             child: Icon(icon, color: primary, size: 20),
           ),
-
           const SizedBox(width: 11),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,9 +104,7 @@ class NaflTile extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(width: 8),
-
           Flexible(
             child: Text(
               time,
