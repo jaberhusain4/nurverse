@@ -1,6 +1,7 @@
 // lib/widgets/prayer/location_card.dart
 
 import 'package:flutter/material.dart';
+import '../../localization/app_localizations.dart';
 import '../../theme/app_theme.dart';
 
 class PrayerLocationCard extends StatelessWidget {
@@ -13,6 +14,7 @@ class PrayerLocationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
+    final l10n = AppLocalizations.of(context);
 
     return InkWell(
       onTap: onTap,
@@ -41,14 +43,14 @@ class PrayerLocationCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'বর্তমান অবস্থান',
+                    l10n.location,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: context.secondaryTextColor,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    location.isEmpty ? 'অবস্থান পাওয়া যায়নি' : location,
+                    location.isEmpty ? l10n.locationUnavailable : location,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
