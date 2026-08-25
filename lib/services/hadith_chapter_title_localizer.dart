@@ -1,5 +1,6 @@
 import '../localization/app_localizations.dart';
 import 'hadith_bengali_title_builder.dart';
+import 'hadith_bengali_title_overrides.dart';
 import 'hadith_chapter_localization.dart';
 import 'hadith_service.dart';
 
@@ -30,6 +31,12 @@ class HadithChapterTitleLocalizer {
     final bengali = chapter.nameBn.trim();
     if (bengali.isNotEmpty && !_genericBengali(bengali) && !_containsLatin(bengali)) {
       return 'অধ্যায় ${_banglaDigits(number)} — ${_stripBengaliChapterPrefix(bengali)}';
+    }
+
+    // Curated title has priority over generic translation/transliteration.
+    final override = HadithBengaliTitleOverrides.resolve(chapter.nameEn);
+    if (override != null && override.trim().isNotEmpty) {
+      return 'অধ্যায় ${_banglaDigits(number)} — ${override.trim()}';
     }
 
     final localized = HadithChapterLocalization.localize(
