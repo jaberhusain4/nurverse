@@ -4,7 +4,6 @@ class HadithBengaliTitleBuilder {
   static String build(String english) {
     var text = _normalize(english);
     text = _removeStructuralPhrases(text);
-
     final exact = _exact[text];
     if (exact != null) return exact;
 
