@@ -38,9 +38,7 @@ class DailyContentCard extends StatelessWidget {
   }
 
   String _reference(AppLocalizations l10n) {
-    if (l10n.isBangla) return content.reference;
-    if (l10n.isArabic) return content.arabicReference.isNotEmpty ? content.arabicReference : content.englishReference;
-    return content.englishReference;
+    return l10n.isBangla ? content.reference : content.englishReference;
   }
 
   @override
@@ -74,9 +72,7 @@ class DailyContentCard extends StatelessWidget {
             children: [
               Icon(icon, color: iconColor, size: 19),
               const SizedBox(width: 7),
-              Expanded(
-                child: Text(_title(l10n), maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleSmall?.copyWith(fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
+              Expanded(child: Text(_title(l10n), maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleSmall?.copyWith(fontSize: 16, fontWeight: FontWeight.bold))),
               if (onBookmark != null) IconButton(onPressed: onBookmark, visualDensity: VisualDensity.compact, padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 30, minHeight: 30), icon: const Icon(Icons.bookmark_border_rounded, size: 19)),
               if (onShare != null) IconButton(onPressed: onShare, visualDensity: VisualDensity.compact, padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 30, minHeight: 30), icon: const Icon(Icons.share_outlined, size: 19)),
             ],
