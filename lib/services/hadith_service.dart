@@ -269,7 +269,7 @@ class HadithService {
         );
 
         final name = entry.value.trim();
-        if (name.isEmpty) {
+        if (name.isEmpty || RegExp(r'^chapter\s*\d+$', caseSensitive: false).hasMatch(name) || RegExp(r'^(অধ্যায়|অধ্যায়)\s*\d+$').hasMatch(name)) {
           continue;
         }
 
@@ -294,6 +294,10 @@ class HadithService {
           () => _ChapterBuilder(id: chapter.id, bookNumber: chapter.bookNumber),
         );
 
+        if (chapter.bookNumber != 0 && builder.bookNumber == 0) {
+          builder.bookNumber = chapter.bookNumber;
+        }
+
         if (language == 'ar') {
           builder.nameAr = chapter.name;
         } else if (language == 'bn') {
@@ -312,18 +316,17 @@ class HadithService {
       process(translated, 'en');
     }
 
-    final result =
-        chapterMap.values
-            .map(
-              (chapter) => HadithChapter(
-                id: chapter.id,
-                bookNumber: chapter.bookNumber,
-                nameAr: chapter.nameAr,
-                nameBn: chapter.nameBn,
-                nameEn: chapter.nameEn,
-              ),
-            )
-            .toList();
+    final result = chapterMap.values
+        .map(
+          (chapter) => HadithChapter(
+            id: chapter.id,
+            bookNumber: chapter.bookNumber,
+            nameAr: chapter.nameAr,
+            nameBn: chapter.nameBn,
+            nameEn: chapter.nameEn,
+          ),
+        )
+        .toList();
 
     result.sort((a, b) {
       if (a.bookNumber != b.bookNumber) {
@@ -470,7 +473,7 @@ class HadithService {
         continue;
       }
 
-      final key = '${chapter?.bookNumber ?? 0}:$numberText';
+      final key = '${chapter?.bookNumber ?? bookNumber ?? 0}:$numberText';
 
       result[key] = item;
     }
@@ -483,33 +486,56 @@ class HadithService {
   // --------------------------------------------------------------------------
 
   _ParsedChapter? _chapterFromItem(Map<String, dynamic> item) {
+    final chapterObject = item['chapter'] is Map
+        ? Map<String, dynamic>.from(item['chapter'] as Map)
+        : null;
+
+    final referenceObject = item['reference'] is Map
+        ? Map<String, dynamic>.from(item['reference'] as Map)
+        : null;
+
     final chapterId = _intValue(
       item['chapterId'] ??
           item['chapter_id'] ??
-          item['chapter'] ??
+          item['chapterNumber'] ??
+          item['chapter_number'] ??
           item['bookId'] ??
-          item['book_id'],
+          item['book_id'] ??
+          item['sectionId'] ??
+          item['section_id'] ??
+          chapterObject?['id'] ??
+          item['section'],
     );
 
     final bookNumber = _intValue(
-      item['bookNumber'] ?? item['book_number'] ?? item['book'],
-    );
+      item['bookNumber'] ??
+          item['book_number'] ??
+          referenceObject?['book'] ??
+          item['book'],
+    ) ?? 0;
+
+    final rawSection = item['section']?.toString().trim() ?? '';
+    final rawChapter = item['chapter'];
 
     final chapterName = _firstNonEmpty([
       item['chapterName']?.toString(),
       item['chapter_name']?.toString(),
       item['chapterTitle']?.toString(),
       item['chapter_title']?.toString(),
-      item['section']?.toString(),
+      item['name']?.toString(),
+      chapterObject?['name']?.toString(),
+      chapterObject?['title']?.toString(),
+      if (_intValue(rawChapter) == null && rawChapter is String) rawChapter,
+      if (_intValue(rawSection) == null) rawSection,
     ]);
 
-    if (chapterId == null || chapterName.isEmpty) {
+    if (chapterId == null || chapterName.isEmpty || _intValue(chapterName) != null) {
       return null;
     }
 
     return _ParsedChapter(
       id: chapterId,
-      bookNumber: bookNumber ?? 0,
+      bookNumber: bookNumber,
       name: chapterName,
     );
   }
@@ -524,38 +550,79 @@ class HadithService {
     final sectionNames = <int, String>{};
     final sectionRanges = <int, _SectionRange>{};
 
+    void addSection(dynamic rawKey, dynamic rawValue) {
+      final index = _intValue(rawKey) ?? _intValue(_mapValue(rawValue, const ['id', 'section', 'number', 'chapterId', 'chapter_id']));
+      if (index == null) return;
+
+      String name = '';
+      if (rawValue is Map) {
+        name = _firstNonEmpty([
+          rawValue['name']?.toString(),
+          rawValue['title']?.toString(),
+          rawValue['sectionName']?.toString(),
+          rawValue['section_name']?.toString(),
+          rawValue['name_ar']?.toString(),
+          rawValue['name_bn']?.toString(),
+          rawValue['name_en']?.toString(),
+        ]);
+      } else {
+        name = rawValue?.toString() ?? '';
+      }
+
+      final normalized = name.trim();
+      if (normalized.isNotEmpty &&
+          !RegExp(r'^chapter\s*\d+$', caseSensitive: false).hasMatch(normalized) &&
+          !RegExp(r'^(অধ্যায়|অধ্যায়)\s*\d+$').hasMatch(normalized) &&
+          !RegExp(r'^الفصل\s*\d+$').hasMatch(normalized)) {
+        sectionNames[index] = normalized;
+      }
+    }
+
+    void addSectionCollection(dynamic sections) {
+      if (sections is Map) {
+        for (final entry in sections.entries) {
+          addSection(entry.key, entry.value);
+        }
+      } else if (sections is List) {
+        for (final value in sections) {
+          addSection(null, value);
+        }
+      }
+    }
+
+    void addRanges(dynamic details) {
+      if (details is Map) {
+        for (final entry in details.entries) {
+          final index = _intValue(entry.key) ?? _intValue(_mapValue(entry.value, const ['id', 'section', 'number']));
+          final value = entry.value;
+          if (index == null || value is! Map) continue;
+          final first = _intValue(value['hadithnumber_first'] ?? value['hadith_first'] ?? value['first']);
+          final last = _intValue(value['hadithnumber_last'] ?? value['hadith_last'] ?? value['last']);
+          if (first != null && last != null) {
+            sectionRanges[index] = _SectionRange(firstHadith: first, lastHadith: last);
+          }
+        }
+      } else if (details is List) {
+        for (final value in details) {
+          if (value is! Map) continue;
+          final index = _intValue(_mapValue(value, const ['id', 'section', 'number', 'chapterId', 'chapter_id']));
+          final first = _intValue(value['hadithnumber_first'] ?? value['hadith_first'] ?? value['first']);
+          final last = _intValue(value['hadithnumber_last'] ?? value['hadith_last'] ?? value['last']);
+          if (index != null && first != null && last != null) {
+            sectionRanges[index] = _SectionRange(firstHadith: first, lastHadith: last);
+          }
+        }
+      }
+    }
+
     if (decoded is Map) {
       final map = Map<String, dynamic>.from(decoded);
+      addSectionCollection(map['sections']);
+
       final metadata = map['metadata'];
-
       if (metadata is Map) {
-        final sections = metadata['sections'];
-        if (sections is Map) {
-          for (final entry in sections.entries) {
-            final index = _intValue(entry.key);
-            final name = entry.value?.toString() ?? '';
-            if (index != null && name.trim().isNotEmpty) {
-              sectionNames[index] = name.trim();
-            }
-          }
-        }
-
-        final sectionDetails = metadata['section_details'];
-        if (sectionDetails is Map) {
-          for (final entry in sectionDetails.entries) {
-            final index = _intValue(entry.key);
-            final details = entry.value;
-            if (index == null || details is! Map) {
-              continue;
-            }
-
-            final first = _intValue(details['hadithnumber_first']);
-            final last = _intValue(details['hadithnumber_last']);
-            if (first != null && last != null) {
-              sectionRanges[index] = _SectionRange(firstHadith: first, lastHadith: last);
-            }
-          }
-        }
+        addSectionCollection(metadata['sections']);
+        addRanges(metadata['section_details']);
       }
     }
 
@@ -564,6 +631,14 @@ class HadithService {
       sectionNames: sectionNames,
       sectionRanges: sectionRanges,
     );
+  }
+
+  dynamic _mapValue(dynamic value, List<String> keys) {
+    if (value is! Map) return null;
+    for (final key in keys) {
+      if (value.containsKey(key)) return value[key];
+    }
+    return null;
   }
 
   List<Map<String, dynamic>> _extractDataList(dynamic decoded) {
@@ -761,7 +836,7 @@ class _SectionRange {
 
 class _ChapterBuilder {
   final int id;
-  final int bookNumber;
+  int bookNumber;
 
   String nameAr = '';
   String nameBn = '';
