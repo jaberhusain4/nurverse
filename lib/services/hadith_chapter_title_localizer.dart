@@ -107,7 +107,6 @@ class HadithChapterTitleLocalizer {
       'justice': 'ন্যায়বিচার',
       'oppression': 'জুলুম',
       'oppressions': 'জুলুম',
-      'charity': 'সদকা',
       'supplication': 'দোয়া',
       'remembrance': 'যিকির',
       'repentance': 'তওবা',
@@ -128,7 +127,6 @@ class HadithChapterTitleLocalizer {
       'sales': 'ক্রয়-বিক্রয়',
       'loan': 'ঋণ',
       'loans': 'ঋণসমূহ',
-      'greetings': 'সালাম',
     };
 
     final ordered = phrases.entries.toList()
