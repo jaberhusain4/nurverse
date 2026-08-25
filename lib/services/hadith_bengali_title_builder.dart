@@ -121,7 +121,7 @@ class HadithBengaliTitleBuilder {
 
     var value = word;
     const replacements = <String, String>{
-      'tion': 'শন', 'tions': 'শনস', 'th': 'থ', 'dh': 'ধ', 'sh': 'শ', 'ch': 'চ',
+      'tions': 'শনস', 'tion': 'শন', 'th': 'থ', 'dh': 'ধ', 'sh': 'শ', 'ch': 'চ',
       'kh': 'খ', 'gh': 'গ', 'ph': 'ফ', 'bh': 'ভ', 'aa': 'া', 'ee': 'ী', 'oo': 'ু',
       'ou': 'ৌ', 'ai': 'ৈ',
     };
