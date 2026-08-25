@@ -1,0 +1,61 @@
+name: One-time repair Onudhabon syntax
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-onudhabon-syntax.yml'
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/prayer-completion-tracker
+      - name: Repair malformed button delimiters
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/screens/quran/onudhabon_quran_reader.dart')
+          text = p.read_text(encoding='utf-8')
+          old = """        Align(alignment: Alignment.centerRight, child: OutlinedButton.icon(onPressed: () { setState(() => _showTafsir = !_showTafsir); _saveSettings(); }, icon: Icon(_showTafsir ? Icons.visibility_off_rounded : Icons.visibility_rounded, size: 15), label: Text(_showTafsir ? _localizedText(l10n, 'তাফসির লুকান', 'Hide Tafsir', 'إخفاء التفسير') : _localizedText(l10n, 'তাফসির দেখান', 'Show Tafsir', 'عرض التفسير'), style: buttonTextStyle), style: OutlinedButton.styleFrom(minimumSize: const Size(0, 32), padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5), tapTargetSize: MaterialTapTargetSize.shrinkWrap, side: BorderSide(color: primary.withValues(alpha: .32), width: 1.1), backgroundColor: primary.withValues(alpha: .055), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),"""
+          new = """        Align(
+          alignment: Alignment.centerRight,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              setState(() => _showTafsir = !_showTafsir);
+              _saveSettings();
+            },
+            icon: Icon(_showTafsir ? Icons.visibility_off_rounded : Icons.visibility_rounded, size: 15),
+            label: Text(
+              _showTafsir
+                  ? _localizedText(l10n, 'তাফসির লুকান', 'Hide Tafsir', 'إخفاء التفسير')
+                  : _localizedText(l10n, 'তাফসির দেখান', 'Show Tafsir', 'عرض التفسير'),
+              style: buttonTextStyle,
+            ),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 32),
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              side: BorderSide(color: primary.withValues(alpha: .32), width: 1.1),
+              backgroundColor: primary.withValues(alpha: .055),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ),"""
+          if old not in text:
+              raise SystemExit('Expected malformed Align block not found; refusing to modify file.')
+          p.write_text(text.replace(old, new, 1), encoding='utf-8', newline='')
+      - name: Commit repair and remove workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/quran/onudhabon_quran_reader.dart
+          git commit -m 'fix(quran): repair Onudhabon header button syntax'
+          git push origin HEAD:fix/prayer-completion-tracker
+          git rm .github/workflows/repair-onudhabon-syntax.yml
+          git commit -m 'chore: remove one-time syntax repair workflow'
+          git push origin HEAD:fix/prayer-completion-tracker
