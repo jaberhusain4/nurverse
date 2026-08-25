@@ -116,7 +116,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
     'Daily Hadith': 'حديث اليوم',
     'Daily Dua': 'دعاء اليوم',
     'Quran Arabic': 'عربي القرآن',
-}
+  };
 
   String _t(String languageCode, String bn, String en, [String? ar]) {
     if (languageCode == 'ar') return ar ?? _ar[en] ?? en;
@@ -249,7 +249,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                 context,
                 _t(languageCode, 'মাযহাব', 'Madhhab'),
                 SettingsProvider.madhabs,
-                settings.setMadhhab,
+                settings.setMadhab,
               ),
             ),
             _divider(),
