@@ -59,7 +59,7 @@ class JamaatService {
         final legacyValue = prefs.getString(legacyKey);
         if (legacyValue == null || legacyValue.trim().isEmpty) continue;
 
-        final normalized = legacyValue.trim();
+        final normalized = _normalizeTime(prayer, legacyValue);
         _customPrayers.add(prayer);
         _jamaat[prayer] = normalized;
         await prefs.setString('$_customPrefix$prayer', normalized);
@@ -81,7 +81,7 @@ class JamaatService {
       final value = prefs.getString('$_customPrefix$prayer');
       if (value != null && value.trim().isNotEmpty) {
         _customPrayers.add(prayer);
-        _jamaat[prayer] = value.trim();
+        _jamaat[prayer] = _normalizeTime(prayer, value);
       }
     }
 
@@ -102,7 +102,9 @@ class JamaatService {
     for (final prayer in prayers) {
       if (_customPrayers.contains(prayer)) {
         final saved = prefs.getString('$_customPrefix$prayer');
-        _jamaat[prayer] = saved?.trim().isNotEmpty == true ? saved!.trim() : '--:--';
+        _jamaat[prayer] = saved?.trim().isNotEmpty == true
+            ? _normalizeTime(prayer, saved!)
+            : '--:--';
       } else {
         _jamaat[prayer] = '--:--';
       }
@@ -137,18 +139,18 @@ class JamaatService {
   }) {
     if (_automaticMode) return;
 
-    _jamaat['Fajr'] = fajr.trim().isEmpty ? '--:--' : fajr.trim();
-    _jamaat['Dhuhr'] = dhuhr.trim().isEmpty ? '--:--' : dhuhr.trim();
-    _jamaat['Asr'] = asr.trim().isEmpty ? '--:--' : asr.trim();
-    _jamaat['Maghrib'] = maghrib.trim().isEmpty ? '--:--' : maghrib.trim();
-    _jamaat['Isha'] = isha.trim().isEmpty ? '--:--' : isha.trim();
+    _jamaat['Fajr'] = _normalizeTime('Fajr', fajr);
+    _jamaat['Dhuhr'] = _normalizeTime('Dhuhr', dhuhr);
+    _jamaat['Asr'] = _normalizeTime('Asr', asr);
+    _jamaat['Maghrib'] = _normalizeTime('Maghrib', maghrib);
+    _jamaat['Isha'] = _normalizeTime('Isha', isha);
   }
 
   static Future<void> set(String prayer, String time) async {
     if (!prayers.contains(prayer)) return;
 
-    final normalized = time.trim();
-    if (normalized.isEmpty) return;
+    final normalized = _normalizeTime(prayer, time);
+    if (normalized == '--:--') return;
 
     await initialize();
 
@@ -187,6 +189,36 @@ class JamaatService {
     for (final key in _legacyKeys.values) {
       await prefs.remove(key);
     }
+  }
+
+  static String _normalizeTime(String prayer, String value) {
+    final raw = value.trim();
+    if (raw.isEmpty || raw == '--:--') return '--:--';
+
+    final amPm = RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)$', caseSensitive: false)
+        .firstMatch(raw);
+    if (amPm != null) {
+      final hour = int.tryParse(amPm.group(1)!);
+      final minute = int.tryParse(amPm.group(2)!);
+      if (hour == null || minute == null || hour < 1 || hour > 12 || minute < 0 || minute > 59) {
+        return '--:--';
+      }
+      return '$hour:${minute.toString().padLeft(2, '0')} ${amPm.group(3)!.toUpperCase()}';
+    }
+
+    final twentyFour = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(raw);
+    if (twentyFour != null) {
+      final hour = int.tryParse(twentyFour.group(1)!);
+      final minute = int.tryParse(twentyFour.group(2)!);
+      if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+        return '--:--';
+      }
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+      return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
+    }
+
+    return raw;
   }
 
   static String _formatTime(DateTime value) {
