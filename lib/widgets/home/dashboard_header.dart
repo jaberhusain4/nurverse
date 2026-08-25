@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../localization/app_localizations.dart';
+
 class DashboardHeader extends StatelessWidget {
   final String greeting;
   final String location;
@@ -24,6 +26,7 @@ class DashboardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     const seaBlue = Color(0xFF0288D1);
 
@@ -62,34 +65,30 @@ class DashboardHeader extends StatelessWidget {
                   size: 28,
                 ),
               ),
-
               const SizedBox(width: 14),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
-                      "NurVerse",
-                      style: TextStyle(
+                      l10n.appName,
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
-                      "Islamic Lifestyle",
-                      style: TextStyle(color: Colors.grey, fontSize: 13),
+                      l10n.tr('ইসলামিক জীবনধারা', 'Islamic Lifestyle'),
+                      style: const TextStyle(color: Colors.grey, fontSize: 13),
                     ),
                   ],
                 ),
               ),
-
               IconButton(
                 onPressed: onNotificationTap,
                 icon: const Icon(Icons.notifications_outlined),
               ),
-
               IconButton(
                 onPressed: onProfileTap,
                 icon: const Icon(Icons.person_outline),
@@ -99,9 +98,9 @@ class DashboardHeader extends StatelessWidget {
 
           const SizedBox(height: 22),
 
-          const Text(
-            "আসসালামু আলাইকুম",
-            style: TextStyle(fontSize: 15, color: Colors.grey),
+          Text(
+            l10n.tr('আসসালামু আলাইকুম', 'Assalamu Alaikum'),
+            style: const TextStyle(fontSize: 15, color: Colors.grey),
           ),
 
           const SizedBox(height: 4),
@@ -133,17 +132,15 @@ class DashboardHeader extends StatelessWidget {
               Expanded(
                 child: _InfoTile(
                   icon: Icons.calendar_today_outlined,
-                  title: "হিজরি",
+                  title: l10n.tr('হিজরি', 'Hijri'),
                   value: hijriBangla,
                 ),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: _InfoTile(
                   icon: Icons.date_range_outlined,
-                  title: "তারিখ",
+                  title: l10n.tr('তারিখ', 'Date'),
                   value: englishDate,
                 ),
               ),
