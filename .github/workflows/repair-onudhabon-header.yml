@@ -1,0 +1,228 @@
+name: Repair Onudhabon header syntax
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-onudhabon-header.yml'
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/prayer-completion-tracker
+          fetch-depth: 1
+
+      - name: Replace Onudhabon surah header with clean Dart syntax
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('lib/screens/quran/onudhabon_quran_reader.dart')
+          text = path.read_text(encoding='utf-8')
+          start = text.index('  Widget _surahHeader(BuildContext context, QuranSurah surah) {')
+          end = text.index('  Widget _ayahCard(BuildContext context, QuranSurah surah, QuranVerse verse) {', start)
+          replacement = r'''  Widget _surahHeader(BuildContext context, QuranSurah surah) {
+    final l10n = AppLocalizations.of(context);
+    final primary = Theme.of(context).colorScheme.primary;
+    final meta = QuranMetadataService.forSurah(surah.number);
+    final typeLabel = surah.type == 'meccan'
+        ? _localizedText(l10n, 'মাক্কী', 'Meccan', 'مكية')
+        : _localizedText(l10n, 'মাদানী', 'Medinan', 'مدنية');
+    const buttonTextStyle = TextStyle(fontSize: 12, fontWeight: FontWeight.w700);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 2),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: primary.withValues(alpha: .10)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              IconButton(
+                onPressed: _backToQuranScreen,
+                icon: const Icon(Icons.arrow_back_rounded, size: 20),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      surah.arabicName,
+                      textDirection: TextDirection.rtl,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: primary,
+                      ),
+                    ),
+                    Text(
+                      surah.banglaName ?? surah.transliteration,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      surah.transliteration,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: context.secondaryTextColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 9),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              _chip(
+                context,
+                l10n.isBangla
+                    ? _bn(surah.totalVerses)
+                    : l10n.isArabic
+                        ? _ar(surah.totalVerses)
+                        : surah.totalVerses.toString(),
+                _localizedText(l10n, 'আয়াত', 'verses', 'آيات'),
+              ),
+              _chip(
+                context,
+                l10n.isBangla
+                    ? _bn(meta.rukuCount)
+                    : l10n.isArabic
+                        ? _ar(meta.rukuCount)
+                        : meta.rukuCount.toString(),
+                _localizedText(l10n, 'রুকু', 'ruku', 'ركوع'),
+              ),
+              _chip(
+                context,
+                l10n.isBangla
+                    ? _bn(meta.sajdaCount)
+                    : l10n.isArabic
+                        ? _ar(meta.sajdaCount)
+                        : meta.sajdaCount.toString(),
+                _localizedText(l10n, 'সিজদা', 'sajdah', 'سجود'),
+              ),
+              _chip(context, typeLabel, ''),
+            ],
+          ),
+          const SizedBox(height: 9),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton.icon(
+                  onPressed: () => _showTranslationPicker(surah),
+                  icon: const Icon(Icons.translate_rounded, size: 17),
+                  label: Text(
+                    _translationEdition.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: buttonTextStyle,
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: primary,
+                    backgroundColor: primary.withValues(alpha: .055),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextButton.icon(
+                  onPressed: () => _showTafsirPicker(surah),
+                  icon: const Icon(Icons.menu_book_rounded, size: 17),
+                  label: Text(
+                    _localizedText(
+                      l10n,
+                      'তাফসির / ব্যাখ্যা',
+                      'Tafsir / Explanation',
+                      'التفسير / الشرح',
+                    ),
+                    maxLines: 1,
+                    style: buttonTextStyle,
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: primary,
+                    backgroundColor: primary.withValues(alpha: .055),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                setState(() => _showTafsir = !_showTafsir);
+                _saveSettings();
+              },
+              icon: Icon(
+                _showTafsir
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
+                size: 15,
+              ),
+              label: Text(
+                _showTafsir
+                    ? _localizedText(
+                        l10n,
+                        'তাফসির লুকান',
+                        'Hide Tafsir',
+                        'إخفاء التفسير',
+                      )
+                    : _localizedText(
+                        l10n,
+                        'তাফসির দেখান',
+                        'Show Tafsir',
+                        'عرض التفسير',
+                      ),
+                style: buttonTextStyle,
+              ),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 32),
+                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                side: BorderSide(
+                  color: primary.withValues(alpha: .32),
+                  width: 1.1,
+                ),
+                backgroundColor: primary.withValues(alpha: .055),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+'''
+          path.write_text(text[:start] + replacement + text[end:], encoding='utf-8')
+
+      - name: Commit repair
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/quran/onudhabon_quran_reader.dart
+          git commit -m "fix(quran): repair Onudhabon surah header syntax" || exit 0
+          git push origin HEAD:fix/prayer-completion-tracker
