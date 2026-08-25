@@ -3,8 +3,8 @@
 /// Offline Bengali chapter-title localization for Hadith collections.
 ///
 /// The bundled Bengali editions do not consistently contain Bengali section
-/// metadata. This layer keeps the UI Bengali-first without changing hadith
-/// IDs, book numbers, or the bundled JSON assets.
+/// metadata. This layer keeps the chapter list Bengali-first without changing
+/// hadith IDs, book numbers, or the bundled JSON assets.
 class HadithChapterLocalization {
   const HadithChapterLocalization._();
 
@@ -16,10 +16,11 @@ class HadithChapterLocalization {
   }) {
     final bn = bengali.trim();
     final en = english.trim();
+    final ar = arabic.trim();
 
     final genericBn = RegExp(r'^(অধ্যায়|অধ্যায়)\s*\d+$').hasMatch(bn);
     final genericEn = RegExp(r'^chapter\s*\d+$', caseSensitive: false).hasMatch(en);
-    final genericAr = RegExp(r'^الفصل\s*\d+$').hasMatch(arabic.trim());
+    final genericAr = RegExp(r'^الفصل\s*\d+$').hasMatch(ar);
 
     if (bn.isNotEmpty && !_containsLatin(bn) && !genericBn) {
       return _withChapterNumber(chapterIndex, bn);
@@ -35,21 +36,15 @@ class HadithChapterLocalization {
       return _withChapterNumber(chapterIndex, generated);
     }
 
-    // Never fall back to a generic numbered placeholder. The bundled English
-    // metadata is the canonical source when a Bengali translation is missing.
     if (!genericEn && en.isNotEmpty) {
-      return _withChapterNumber(chapterIndex, en);
+      return _withChapterNumber(chapterIndex, _translateEnglishTitle(en));
     }
 
-    if (!genericAr && arabic.trim().isNotEmpty) {
-      return _withChapterNumber(chapterIndex, arabic.trim());
+    if (!genericAr && ar.isNotEmpty) {
+      return _withChapterNumber(chapterIndex, 'আরবি অধ্যায়ের নাম');
     }
 
-    if (bn.isNotEmpty && !genericBn) {
-      return _withChapterNumber(chapterIndex, bn);
-    }
-
-    return _withChapterNumber(chapterIndex, 'Chapter ${chapterIndex}');
+    return _withChapterNumber(chapterIndex, 'অন্যান্য বিষয়');
   }
 
   static String _withChapterNumber(int chapterIndex, String title) =>
@@ -81,7 +76,370 @@ class HadithChapterLocalization {
       }
     }
 
-    return _subjects[normalized];
+    return _subjects[normalized] ?? _translateEnglishTitle(value);
+  }
+
+  /// Converts common English chapter-title phrasing to natural Bengali.
+  ///
+  /// This is intentionally offline: the app never needs an internet service
+  /// just to render a chapter list.
+  static String _translateEnglishTitle(String value) {
+    var text = _normalize(value);
+
+    const phraseMap = <String, String>{
+      'the book of ': '',
+      'book of ': '',
+      'the ': '',
+      'of the ': 'এর ',
+      'and ': 'ও ',
+      'with ': 'সহ ',
+      'on ': 'সম্পর্কে ',
+      'about ': 'সম্পর্কে ',
+      'regarding ': 'সম্পর্কে ',
+      'during ': 'চলাকালীন ',
+      'after ': 'পর ',
+      'before ': 'আগে ',
+      'in ': 'এর মধ্যে ',
+      'from ': 'থেকে ',
+      'to ': 'প্রতি ',
+      'for ': 'জন্য ',
+      'according to ': 'অনুযায়ী ',
+      'virtues of ': 'এর ফযীলত ',
+      'merits of ': 'এর ফযীলত ',
+      'characteristics of ': 'এর বৈশিষ্ট্য ',
+      'description of ': 'এর বিবরণ ',
+      'times of ': 'এর সময়সমূহ ',
+      'chapter on ': '',
+      'chapters on ': '',
+    };
+
+    for (final entry in phraseMap.entries) {
+      text = text.replaceAll(entry.key, entry.value);
+    }
+
+    const tokenMap = <String, String>{
+      'revelation': 'ওহী',
+      'faith': 'ঈমান',
+      'belief': 'আকীদা',
+      'knowledge': 'ইলম',
+      'purification': 'পবিত্রতা',
+      'ablution': 'উযূ',
+      'ablutions': 'উযূ',
+      'wudu': 'উযূ',
+      'ghusl': 'গোসল',
+      'bathing': 'গোসল',
+      'menstruation': 'হায়েয',
+      'menstrual': 'হায়েয',
+      'tayammum': 'তায়াম্মুম',
+      'prayer': 'সালাত',
+      'prayers': 'সালাত',
+      'salat': 'সালাত',
+      'call': 'আযান',
+      'adhaan': 'আযান',
+      'friday': 'জুমুআ',
+      'fear': 'ভয়',
+      'festival': 'ঈদ',
+      'festivals': 'ঈদসমূহ',
+      'eid': 'ঈদ',
+      'eids': 'ঈদসমূহ',
+      'witr': 'বিতর',
+      'night': 'রাত',
+      'tahajjud': 'তাহাজ্জুদ',
+      'eclipse': 'গ্রহণ',
+      'eclipses': 'গ্রহণসমূহ',
+      'prostration': 'সিজদা',
+      'recital': 'তিলাওয়াত',
+      'quran': 'কুরআন',
+      'shortening': 'কসর',
+      'fasting': 'সিয়াম',
+      'fast': 'রোযা',
+      'zakat': 'যাকাত',
+      'charity': 'সদকা',
+      'pilgrimage': 'হজ্জ',
+      'hajj': 'হজ্জ',
+      'umrah': 'উমরাহ',
+      'madinah': 'মদিনা',
+      'medina': 'মদিনা',
+      'makkah': 'মক্কা',
+      'mecca': 'মক্কা',
+      'qadr': 'কদর',
+      'night of qadr': 'লাইলাতুল কদর',
+      'itikaf': 'ইতিকাফ',
+      "i'tikaf": 'ইতিকাফ',
+      'remembrance': 'যিকির',
+      'invocations': 'দোয়া ও যিকির',
+      'supplication': 'দোয়া',
+      'repentance': 'তওবা',
+      'sales': 'ক্রয়-বিক্রয়',
+      'sale': 'বিক্রয়',
+      'trade': 'ব্যবসা',
+      'transactions': 'লেনদেন',
+      'transaction': 'লেনদেন',
+      'agriculture': 'কৃষি',
+      'water': 'পানি',
+      'loans': 'ঋণ',
+      'loan': 'ঋণ',
+      'partnership': 'অংশীদারিত্ব',
+      'mortgaging': 'বন্ধক',
+      'hiring': 'নিয়োগ',
+      'gifts': 'উপহার',
+      'gift': 'উপহার',
+      'witnesses': 'সাক্ষ্য',
+      'testimonies': 'সাক্ষ্য',
+      'peacemaking': 'মীমাংসা',
+      'peace': 'শান্তি',
+      'conditions': 'শর্তাবলি',
+      'condition': 'শর্ত',
+      'oppressions': 'জুলুম',
+      'oppression': 'জুলুম',
+      'funerals': 'জানাযা',
+      'funeral': 'জানাযা',
+      'wills': 'অছিয়ত',
+      'inheritance': 'উত্তরাধিকার',
+      'oaths': 'শপথ',
+      'oath': 'শপথ',
+      'vows': 'মানত',
+      'vow': 'মানত',
+      'divorce': 'তালাক',
+      'marriage': 'বিবাহ',
+      'wives': 'স্ত্রীগণ',
+      'wife': 'স্ত্রী',
+      'husbands': 'স্বামীগণ',
+      'husband': 'স্বামী',
+      'food': 'খাদ্য',
+      'drinks': 'পানীয়',
+      'drink': 'পানীয়',
+      'clothing': 'পোশাক',
+      'dress': 'পোশাক',
+      'greetings': 'সালাম',
+      'manners': 'আদব',
+      'medicine': 'চিকিৎসা',
+      'patients': 'রোগীগণ',
+      'patient': 'রোগী',
+      'dreams': 'স্বপ্ন',
+      'dream': 'স্বপ্ন',
+      'virtues': 'ফযীলত',
+      'virtue': 'ফযীলত',
+      'destiny': 'তাকদীর',
+      'divine': 'আল্লাহর',
+      'will': 'ইচ্ছা',
+      'judgment': 'বিচার',
+      'judgments': 'বিচারসমূহ',
+      'jihad': 'জিহাদ',
+      'leadership': 'নেতৃত্ব',
+      'fitnah': 'ফিতনা',
+      'tribulations': 'বিপদ ও ফিতনা',
+      'paradise': 'জান্নাত',
+      'heaven': 'জান্নাত',
+      'hellfire': 'জাহান্নাম',
+      'hell': 'জাহান্নাম',
+      'punishments': 'শাস্তি',
+      'punishment': 'শাস্তি',
+      'legal': 'শরয়ী',
+      'blood-money': 'রক্তপণ',
+      'sacrifice': 'কুরবানী',
+      'hunting': 'শিকার',
+      'creation': 'সৃষ্টি',
+      'beginning': 'সূচনা',
+      'prophets': 'নবীগণ',
+      'prophet': 'নবী',
+      'companions': 'সাহাবীগণ',
+      'companion': 'সাহাবী',
+      'manumission': 'দাসমুক্তি',
+      'slaves': 'দাসগণ',
+      'slave': 'দাস',
+      'permission': 'অনুমতি',
+      'asking': 'প্রার্থনা',
+      'booty': 'গনীমত',
+      'fighting': 'সংগ্রাম',
+      'cause': 'পথ',
+      'jizyah': 'জিযিয়া',
+      'justice': 'ন্যায়বিচার',
+      'righteousness': 'নেক আমল',
+      'hypocrisy': 'মুনাফিকী',
+      'hypocrites': 'মুনাফিকগণ',
+      'knowledgeable': 'জ্ঞানী',
+      'scholars': 'আলিমগণ',
+      'islam': 'ইসলাম',
+      'muslims': 'মুসলিমগণ',
+      'muslim': 'মুসলিম',
+      'allah': 'আল্লাহ',
+      'messenger': 'রাসূল',
+      'messengers': 'রাসূলগণ',
+      'prophecy': 'নবুওত',
+      'community': 'উম্মাহ',
+      'people': 'মানুষ',
+      'men': 'পুরুষগণ',
+      'women': 'নারীগণ',
+      'children': 'শিশুগণ',
+      'child': 'শিশু',
+      'parents': 'পিতা-মাতা',
+      'father': 'পিতা',
+      'mother': 'মাতা',
+      'brother': 'ভাই',
+      'sister': 'বোন',
+      'house': 'ঘর',
+      'mosque': 'মসজিদ',
+      'market': 'বাজার',
+      'travel': 'সফর',
+      'travelling': 'সফর',
+      'journey': 'সফর',
+      'dress': 'পোশাক',
+      'rings': 'আংটি',
+      'ring': 'আংটি',
+      'hair': 'চুল',
+      'beard': 'দাড়ি',
+      'names': 'নামসমূহ',
+      'name': 'নাম',
+      'character': 'চরিত্র',
+      'characteristics': 'বৈশিষ্ট্য',
+      'description': 'বিবরণ',
+      'stories': 'ঘটনাবলি',
+      'story': 'ঘটনা',
+      'signs': 'নিদর্শনসমূহ',
+      'sign': 'নিদর্শন',
+      'miracles': 'মুজিযা',
+      'miracle': 'মুজিযা',
+      'kings': 'বাদশাহগণ',
+      'king': 'বাদশাহ',
+      'government': 'শাসন',
+      'ruler': 'শাসক',
+      'rulers': 'শাসকগণ',
+      'army': 'সেনাবাহিনী',
+      'armies': 'সেনাবাহিনীসমূহ',
+      'battle': 'যুদ্ধ',
+      'battles': 'যুদ্ধসমূহ',
+      'treatment': 'আচরণ',
+      'rights': 'অধিকারসমূহ',
+      'right': 'অধিকার',
+      'duty': 'কর্তব্য',
+      'duties': 'কর্তব্যসমূহ',
+      'obligations': 'বাধ্যবাধকতা',
+      'obligation': 'বাধ্যবাধকতা',
+      'prohibition': 'নিষেধ',
+      'prohibitions': 'নিষেধাজ্ঞাসমূহ',
+      'law': 'বিধান',
+      'laws': 'বিধানসমূহ',
+      'commandments': 'নির্দেশসমূহ',
+      'commandment': 'নির্দেশ',
+      'questions': 'প্রশ্নসমূহ',
+      'question': 'প্রশ্ন',
+      'answers': 'উত্তরসমূহ',
+      'answer': 'উত্তর',
+      'evidence': 'প্রমাণ',
+      'proof': 'প্রমাণ',
+      'interpretation': 'ব্যাখ্যা',
+      'explanation': 'ব্যাখ্যা',
+      'traditions': 'হাদিসসমূহ',
+      'tradition': 'হাদিস',
+      'hadith': 'হাদিস',
+      'chapter': 'অধ্যায়',
+      'chapters': 'অধ্যায়সমূহ',
+      'book': 'কিতাব',
+      'books': 'কিতাবসমূহ',
+    };
+
+    for (final entry in tokenMap.entries) {
+      text = text.replaceAll(
+        RegExp('\\b${RegExp.escape(entry.key)}\\b', caseSensitive: false),
+        entry.value,
+      );
+    }
+
+    text = text
+        .replaceAll(RegExp(r'\\s+'), ' ')
+        .replaceAll('  ', ' ')
+        .replaceAll(' ,', ',')
+        .replaceAll(' .', '.')
+        .trim();
+
+    if (text.isEmpty || _containsLatin(text)) {
+      return _transliterateRemaining(text.isEmpty ? value : text);
+    }
+
+    return text;
+  }
+
+  /// Last-resort Bengali-script transliteration for proper names/terms that
+  /// are not in the translation dictionary. This prevents English chapter
+  /// titles from leaking into the Bengali UI while retaining recognisable
+  /// pronunciation.
+  static String _transliterateRemaining(String value) {
+    final words = value.split(RegExp(r'(\\s+)'));
+    final converted = <String>[];
+
+    for (final word in words) {
+      if (word.trim().isEmpty || !_containsLatin(word)) {
+        converted.add(word);
+        continue;
+      }
+
+      var w = word.toLowerCase();
+      const digraphs = <String, String>{
+        'tsh': 'টশ',
+        'sch': 'শ',
+        'sh': 'শ',
+        'ch': 'চ',
+        'kh': 'খ',
+        'gh': 'ঘ',
+        'ph': 'ফ',
+        'th': 'থ',
+        'dh': 'ধ',
+        'bh': 'ভ',
+        'jh': 'ঝ',
+        'ck': 'ক',
+        'qu': 'কু',
+        'oo': 'ু',
+        'ee': 'ী',
+        'aa': 'া',
+        'ai': 'ঐ',
+        'au': 'ঔ',
+      };
+
+      for (final entry in digraphs.entries) {
+        w = w.replaceAll(entry.key, entry.value);
+      }
+
+      const letters = <String, String>{
+        'a': 'আ',
+        'b': 'ব',
+        'c': 'ক',
+        'd': 'দ',
+        'e': 'এ',
+        'f': 'ফ',
+        'g': 'গ',
+        'h': 'হ',
+        'i': 'ই',
+        'j': 'জ',
+        'k': 'ক',
+        'l': 'ল',
+        'm': 'ম',
+        'n': 'ন',
+        'o': 'ও',
+        'p': 'প',
+        'q': 'ক',
+        'r': 'র',
+        's': 'স',
+        't': 'ত',
+        'u': 'উ',
+        'v': 'ভ',
+        'w': 'ও',
+        'x': 'ক্স',
+        'y': 'ই',
+        'z': 'জ',
+      };
+
+      final buffer = StringBuffer();
+      for (final rune in w.runes) {
+        final ch = String.fromCharCode(rune);
+        buffer.write(letters[ch] ?? ch);
+      }
+
+      converted.add(buffer.toString());
+    }
+
+    final result = converted.join();
+    return _containsLatin(result) ? 'অন্যান্য বিষয়' : result;
   }
 
   static const Map<String, String> _subjects = {
