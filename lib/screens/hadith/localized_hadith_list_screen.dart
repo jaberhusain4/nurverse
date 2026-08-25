@@ -239,26 +239,30 @@ class _LocalizedHadithListScreenState extends State<LocalizedHadithListScreen> {
     if (list.isEmpty) {
       return RefreshIndicator(
         onRefresh: _load,
-        child: ListView(
-          children: [
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * .35,
-              child: Center(child: Text(l10n.tr('এই অধ্যায়ে কোনো হাদিস পাওয়া যায়নি।', 'No hadiths were found in this chapter.'), textAlign: TextAlign.center, style: TextStyle(color: context.secondaryTextColor))),
-            ),
-          ],
+        child: Scrollbar(
+          child: ListView(
+            children: [
+              SizedBox(
+                height: MediaQuery.sizeOf(context).height * .35,
+                child: Center(child: Text(l10n.tr('এই অধ্যায়ে কোনো হাদিস পাওয়া যায়নি।', 'No hadiths were found in this chapter.'), textAlign: TextAlign.center, style: TextStyle(color: context.secondaryTextColor))),
+              ),
+            ],
+          ),
         ),
       );
     }
     return RefreshIndicator(
       onRefresh: _load,
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        itemCount: list.length,
-        itemBuilder: (context, index) {
-          final h = list[index];
-          return Padding(padding: const EdgeInsets.only(bottom: 14), child: _hadithCard(context, h, l10n));
-        },
+      child: Scrollbar(
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          itemCount: list.length,
+          itemBuilder: (context, index) {
+            final h = list[index];
+            return Padding(padding: const EdgeInsets.only(bottom: 14), child: _hadithCard(context, h, l10n));
+          },
+        ),
       ),
     );
   }
