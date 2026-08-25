@@ -13,7 +13,6 @@ class HadithBengaliTitleBuilder {
       final word = raw.toLowerCase();
       translated.add(_words[word] ?? _transliterate(word));
     }
-
     final result = translated.join(' ').replaceAll(RegExp(r'\s+'), ' ').trim();
     return result.isEmpty ? 'হাদিসের বিষয়' : result;
   }
