@@ -15,16 +15,30 @@ class HadithChapterLocalization {
     required int chapterIndex,
   }) {
     final bn = bengali.trim();
-    if (bn.isNotEmpty && !_containsLatin(bn)) return bn;
+    final en = english.trim();
 
-    final direct = _subjects[_normalize(bn)] ?? _subjects[_normalize(english)];
+    // Some bundled Bengali editions contain a non-empty generic placeholder
+    // such as "অধ্যায় 12". Treat that as missing metadata so the real English
+    // chapter title can be localized instead of leaking the placeholder.
+    final genericBn = RegExp(r'^(অধ্যায়|অধ্যায়)\s*\d+$').hasMatch(bn);
+    final genericEn = RegExp(r'^chapter\s*\d+$', caseSensitive: false).hasMatch(en);
+    final genericAr = RegExp(r'^الفصل\s*\d+$').hasMatch(arabic.trim());
+
+    if (bn.isNotEmpty && !_containsLatin(bn) && !genericBn) return bn;
+
+    final direct = _subjects[_normalize(bn)] ?? _subjects[_normalize(en)];
     if (direct != null) return direct;
 
-    final generated = _generateFromEnglish(english);
+    final generated = _generateFromEnglish(en);
     if (generated != null) return generated;
 
-    // Never leak English or Arabic metadata into the Bengali chapter list.
-    return 'অধ্যায় ${_bnDigits(chapterIndex)}';
+    // When a source has only generic chapter metadata, keep the Bengali UI
+    // deterministic and useful rather than leaking another language.
+    if (genericBn || genericEn || genericAr || bn.isEmpty) {
+      return 'অধ্যায় ${_bnDigits(chapterIndex)}';
+    }
+
+    return bn.isNotEmpty ? bn : 'অধ্যায় ${_bnDigits(chapterIndex)}';
   }
 
   static bool _containsLatin(String value) => RegExp(r'[A-Za-z]').hasMatch(value);
@@ -40,7 +54,7 @@ class HadithChapterLocalization {
 
   static String? _generateFromEnglish(String value) {
     final normalized = _normalize(value);
-    if (normalized.isEmpty) return null;
+    if (normalized.isEmpty || RegExp(r'^chapter\s*\d+$').hasMatch(normalized)) return null;
 
     const prefixes = ['the book of ', 'book of '];
     for (final prefix in prefixes) {
