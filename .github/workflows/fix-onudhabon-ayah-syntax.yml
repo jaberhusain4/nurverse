@@ -161,3 +161,5 @@ jobs:
           git add lib/screens/quran/onudhabon_quran_reader.dart
           git commit -m "fix(quran): repair Onudhabon ayah card syntax"
           git push origin HEAD:fix/prayer-completion-tracker
+
+# trigger repair workflow
