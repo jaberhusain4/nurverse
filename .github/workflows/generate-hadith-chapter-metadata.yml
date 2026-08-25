@@ -20,10 +20,8 @@ jobs:
           SOURCE_BASE: https://raw.githubusercontent.com/HsnSaboor/hadith-api-toon/main/editions
         run: python tool/generate_hadith_chapter_metadata.py
 
-      - name: Format and verify
-        run: |
-          git diff --check
-          dart format lib/services/generated_hadith_chapter_metadata.dart lib/services/hadith_service.dart
+      - name: Verify generated changes
+        run: git diff --check
 
       - name: Commit generated metadata
         run: |
