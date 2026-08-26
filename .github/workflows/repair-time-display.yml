@@ -19,38 +19,65 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           home = Path('lib/screens/simple_home_screen.dart')
           s = home.read_text()
+          s = s.replace("import 'dart:ui';\n", "")
 
-          old = """  List<Map<String, dynamic>> _fivePrayers(PrayerController controller) {\n    const keys = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];\n    final result = <Map<String, dynamic>>[];\n    for (final key in keys) {\n      for (final prayer in controller.prayers) {\n        final name = (prayer['name'] ?? '').toString().toLowerCase();\n        final nameBn = (prayer['nameBn'] ?? '').toString().toLowerCase();\n        final match = name.contains(key.toLowerCase()) ||\n            (key == 'Fajr' && nameBn.contains('ফজর')) ||\n            (key == 'Dhuhr' &&\n                (nameBn.contains('যোহর') || nameBn.contains('জুমু'))) ||\n            (key == 'Asr' && nameBn.contains('আসর')) ||\n            (key == 'Maghrib' && nameBn.contains('মাগরিব')) ||\n            (key == 'Isha' && nameBn.contains('ইশা'));\n        if (match) {\n          result.add(prayer);\n          break;\n        }\n      }\n    }\n    return result;\n  }"""
-          new = """  List<Map<String, dynamic>> _fivePrayers(PrayerController controller) {\n    final result = controller.prayers\n        .where((prayer) => prayer['category']?.toString() == 'obligatory')\n        .take(5)\n        .toList();\n    return result;\n  }"""
+          old = """  List<Map<String, dynamic>> _fivePrayers(PrayerController controller) {
+    const keys = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    final result = <Map<String, dynamic>>[];
+    for (final key in keys) {
+      for (final prayer in controller.prayers) {
+        final name = (prayer['name'] ?? '').toString().toLowerCase();
+        final nameBn = (prayer['nameBn'] ?? '').toString().toLowerCase();
+        final match = name.contains(key.toLowerCase()) ||
+            (key == 'Fajr' && nameBn.contains('ফজর')) ||
+            (key == 'Dhuhr' &&
+                (nameBn.contains('যোহর') || nameBn.contains('জুমু'))) ||
+            (key == 'Asr' && nameBn.contains('আসর')) ||
+            (key == 'Maghrib' && nameBn.contains('মাগরিব')) ||
+            (key == 'Isha' && nameBn.contains('ইশা'));
+        if (match) {
+          result.add(prayer);
+          break;
+        }
+      }
+    }
+    return result;
+  }"""
+          new = """  List<Map<String, dynamic>> _fivePrayers(PrayerController controller) {
+    final result = controller.prayers
+        .where((prayer) => prayer['category']?.toString() == 'obligatory')
+        .take(5)
+        .toList();
+    return result;
+  }"""
           if old not in s:
               raise SystemExit('home prayer list block not found')
           s = s.replace(old, new)
 
-          # Only live clock/countdown uses seconds on Home. Prayer start times and sunrise/sunset are static.
           s = s.replace("nextPrayerTime: _displayTime(controller.nextPrayerTime, settings.showSeconds),", "nextPrayerTime: _displayTime(controller.nextPrayerTime, false),")
           s = s.replace("sunrise: _displayTime(controller.sunriseTime, settings.showSeconds),", "sunrise: _displayTime(controller.sunriseTime, false),")
           s = s.replace("sunset: _displayTime(controller.sunsetTime, settings.showSeconds),", "sunset: _displayTime(controller.sunsetTime, false),")
-          s = s.replace("sunrise: _displayTime(controller.sunriseTime, settings.showSeconds),", "sunrise: _displayTime(controller.sunriseTime, false),")
-          s = s.replace("sunset: _displayTime(controller.sunsetTime, settings.showSeconds),", "sunset: _displayTime(controller.sunsetTime, false),")
-          home.write_text(s)
-
-          strip = Path('lib/screens/simple_home_screen.dart')
-          s = strip.read_text()
-          old = """        final rawTime = prayer['start']?.toString() ?? '--:--';\n        final time = showSeconds ? rawTime : (RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(rawTime.trim())?.group(1) ?? rawTime);"""
-          new = """        final rawTime = prayer['start']?.toString() ?? '--:--';\n        final time = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(rawTime.trim())?.group(1) ?? rawTime;"""
-          if old not in s:
-              raise SystemExit('home strip time block not found')
-          s = s.replace(old, new)
           s = s.replace("_DateFooter(\n                englishDate: DateService.englishDate(),\n                sunrise: _displayTime(controller.sunriseTime, settings.showSeconds),\n                sunset: _displayTime(controller.sunsetTime, settings.showSeconds),", "_DateFooter(\n                englishDate: DateService.englishDate(),\n                sunrise: _displayTime(controller.sunriseTime, false),\n                sunset: _displayTime(controller.sunsetTime, false),")
-          strip.write_text(s)
+          s = re.sub(r"(?<![=!])!(?=[.\[])", "", s)
+          home.write_text(s)
 
           prayer = Path('lib/screens/prayer_screen_v2.dart')
           p = prayer.read_text()
-          old = """  String _displayTime(SettingsProvider settings, String value) {\n    if (settings.showSeconds) return value;\n    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(value.trim());\n    return match?.group(1) ?? value;\n  }"""
-          new = """  // Prayer start/end/Jamaat and other scheduled times are static; seconds are only\n  // meaningful for live clocks and active countdowns.\n  String _displayTime(SettingsProvider settings, String value) {\n    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(value.trim());\n    return match?.group(1) ?? value;\n  }"""
+          old = """  String _displayTime(SettingsProvider settings, String value) {
+    if (settings.showSeconds) return value;
+    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(value.trim());
+    return match?.group(1) ?? value;
+  }"""
+          new = """  // Scheduled prayer times are static; live clocks and active countdowns
+  // are the only displays where seconds are meaningful.
+  String _displayTime(SettingsProvider settings, String value) {
+    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(value.trim());
+    return match?.group(1) ?? value;
+  }"""
           if old not in p:
               raise SystemExit('prayer display helper not found')
           p = p.replace(old, new)
@@ -66,6 +93,7 @@ jobs:
       - name: Format and analyze affected files
         run: |
           dart format lib/screens/simple_home_screen.dart lib/screens/prayer_screen_v2.dart lib/widgets/prayer/prayer_special_times_detail_card.dart
+          flutter pub get
           flutter analyze lib/screens/simple_home_screen.dart lib/screens/prayer_screen_v2.dart lib/widgets/prayer/prayer_special_times_detail_card.dart
 
       - name: Commit repaired files and remove temporary workflow
