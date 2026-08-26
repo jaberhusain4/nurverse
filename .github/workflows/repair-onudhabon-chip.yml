@@ -14,12 +14,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: fix/prayer-completion-tracker
-      - name: Repair malformed chip widget
+      - name: Repair Onudhabon chip and home seconds preference
         shell: python
         run: |
           from pathlib import Path
-          p = Path('lib/screens/quran/onudhabon_quran_reader.dart')
-          text = p.read_text(encoding='utf-8')
+
+          # Existing one-time Onudhabon repair.
+          q = Path('lib/screens/quran/onudhabon_quran_reader.dart')
+          text = q.read_text(encoding='utf-8')
           old = "    return Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: primary.withValues(alpha: .07), borderRadius: BorderRadius.circular(20)), child: Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: primary)));"
           new = """    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -36,18 +38,96 @@ jobs:
         ),
       ),
     );"""
-          if old not in text:
-              raise SystemExit('Expected malformed _chip return not found; refusing to modify file.')
-          p.write_text(text.replace(old, new, 1), encoding='utf-8', newline='')
-      - name: Commit repair and remove workflow
+          if old in text:
+              q.write_text(text.replace(old, new, 1), encoding='utf-8', newline='')
+
+          # Home: make every visible clock/prayer-time seconds display obey Settings > Show seconds.
+          p = Path('lib/screens/simple_home_screen_v11.dart')
+          s = p.read_text(encoding='utf-8')
+
+          old = """  String _clock() {
+    final h = _now.hour % 12 == 0 ? 12 : _now.hour % 12;
+    return '${h.toString().padLeft(2, '0')}:${_now.minute.toString().padLeft(2, '0')}:${_now.second.toString().padLeft(2, '0')}';
+  }
+"""
+          new = """  String _clock(bool showSeconds) {
+    final h = _now.hour % 12 == 0 ? 12 : _now.hour % 12;
+    final base = '${h.toString().padLeft(2, '0')}:${_now.minute.toString().padLeft(2, '0')}';
+    return showSeconds ? '$base:${_now.second.toString().padLeft(2, '0')}' : base;
+  }
+
+  String _withoutSeconds(String value) {
+    final match = RegExp(r'^(\\d{2}:\\d{2})').firstMatch(value.trim());
+    return match == null ? value : match.group(1)!;
+  }
+"""
+          if old not in s:
+              raise SystemExit('Home clock block not found; refusing home modification.')
+          s = s.replace(old, new, 1)
+
+          old = """  String _remaining(PrayerController c) {
+    final value = c.timeRemainingForNextPrayer;
+    if (value == null) return '--:--:--';
+    return value.toString();
+  }
+"""
+          new = """  String _remaining(PrayerController c, bool showSeconds) {
+    final value = c.timeRemainingForNextPrayer;
+    if (value == null) return showSeconds ? '--:--:--' : '--:--';
+    final text = value.toString();
+    return showSeconds ? text : _withoutSeconds(text);
+  }
+"""
+          if old not in s:
+              raise SystemExit('Home remaining block not found; refusing home modification.')
+          s = s.replace(old, new, 1)
+
+          replacements = {
+            "clock: _clock(),": "clock: _clock(settings.showSeconds),",
+            "remaining: _remaining(controller),": "remaining: _remaining(controller, settings.showSeconds),",
+            "nextPrayerTime: '${controller.nextPrayerTime}',": "nextPrayerTime: settings.showSeconds ? '${controller.nextPrayerTime}' : _withoutSeconds('${controller.nextPrayerTime}'),",
+            "sunrise: '${controller.sunriseTime}',": "sunrise: settings.showSeconds ? '${controller.sunriseTime}' : _withoutSeconds('${controller.sunriseTime}'),",
+            "sunset: '${controller.sunsetTime}',": "sunset: settings.showSeconds ? '${controller.sunsetTime}' : _withoutSeconds('${controller.sunsetTime}'),",
+            "_PrayerTimeline(prayers: prayers, code: code)": "_PrayerTimeline(prayers: prayers, code: code, showSeconds: settings.showSeconds)",
+          }
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'Expected home call not found: {old}')
+              s = s.replace(old, new, 1)
+
+          old = """  const _PrayerTimeline({required this.prayers, required this.code});
+  final List<Map<String, dynamic>> prayers;
+  final String code;
+"""
+          new = """  const _PrayerTimeline({required this.prayers, required this.code, required this.showSeconds});
+  final List<Map<String, dynamic>> prayers;
+  final String code;
+  final bool showSeconds;
+"""
+          if old not in s:
+              raise SystemExit('Prayer timeline constructor block not found.')
+          s = s.replace(old, new, 1)
+
+          old = """          final time = '${p['time'] ?? p['formattedTime'] ?? '--:--'}';"""
+          new = """          final rawTime = '${p['time'] ?? p['formattedTime'] ?? '--:--'}';
+          final time = showSeconds
+              ? rawTime
+              : RegExp(r'^(\\d{2}:\\d{2})').firstMatch(rawTime.trim())?.group(1) ?? rawTime;"""
+          if old not in s:
+              raise SystemExit('Prayer timeline time block not found.')
+          s = s.replace(old, new, 1)
+
+          p.write_text(s, encoding='utf-8', newline='')
+
+      - name: Commit repair and remove one-time workflow
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add lib/screens/quran/onudhabon_quran_reader.dart
-          git commit -m 'fix(quran): repair Onudhabon chip syntax'
+          git add lib/screens/simple_home_screen_v11.dart lib/screens/quran/onudhabon_quran_reader.dart
+          git commit -m 'fix(home): respect show seconds setting'
           git push origin HEAD:fix/prayer-completion-tracker
           git rm .github/workflows/repair-onudhabon-chip.yml
-          git commit -m 'chore: remove one-time chip syntax repair workflow'
+          git rm .github/workflows/normalize_home_seconds.yml || true
+          git commit -m 'chore: remove one-time repair workflows'
           git push origin HEAD:fix/prayer-completion-tracker
-# sync repair v2
