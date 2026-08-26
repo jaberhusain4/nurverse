@@ -121,12 +121,12 @@ class _SimpleHomeScreenV11State extends State<SimpleHomeScreenV11> with SingleTi
                   motion: _motion.value,
                   clock: _clock(settings.showSeconds),
                   nextPrayer: '${controller.nextPrayerName}',
-                  nextPrayerTime: settings.showSeconds ? '${controller.nextPrayerTime}' : _withoutSeconds('${controller.nextPrayerTime}'),
+                  nextPrayerTime: _withoutSeconds('${controller.nextPrayerTime}'),
                   remaining: _remaining(controller, settings.showSeconds),
                   currentPrayer: '${controller.currentPrayer}',
                   progress: controller.prayerProgress.clamp(0.0, 1.0),
-                  sunrise: settings.showSeconds ? '${controller.sunriseTime}' : _withoutSeconds('${controller.sunriseTime}'),
-                  sunset: settings.showSeconds ? '${controller.sunsetTime}' : _withoutSeconds('${controller.sunsetTime}'),
+                  sunrise: _withoutSeconds('${controller.sunriseTime}'),
+                  sunset: _withoutSeconds('${controller.sunsetTime}'),
                 ),
               ),
               const SizedBox(height: 22),
@@ -337,10 +337,15 @@ class _PrayerTimeline extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
     return SizedBox(height: 88, child: ListView.separated(scrollDirection: Axis.horizontal, itemCount: 5, separatorBuilder: (_, __) => const SizedBox(width: 8), itemBuilder: (_, i) {
       final p = i < prayers.length ? prayers[i] : <String, dynamic>{};
-      final rawTime = '${p['time'] ?? p['formattedTime'] ?? '--:--'}';
-      final time = showSeconds ? rawTime : (RegExp(r'^(\d{2}:\d{2})').firstMatch(rawTime.trim())?.group(1) ?? rawTime);
+      final rawTime = '${p['start'] ?? '--:--'}';
+      final time = _timeOnly(rawTime);
       return Container(width: 92, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: primary.withValues(alpha: .07), borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [Text(code == 'en' ? namesEn[i] : namesBn[i], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)), const SizedBox(height: 5), Text(time, style: TextStyle(fontSize: 12, color: context.secondaryTextColor, fontWeight: FontWeight.w600))]));
     }));
+  }
+
+  String _timeOnly(String value) {
+    final match = RegExp(r'^(\d{1,2}:\d{2})').firstMatch(value.trim());
+    return match?.group(1) ?? '--:--';
   }
 }
 
