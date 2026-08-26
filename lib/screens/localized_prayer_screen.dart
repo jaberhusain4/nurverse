@@ -124,7 +124,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
                         Icons.check_circle_outline_rounded,
                       ),
                       const SizedBox(height: 8),
-                      _PrayerTrackerCard(),
+                      _prayerTrackerCard(),
                       const SizedBox(height: 18),
                       _footer(context),
                     ],
@@ -693,7 +693,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
     );
   }
 
-  Widget _PrayerTrackerCard() {
+  Widget _prayerTrackerCard() {
     final l10n = AppLocalizations.of(context);
     return _card(
       context,
