@@ -486,31 +486,31 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         if (_showTafsir && tafsir != null && tafsir.trim().isNotEmpty) ...[
           const SizedBox(height: 10),
           Container(
-  width: double.infinity,
-  padding: const EdgeInsets.all(12),
-  decoration: BoxDecoration(
-    color: primary.withValues(alpha: .035),
-    borderRadius: BorderRadius.circular(14),
-  ),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        _tafsirTitle,
-        style: TextStyle(
-          fontSize: 11.5,
-          fontWeight: FontWeight.w800,
-          color: primary,
-        ),
-      ),
-      const SizedBox(height: 6),
-      Text(
-        tafsir,
-        style: const TextStyle(fontSize: 13.5, height: 1.55),
-      ),
-    ],
-  ),
-),
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: .035),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _tafsirTitle,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    color: primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  tafsir,
+                  style: const TextStyle(fontSize: 13.5, height: 1.55),
+                ),
+              ],
+            ),
+          ),
         ],
       ]),
     );
@@ -519,7 +519,21 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   Widget _chip(BuildContext context, String value, String label) {
     final primary = Theme.of(context).colorScheme.primary;
     final text = label.isEmpty ? value : '$value $label';
-    return Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: primary.withValues(alpha: .07), borderRadius: BorderRadius.circular(20)), child: Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: primary)));
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: .07),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: primary,
+        ),
+      ),
+    );
   }
 
   Widget _error(BuildContext context, String text) {
