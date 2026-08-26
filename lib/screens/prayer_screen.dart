@@ -144,6 +144,29 @@ class _PrayerScreenState extends State<PrayerScreen> {
     return _sunTimeInfo;
   }
 
+  String _displayTime(String value, bool showSeconds) {
+    final raw = value.trim();
+    if (showSeconds) return raw;
+    final match = RegExp(r'^(\d{1,2}:\d{2})').firstMatch(raw);
+    return match?.group(1) ?? raw;
+  }
+
+  List<Map<String, dynamic>> _displayPrayerTimes(
+    List<Map<String, dynamic>> prayers,
+    bool showSeconds,
+  ) {
+    return prayers.map((prayer) {
+      final copy = Map<String, dynamic>.from(prayer);
+      for (final key in const ['start', 'end', 'jamaat', 'time', 'formattedTime']) {
+        final value = copy[key];
+        if (value != null) {
+          copy[key] = _displayTime(value.toString(), showSeconds);
+        }
+      }
+      return copy;
+    }).toList(growable: false);
+  }
+
   String _currentJamaatKey(String prayer) {
     switch (prayer) {
       case 'ফজর': case 'Fajr': return 'Fajr';
@@ -195,13 +218,13 @@ class _PrayerScreenState extends State<PrayerScreen> {
             physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              TopHeader(greeting: _greeting(languageCode), currentTime: _currentTime, onNotificationTap: () {}, onProfileTap: () {}),
+              TopHeader(greeting: _greeting(languageCode), currentTime: _displayTime(_currentTime, settings.showSeconds), onNotificationTap: () {}, onProfileTap: () {}),
               const SizedBox(height: 14),
-              CurrentPrayerPremiumCard(previousPrayer: previousPrayer, previousPrayerTime: controller.previousPrayerTime, currentPrayer: currentPrayer, currentPrayerTime: controller.currentPrayerTime, nextPrayer: nextPrayer, nextPrayerTime: controller.nextPrayerTime, remainingTime: controller.timeRemainingForNextPrayer, progress: controller.prayerProgress, iqamahTime: currentJamaat, status: _status(l10n, controller.prayerStatus, languageCode), languageCode: languageCode, onJamaatTap: _openJamaatSettings),
+              CurrentPrayerPremiumCard(previousPrayer: previousPrayer, previousPrayerTime: _displayTime(controller.previousPrayerTime, settings.showSeconds), currentPrayer: currentPrayer, currentPrayerTime: _displayTime(controller.currentPrayerTime, settings.showSeconds), nextPrayer: nextPrayer, nextPrayerTime: _displayTime(controller.nextPrayerTime, settings.showSeconds), remainingTime: _displayTime(controller.timeRemainingForNextPrayer, settings.showSeconds), progress: controller.prayerProgress, iqamahTime: _displayTime(currentJamaat, settings.showSeconds), status: _status(l10n, controller.prayerStatus, languageCode), languageCode: languageCode, onJamaatTap: _openJamaatSettings),
               const SizedBox(height: 10),
-              PrayerTimelineCard(prayers: controller.prayers.where((p) => p['category'] == 'obligatory').toList(growable: false), languageCode: languageCode),
+              PrayerTimelineCard(prayers: _displayPrayerTimes(controller.prayers.where((p) => p['category'] == 'obligatory').toList(growable: false), settings.showSeconds), languageCode: languageCode),
               const SizedBox(height: 10),
-              IslamicInfoCard(location: controller.currentLocationName, englishDate: DateService.englishDate(), banglaDate: _banglaDate(), hijriDate: _hijriDate(languageCode), sunrise: sunTimes?.sunriseString ?? controller.sunriseTime, sunset: sunTimes?.sunsetString ?? controller.sunsetTime, languageCode: languageCode, onRefresh: controller.refreshLocation, compactLocation: true),
+              IslamicInfoCard(location: controller.currentLocationName, englishDate: DateService.englishDate(), banglaDate: _banglaDate(), hijriDate: _hijriDate(languageCode), sunrise: _displayTime(sunTimes?.sunriseString ?? controller.sunriseTime, settings.showSeconds), sunset: _displayTime(sunTimes?.sunsetString ?? controller.sunsetTime, settings.showSeconds), languageCode: languageCode, onRefresh: controller.refreshLocation, compactLocation: true),
               const SizedBox(height: 16),
               _sectionHeader(context, primary, Icons.mosque_outlined, l10n.todaysPrayer),
               const SizedBox(height: 9),
@@ -254,9 +277,10 @@ class _PrayerScreenState extends State<PrayerScreen> {
   Widget _prayerRow(BuildContext context, AppLocalizations l10n, Map<String, dynamic> data, Color primary, Color text, Color secondary, String languageCode, bool divider) {
     final current = data['isCurrent'] == true;
     final name = _prayerName(l10n, data['name']?.toString() ?? '', languageCode);
-    final start = data['start']?.toString() ?? '--:--';
-    final end = data['end']?.toString() ?? '--:--';
-    final jamaat = data['jamaat']?.toString() ?? '--:--';
+    final showSeconds = context.read<SettingsProvider>().showSeconds;
+    final start = _displayTime(data['start']?.toString() ?? '--:--', showSeconds);
+    final end = _displayTime(data['end']?.toString() ?? '--:--', showSeconds);
+    final jamaat = _displayTime(data['jamaat']?.toString() ?? '--:--', showSeconds);
     final icon = _prayerIcon(data['name']?.toString() ?? '');
     return Column(children: [
       Padding(padding: const EdgeInsets.symmetric(vertical: 9), child: Row(children: [
@@ -279,12 +303,13 @@ class _PrayerScreenState extends State<PrayerScreen> {
   }
 
   Widget _importantTimes(BuildContext context, AppLocalizations l10n, PrayerController controller, Color primary, SunTimeInfo? sunTimes) {
+    final showSeconds = context.read<SettingsProvider>().showSeconds;
     return Row(children: [
-      Expanded(child: _infoMiniCard(context, Icons.wb_sunny_outlined, l10n.sunrise, sunTimes?.sunriseString ?? controller.sunriseTime, primary)),
+      Expanded(child: _infoMiniCard(context, Icons.wb_sunny_outlined, l10n.sunrise, _displayTime(sunTimes?.sunriseString ?? controller.sunriseTime, showSeconds), primary)),
       const SizedBox(width: 7),
-      Expanded(child: _infoMiniCard(context, Icons.brightness_5_outlined, l10n.solarNoon, controller.solarNoonTime, primary)),
+      Expanded(child: _infoMiniCard(context, Icons.brightness_5_outlined, l10n.solarNoon, _displayTime(controller.solarNoonTime, showSeconds), primary)),
       const SizedBox(width: 7),
-      Expanded(child: _infoMiniCard(context, Icons.nights_stay_outlined, l10n.sunset, sunTimes?.sunsetString ?? controller.sunsetTime, primary)),
+      Expanded(child: _infoMiniCard(context, Icons.nights_stay_outlined, l10n.sunset, _displayTime(sunTimes?.sunsetString ?? controller.sunsetTime, showSeconds), primary)),
     ]);
   }
 
@@ -304,6 +329,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final theme = Theme.of(context);
     final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary = theme.textTheme.bodySmall?.color?.withValues(alpha: .68) ?? theme.colorScheme.onSurface.withValues(alpha: .68);
+    final showSeconds = context.read<SettingsProvider>().showSeconds;
     final nafl = controller.prayers.where((p) => p['category'] == 'nafl').toList(growable: false);
     return _card(context, primary, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7), child: Column(children: [
       for (var i = 0; i < nafl.length; i++) ...[
@@ -312,7 +338,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
           const SizedBox(width: 10),
           Expanded(child: Text(_prayerName(AppLocalizations.of(context), nafl[i]['name']?.toString() ?? '', languageCode), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800, height: 1.15))),
           const SizedBox(width: 8),
-          Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text('${nafl[i]['start'] ?? '--:--'} – ${nafl[i]['end'] ?? '--:--'}', maxLines: 1, style: TextStyle(color: primary, fontSize: 12.5, fontWeight: FontWeight.w800, height: 1.1)))),
+          Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text('${_displayTime(nafl[i]['start']?.toString() ?? '--:--', showSeconds)} – ${_displayTime(nafl[i]['end']?.toString() ?? '--:--', showSeconds)}', maxLines: 1, style: TextStyle(color: primary, fontSize: 12.5, fontWeight: FontWeight.w800, height: 1.1)))),
         ])),
         if (i < nafl.length - 1) Divider(height: 1, color: secondary.withValues(alpha: .10)),
       ],
