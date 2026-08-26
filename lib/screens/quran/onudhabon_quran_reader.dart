@@ -471,7 +471,16 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(22), border: Border.all(color: primary.withValues(alpha: .10))),
       child: Column(children: [
-        Row(children: [Expanded(child: Column(children: [Text(surah.arabicName, textDirection: TextDirection.rtl, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: primary)), Text(surah.banglaName ?? surah.transliteration, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)), Text(surah.transliteration, style: TextStyle(fontSize: 11.5, color: context.secondaryTextColor))]))]),
+        Row(children: [
+          Expanded(
+            child: Column(
+              children: [
+                Text(surah.arabicName, textDirection: TextDirection.rtl, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: primary)),
+                Text(_surahDisplayName(surah, l10n), textDirection: l10n.isArabic ? TextDirection.rtl : TextDirection.ltr, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+              ],
+            ),
+          ),
+        ]),
         const SizedBox(height: 9),
         Wrap(alignment: WrapAlignment.center, spacing: 7, runSpacing: 7, children: [
           _chip(context, l10n.isBangla ? _bn(surah.totalVerses) : l10n.isArabic ? _ar(surah.totalVerses) : surah.totalVerses.toString(), _localizedText(l10n, 'আয়াত', 'verses', 'آيات')),
