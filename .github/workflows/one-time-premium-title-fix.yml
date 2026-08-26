@@ -1,0 +1,46 @@
+name: One-time Premium Title Fix
+
+on:
+  push:
+    branches:
+      - fix/prayer-completion-tracker
+
+permissions:
+  contents: write
+
+jobs:
+  patch-title:
+    if: github.actor == 'jaberhusain4'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Patch all Premium title occurrences and remove workflow
+        shell: python
+        run: |
+          from pathlib import Path
+
+          target = Path('lib/screens/settings_hub_screen_v4.dart')
+          text = target.read_text(encoding='utf-8')
+
+          old = "_t(languageCode, 'নূরভার্স প্রিমিয়াম', 'NurVerse Premium')"
+          new = "'NurVerse Premium'"
+          count = text.count(old)
+          if count < 1:
+              raise SystemExit('Expected Premium title expression was not found.')
+
+          target.write_text(text.replace(old, new), encoding='utf-8')
+          Path('.github/workflows/one-time-premium-title-fix.yml').unlink()
+          print(f'Patched {count} Premium title occurrence(s).')
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/screens/settings_hub_screen_v4.dart .github/workflows/one-time-premium-title-fix.yml
+          git commit -m "Settings: keep NurVerse Premium title English"
+          git push
