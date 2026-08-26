@@ -1,0 +1,61 @@
+name: Enable Show Seconds preference
+
+on:
+  push:
+    paths:
+      - '.github/workflows/enable-show-seconds.yml'
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/prayer-completion-tracker
+          fetch-depth: 1
+
+      - name: Wire Show Seconds to prayer screen clock
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('lib/screens/localized_prayer_screen.dart')
+          text = path.read_text(encoding='utf-8')
+
+          import_old = "import '../controllers/prayer_controller.dart';"
+          import_new = "import '../controllers/prayer_controller.dart';\nimport '../providers/settings_provider.dart';"
+          if import_old not in text:
+              raise SystemExit('Prayer controller import not found.')
+          text = text.replace(import_old, import_new, 1)
+
+          start = text.index('  Widget _importantTimes(BuildContext context, PrayerController c) {')
+          end = text.index('  Widget _card(', start)
+          block = text[start:end]
+
+          marker = "    final primary = Theme.of(context).colorScheme.primary;"
+          if marker not in block:
+              raise SystemExit('Expected _importantTimes primary marker not found.')
+          block = block.replace(marker, marker + "\n    final settings = context.watch<SettingsProvider>();", 1)
+
+          old = "DateFormat('hh:mm:ss a').format(_now)"
+          new = "DateFormat(settings.showSeconds ? 'hh:mm:ss a' : 'hh:mm a').format(_now)"
+          if old not in block:
+              raise SystemExit('Expected live clock formatter not found.')
+          block = block.replace(old, new, 1)
+
+          text = text[:start] + block + text[end:]
+          path.write_text(text, encoding='utf-8')
+
+      - name: Commit patch and remove workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/localized_prayer_screen.dart .github/workflows/enable-show-seconds.yml
+          git commit -m 'fix(settings): activate Show Seconds on prayer clock'
+          git push origin HEAD:fix/prayer-completion-tracker
+          git rm .github/workflows/enable-show-seconds.yml
+          git commit -m 'chore: remove one-time Show Seconds workflow'
+          git push origin HEAD:fix/prayer-completion-tracker
