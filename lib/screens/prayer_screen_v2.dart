@@ -41,7 +41,7 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
 
   Future<void> _loadTracker() async {
     final day = await PrayerCompletionService.getDay();
-    final week = await PrayerCompletionService.getLastSevenDays();
+    await PrayerCompletionService.getLastSevenDays();
     if (!mounted) return;
     setState(() {
       _completed = day;
@@ -56,7 +56,7 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
       prayer: prayer,
       completed: next,
     );
-    final week = await PrayerCompletionService.getLastSevenDays();
+    await PrayerCompletionService.getLastSevenDays();
     if (!mounted) return;
   }
 
@@ -682,7 +682,6 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
   Future<void> _showWeeklyReport() async {
     final records = await PrayerCompletionService.getLastSevenDays();
     if (!mounted) return;
-    setState(() => _week = records);
     final primary = Theme.of(context).colorScheme.primary;
     final total = records.fold<int>(0, (sum, day) => sum + day.completedCount);
     final average = total / 7;
