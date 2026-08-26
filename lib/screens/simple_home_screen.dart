@@ -83,11 +83,18 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
     return 'শুভ সন্ধ্যা';
   }
 
-  String _clock() {
+  String _clock(bool showSeconds) {
     final hour = _now.hour % 12 == 0 ? 12 : _now.hour % 12;
     final minute = _now.minute.toString().padLeft(2, '0');
     final second = _now.second.toString().padLeft(2, '0');
-    return '$hour:$minute:$second ${_now.hour >= 12 ? 'PM' : 'AM'}';
+    final base = '$hour:$minute';
+    return showSeconds ? '$base:$second ${_now.hour >= 12 ? 'PM' : 'AM'}' : '$base ${_now.hour >= 12 ? 'PM' : 'AM'}';
+  }
+
+  String _displayTime(String value, bool showSeconds) {
+    if (showSeconds) return value;
+    final match = RegExp(r'^(\d{1,2}:\d{2})').firstMatch(value.trim());
+    return match?.group(1) ?? value;
   }
 
   String _dateText(String languageCode) {
@@ -191,18 +198,18 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
               const SizedBox(height: 12),
               _ScenicPrayerHero(
                 now: _now,
-                clock: _clock(),
+                clock: _clock(settings.showSeconds),
                 currentPrayer: controller.currentPrayer,
                 nextPrayer: controller.nextPrayerName,
-                nextPrayerTime: controller.nextPrayerTime,
-                remaining: controller.timeRemainingForNextPrayer,
+                nextPrayerTime: _displayTime(controller.nextPrayerTime, settings.showSeconds),
+                remaining: _displayTime(controller.timeRemainingForNextPrayer, settings.showSeconds),
                 progress: controller.prayerProgress,
-                sunrise: controller.sunriseTime,
-                sunset: controller.sunsetTime,
+                sunrise: _displayTime(controller.sunriseTime, settings.showSeconds),
+                sunset: _displayTime(controller.sunsetTime, settings.showSeconds),
                 languageCode: languageCode,
               ),
               const SizedBox(height: 12),
-              _PrayerStrip(prayers: prayers, languageCode: languageCode),
+              _PrayerStrip(prayers: prayers, languageCode: languageCode, showSeconds: settings.showSeconds),
               const SizedBox(height: 18),
               _SectionTitle(title: _label(languageCode, 'প্রয়োজনীয়', 'Essentials')),
               const SizedBox(height: 9),
@@ -243,8 +250,8 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
               const SizedBox(height: 18),
               _DateFooter(
                 englishDate: DateService.englishDate(),
-                sunrise: controller.sunriseTime,
-                sunset: controller.sunsetTime,
+                sunrise: _displayTime(controller.sunriseTime, settings.showSeconds),
+                sunset: _displayTime(controller.sunsetTime, settings.showSeconds),
                 languageCode: languageCode,
               ),
             ],
@@ -517,10 +524,11 @@ class _ScenicPrayerHero extends StatelessWidget {
 }
 
 class _PrayerStrip extends StatelessWidget {
-  const _PrayerStrip({required this.prayers, required this.languageCode});
+  const _PrayerStrip({required this.prayers, required this.languageCode, required this.showSeconds});
 
   final List<Map<String, dynamic>> prayers;
   final String languageCode;
+  final bool showSeconds;
 
   String _name(Map<String, dynamic> prayer) {
     if (languageCode != 'en') return prayer['nameBn']?.toString() ?? '--';
@@ -539,7 +547,8 @@ class _PrayerStrip extends StatelessWidget {
             : const <String, dynamic>{};
         final active = prayer['isCurrent'] == true;
         final name = _name(prayer);
-        final time = prayer['start']?.toString() ?? '--:--';
+        final rawTime = prayer['start']?.toString() ?? '--:--';
+        final time = showSeconds ? rawTime : (RegExp(r'^(\d{1,2}:\d{2})').firstMatch(rawTime.trim())?.group(1) ?? rawTime);
 
         return Expanded(
           child: Container(

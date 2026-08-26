@@ -623,7 +623,7 @@ class PrayerController extends ChangeNotifier {
     }
   }
 
-  String _formatTime(DateTime value) => DateFormat('hh:mm a').format(value);
+  String _formatTime(DateTime value) => DateFormat('hh:mm:ss a').format(value);
 
   String _formatDuration(Duration duration) {
     if (duration.isNegative) return '00:00:00';

@@ -250,11 +250,11 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
           const SizedBox(height: 13),
           Row(
             children: [
-              Expanded(child: _mini(context, Icons.play_arrow_rounded, _label(context, 'শুরু', 'Start'), c.currentPrayerStart)),
+              Expanded(child: _mini(context, Icons.play_arrow_rounded, _label(context, 'শুরু', 'Start'), _displayTime(settings, c.currentPrayerStart))),
               const SizedBox(width: 8),
-              Expanded(child: _mini(context, Icons.stop_rounded, _label(context, 'শেষ', 'End'), c.currentPrayerEnd)),
+              Expanded(child: _mini(context, Icons.stop_rounded, _label(context, 'শেষ', 'End'), _displayTime(settings, c.currentPrayerEnd))),
               const SizedBox(width: 8),
-              Expanded(child: _mini(context, Icons.groups_rounded, _label(context, 'জামাত', 'Jamaat'), c.currentIqamahTime)),
+              Expanded(child: _mini(context, Icons.groups_rounded, _label(context, 'জামাত', 'Jamaat'), _displayTime(settings, c.currentIqamahTime))),
             ],
           ),
           const SizedBox(height: 11),
@@ -282,13 +282,13 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
             ],
           ),
           const SizedBox(height: 10),
-          _previousNextPrayerRow(context, c),
+          _previousNextPrayerRow(context, c, settings),
         ],
       ),
     );
   }
 
-  Widget _previousNextPrayerRow(BuildContext context, PrayerController c) {
+  Widget _previousNextPrayerRow(BuildContext context, PrayerController c, SettingsProvider settings) {
     final primary = Theme.of(context).colorScheme.primary;
     final secondary = context.secondaryTextColor;
     final previousName = c.previousPrayer.trim().isEmpty ? '—' : _prayerLabel(context, c.previousPrayer);
@@ -301,7 +301,7 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
             icon: Icons.history_rounded,
             title: _label(context, 'পূর্ববর্তী', 'Previous'),
             name: previousName,
-            time: c.previousPrayerTime.trim().isEmpty ? '--:--' : c.previousPrayerTime,
+            time: c.previousPrayerTime.trim().isEmpty ? '--:--' : _displayTime(settings, c.previousPrayerTime),
             primary: primary,
             secondary: secondary,
           ),
@@ -313,7 +313,7 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
             icon: Icons.schedule_rounded,
             title: _label(context, 'পরবর্তী', 'Next'),
             name: nextName,
-            time: c.nextPrayerTime,
+            time: _displayTime(settings, c.nextPrayerTime),
             primary: primary,
             secondary: secondary,
           ),
@@ -373,6 +373,12 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
     );
   }
 
+  String _displayTime(SettingsProvider settings, String value) {
+    if (settings.showSeconds) return value;
+    final match = RegExp(r'^(\d{1,2}:\d{2})').firstMatch(value.trim());
+    return match?.group(1) ?? value;
+  }
+
   String _withoutSeconds(String value) {
     final match = RegExp(r'^(\d{2}):(\d{2})').firstMatch(value.trim());
     return match == null ? value : '${match.group(1)}:${match.group(2)}';
@@ -380,6 +386,7 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
 
   Widget _importantTimes(BuildContext context, PrayerController c) {
     final primary = Theme.of(context).colorScheme.primary;
+    final settings = context.watch<SettingsProvider>();
     return _card(
       context,
       child: Column(
@@ -397,11 +404,11 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _dailyTime(context, Icons.wb_sunny_outlined, _label(context, 'সূর্যোদয়', 'Sunrise'), c.sunriseTime, primary)),
+              Expanded(child: _dailyTime(context, Icons.wb_sunny_outlined, _label(context, 'সূর্যোদয়', 'Sunrise'), _displayTime(settings, c.sunriseTime), primary)),
               _divider(context),
-              Expanded(child: _dailyTime(context, Icons.light_mode_outlined, _label(context, 'জাওয়াল / মধ্যাহ্ন', 'Zawal / Noon'), c.solarNoonTime, primary)),
+              Expanded(child: _dailyTime(context, Icons.light_mode_outlined, _label(context, 'জাওয়াল / মধ্যাহ্ন', 'Zawal / Noon'), _displayTime(settings, c.solarNoonTime), primary)),
               _divider(context),
-              Expanded(child: _dailyTime(context, Icons.nights_stay_outlined, _label(context, 'সূর্যাস্ত', 'Sunset'), c.sunsetTime, primary)),
+              Expanded(child: _dailyTime(context, Icons.nights_stay_outlined, _label(context, 'সূর্যাস্ত', 'Sunset'), _displayTime(settings, c.sunsetTime), primary)),
             ],
           ),
           const SizedBox(height: 10),
@@ -421,7 +428,7 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
                     style: TextStyle(color: context.secondaryTextColor, fontSize: 11.5, fontWeight: FontWeight.w600),
                   ),
                 ),
-                Text(DateFormat('hh:mm:ss a').format(_now), style: TextStyle(color: primary, fontSize: 11.5, fontWeight: FontWeight.w800)),
+                Text(DateFormat(settings.showSeconds ? 'hh:mm:ss a' : 'hh:mm a').format(_now), style: TextStyle(color: primary, fontSize: 11.5, fontWeight: FontWeight.w800)),
               ],
             ),
           ),
@@ -432,6 +439,7 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
 
   Widget _todaySalah(BuildContext context, PrayerController c, bool friday) {
     final primary = Theme.of(context).colorScheme.primary;
+    final settings = context.watch<SettingsProvider>();
     final secondary = context.secondaryTextColor;
     final obligatory = c.prayers.where((p) => p['category'] == 'obligatory').toList();
     final completedCount = _completed.values.where((value) => value).length;
@@ -489,8 +497,8 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
                 (p) => p?['name']?.toString() == prayer,
                 orElse: () => null,
               );
-              final time = source?['start']?.toString() ?? '--:--';
-              final end = source?['end']?.toString() ?? '';
+              final time = _displayTime(settings, source?['start']?.toString() ?? '--:--');
+              final end = _displayTime(settings, source?['end']?.toString() ?? '');
               final isCurrent = source?['isCurrent'] == true;
               final checked = _completed[prayer] ?? false;
               final isJumuah = friday && prayer == 'Dhuhr';
@@ -852,7 +860,7 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
                       ],
                     ),
                   ),
-                  Text(item['time'] as String, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12.5, fontWeight: FontWeight.w800)),
+                  Text(_displayTime(context.read<SettingsProvider>(), item['time'] as String, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12.5, fontWeight: FontWeight.w800)),
                 ],
               ),
             ),
