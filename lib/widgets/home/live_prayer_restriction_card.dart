@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/prayer_controller.dart';
 import '../../localization/app_localizations.dart';
 import '../../localization/app_localizations_locale_text_x.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/prayer_engine_service.dart';
 
 class LivePrayerRestrictionCard extends StatefulWidget {
@@ -39,18 +40,25 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
   String _label(AppLocalizations l10n, {required String bn, required String en, required String ar}) =>
       l10n.localeText(values: {'bn': bn, 'en': en, 'ar': ar});
 
-  String _clock(DateTime value) {
+  String _clock(DateTime value, bool showSeconds) {
     final hour = value.hour % 12 == 0 ? 12 : value.hour % 12;
-    return '$hour:${value.minute.toString().padLeft(2, '0')} ${value.hour >= 12 ? 'PM' : 'AM'}';
+    final minute = value.minute.toString().padLeft(2, '0');
+    final second = value.second.toString().padLeft(2, '0');
+    final base = '$hour:$minute';
+    return showSeconds ? '$base:$second ${value.hour >= 12 ? 'PM' : 'AM'}' : '$base ${value.hour >= 12 ? 'PM' : 'AM'}';
   }
 
-  String _countdown(Duration duration) {
-    final seconds = duration.inSeconds.clamp(0, 7 * 86400);
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    final secs = seconds % 60;
-    if (hours > 0) return '$hours:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-    return '$minutes:${secs.toString().padLeft(2, '0')}';
+  String _countdown(Duration duration, bool showSeconds) {
+    final totalSeconds = duration.inSeconds.clamp(0, 7 * 86400);
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+    if (!showSeconds) {
+      if (hours > 0) return '$hours:${minutes.toString().padLeft(2, '0')}';
+      return '$minutes:00';
+    }
+    if (hours > 0) return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   List<PrayerTimeWindow> _todayAndTomorrowWindows(PrayerController controller, DateTime date) {
@@ -114,6 +122,7 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<PrayerController>();
+    final settings = context.watch<SettingsProvider>();
     final l10n = AppLocalizations.of(context);
     final active = _activeWindow(controller);
     final next = _nextWindow(controller);
@@ -122,6 +131,7 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
     final theme = Theme.of(context);
     final foreground = theme.colorScheme.onSurface;
     final secondary = theme.textTheme.bodySmall?.color ?? foreground.withValues(alpha: .7);
+    final showSeconds = settings.showSeconds;
 
     return Container(
       width: double.infinity,
@@ -130,9 +140,9 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [Icon(Icons.block_rounded, size: 21, color: active != null ? theme.colorScheme.error : theme.colorScheme.primary), const SizedBox(width: 8), Expanded(child: Text(_label(l10n, bn: 'নিষিদ্ধ সময়', en: 'Prohibited Prayer Times', ar: 'أوقات النهي'), style: TextStyle(color: foreground, fontSize: 16, fontWeight: FontWeight.w800)))]),
         const SizedBox(height: 10),
-        if (active != null) _timerRow(context: context, title: _label(l10n, bn: 'বর্তমান নিষিদ্ধ সময়', en: 'Current prohibited time', ar: 'وقت النهي الحالي'), subtitle: '${_name(l10n, active)} • ${_clock(active.start)} – ${_clock(active.end)}', timer: _countdown(active.end.difference(_now)), active: true),
+        if (active != null) _timerRow(context: context, title: _label(l10n, bn: 'বর্তমান নিষিদ্ধ সময়', en: 'Current prohibited time', ar: 'وقت النهي الحالي'), subtitle: '${_name(l10n, active)} • ${_clock(active.start, showSeconds)} – ${_clock(active.end, showSeconds)}', timer: _countdown(active.end.difference(_now), showSeconds), active: true),
         if (active != null && next != null) const SizedBox(height: 8),
-        if (next != null) _timerRow(context: context, title: _label(l10n, bn: 'পরবর্তী নিষিদ্ধ সময়', en: 'Next prohibited time', ar: 'وقت النهي التالي'), subtitle: '${_name(l10n, next)} • ${_clock(next.start)} – ${_clock(next.end)}', timer: _countdown(next.start.difference(_now)), active: false),
+        if (next != null) _timerRow(context: context, title: _label(l10n, bn: 'পরবর্তী নিষিদ্ধ সময়', en: 'Next prohibited time', ar: 'وقت النهي التالي'), subtitle: '${_name(l10n, next)} • ${_clock(next.start, showSeconds)} – ${_clock(next.end, showSeconds)}', timer: _countdown(next.start.difference(_now), showSeconds), active: false),
         const SizedBox(height: 7),
         Text(_label(l10n, bn: 'সময়গুলো প্রতি সেকেন্ডে লাইভ আপডেট হচ্ছে।', en: 'Times update live every second.', ar: 'الأوقات تتحدث مباشرة كل ثانية.'), style: TextStyle(color: secondary, fontSize: 10.5)),
       ]),
