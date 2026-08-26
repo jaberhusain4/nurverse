@@ -9,25 +9,9 @@ on:
 jobs:
   localization-guard:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
       - run: dart tool/check_localization_hardcodes.dart
-      - name: Repair active Home and Prayer seconds
-        if: github.event_name == 'push'
-        shell: bash
-        run: |
-          if [ "$GITHUB_ACTOR" = "github-actions[bot]" ]; then exit 0; fi
-          python3 tool/repair_active_home_prayer_seconds.py
-          flutter pub get
-          dart analyze lib/screens/home_screen.dart lib/screens/prayer_screen.dart
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add lib/screens/home_screen.dart lib/screens/prayer_screen.dart
-          git diff --cached --check
-          git commit -m 'fix: restore active Home and Prayer seconds behavior'
-          git push
