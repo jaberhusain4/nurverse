@@ -22,7 +22,6 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
   Timer? _clock;
   DateTime _now = DateTime.now();
   Map<String, bool> _completed = <String, bool>{};
-  List<PrayerDayRecord> _week = <PrayerDayRecord>[];
   bool _trackerLoading = true;
 
   @override
@@ -46,7 +45,6 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
     if (!mounted) return;
     setState(() {
       _completed = day;
-      _week = week;
       _trackerLoading = false;
     });
   }
@@ -60,7 +58,6 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
     );
     final week = await PrayerCompletionService.getLastSevenDays();
     if (!mounted) return;
-    setState(() => _week = week);
   }
 
   String _label(BuildContext context, String bn, String en, [String ar = '']) {
@@ -860,7 +857,7 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
                       ],
                     ),
                   ),
-                  Text(_displayTime(context.read<SettingsProvider>(), item['time'] as String, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12.5, fontWeight: FontWeight.w800)),
+                  Text(_displayTime(context.read<SettingsProvider>(), item['time'] as String), style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12.5, fontWeight: FontWeight.w800)),
                 ],
               ),
             ),
