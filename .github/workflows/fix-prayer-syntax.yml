@@ -1,0 +1,39 @@
+name: Fix Prayer Screen Syntax
+on:
+  push:
+    branches:
+      - fix/prayer-completion-tracker
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/prayer-completion-tracker
+          fetch-depth: 0
+      - name: Patch prayer screen
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/screens/prayer_screen_v2.dart')
+          s = p.read_text(encoding='utf-8')
+          old = "Text(_displayTime(context.read<SettingsProvider>(), item['time'] as String, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12.5, fontWeight: FontWeight.w800)),"
+          new = "Text(_displayTime(context.read<SettingsProvider>(), item['time'] as String), style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12.5, fontWeight: FontWeight.w800)),"
+          if old not in s:
+              raise SystemExit('expected _displayTime call not found')
+          s = s.replace(old, new, 1)
+          s = s.replace("  List<PrayerDayRecord> _week = <PrayerDayRecord>[];\n", "", 1)
+          s = s.replace("      _week = week;\n", "", 1)
+          s = s.replace("    setState(() => _week = week);\n", "", 1)
+          p.write_text(s, encoding='utf-8')
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/prayer_screen_v2.dart
+          git diff --cached --quiet || git commit -m 'Fix Prayer Screen syntax and unused tracker field'
+          git push
