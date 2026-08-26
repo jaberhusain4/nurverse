@@ -309,7 +309,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
                 Expanded(
                   flex: 3,
                   child: Text(
-                    c.timeRemainingForNextPrayer,
+                    settings.showSeconds ? c.timeRemainingForNextPrayer : _withoutSeconds(c.timeRemainingForNextPrayer),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: secondary,
@@ -336,6 +336,11 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
         ],
       ),
     );
+  }
+
+  String _withoutSeconds(String value) {
+    final match = RegExp(r'^(\d{2}):(\d{2})').firstMatch(value.trim());
+    return match == null ? value : '${match.group(1)}:${match.group(2)}';
   }
 
   Widget _importantTimes(BuildContext context, PrayerController c) {
