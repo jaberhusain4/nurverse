@@ -508,9 +508,9 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         ]),
         const SizedBox(height: 9),
         Row(children: [
-          Expanded(child: TextButton.icon(onPressed: () => _showTranslationPicker(surah), icon: const Icon(Icons.translate_rounded, size: 16), label: Text(_translationEdition.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), minimumSize: Size.zero, padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4), tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9))))),
+          Expanded(child: TextButton.icon(onPressed: () => _showTranslationPicker(surah), icon: const Icon(Icons.translate_rounded, size: 17), label: Text(_translationEdition.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: buttonTextStyle), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), minimumSize: Size.zero, padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4), tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9))))),
           const SizedBox(width: 6),
-          Expanded(child: TextButton.icon(onPressed: () => _showTafsirPicker(surah), icon: const Icon(Icons.menu_book_rounded, size: 16), label: Text(_localizedText(l10n, 'তাফসির / ব্যাখ্যা', 'Tafsir / Explanation', 'التفسير / الشرح'), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), minimumSize: Size.zero, padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4), tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9))))),
+          Expanded(child: TextButton.icon(onPressed: () => _showTafsirPicker(surah), icon: const Icon(Icons.menu_book_rounded, size: 17), label: Text(_localizedText(l10n, 'তাফসির / ব্যাখ্যা', 'Tafsir / Explanation', 'التفسير / الشرح'), maxLines: 1, overflow: TextOverflow.ellipsis, style: buttonTextStyle), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), minimumSize: Size.zero, padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4), tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9))))),
         ]),
         Align(alignment: Alignment.centerRight, child: OutlinedButton.icon(onPressed: () { setState(() => _showTafsir = !_showTafsir); _saveSettings(); }, icon: Icon(_showTafsir ? Icons.visibility_off_rounded : Icons.visibility_rounded, size: 15), label: Text(_showTafsir ? _localizedText(l10n, 'তাফসির লুকান', 'Hide Tafsir', 'إخفاء التفسير') : _localizedText(l10n, 'তাফসির দেখান', 'Show Tafsir', 'عرض التفسير'), style: buttonTextStyle), style: OutlinedButton.styleFrom(minimumSize: const Size(0, 32), padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5), tapTargetSize: MaterialTapTargetSize.shrinkWrap, side: BorderSide(color: primary.withValues(alpha: .32), width: 1.1), backgroundColor: primary.withValues(alpha: .055), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
       ]),
@@ -525,8 +525,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
       decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(20)),
-      child: Column(children: [
-        Row(children: [CircleAvatar(radius: 15, backgroundColor: primary.withValues(alpha: .10), child: Text(_bn(verse.number), style: TextStyle(color: primary, fontSize: 11, fontWeight: FontWeight.w800))), const Spacer(), Text('${_bn(surah.number)}:${_bn(verse.number)}', style: TextStyle(fontSize: 10.5, color: context.secondaryTextColor))]),
+      child: Column(children: [Row(children: [CircleAvatar(radius: 15, backgroundColor: primary.withValues(alpha: .10), child: Text(_bn(verse.number), style: TextStyle(color: primary, fontSize: 11, fontWeight: FontWeight.w800))), const Spacer(), Text('${_bn(surah.number)}:${_bn(verse.number)}', style: TextStyle(fontSize: 10.5, color: context.secondaryTextColor))]),
         const SizedBox(height: 10),
         if (_showAyah) Container(width: double.infinity, alignment: Alignment.centerRight, child: Directionality(textDirection: TextDirection.rtl, child: Text.rich(TextSpan(children: [TextSpan(text: verse.arabic, style: TextStyle(fontSize: _arabicSize, height: _arabicSize >= 25 ? 1.72 : 1.60, fontWeight: FontWeight.w500)), TextSpan(text: '  ۝${_ar(verse.number)}', style: TextStyle(color: primary, fontSize: _arabicSize * .72, fontWeight: FontWeight.w800))]), textAlign: TextAlign.right))),
         if (_showTranslation && translation != null && translation.trim().isNotEmpty) ...[
@@ -535,32 +534,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         ],
         if (_showTafsir && tafsir != null && tafsir.trim().isNotEmpty) ...[
           const SizedBox(height: 10),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: .035),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _tafsirTitle,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
-                    color: primary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  tafsir,
-                  style: const TextStyle(fontSize: 13.5, height: 1.55),
-                ),
-              ],
-            ),
-          ),
+          Container(width: double.infinity, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: primary.withValues(alpha: .035), borderRadius: BorderRadius.circular(14)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(_tafsirTitle, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: primary)), const SizedBox(height: 6), Text(tafsir, style: const TextStyle(fontSize: 13.5, height: 1.55))])),
         ],
       ]),
     );
@@ -569,21 +543,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   Widget _chip(BuildContext context, String value, String label) {
     final primary = Theme.of(context).colorScheme.primary;
     final text = label.isEmpty ? value : '$value $label';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: primary.withValues(alpha: .07),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: primary,
-        ),
-      ),
-    );
+    return Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: primary.withValues(alpha: .07), borderRadius: BorderRadius.circular(20)), child: Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: primary)));
   }
 
   Widget _error(BuildContext context, String text) {
