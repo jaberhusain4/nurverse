@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hijri/hijri_calendar.dart';
+import 'package:provider/provider.dart';
 
+import '../../providers/settings_provider.dart';
 import '../../theme/app_theme.dart';
 
 class IslamicInfoCard extends StatelessWidget {
@@ -197,10 +199,49 @@ class IslamicInfoCard extends StatelessWidget {
     final primary = theme.colorScheme.primary;
     final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary = context.secondaryTextColor;
+    final datePreference = context.watch<SettingsProvider>().dateDisplayPreference;
     final locationIconSize = compactLocation ? 17.0 : 18.0;
     final locationIconBox = compactLocation ? 34.0 : 36.0;
     final locationFontSize = compactLocation ? 11.5 : 14.0;
     final locationLabelSize = compactLocation ? 12.0 : 13.0;
+
+    final dateBlocks = <Widget>[];
+    void addDateBlock({required String label, required String value}) {
+      if (dateBlocks.isNotEmpty) {
+        dateBlocks.add(const SizedBox(width: 7));
+      }
+      dateBlocks.add(
+        Expanded(
+          child: _DateBlock(
+            label: label,
+            value: value,
+            primary: primary,
+            text: text,
+            secondary: secondary,
+          ),
+        ),
+      );
+    }
+
+    if (datePreference == 'gregorian' || datePreference == 'both') {
+      addDateBlock(
+        label: _label(bn: 'ইংরেজি', en: 'Gregorian', ar: 'ميلادي'),
+        value: englishDate,
+      );
+    }
+    if (datePreference == 'hijri' || datePreference == 'both') {
+      addDateBlock(
+        label: _label(bn: 'হিজরি', en: 'Hijri', ar: 'هجري'),
+        value: languageCode == 'bn' ? _hijriBanglaDate() : hijriDate,
+      );
+    }
+
+    if (dateBlocks.isEmpty) {
+      addDateBlock(
+        label: _label(bn: 'ইংরেজি', en: 'Gregorian', ar: 'ميلادي'),
+        value: englishDate,
+      );
+    }
 
     return Container(
       width: double.infinity,
@@ -252,39 +293,7 @@ class IslamicInfoCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 11),
-          Row(
-            children: [
-              Expanded(
-                child: _DateBlock(
-                  label: _label(bn: 'ইংরেজি', en: 'Gregorian', ar: 'ميلادي'),
-                  value: englishDate,
-                  primary: primary,
-                  text: text,
-                  secondary: secondary,
-                ),
-              ),
-              const SizedBox(width: 7),
-              Expanded(
-                child: _DateBlock(
-                  label: _label(bn: 'বাংলা', en: 'Bangla', ar: 'بنغالية'),
-                  value: banglaDate,
-                  primary: primary,
-                  text: text,
-                  secondary: secondary,
-                ),
-              ),
-              const SizedBox(width: 7),
-              Expanded(
-                child: _DateBlock(
-                  label: _label(bn: 'হিজরি', en: 'Hijri', ar: 'هجري'),
-                  value: languageCode == 'bn' ? _hijriBanglaDate() : hijriDate,
-                  primary: primary,
-                  text: text,
-                  secondary: secondary,
-                ),
-              ),
-            ],
-          ),
+          Row(children: dateBlocks),
           const SizedBox(height: 8),
           Row(
             children: [
