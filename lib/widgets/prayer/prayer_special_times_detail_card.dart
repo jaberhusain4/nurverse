@@ -19,8 +19,8 @@ class PrayerSpecialTimesDetailCard extends StatelessWidget {
     var hour = int.tryParse(match.group(1)!) ?? -1;
     final minute = int.tryParse(match.group(2)!) ?? -1;
     final second = int.tryParse(match.group(3) ?? '0') ?? 0;
-    if (hour < 1 || hour > 12 || minute < 0 || minute > 59) return null;
-    final period = match.group(3)!.toUpperCase();
+    if (hour < 1 || hour > 12 || minute < 0 || minute > 59 || second < 0 || second > 59) return null;
+    final period = match.group(4)!.toUpperCase();
     if (period == 'AM' && hour == 12) hour = 0;
     if (period == 'PM' && hour != 12) hour += 12;
     final now = DateTime.now();
