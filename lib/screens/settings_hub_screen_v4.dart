@@ -447,7 +447,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                           children: [
                             Flexible(
                               child: Text(
-                                _t(languageCode, 'নূরভার্স প্রিমিয়াম', 'NurVerse Premium'),
+                                'NurVerse Premium',
                                 style: const TextStyle(color: AppColors.seaBlue, fontSize: 18, fontWeight: FontWeight.w900),
                               ),
                             ),
