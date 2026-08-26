@@ -1,0 +1,40 @@
+name: Fix Show Seconds scope
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-show-seconds-scope.yml'
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/prayer-completion-tracker
+          fetch-depth: 1
+      - name: Fix settings scope in prayer card
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/screens/localized_prayer_screen.dart')
+          text = p.read_text(encoding='utf-8')
+          old = "  Widget _currentCard(BuildContext context, PrayerController c, bool friday) {\n    final l10n = AppLocalizations.of(context);"
+          new = "  Widget _currentCard(BuildContext context, PrayerController c, bool friday) {\n    final l10n = AppLocalizations.of(context);\n    final settings = context.watch<SettingsProvider>();"
+          if old not in text:
+              raise SystemExit('Expected _currentCard marker not found; refusing to modify file.')
+          text = text.replace(old, new, 1)
+          p.write_text(text, encoding='utf-8')
+      - name: Commit fix and remove workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/localized_prayer_screen.dart
+          git commit -m 'fix(settings): scope Show Seconds preference to prayer card'
+          git push origin HEAD:fix/prayer-completion-tracker
+          git rm .github/workflows/fix-show-seconds-scope.yml
+          git commit -m 'chore: remove one-time Show Seconds scope workflow'
+          git push origin HEAD:fix/prayer-completion-tracker
