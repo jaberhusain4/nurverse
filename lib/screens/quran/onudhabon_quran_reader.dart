@@ -80,120 +80,26 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
 
   String? _surahBanglaMeaning(int number) {
     const meanings = <int, String>{
-      1: 'সূচনা',
-      2: 'গাভী',
-      3: 'ইমরানের পরিবার',
-      4: 'নারী',
-      5: 'খাবারের টেবিল',
-      6: 'গবাদি পশু',
-      7: 'উচ্চস্থানসমূহ',
-      8: 'যুদ্ধলব্ধ সম্পদ',
-      9: 'তওবা',
-      10: 'ইউনুস (আ.)',
-      11: 'হূদ (আ.)',
-      12: 'ইউসুফ (আ.)',
-      13: 'বজ্রধ্বনি',
-      14: 'ইবরাহিম (আ.)',
-      15: 'পাথুরে ভূমি',
-      16: 'মৌমাছি',
-      17: 'রাতের ভ্রমণ',
-      18: 'গুহা',
-      19: 'মারইয়াম (আ.)',
-      20: 'ত্বা-হা — বিচ্ছিন্ন আরবি অক্ষর',
-      21: 'নবীগণ',
-      22: 'হজ',
-      23: 'মুমিনগণ',
-      24: 'আলো',
-      25: 'সত্য-মিথ্যার পার্থক্যকারী',
-      26: 'কবিগণ',
-      27: 'পিঁপড়া',
-      28: 'কাহিনী',
-      29: 'মাকড়সা',
-      30: 'রোমানরা',
-      31: 'লুকমান',
-      32: 'সিজদা',
-      33: 'সম্মিলিত বাহিনী',
-      34: 'সাবা জাতি',
-      35: 'সৃষ্টিকর্তা',
-      36: 'ইয়াসীন — বিচ্ছিন্ন আরবি অক্ষর',
-      37: 'সারিবদ্ধরা',
-      38: 'সাদ — বিচ্ছিন্ন আরবি অক্ষর',
-      39: 'দলসমূহ',
-      40: 'ক্ষমাশীল',
-      41: 'বিস্তারিত ব্যাখ্যা',
-      42: 'পরামর্শ',
-      43: 'অলংকার',
-      44: 'ধোঁয়া',
-      45: 'নতজানু',
-      46: 'বালুকাময় পাহাড়',
-      47: 'মুহাম্মাদ (সা.)',
-      48: 'বিজয়',
-      49: 'কক্ষসমূহ',
-      50: 'কাফ — বিচ্ছিন্ন আরবি অক্ষর',
-      51: 'বিক্ষেপকারী বায়ু',
-      52: 'তূর পর্বত',
-      53: 'নক্ষত্র',
-      54: 'চন্দ্র',
-      55: 'পরম দয়ালু',
-      56: 'মহাঘটনা',
-      57: 'লোহা',
-      58: 'বিতর্ককারিণী',
-      59: 'সমবেতকরণ',
-      60: 'পরীক্ষিতা নারী',
-      61: 'সারিবদ্ধ',
-      62: 'সমাবেশের দিন',
-      63: 'মুনাফিকগণ',
-      64: 'পারস্পরিক লাভ-ক্ষতি',
-      65: 'তালাক',
-      66: 'নিষিদ্ধকরণ',
-      67: 'রাজত্ব',
-      68: 'কলম',
-      69: 'অবধারিত সত্য',
-      70: 'উন্নীত হওয়ার সিঁড়ি',
-      71: 'নূহ (আ.)',
-      72: 'জিন',
-      73: 'বস্ত্রাবৃত ব্যক্তি',
-      74: 'চাদরাচ্ছাদিত ব্যক্তি',
-      75: 'কিয়ামত',
-      76: 'মানুষ',
-      77: 'প্রেরিতগণ',
-      78: 'মহাসংবাদ',
-      79: 'টেনে বেরকারীরা',
-      80: 'ভ্রুকুটি',
-      81: 'সূর্য গুটিয়ে যাওয়া',
-      82: 'বিদীর্ণ হওয়া',
-      83: 'পরিমাপে কারচুপি করা',
-      84: 'বিদীর্ণ হওয়া',
-      85: 'নক্ষত্রমণ্ডলী',
-      86: 'রাতের আগন্তুক',
-      87: 'সর্বোচ্চ',
-      88: 'আচ্ছন্নকারী',
-      89: 'ভোর',
-      90: 'নগর',
-      91: 'সূর্য',
-      92: 'রাত',
-      93: 'পূর্বাহ্ন',
-      94: 'বক্ষ প্রশস্তকরণ',
-      95: 'ডুমুর',
-      96: 'রক্তপিণ্ড',
-      97: 'মর্যাদার রাত',
-      98: 'স্পষ্ট প্রমাণ',
-      99: 'ভূমিকম্প',
-      100: 'ছুটন্ত অশ্ব',
-      101: 'মহাপ্রলয়',
-      102: 'প্রাচুর্য নিয়ে প্রতিযোগিতা',
-      103: 'সময়',
-      104: 'পরনিন্দাকারী',
-      105: 'হাতির বাহিনী',
-      106: 'কুরাইশ',
-      107: 'সাহায্য ও সামান্য প্রয়োজনীয় বস্তু',
-      108: 'অপরিমিত প্রাচুর্য',
-      109: 'কাফিরগণ',
-      110: 'সাহায্য',
-      111: 'খেজুরের আঁশ',
-      112: 'একনিষ্ঠতা',
-      113: 'ভোর',
-      114: 'মানুষ',
+      1: 'সূচনা', 2: 'গাভী', 3: 'ইমরানের পরিবার', 4: 'নারী', 5: 'খাবারের টেবিল', 6: 'গবাদি পশু',
+      7: 'উচ্চস্থানসমূহ', 8: 'যুদ্ধলব্ধ সম্পদ', 9: 'তওবা', 10: 'ইউনুস (আ.)', 11: 'হূদ (আ.)', 12: 'ইউসুফ (আ.)',
+      13: 'বজ্রধ্বনি', 14: 'ইবরাহিম (আ.)', 15: 'পাথুরে ভূমি', 16: 'মৌমাছি', 17: 'রাতের ভ্রমণ', 18: 'গুহা',
+      19: 'মারইয়াম (আ.)', 20: 'ত্বা-হা — বিচ্ছিন্ন আরবি অক্ষর', 21: 'নবীগণ', 22: 'হজ', 23: 'মুমিনগণ', 24: 'আলো',
+      25: 'সত্য-মিথ্যার পার্থক্যকারী', 26: 'কবিগণ', 27: 'পিঁপড়া', 28: 'কাহিনী', 29: 'মাকড়সা', 30: 'রোমানরা',
+      31: 'লুকমান', 32: 'সিজদা', 33: 'সম্মিলিত বাহিনী', 34: 'সাবা জাতি', 35: 'সৃষ্টিকর্তা', 36: 'ইয়াসীন — বিচ্ছিন্ন আরবি অক্ষর',
+      37: 'সারিবদ্ধরা', 38: 'সাদ — বিচ্ছিন্ন আরবি অক্ষর', 39: 'দলসমূহ', 40: 'ক্ষমাশীল', 41: 'বিস্তারিত ব্যাখ্যা',
+      42: 'পরামর্শ', 43: 'অলংকার', 44: 'ধোঁয়া', 45: 'নতজানু', 46: 'বালুকাময় পাহাড়', 47: 'মুহাম্মাদ (সা.)',
+      48: 'বিজয়', 49: 'কক্ষসমূহ', 50: 'কাফ — বিচ্ছিন্ন আরবি অক্ষর', 51: 'বিক্ষেপকারী বায়ু', 52: 'তূর পর্বত',
+      53: 'নক্ষত্র', 54: 'চন্দ্র', 55: 'পরম দয়ালু', 56: 'মহাঘটনা', 57: 'লোহা', 58: 'বিতর্ককারিণী', 59: 'সমবেতকরণ',
+      60: 'পরীক্ষিতা নারী', 61: 'সারিবদ্ধ', 62: 'সমাবেশের দিন', 63: 'মুনাফিকগণ', 64: 'পারস্পরিক লাভ-ক্ষতি',
+      65: 'তালাক', 66: 'নিষিদ্ধকরণ', 67: 'রাজত্ব', 68: 'কলম', 69: 'অবধারিত সত্য', 70: 'উন্নীত হওয়ার সিঁড়ি',
+      71: 'নূহ (আ.)', 72: 'জিন', 73: 'বস্ত্রাবৃত ব্যক্তি', 74: 'চাদরাচ্ছাদিত ব্যক্তি', 75: 'কিয়ামত', 76: 'মানুষ',
+      77: 'প্রেরিতগণ', 78: 'মহাসংবাদ', 79: 'টেনে বেরকারীরা', 80: 'ভ্রুকুটি', 81: 'সূর্য গুটিয়ে যাওয়া', 82: 'বিদীর্ণ হওয়া',
+      83: 'পরিমাপে কারচুপি করা', 84: 'বিদীর্ণ হওয়া', 85: 'নক্ষত্রমণ্ডলী', 86: 'রাতের আগন্তুক', 87: 'সর্বোচ্চ',
+      88: 'আচ্ছন্নকারী', 89: 'ভোর', 90: 'নগর', 91: 'সূর্য', 92: 'রাত', 93: 'পূর্বাহ্ন', 94: 'বক্ষ প্রশস্তকরণ',
+      95: 'ডুমুর', 96: 'রক্তপিণ্ড', 97: 'মর্যাদার রাত', 98: 'স্পষ্ট প্রমাণ', 99: 'ভূমিকম্প', 100: 'ছুটন্ত অশ্ব',
+      101: 'মহাপ্রলয়', 102: 'প্রাচুর্য নিয়ে প্রতিযোগিতা', 103: 'সময়', 104: 'পরনিন্দাকারী', 105: 'হাতির বাহিনী',
+      106: 'কুরাইশ', 107: 'সাহায্য ও সামান্য প্রয়োজনীয় বস্তু', 108: 'অপরিমিত প্রাচুর্য', 109: 'কাফিরগণ', 110: 'সাহায্য',
+      111: 'খেজুরের আঁশ', 112: 'একনিষ্ঠতা', 113: 'ভোর', 114: 'মানুষ',
     };
     return meanings[number];
   }
@@ -234,13 +140,10 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
     _showAyah = prefs.getBool('onudhabon_show_ayah') ?? true;
     _showTranslation = prefs.getBool('onudhabon_show_translation') ?? true;
     _showTafsir = prefs.getBool('onudhabon_show_tafsir') ?? false;
-
     if (!QuranTranslationService.editions.any((e) => e.id == _translationId)) {
       _translationId = QuranTranslationService.editions.first.id;
     }
-
     await _data.init();
-
     if (widget.initialSurahNumber != null && widget.initialSurahNumber! >= 1 && widget.initialSurahNumber! <= 114) {
       _selectedSurah = widget.initialSurahNumber;
       _resumeAyah = null;
@@ -253,7 +156,6 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         _resumeAyah = ayah is int && ayah > 0 ? ayah : 1;
       }
     }
-
     if (!mounted) return;
     setState(() => _loading = false);
     if (_selectedSurah != null) {
@@ -278,7 +180,6 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         }
         currentSurah = _data.getSurah(surah.number);
       }
-
       final local = <int, String>{
         for (final verse in currentSurah.verses)
           if (verse.bangla != null && verse.bangla!.trim().isNotEmpty) verse.number: verse.bangla!,
@@ -343,7 +244,6 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
       });
       return;
     }
-
     Navigator.of(context).pop();
   }
 
@@ -399,14 +299,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
                 const Icon(Icons.text_fields_rounded), const SizedBox(width: 8),
                 Text(_localizedText(l10n, 'পড়ার সেটিংস', 'Reading settings', 'إعدادات القراءة'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                 const Spacer(),
-                TextButton(
-                  onPressed: () {
-                    setState(() { _arabicSize = 20; _translationSize = 15; });
-                    _saveSettings();
-                    setSheetState(() {});
-                  },
-                  child: Text(_localizedText(l10n, 'ডিফল্ট', 'Default', 'افتراضي')),
-                ),
+                TextButton(onPressed: () { setState(() { _arabicSize = 20; _translationSize = 15; }); _saveSettings(); setSheetState(() {}); }, child: Text(_localizedText(l10n, 'ডিফল্ট', 'Default', 'افتراضي'))),
               ]),
               Align(alignment: Alignment.centerLeft, child: Text(_localizedText(l10n, 'কি কি দেখাবেন', 'What to show', 'ماذا تريد أن تعرض'), style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700))),
               const SizedBox(height: 6),
@@ -615,9 +508,9 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         ]),
         const SizedBox(height: 9),
         Row(children: [
-          Expanded(child: TextButton.icon(onPressed: () => _showTranslationPicker(surah), icon: const Icon(Icons.translate_rounded, size: 17), label: Text(_translationEdition.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: buttonTextStyle), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
+          Expanded(child: TextButton.icon(onPressed: () => _showTranslationPicker(surah), icon: const Icon(Icons.translate_rounded, size: 17), label: Text(_translationEdition.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: buttonTextStyle), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11))))),
           const SizedBox(width: 8),
-          Expanded(child: TextButton.icon(onPressed: () => _showTafsirPicker(surah), icon: const Icon(Icons.menu_book_rounded, size: 17), label: Text(_localizedText(l10n, 'তাফসির / ব্যাখ্যা', 'Tafsir / Explanation', 'التفسير / الشرح'), maxLines: 1, style: buttonTextStyle), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
+          Expanded(child: TextButton.icon(onPressed: () => _showTafsirPicker(surah), icon: const Icon(Icons.menu_book_rounded, size: 17), label: Text(_localizedText(l10n, 'তাফসির / ব্যাখ্যা', 'Tafsir / Explanation', 'التفسير / الشرح'), maxLines: 1, style: buttonTextStyle), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11))))),
         ]),
         Align(alignment: Alignment.centerRight, child: OutlinedButton.icon(onPressed: () { setState(() => _showTafsir = !_showTafsir); _saveSettings(); }, icon: Icon(_showTafsir ? Icons.visibility_off_rounded : Icons.visibility_rounded, size: 15), label: Text(_showTafsir ? _localizedText(l10n, 'তাফসির লুকান', 'Hide Tafsir', 'إخفاء التفسير') : _localizedText(l10n, 'তাফসির দেখান', 'Show Tafsir', 'عرض التفسير'), style: buttonTextStyle), style: OutlinedButton.styleFrom(minimumSize: const Size(0, 32), padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5), tapTargetSize: MaterialTapTargetSize.shrinkWrap, side: BorderSide(color: primary.withValues(alpha: .32), width: 1.1), backgroundColor: primary.withValues(alpha: .055), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
       ]),
