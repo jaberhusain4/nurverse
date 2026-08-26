@@ -20,14 +20,22 @@ class DailyContentSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final languageCode =
-        languageCodeOverride ?? context.watch<SettingsProvider>().languageCode;
+    final settings = context.watch<SettingsProvider>();
+    final languageCode = languageCodeOverride ?? settings.languageCode;
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final secondary = context.secondaryTextColor;
     final ayah = DailyContentService.getTodayAyah();
     final hadith = DailyContentService.getTodayHadith();
     final dua = DailyContentService.getTodayDua();
+
+    final showAyah = settings.showDailyAyah;
+    final showHadith = settings.showDailyHadith;
+    final showDua = settings.showDailyDua;
+
+    if (!showAyah && !showHadith && !showDua) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,24 +81,27 @@ class DailyContentSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 11),
-        DailyContentCard(
-          content: ayah,
-          languageCode: languageCode,
-          icon: Icons.auto_stories_rounded,
-          iconColor: primary,
-        ),
-        DailyContentCard(
-          content: hadith,
-          languageCode: languageCode,
-          icon: Icons.menu_book_rounded,
-          iconColor: primary,
-        ),
-        DailyContentCard(
-          content: dua,
-          languageCode: languageCode,
-          icon: Icons.favorite_rounded,
-          iconColor: primary,
-        ),
+        if (showAyah)
+          DailyContentCard(
+            content: ayah,
+            languageCode: languageCode,
+            icon: Icons.auto_stories_rounded,
+            iconColor: primary,
+          ),
+        if (showHadith)
+          DailyContentCard(
+            content: hadith,
+            languageCode: languageCode,
+            icon: Icons.menu_book_rounded,
+            iconColor: primary,
+          ),
+        if (showDua)
+          DailyContentCard(
+            content: dua,
+            languageCode: languageCode,
+            icon: Icons.favorite_rounded,
+            iconColor: primary,
+          ),
       ],
     );
   }
