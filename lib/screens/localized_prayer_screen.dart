@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/prayer_controller.dart';
+import '../providers/settings_provider.dart';
 import '../localization/app_localizations.dart';
 import '../localization/app_localizations_x.dart';
 import '../theme/app_theme.dart';
@@ -339,6 +340,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
 
   Widget _importantTimes(BuildContext context, PrayerController c) {
     final primary = Theme.of(context).colorScheme.primary;
+    final settings = context.watch<SettingsProvider>();
     return _card(
       context,
       child: Column(
@@ -416,7 +418,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
                   ),
                 ),
                 Text(
-                  DateFormat('hh:mm:ss a').format(_now),
+                  DateFormat(settings.showSeconds ? 'hh:mm:ss a' : 'hh:mm a').format(_now),
                   style: TextStyle(
                     color: primary,
                     fontSize: 11.5,
