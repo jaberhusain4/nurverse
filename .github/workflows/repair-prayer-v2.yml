@@ -1,0 +1,56 @@
+name: Repair Prayer Screen V2
+on:
+  push:
+    branches: [fix/prayer-completion-tracker]
+jobs:
+  repair:
+    if: github.event.head_commit.message != 'feat(prayer): repair Prayer Screen V2 layout and seconds'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch Prayer Screen V2
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/screens/prayer_screen_v2.dart')
+          s = p.read_text(encoding='utf-8')
+          if "../providers/settings_provider.dart" not in s:
+              s = s.replace("import '../services/prayer_completion_service.dart';", "import '../services/prayer_completion_service.dart';\nimport '../providers/settings_provider.dart';")
+          old = '''          Row(\n            children: [\n              _iconBox(primary, Icons.mosque_rounded, size: 42),\n              const SizedBox(width: 10),\n              Expanded(\n                child: Column(\n                  crossAxisAlignment: CrossAxisAlignment.start,\n                  children: [\n                    Text(\n                      _label(context, 'বর্তমান ওয়াক্ত', 'Current prayer'),\n                      style: TextStyle(\n                        color: secondary,\n                        fontSize: 11.5,\n                        fontWeight: FontWeight.w600,\n                      ),\n                    ),\n                    const SizedBox(height: 2),\n                    Text(\n                      _prayerLabel(context, c.currentPrayer),\n                      maxLines: 1,\n                      overflow: TextOverflow.ellipsis,\n                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),\n                    ),\n                  ],\n                ),\n              ),\n              if (friday)\n                _badge(primary, AppLocalizations.of(context).fridayLabel),\n            ],\n          ),'''
+          new = '''          Row(\n            crossAxisAlignment: CrossAxisAlignment.center,\n            children: [\n              _iconBox(primary, Icons.mosque_rounded, size: 42),\n              const SizedBox(width: 10),\n              Expanded(\n                child: Column(\n                  crossAxisAlignment: CrossAxisAlignment.start,\n                  children: [\n                    Text(\n                      _label(context, 'বর্তমান ওয়াক্ত', 'Current prayer'),\n                      style: TextStyle(\n                        color: secondary,\n                        fontSize: 11.5,\n                        fontWeight: FontWeight.w600,\n                      ),\n                    ),\n                    const SizedBox(height: 2),\n                    Text(\n                      _prayerLabel(context, c.currentPrayer),\n                      maxLines: 1,\n                      overflow: TextOverflow.ellipsis,\n                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),\n                    ),\n                  ],\n                ),\n              ),\n              if (friday) ...[\n                const SizedBox(width: 8),\n                _badge(primary, AppLocalizations.of(context).fridayLabel),\n              ],\n              const SizedBox(width: 12),\n              Expanded(\n                child: Column(\n                  crossAxisAlignment: CrossAxisAlignment.end,\n                  children: [\n                    Text(\n                      _label(context, 'সময় বাকি', 'Time left'),\n                      style: TextStyle(\n                        color: secondary,\n                        fontSize: 11,\n                        fontWeight: FontWeight.w600,\n                      ),\n                    ),\n                    const SizedBox(height: 2),\n                    Text(\n                      context.read<SettingsProvider>().showSeconds\n                          ? c.timeRemainingForNextPrayer\n                          : _withoutSeconds(c.timeRemainingForNextPrayer),\n                      textAlign: TextAlign.end,\n                      style: TextStyle(\n                        color: primary,\n                        fontSize: 18,\n                        fontWeight: FontWeight.w900,\n                      ),\n                    ),\n                  ],\n                ),\n              ),\n            ],\n          ),'''
+          if old not in s:
+              raise SystemExit('current prayer header block not found')
+          s = s.replace(old, new, 1)
+          old2 = '''          Container(\n            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),\n            decoration: BoxDecoration(\n              color: primary.withValues(alpha: .06),\n              borderRadius: BorderRadius.circular(13),\n            ),\n            child: Row(\n              children: [\n                Icon(Icons.schedule_rounded, size: 18, color: primary),\n                const SizedBox(width: 7),\n                Expanded(\n                  child: Text(\n                    '${_label(context, 'পরবর্তী', 'Next')}: ${_prayerLabel(context, c.nextPrayerName)}',\n                    maxLines: 1,\n                    overflow: TextOverflow.ellipsis,\n                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),\n                  ),\n                ),\n                Text(\n                  c.timeRemainingForNextPrayer,\n                  style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w700),\n                ),\n                const SizedBox(width: 7),\n                Text(\n                  c.nextPrayerTime,\n                  style: TextStyle(color: primary, fontSize: 13.5, fontWeight: FontWeight.w800),\n                ),\n              ],\n            ),\n          ),'''
+          new2 = '''          _previousNextPrayerRow(context, c),'''
+          if old2 not in s:
+              raise SystemExit('old next-prayer block not found')
+          s = s.replace(old2, new2, 1)
+          marker = "  Widget _importantTimes(BuildContext context, PrayerController c) {"
+          helpers = '''  Widget _previousNextPrayerRow(BuildContext context, PrayerController c) {\n    final primary = Theme.of(context).colorScheme.primary;\n    final secondary = context.secondaryTextColor;\n    final previousName = c.previousPrayer.trim().isEmpty ? '—' : _prayerLabel(context, c.previousPrayer);\n    final nextName = c.nextPrayerName.trim().isEmpty ? '—' : _prayerLabel(context, c.nextPrayerName);\n    return Row(\n      children: [\n        Expanded(\n          child: _adjacentPrayerCard(\n            context,\n            icon: Icons.history_rounded,\n            title: _label(context, 'পূর্ববর্তী', 'Previous'),\n            name: previousName,\n            time: c.previousPrayerTime.trim().isEmpty ? '--:--' : c.previousPrayerTime,\n            primary: primary,\n            secondary: secondary,\n          ),\n        ),\n        const SizedBox(width: 10),\n        Expanded(\n          child: _adjacentPrayerCard(\n            context,\n            icon: Icons.schedule_rounded,\n            title: _label(context, 'পরবর্তী', 'Next'),\n            name: nextName,\n            time: c.nextPrayerTime,\n            primary: primary,\n            secondary: secondary,\n          ),\n        ),\n      ],\n    );\n  }\n\n  Widget _adjacentPrayerCard(\n    BuildContext context, {\n    required IconData icon,\n    required String title,\n    required String name,\n    required String time,\n    required Color primary,\n    required Color secondary,\n  }) {\n    return Container(\n      padding: const EdgeInsets.fromLTRB(11, 10, 11, 10),\n      decoration: BoxDecoration(\n        color: primary.withValues(alpha: .045),\n        borderRadius: BorderRadius.circular(14),\n        border: Border.all(color: primary.withValues(alpha: .10)),\n      ),\n      child: Row(\n        children: [\n          Icon(icon, color: primary, size: 18),\n          const SizedBox(width: 7),\n          Expanded(\n            child: Column(\n              crossAxisAlignment: CrossAxisAlignment.start,\n              children: [\n                Text(\n                  title,\n                  maxLines: 1,\n                  overflow: TextOverflow.ellipsis,\n                  style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600),\n                ),\n                const SizedBox(height: 2),\n                Text(\n                  name,\n                  maxLines: 1,\n                  overflow: TextOverflow.ellipsis,\n                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),\n                ),\n              ],\n            ),\n          ),\n          const SizedBox(width: 6),\n          Text(\n            time,\n            textAlign: TextAlign.end,\n            style: TextStyle(color: primary, fontSize: 12.5, fontWeight: FontWeight.w800),\n          ),\n        ],\n      ),\n    );\n  }\n\n  String _withoutSeconds(String value) {\n    final match = RegExp(r'^(\\d{2}):(\\d{2})').firstMatch(value.trim());\n    return match == null ? value : '${match.group(1)}:${match.group(2)}';\n  }\n\n'''
+          if marker not in s:
+              raise SystemExit('helper marker not found')
+          if '_previousNextPrayerRow' not in s:
+              s = s.replace(marker, helpers + marker, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Analyze and commit
+        run: |
+          flutter_version=3.44.8
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/screens/prayer_screen_v2.dart
+          git diff --cached --quiet && exit 0
+          git commit -m "feat(prayer): repair Prayer Screen V2 layout and seconds"
+          git push
+      - name: Remove temporary workflow
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/repair-prayer-v2.yml || true
+          git commit -m "chore: remove temporary Prayer Screen repair workflow" || true
+          git push || true
