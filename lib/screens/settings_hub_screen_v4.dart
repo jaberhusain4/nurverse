@@ -637,7 +637,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(_t(languageCode, 'নূরভার্স প্রিমিয়াম', 'NurVerse Premium')),
+        title: Text('NurVerse Premium'),
         content: Text(_t(languageCode, 'প্রিমিয়াম সক্রিয় আছে।', 'Premium is active.')),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(_t(languageCode, 'ঠিক আছে', 'Done'))),
