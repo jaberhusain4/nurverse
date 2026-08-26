@@ -15,3 +15,124 @@ jobs:
         with:
           channel: stable
       - run: dart tool/check_localization_hardcodes.dart
+
+  active-screens-repair:
+    if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+      - name: Patch active Home and Prayer screens
+        shell: python
+        run: |
+          from pathlib import Path
+
+          # MainShell uses HomeScreen and PrayerScreen. Do not modify legacy SimpleHome/V2 files.
+          p = Path('lib/screens/home_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          home_helper = """
+  String _displayTime(String value, bool showSeconds) {
+    final raw = value.trim();
+    if (showSeconds) return raw;
+    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(raw);
+    return match?.group(1) ?? raw;
+  }
+
+  List<Map<String, dynamic>> _displayPrayerTimes(List<Map<String, dynamic>> prayers, bool showSeconds) {
+    return prayers.map((prayer) {
+      final copy = Map<String, dynamic>.from(prayer);
+      for (final key in const ['start', 'end', 'jamaat', 'time', 'formattedTime']) {
+        final value = copy[key];
+        if (value != null) copy[key] = _displayTime(value.toString(), showSeconds);
+      }
+      return copy;
+    }).toList(growable: false);
+  }
+"""
+          marker = "  String _greeting(String languageCode) {"
+          if '_displayPrayerTimes(List<Map<String, dynamic>> prayers' not in s:
+              if marker not in s: raise SystemExit('Home helper marker missing')
+              s = s.replace(marker, home_helper + "\n" + marker, 1)
+          replacements = [
+            ("currentTime: _currentTime,", "currentTime: _displayTime(_currentTime, settings.showSeconds),"),
+            ("previousPrayerTime: controller.previousPrayerTime,", "previousPrayerTime: _displayTime(controller.previousPrayerTime, settings.showSeconds),"),
+            ("currentPrayerTime: controller.currentPrayerTime,", "currentPrayerTime: _displayTime(controller.currentPrayerTime, settings.showSeconds),"),
+            ("nextPrayerTime: controller.nextPrayerTime,", "nextPrayerTime: _displayTime(controller.nextPrayerTime, settings.showSeconds),"),
+            ("remainingTime: controller.timeRemainingForNextPrayer,", "remainingTime: _displayTime(controller.timeRemainingForNextPrayer, settings.showSeconds),"),
+            ("iqamahTime: currentJamaat,", "iqamahTime: _displayTime(currentJamaat, settings.showSeconds),"),
+            ("PrayerTimelineCard(prayers: controller.prayers, languageCode: languageCode)", "PrayerTimelineCard(prayers: _displayPrayerTimes(controller.prayers, settings.showSeconds), languageCode: languageCode)"),
+            ("sunrise: sunTimes?.sunriseString ?? controller.sunriseTime,", "sunrise: _displayTime(sunTimes?.sunriseString ?? controller.sunriseTime, settings.showSeconds),"),
+            ("sunset: sunTimes?.sunsetString ?? controller.sunsetTime,", "sunset: _displayTime(sunTimes?.sunsetString ?? controller.sunsetTime, settings.showSeconds),"),
+          ]
+          for old, new in replacements:
+              if old not in s: raise SystemExit(f'Home pattern missing: {old}')
+              s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('lib/screens/prayer_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          prayer_helper = """
+  String _displayTime(String value, bool showSeconds) {
+    final raw = value.trim();
+    if (showSeconds) return raw;
+    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(raw);
+    return match?.group(1) ?? raw;
+  }
+
+  List<Map<String, dynamic>> _displayPrayerTimes(List<Map<String, dynamic>> prayers, bool showSeconds) {
+    return prayers.map((prayer) {
+      final copy = Map<String, dynamic>.from(prayer);
+      for (final key in const ['start', 'end', 'jamaat', 'time', 'formattedTime']) {
+        final value = copy[key];
+        if (value != null) copy[key] = _displayTime(value.toString(), showSeconds);
+      }
+      return copy;
+    }).toList(growable: false);
+  }
+"""
+          if '_displayPrayerTimes(List<Map<String, dynamic>> prayers' not in s:
+              if marker not in s: raise SystemExit('Prayer helper marker missing')
+              s = s.replace(marker, prayer_helper + marker, 1)
+          replacements = [
+            ("currentTime: _currentTime,", "currentTime: _displayTime(_currentTime, settings.showSeconds),"),
+            ("previousPrayerTime: controller.previousPrayerTime,", "previousPrayerTime: _displayTime(controller.previousPrayerTime, settings.showSeconds),"),
+            ("currentPrayerTime: controller.currentPrayerTime,", "currentPrayerTime: _displayTime(controller.currentPrayerTime, settings.showSeconds),"),
+            ("nextPrayerTime: controller.nextPrayerTime,", "nextPrayerTime: _displayTime(controller.nextPrayerTime, settings.showSeconds),"),
+            ("remainingTime: controller.timeRemainingForNextPrayer,", "remainingTime: _displayTime(controller.timeRemainingForNextPrayer, settings.showSeconds),"),
+            ("iqamahTime: currentJamaat,", "iqamahTime: _displayTime(currentJamaat, settings.showSeconds),"),
+            ("PrayerTimelineCard(prayers: controller.prayers.where((p) => p['category'] == 'obligatory').toList(growable: false), languageCode: languageCode)", "PrayerTimelineCard(prayers: _displayPrayerTimes(controller.prayers.where((p) => p['category'] == 'obligatory').toList(growable: false), settings.showSeconds), languageCode: languageCode)"),
+            ("sunrise: sunTimes?.sunriseString ?? controller.sunriseTime,", "sunrise: _displayTime(sunTimes?.sunriseString ?? controller.sunriseTime, settings.showSeconds),"),
+            ("sunset: sunTimes?.sunsetString ?? controller.sunsetTime,", "sunset: _displayTime(sunTimes?.sunsetString ?? controller.sunsetTime, settings.showSeconds),"),
+            ("final start = data['start']?.toString() ?? '--:--';", "final start = _displayTime(data['start']?.toString() ?? '--:--', context.read<SettingsProvider>().showSeconds);"),
+            ("final end = data['end']?.toString() ?? '--:--';", "final end = _displayTime(data['end']?.toString() ?? '--:--', context.read<SettingsProvider>().showSeconds);"),
+            ("final jamaat = data['jamaat']?.toString() ?? '--:--';", "final jamaat = _displayTime(data['jamaat']?.toString() ?? '--:--', context.read<SettingsProvider>().showSeconds);"),
+            ("Text('${nafl[i]['start'] ?? '--:--'} – ${nafl[i]['end'] ?? '--:--'}'", "Text('${_displayTime(nafl[i]['start']?.toString() ?? '--:--', context.read<SettingsProvider>().showSeconds)} – ${_displayTime(nafl[i]['end']?.toString() ?? '--:--', context.read<SettingsProvider>().showSeconds)}'"),
+            ("sunTimes?.sunriseString ?? controller.sunriseTime, primary", "_displayTime(sunTimes?.sunriseString ?? controller.sunriseTime, context.read<SettingsProvider>().showSeconds), primary"),
+            ("controller.solarNoonTime, primary", "_displayTime(controller.solarNoonTime, context.read<SettingsProvider>().showSeconds), primary"),
+            ("sunTimes?.sunsetString ?? controller.sunsetTime, primary", "_displayTime(sunTimes?.sunsetString ?? controller.sunsetTime, context.read<SettingsProvider>().showSeconds), primary"),
+          ]
+          for old, new in replacements:
+              if old not in s: raise SystemExit(f'Prayer pattern missing: {old}')
+              s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+
+      - name: Verify affected files
+        run: |
+          flutter pub get
+          dart analyze lib/screens/home_screen.dart lib/screens/prayer_screen.dart
+
+      - name: Commit active screen repair and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/home_screen.dart lib/screens/prayer_screen.dart .github/workflows/localization-guard.yml .github/workflows/repair-active-prayer-home-seconds.yml
+          git rm .github/workflows/repair-active-prayer-home-seconds.yml || true
+          git diff --cached --check
+          git commit -m 'fix: restore active Home and Prayer seconds behavior'
+          git push
