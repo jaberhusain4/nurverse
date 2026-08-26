@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../controllers/prayer_controller.dart';
 import '../localization/app_localizations.dart';
+import '../providers/settings_provider.dart';
 import '../services/prayer_completion_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home/prayer_special_times_card.dart';
@@ -178,6 +179,7 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
   Widget _currentCard(BuildContext context, PrayerController c, bool friday) {
     final primary = Theme.of(context).colorScheme.primary;
     final secondary = context.secondaryTextColor;
+    final settings = context.watch<SettingsProvider>();
     return _card(
       context,
       radius: 21,
@@ -185,6 +187,7 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
       child: Column(
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _iconBox(primary, Icons.mosque_rounded, size: 42),
               const SizedBox(width: 10),
@@ -210,8 +213,38 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
                   ],
                 ),
               ),
-              if (friday)
+              if (friday) ...[
+                const SizedBox(width: 8),
                 _badge(primary, AppLocalizations.of(context).fridayLabel),
+              ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      _label(context, 'সময় বাকি', 'Time left'),
+                      style: TextStyle(
+                        color: secondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      settings.showSeconds
+                          ? c.timeRemainingForNextPrayer
+                          : _withoutSeconds(c.timeRemainingForNextPrayer),
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        color: primary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 13),
@@ -249,39 +282,100 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
             ],
           ),
           const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: .06),
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: Row(
+          _previousNextPrayerRow(context, c),
+        ],
+      ),
+    );
+  }
+
+  Widget _previousNextPrayerRow(BuildContext context, PrayerController c) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final secondary = context.secondaryTextColor;
+    final previousName = c.previousPrayer.trim().isEmpty ? '—' : _prayerLabel(context, c.previousPrayer);
+    final nextName = c.nextPrayerName.trim().isEmpty ? '—' : _prayerLabel(context, c.nextPrayerName);
+    return Row(
+      children: [
+        Expanded(
+          child: _adjacentPrayerCard(
+            context,
+            icon: Icons.history_rounded,
+            title: _label(context, 'পূর্ববর্তী', 'Previous'),
+            name: previousName,
+            time: c.previousPrayerTime.trim().isEmpty ? '--:--' : c.previousPrayerTime,
+            primary: primary,
+            secondary: secondary,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _adjacentPrayerCard(
+            context,
+            icon: Icons.schedule_rounded,
+            title: _label(context, 'পরবর্তী', 'Next'),
+            name: nextName,
+            time: c.nextPrayerTime,
+            primary: primary,
+            secondary: secondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _adjacentPrayerCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String name,
+    required String time,
+    required Color primary,
+    required Color secondary,
+  }) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(11, 10, 11, 10),
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: .045),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: primary.withValues(alpha: .10)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: primary, size: 18),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.schedule_rounded, size: 18, color: primary),
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Text(
-                    '${_label(context, 'পরবর্তী', 'Next')}: ${_prayerLabel(context, c.nextPrayerName)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
-                  ),
-                ),
                 Text(
-                  c.timeRemainingForNextPrayer,
-                  style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w700),
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(width: 7),
+                const SizedBox(height: 2),
                 Text(
-                  c.nextPrayerTime,
-                  style: TextStyle(color: primary, fontSize: 13.5, fontWeight: FontWeight.w800),
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 6),
+          Text(
+            time,
+            textAlign: TextAlign.end,
+            style: TextStyle(color: primary, fontSize: 12.5, fontWeight: FontWeight.w800),
+          ),
         ],
       ),
     );
+  }
+
+  String _withoutSeconds(String value) {
+    final match = RegExp(r'^(\d{2}):(\d{2})').firstMatch(value.trim());
+    return match == null ? value : '${match.group(1)}:${match.group(2)}';
   }
 
   Widget _importantTimes(BuildContext context, PrayerController c) {
