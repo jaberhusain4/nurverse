@@ -357,14 +357,21 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
     final l10n = AppLocalizations.of(context);
     if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final selected = _selectedSurah == null ? null : _data.getSurah(_selectedSurah!);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_localizedText(l10n, 'অনুধাবন কুরআন', 'Onudhabon Quran', 'قرآن الفهم'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-        centerTitle: true,
-        leading: selected == null ? null : IconButton(onPressed: _backToQuranScreen, icon: const Icon(Icons.arrow_back_rounded, size: 20)),
-        actions: selected == null ? null : [IconButton(onPressed: _showReadingSettings, icon: const Icon(Icons.text_fields_rounded, size: 20))],
+    return PopScope<void>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _backToQuranScreen();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_localizedText(l10n, 'অনুধাবন কুরআন', 'Onudhabon Quran', 'قرآن الفهم'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+          centerTitle: true,
+          leading: selected == null ? null : IconButton(onPressed: _backToQuranScreen, icon: const Icon(Icons.arrow_back_rounded, size: 20)),
+          actions: selected == null ? null : [IconButton(onPressed: _showReadingSettings, icon: const Icon(Icons.text_fields_rounded, size: 20))],
+        ),
+        body: selected == null ? _buildPicker(context) : _buildReader(context, selected),
       ),
-      body: selected == null ? _buildPicker(context) : _buildReader(context, selected),
     );
   }
 
@@ -464,17 +471,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(22), border: Border.all(color: primary.withValues(alpha: .10))),
       child: Column(children: [
-        Row(children: [
-          Expanded(
-            child: Column(
-              children: [
-                Text(surah.arabicName, textDirection: TextDirection.rtl, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: primary)),
-                Text(surah.banglaName ?? surah.transliteration, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
-                Text(surah.transliteration, style: TextStyle(fontSize: 11.5, color: context.secondaryTextColor)),
-              ],
-            ),
-          ),
-        ]),
+        Row(children: [Expanded(child: Column(children: [Text(surah.arabicName, textDirection: TextDirection.rtl, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: primary)), Text(surah.banglaName ?? surah.transliteration, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)), Text(surah.transliteration, style: TextStyle(fontSize: 11.5, color: context.secondaryTextColor))]))]),
         const SizedBox(height: 9),
         Wrap(alignment: WrapAlignment.center, spacing: 7, runSpacing: 7, children: [
           _chip(context, l10n.isBangla ? _bn(surah.totalVerses) : l10n.isArabic ? _ar(surah.totalVerses) : surah.totalVerses.toString(), _localizedText(l10n, 'আয়াত', 'verses', 'آيات')),
@@ -484,33 +481,9 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         ]),
         const SizedBox(height: 9),
         Row(children: [
-          Expanded(
-            child: TextButton.icon(
-              onPressed: () => _showTranslationPicker(surah),
-              icon: const Icon(Icons.translate_rounded, size: 17),
-              label: Text(_translationEdition.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: buttonTextStyle),
-              style: TextButton.styleFrom(
-                foregroundColor: primary,
-                backgroundColor: primary.withValues(alpha: .055),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ),
+          Expanded(child: TextButton.icon(onPressed: () => _showTranslationPicker(surah), icon: const Icon(Icons.translate_rounded, size: 17), label: Text(_translationEdition.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: buttonTextStyle), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
           const SizedBox(width: 8),
-          Expanded(
-            child: TextButton.icon(
-              onPressed: () => _showTafsirPicker(surah),
-              icon: const Icon(Icons.menu_book_rounded, size: 17),
-              label: Text(_localizedText(l10n, 'তাফসির / ব্যাখ্যা', 'Tafsir / Explanation', 'التفسير / الشرح'), maxLines: 1, style: buttonTextStyle),
-              style: TextButton.styleFrom(
-                foregroundColor: primary,
-                backgroundColor: primary.withValues(alpha: .055),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ),
+          Expanded(child: TextButton.icon(onPressed: () => _showTafsirPicker(surah), icon: const Icon(Icons.menu_book_rounded, size: 17), label: Text(_localizedText(l10n, 'তাফসির / ব্যাখ্যা', 'Tafsir / Explanation', 'التفسير / الشرح'), maxLines: 1, style: buttonTextStyle), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
         ]),
         Align(alignment: Alignment.centerRight, child: OutlinedButton.icon(onPressed: () { setState(() => _showTafsir = !_showTafsir); _saveSettings(); }, icon: Icon(_showTafsir ? Icons.visibility_off_rounded : Icons.visibility_rounded, size: 15), label: Text(_showTafsir ? _localizedText(l10n, 'তাফসির লুকান', 'Hide Tafsir', 'إخفاء التفسير') : _localizedText(l10n, 'তাফসির দেখান', 'Show Tafsir', 'عرض التفسير'), style: buttonTextStyle), style: OutlinedButton.styleFrom(minimumSize: const Size(0, 32), padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5), tapTargetSize: MaterialTapTargetSize.shrinkWrap, side: BorderSide(color: primary.withValues(alpha: .32), width: 1.1), backgroundColor: primary.withValues(alpha: .055), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
       ]),
