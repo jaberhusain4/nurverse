@@ -20,95 +20,13 @@ jobs:
           SOURCE_BASE: https://raw.githubusercontent.com/HsnSaboor/hadith-api-toon/main/editions
         run: python tool/generate_hadith_chapter_metadata.py
 
-      - name: Apply Home seconds preference
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('lib/screens/simple_home_screen_v11.dart')
-          text = path.read_text(encoding='utf-8')
-
-          old = """  String _clock() {
-    final h = _now.hour % 12 == 0 ? 12 : _now.hour % 12;
-    return '${h.toString().padLeft(2, '0')}:${_now.minute.toString().padLeft(2, '0')}:${_now.second.toString().padLeft(2, '0')}';
-  }
-"""
-          new = """  String _clock(bool showSeconds) {
-    final h = _now.hour % 12 == 0 ? 12 : _now.hour % 12;
-    final base = '${h.toString().padLeft(2, '0')}:${_now.minute.toString().padLeft(2, '0')}';
-    return showSeconds ? '$base:${_now.second.toString().padLeft(2, '0')}' : base;
-  }
-
-  String _withoutSeconds(String value) {
-    final match = RegExp(r'^(\\d{2}:\\d{2})').firstMatch(value.trim());
-    return match == null ? value : match.group(1)!;
-  }
-"""
-          if old not in text:
-              raise SystemExit('Home clock block not found')
-          text = text.replace(old, new, 1)
-
-          old = """  String _remaining(PrayerController c) {
-    final value = c.timeRemainingForNextPrayer;
-    if (value == null) return '--:--:--';
-    return value.toString();
-  }
-"""
-          new = """  String _remaining(PrayerController c, bool showSeconds) {
-    final value = c.timeRemainingForNextPrayer;
-    if (value == null) return showSeconds ? '--:--:--' : '--:--';
-    final raw = value.toString();
-    return showSeconds ? raw : _withoutSeconds(raw);
-  }
-"""
-          if old not in text:
-              raise SystemExit('Home remaining block not found')
-          text = text.replace(old, new, 1)
-
-          replacements = [
-            ("clock: _clock(),", "clock: _clock(settings.showSeconds),"),
-            ("nextPrayerTime: '${controller.nextPrayerTime}',", "nextPrayerTime: settings.showSeconds ? '${controller.nextPrayerTime}' : _withoutSeconds('${controller.nextPrayerTime}'),"),
-            ("remaining: _remaining(controller),", "remaining: _remaining(controller, settings.showSeconds),"),
-            ("sunrise: '${controller.sunriseTime}',", "sunrise: settings.showSeconds ? '${controller.sunriseTime}' : _withoutSeconds('${controller.sunriseTime}'),"),
-            ("sunset: '${controller.sunsetTime}',", "sunset: settings.showSeconds ? '${controller.sunsetTime}' : _withoutSeconds('${controller.sunsetTime}'),"),
-            ("_PrayerTimeline(prayers: prayers, code: code)", "_PrayerTimeline(prayers: prayers, code: code, showSeconds: settings.showSeconds)"),
-          ]
-          for old, new in replacements:
-              if old not in text:
-                  raise SystemExit(f'Home call not found: {old}')
-              text = text.replace(old, new, 1)
-
-          old = """  const _PrayerTimeline({required this.prayers, required this.code});
-  final List<Map<String, dynamic>> prayers;
-  final String code;
-"""
-          new = """  const _PrayerTimeline({required this.prayers, required this.code, required this.showSeconds});
-  final List<Map<String, dynamic>> prayers;
-  final String code;
-  final bool showSeconds;
-"""
-          if old not in text:
-              raise SystemExit('Timeline constructor not found')
-          text = text.replace(old, new, 1)
-
-          old = "          final time = '${p['time'] ?? p['formattedTime'] ?? '--:--'}';"
-          new = """          final rawTime = '${p['time'] ?? p['formattedTime'] ?? '--:--'}';
-          final time = showSeconds
-              ? rawTime
-              : RegExp(r'^(\\d{2}:\\d{2})').firstMatch(rawTime.trim())?.group(1) ?? rawTime;"""
-          if old not in text:
-              raise SystemExit('Timeline time line not found')
-          text = text.replace(old, new, 1)
-
-          path.write_text(text, encoding='utf-8')
-          PY
-
       - name: Verify generated changes
         run: git diff --check
 
-      - name: Commit generated metadata and Home update
+      - name: Commit generated metadata
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add lib/services/generated_hadith_chapter_metadata.dart lib/services/hadith_service.dart lib/screens/simple_home_screen_v11.dart
-          git diff --cached --quiet || git commit -m "fix(home): respect show seconds setting"
+          git add lib/services/generated_hadith_chapter_metadata.dart lib/services/hadith_service.dart
+          git diff --cached --quiet || git commit -m "fix(hadith): use canonical multilingual chapter titles"
           git push
