@@ -50,5 +50,4 @@ jobs:
           git rm .github/workflows/repair-onudhabon-chip.yml
           git commit -m 'chore: remove one-time chip syntax repair workflow'
           git push origin HEAD:fix/prayer-completion-tracker
-
-# retrigger repair
+# sync repair v2
