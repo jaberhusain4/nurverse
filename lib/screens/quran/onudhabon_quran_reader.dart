@@ -452,7 +452,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
       children: [
         if (_loadingSources) const LinearProgressIndicator(minHeight: 2),
         if (_translationError != null) _error(context, _translationError!),
-        if (_tafsirError != null) _error(context, _localizedText(l10n, 'তাফসির লোড করা যায়নি। আবার চেষ্টা করুন।', 'Could not load Tafsir. Please try again.', 'تعذر تحميل التفسير. حاول مرة أخرى.')),
+        if (_tafsirError != null) _error(context, _localizedText(l10n, 'তাফসির লোড করা যায়নি।', 'Could not load Tafsir.', 'تعذر تحميل التفسير.')),
         Expanded(
           child: Builder(
             builder: (context) {
@@ -508,9 +508,9 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
         ]),
         const SizedBox(height: 9),
         Row(children: [
-          Expanded(child: TextButton.icon(onPressed: () => _showTranslationPicker(surah), icon: const Icon(Icons.translate_rounded, size: 17), label: Text(_translationEdition.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: buttonTextStyle), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), minimumSize: Size.zero, padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4), tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9))))),
+          Expanded(child: TextButton.icon(onPressed: () => _showTranslationPicker(surah), icon: const Icon(Icons.translate_rounded, size: 17), label: Text(_translationEdition.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: buttonTextStyle), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), minimumSize: Size.zero, padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6), tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9))))),
           const SizedBox(width: 6),
-          Expanded(child: TextButton.icon(onPressed: () => _showTafsirPicker(surah), icon: const Icon(Icons.menu_book_rounded, size: 17), label: Text(_localizedText(l10n, 'তাফসির / ব্যাখ্যা', 'Tafsir / Explanation', 'التفسير / الشرح'), maxLines: 1, overflow: TextOverflow.ellipsis, style: buttonTextStyle), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), minimumSize: Size.zero, padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4), tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9))))),
+          Expanded(child: TextButton.icon(onPressed: () => _showTafsirPicker(surah), icon: const Icon(Icons.menu_book_rounded, size: 17), label: Text(_localizedText(l10n, 'তাফসির / ব্যাখ্যা', 'Tafsir / Explanation', 'التفسير / الشرح'), maxLines: 1, overflow: TextOverflow.ellipsis, style: buttonTextStyle), style: TextButton.styleFrom(foregroundColor: primary, backgroundColor: primary.withValues(alpha: .055), minimumSize: Size.zero, padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6), tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9))))),
         ]),
         const SizedBox(height: 6),
         Align(alignment: Alignment.centerRight, child: OutlinedButton.icon(onPressed: () { setState(() => _showTafsir = !_showTafsir); _saveSettings(); }, icon: Icon(_showTafsir ? Icons.visibility_off_rounded : Icons.visibility_rounded, size: 15), label: Text(_showTafsir ? _localizedText(l10n, 'তাফসির লুকান', 'Hide Tafsir', 'إخفاء التفسير') : _localizedText(l10n, 'তাফসির দেখান', 'Show Tafsir', 'عرض التفسير'), style: buttonTextStyle), style: OutlinedButton.styleFrom(minimumSize: const Size(0, 32), padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5), tapTargetSize: MaterialTapTargetSize.shrinkWrap, side: BorderSide(color: primary.withValues(alpha: .32), width: 1.1), backgroundColor: primary.withValues(alpha: .055), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
