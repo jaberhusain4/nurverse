@@ -538,7 +538,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
 
   Widget _error(BuildContext context, String text) {
     final color = Theme.of(context).colorScheme.error;
-    return Padding(padding: const EdgeInsets.fromLTRB(14, 7, 14, 0), child: Container(width: double.infinity, padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: .06), borderRadius: BorderRadius.circular(12)), child: Text(text, style: TextStyle(fontSize: 11.5, color: color)));
+    return Padding(padding: const EdgeInsets.fromLTRB(14, 7, 14, 0), child: Container(width: double.infinity, padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: .06), borderRadius: BorderRadius.circular(12)), child: Text(text, style: TextStyle(fontSize: 11.5, color: color))));
   }
 
   String _bn(int n) {
