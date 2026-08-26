@@ -179,6 +179,7 @@ class _LocalizedPrayerScreenState extends State<LocalizedPrayerScreen> {
 
   Widget _currentCard(BuildContext context, PrayerController c, bool friday) {
     final l10n = AppLocalizations.of(context);
+    final settings = context.watch<SettingsProvider>();
     final primary = Theme.of(context).colorScheme.primary;
     final secondary = context.secondaryTextColor;
     return _card(
