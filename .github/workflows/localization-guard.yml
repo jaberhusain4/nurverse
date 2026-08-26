@@ -45,8 +45,7 @@ jobs:
           if start < 0 or end < 0:
               raise SystemExit('Could not locate _currentCard boundaries')
 
-          new_card = '''  Widget _currentCard(BuildContext context, PrayerController c, bool friday) {\n    final primary = Theme.of(context).colorScheme.primary;\n    final secondary = context.secondaryTextColor;\n    final settings = context.watch<SettingsProvider>();\n    final countdown = _countdownText(context, c);\n\n    Widget prayerSideCard(String title, String name, String time, IconData icon) {\n      final safeName = name.trim().isEmpty ? _label(context, 'নেই', 'None') : _prayerLabel(context, name);\n      final safeTime = time.trim().isEmpty ? '--:--' : time;\n      return Expanded(\n        child: Container(\n          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),\n          decoration: BoxDecoration(\n            color: primary.withValues(alpha: .055),\n            borderRadius: BorderRadius.circular(15),\n            border: Border.all(color: primary.withValues(alpha: .06)),\n          ),\n          child: Row(\n            children: [\n              Icon(icon, size: 20, color: primary),\n              const SizedBox(width: 8),\n              Expanded(\n                child: Column(\n                  crossAxisAlignment: CrossAxisAlignment.start,\n                  children: [\n                    Text(\n                      title,\n                      maxLines: 1,\n                      overflow: TextOverflow.ellipsis,\n                      style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600),\n                    ),\n                    const SizedBox(height: 2),\n                    Text(\n                      safeName,\n                      maxLines: 1,\n                      overflow: TextOverflow.ellipsis,\n                      style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800),\n                    ),\n                    const SizedBox(height: 2),\n                    Text(\n                      safeTime,\n                      style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.w800),\n                    ),\n                  ],\n                ),\n              ),\n            ],\n          ),\n        ),\n      );\n    }\n\n    return _card(\n      context,\n      radius: 21,\n      padding: const EdgeInsets.fromLTRB(15, 14, 15, 13),\n      child: Column(\n        children: [\n          Row(\n            crossAxisAlignment: CrossAxisAlignment.center,\n            children: [\n              Expanded(\n                child: Row(\n                  children: [\n                    _iconBox(primary, Icons.mosque_rounded, size: 42),\n                    const SizedBox(width: 10),\n                    Expanded(\n                      child: Column(\n                        crossAxisAlignment: CrossAxisAlignment.start,\n                        children: [\n                          Text(\n                            _label(context, 'বর্তমান ওয়াক্ত', 'Current prayer'),\n                            style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w600),\n                          ),\n                          const SizedBox(height: 2),\n                          Text(\n                            _prayerLabel(context, c.currentPrayer),\n                            maxLines: 1,\n                            overflow: TextOverflow.ellipsis,\n                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),\n                          ),\n                        ],\n                      ),\n                    ),\n                  ],\n                ),\n              ),\n              const SizedBox(width: 10),\n              Container(\n                constraints: const BoxConstraints(minWidth: 112),\n                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),\n                decoration: BoxDecoration(\n                  color: primary.withValues(alpha: .08),\n                  borderRadius: BorderRadius.circular(15),\n                  border: Border.all(color: primary.withValues(alpha: .10)),\n                ),\n                child: Column(\n                  crossAxisAlignment: CrossAxisAlignment.end,\n                  children: [\n                    Text(\n                      _label(context, 'সময় বাকি', 'Time left'),\n                      style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600),\n                    ),\n                    const SizedBox(height: 2),\n                    FittedBox(\n                      fit: BoxFit.scaleDown,\n                      child: Text(\n                        countdown,\n                        maxLines: 1,\n                        style: TextStyle(color: primary, fontSize: 18, fontWeight: FontWeight.w900),\n                      ),\n                    ),\n                  ],\n                ),\n              ),\n              if (friday) ...[\n                const SizedBox(width: 6),\n                _badge(primary, AppLocalizations.of(context).fridayLabel),\n              ],\n            ],\n          ),\n          const SizedBox(height: 13),\n          Row(\n            children: [\n              Expanded(child: _mini(context, Icons.play_arrow_rounded, _label(context, 'শুরু', 'Start'), c.currentPrayerStart)),\n              const SizedBox(width: 8),\n              Expanded(child: _mini(context, Icons.stop_rounded, _label(context, 'শেষ', 'End'), c.currentPrayerEnd)),\n              const SizedBox(width: 8),\n              Expanded(child: _mini(context, Icons.groups_rounded, _label(context, 'জামাত', 'Jamaat'), c.currentIqamahTime)),\n            ],\n          ),\n          const SizedBox(height: 11),\n          ClipRRect(\n            borderRadius: BorderRadius.circular(20),\n            child: LinearProgressIndicator(\n              value: c.prayerProgress.clamp(0.0, 1.0),\n              minHeight: 7,\n              backgroundColor: primary.withValues(alpha: .10),\n            ),\n          ),\n          const SizedBox(height: 7),\n          Row(\n            children: [\n              Icon(Icons.timelapse_rounded, size: 17, color: primary),\n              const SizedBox(width: 6),\n              Expanded(\n                child: Text(\n                  c.prayerStatus,\n                  maxLines: 1,\n                  overflow: TextOverflow.ellipsis,\n                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),\n                ),\n              ),\n            ],\n          ),\n          const SizedBox(height: 11),\n          Row(\n            children: [\n              prayerSideCard(\n                _label(context, 'পূর্ববর্তী', 'Previous'),\n                c.previousPrayer,\n                c.previousPrayerTime.isNotEmpty ? c.previousPrayerTime : c.previousPrayerText,\n                Icons.history_rounded,\n              ),\n              const SizedBox(width: 9),\n              prayerSideCard(\n                _label(context, 'পরবর্তী', 'Next'),\n                c.nextPrayerName,\n                c.nextPrayerTime,\n                Icons.schedule_rounded,\n              ),\n            ],\n          ),\n        ],\n      ),\n    );\n  }\n\n'''
-
+          new_card = '''  Widget _currentCard(BuildContext context, PrayerController c, bool friday) {\n    final primary = Theme.of(context).colorScheme.primary;\n    final secondary = context.secondaryTextColor;\n    final settings = context.watch<SettingsProvider>();\n    final countdown = _countdownText(context, c);\n\n    Widget prayerSideCard(String title, String name, String time, IconData icon) {\n      final safeName = name.trim().isEmpty ? _label(context, 'নেই', 'None') : _prayerLabel(context, name);\n      final safeTime = time.trim().isEmpty ? '--:--' : time;\n      return Expanded(\n        child: Container(\n          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),\n          decoration: BoxDecoration(\n            color: primary.withValues(alpha: .055),\n            borderRadius: BorderRadius.circular(15),\n            border: Border.all(color: primary.withValues(alpha: .06)),\n          ),\n          child: Row(\n            children: [\n              Icon(icon, size: 20, color: primary),\n              const SizedBox(width: 8),\n              Expanded(\n                child: Column(\n                  crossAxisAlignment: CrossAxisAlignment.start,\n                  children: [\n                    Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600)),\n                    const SizedBox(height: 2),\n                    Text(safeName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800)),\n                    const SizedBox(height: 2),\n                    Text(safeTime, style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.w800)),\n                  ],\n                ),\n              ),\n            ],\n          ),\n        ),\n      );\n    }\n\n    return _card(\n      context,\n      radius: 21,\n      padding: const EdgeInsets.fromLTRB(15, 14, 15, 13),\n      child: Column(\n        children: [\n          Row(\n            crossAxisAlignment: CrossAxisAlignment.center,\n            children: [\n              Expanded(\n                child: Row(\n                  children: [\n                    _iconBox(primary, Icons.mosque_rounded, size: 42),\n                    const SizedBox(width: 10),\n                    Expanded(\n                      child: Column(\n                        crossAxisAlignment: CrossAxisAlignment.start,\n                        children: [\n                          Text(_label(context, 'বর্তমান ওয়াক্ত', 'Current prayer'), style: TextStyle(color: secondary, fontSize: 11.5, fontWeight: FontWeight.w600)),\n                          const SizedBox(height: 2),\n                          Text(_prayerLabel(context, c.currentPrayer), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),\n                        ],\n                      ),\n                    ),\n                  ],\n                ),\n              ),\n              const SizedBox(width: 10),\n              Container(\n                constraints: const BoxConstraints(minWidth: 112),\n                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),\n                decoration: BoxDecoration(color: primary.withValues(alpha: .08), borderRadius: BorderRadius.circular(15), border: Border.all(color: primary.withValues(alpha: .10))),\n                child: Column(\n                  crossAxisAlignment: CrossAxisAlignment.end,\n                  children: [\n                    Text(_label(context, 'সময় বাকি', 'Time left'), style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w600)),\n                    const SizedBox(height: 2),\n                    FittedBox(fit: BoxFit.scaleDown, child: Text(countdown, maxLines: 1, style: TextStyle(color: primary, fontSize: 18, fontWeight: FontWeight.w900))),\n                  ],\n                ),\n              ),\n              if (friday) ...[const SizedBox(width: 6), _badge(primary, AppLocalizations.of(context).fridayLabel)],\n            ],\n          ),\n          const SizedBox(height: 13),\n          Row(children: [\n            Expanded(child: _mini(context, Icons.play_arrow_rounded, _label(context, 'শুরু', 'Start'), c.currentPrayerStart)),\n            const SizedBox(width: 8),\n            Expanded(child: _mini(context, Icons.stop_rounded, _label(context, 'শেষ', 'End'), c.currentPrayerEnd)),\n            const SizedBox(width: 8),\n            Expanded(child: _mini(context, Icons.groups_rounded, _label(context, 'জামাত', 'Jamaat'), c.currentIqamahTime)),\n          ]),\n          const SizedBox(height: 11),\n          ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: c.prayerProgress.clamp(0.0, 1.0), minHeight: 7, backgroundColor: primary.withValues(alpha: .10))),\n          const SizedBox(height: 7),\n          Row(children: [Icon(Icons.timelapse_rounded, size: 17, color: primary), const SizedBox(width: 6), Expanded(child: Text(c.prayerStatus, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)))]),\n          const SizedBox(height: 11),\n          Row(children: [\n            prayerSideCard(_label(context, 'পূর্ববর্তী', 'Previous'), c.previousPrayer, c.previousPrayerTime.isNotEmpty ? c.previousPrayerTime : c.previousPrayerText, Icons.history_rounded),\n            const SizedBox(width: 9),\n            prayerSideCard(_label(context, 'পরবর্তী', 'Next'), c.nextPrayerName, c.nextPrayerTime, Icons.schedule_rounded),\n          ]),\n        ],\n      ),\n    );\n  }\n\n'''
           text = text[:start] + new_card + text[end:]
           path.write_text(text, encoding='utf-8')
           PY
@@ -60,4 +59,99 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lib/screens/prayer_screen_v2.dart
           git commit -m 'Prayer: improve current and previous/next layout'
+          git push
+
+      - name: Apply Home seconds preference
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          path = Path('lib/screens/simple_home_screen_v11.dart')
+          text = path.read_text(encoding='utf-8')
+
+          old = """  String _clock() {
+    final h = _now.hour % 12 == 0 ? 12 : _now.hour % 12;
+    return '${h.toString().padLeft(2, '0')}:${_now.minute.toString().padLeft(2, '0')}:${_now.second.toString().padLeft(2, '0')}';
+  }
+"""
+          new = """  String _clock(bool showSeconds) {
+    final h = _now.hour % 12 == 0 ? 12 : _now.hour % 12;
+    final base = '${h.toString().padLeft(2, '0')}:${_now.minute.toString().padLeft(2, '0')}';
+    return showSeconds ? '$base:${_now.second.toString().padLeft(2, '0')}' : base;
+  }
+
+  String _withoutSeconds(String value) {
+    final match = RegExp(r'^(\\d{2}:\\d{2})').firstMatch(value.trim());
+    return match == null ? value : match.group(1)!;
+  }
+"""
+          if old not in text:
+              raise SystemExit('Home clock block not found')
+          text = text.replace(old, new, 1)
+
+          old = """  String _remaining(PrayerController c) {
+    final value = c.timeRemainingForNextPrayer;
+    if (value == null) return '--:--:--';
+    return value.toString();
+  }
+"""
+          new = """  String _remaining(PrayerController c, bool showSeconds) {
+    final value = c.timeRemainingForNextPrayer;
+    if (value == null) return showSeconds ? '--:--:--' : '--:--';
+    final text = value.toString();
+    return showSeconds ? text : _withoutSeconds(text);
+  }
+"""
+          if old not in text:
+              raise SystemExit('Home remaining block not found')
+          text = text.replace(old, new, 1)
+
+          replacements = [
+            ("clock: _clock(),", "clock: _clock(settings.showSeconds),"),
+            ("remaining: _remaining(controller),", "remaining: _remaining(controller, settings.showSeconds),"),
+            ("nextPrayerTime: '${controller.nextPrayerTime}',", "nextPrayerTime: settings.showSeconds ? '${controller.nextPrayerTime}' : _withoutSeconds('${controller.nextPrayerTime}'),"),
+            ("sunrise: '${controller.sunriseTime}',", "sunrise: settings.showSeconds ? '${controller.sunriseTime}' : _withoutSeconds('${controller.sunriseTime}'),"),
+            ("sunset: '${controller.sunsetTime}',", "sunset: settings.showSeconds ? '${controller.sunsetTime}' : _withoutSeconds('${controller.sunsetTime}'),"),
+            ("_PrayerTimeline(prayers: prayers, code: code)", "_PrayerTimeline(prayers: prayers, code: code, showSeconds: settings.showSeconds)"),
+          ]
+          for old, new in replacements:
+              if old not in text:
+                  raise SystemExit(f'Home call not found: {old}')
+              text = text.replace(old, new, 1)
+
+          old = """  const _PrayerTimeline({required this.prayers, required this.code});
+  final List<Map<String, dynamic>> prayers;
+  final String code;
+"""
+          new = """  const _PrayerTimeline({required this.prayers, required this.code, required this.showSeconds});
+  final List<Map<String, dynamic>> prayers;
+  final String code;
+  final bool showSeconds;
+"""
+          if old not in text:
+              raise SystemExit('Timeline constructor not found')
+          text = text.replace(old, new, 1)
+
+          old = "          final time = '${p['time'] ?? p['formattedTime'] ?? '--:--'}';"
+          new = """          final rawTime = '${p['time'] ?? p['formattedTime'] ?? '--:--'}';
+          final time = showSeconds
+              ? rawTime
+              : RegExp(r'^(\\d{2}:\\d{2})').firstMatch(rawTime.trim())?.group(1) ?? rawTime;"""
+          if old not in text:
+              raise SystemExit('Timeline time line not found')
+          text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          if git diff --quiet -- lib/screens/simple_home_screen_v11.dart; then
+            echo 'No Home seconds change required.'
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/simple_home_screen_v11.dart
+          git commit -m 'fix(home): respect show seconds setting'
           git push
