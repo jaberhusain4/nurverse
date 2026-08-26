@@ -1,4 +1,5 @@
 name: Repair active Home and Prayer seconds
+# trigger repair after workflow registration
 on:
   push:
     branches: [fix/prayer-completion-tracker]
@@ -18,13 +19,6 @@ jobs:
         shell: python
         run: |
           from pathlib import Path
-
-          def replace_once(path, old, new):
-              p = Path(path)
-              s = p.read_text(encoding='utf-8')
-              if old not in s:
-                  raise SystemExit(f'Pattern not found in {path}: {old[:100]}')
-              p.write_text(s.replace(old, new, 1), encoding='utf-8')
 
           # ACTIVE HOME: MainShell opens HomeScreen, not the legacy SimpleHome variants.
           p = Path('lib/screens/home_screen.dart')
@@ -84,7 +78,6 @@ jobs:
       return copy;
     }).toList(growable: false);
   }
-
 """
           marker = "  String _greeting(String languageCode) {"
           if '_displayPrayerTimes(List<Map<String, dynamic>> prayers' not in s:
