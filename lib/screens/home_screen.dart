@@ -97,6 +97,29 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
+  String _displayTime(String value, bool showSeconds) {
+    final raw = value.trim();
+    if (showSeconds) return raw;
+    final match = RegExp(r'^(\d{1,2}:\d{2})').firstMatch(raw);
+    return match?.group(1) ?? raw;
+  }
+
+  List<Map<String, dynamic>> _displayPrayerTimes(
+    List<Map<String, dynamic>> prayers,
+    bool showSeconds,
+  ) {
+    return prayers.map((prayer) {
+      final copy = Map<String, dynamic>.from(prayer);
+      for (final key in const ['start', 'end', 'jamaat', 'time', 'formattedTime']) {
+        final value = copy[key];
+        if (value != null) {
+          copy[key] = _displayTime(value.toString(), showSeconds);
+        }
+      }
+      return copy;
+    }).toList(growable: false);
+  }
+
   String _greeting(String languageCode) {
     final hour = DateTime.now().hour;
     if (languageCode == 'en') {
@@ -330,35 +353,38 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     TopHeader(
                       greeting: _greeting(languageCode),
-                      currentTime: _currentTime,
+                      currentTime: _displayTime(_currentTime, settings.showSeconds),
                       onNotificationTap: () => widget.onNavigateTab?.call(5),
                       onProfileTap: () => widget.onNavigateTab?.call(5),
                     ),
                     const SizedBox(height: 14),
                     CurrentPrayerPremiumCard(
                       previousPrayer: controller.previousPrayer,
-                      previousPrayerTime: controller.previousPrayerTime,
+                      previousPrayerTime: _displayTime(controller.previousPrayerTime, settings.showSeconds),
                       currentPrayer: controller.currentPrayer,
-                      currentPrayerTime: controller.currentPrayerTime,
+                      currentPrayerTime: _displayTime(controller.currentPrayerTime, settings.showSeconds),
                       nextPrayer: controller.nextPrayer,
-                      nextPrayerTime: controller.nextPrayerTime,
-                      remainingTime: controller.timeRemainingForNextPrayer,
+                      nextPrayerTime: _displayTime(controller.nextPrayerTime, settings.showSeconds),
+                      remainingTime: _displayTime(controller.timeRemainingForNextPrayer, settings.showSeconds),
                       progress: controller.prayerProgress,
-                      iqamahTime: currentJamaat,
+                      iqamahTime: _displayTime(currentJamaat, settings.showSeconds),
                       status: controller.prayerStatus,
                       languageCode: languageCode,
                       onJamaatTap: _openJamaatSettings,
                     ),
                     const SizedBox(height: 10),
-                    PrayerTimelineCard(prayers: controller.prayers, languageCode: languageCode),
+                    PrayerTimelineCard(
+                      prayers: _displayPrayerTimes(controller.prayers, settings.showSeconds),
+                      languageCode: languageCode,
+                    ),
                     const SizedBox(height: 10),
                     IslamicInfoCard(
                       location: controller.currentLocationName,
                       englishDate: DateService.englishDate(),
                       banglaDate: _banglaDate(),
                       hijriDate: _hijriDate(languageCode),
-                      sunrise: sunTimes?.sunriseString ?? controller.sunriseTime,
-                      sunset: sunTimes?.sunsetString ?? controller.sunsetTime,
+                      sunrise: _displayTime(sunTimes?.sunriseString ?? controller.sunriseTime, settings.showSeconds),
+                      sunset: _displayTime(sunTimes?.sunsetString ?? controller.sunsetTime, settings.showSeconds),
                       languageCode: languageCode,
                       onRefresh: controller.refreshLocation,
                     ),
