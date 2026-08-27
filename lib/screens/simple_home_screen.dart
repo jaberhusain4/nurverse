@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:hijri/hijri_calendar.dart';
@@ -88,14 +87,18 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
     final minute = _now.minute.toString().padLeft(2, '0');
     final second = _now.second.toString().padLeft(2, '0');
     final base = '$hour:$minute';
-    return showSeconds ? '$base:$second ${_now.hour >= 12 ? 'PM' : 'AM'}' : '$base ${_now.hour >= 12 ? 'PM' : 'AM'}';
+    return showSeconds
+        ? '$base:$second ${_now.hour >= 12 ? 'PM' : 'AM'}'
+        : '$base ${_now.hour >= 12 ? 'PM' : 'AM'}';
   }
 
-  String _displayTime(String value, bool showSeconds) {
-    if (showSeconds) return value;
+  String _staticTime(String value) {
     final match = RegExp(r'^(\d{1,2}:\d{2})').firstMatch(value.trim());
     return match?.group(1) ?? value;
   }
+
+  String _countdownTime(String value, bool showSeconds) =>
+      showSeconds ? value : _staticTime(value);
 
   String _dateText(String languageCode) {
     final h = HijriCalendar.now();
@@ -133,9 +136,8 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
       return value.toString().split('').map((d) => bn[int.parse(d)]).join();
     }
 
-    final month = languageCode == 'en'
-        ? enMonths[h.hMonth - 1]
-        : bnMonths[h.hMonth - 1];
+    final month =
+        languageCode == 'en' ? enMonths[h.hMonth - 1] : bnMonths[h.hMonth - 1];
     final day = languageCode == 'en' ? '${h.hDay}' : digits(h.hDay);
     final year = languageCode == 'en' ? '${h.hYear}' : digits(h.hYear);
     return '$day $month $year';
@@ -201,17 +203,21 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
                 clock: _clock(settings.showSeconds),
                 currentPrayer: controller.currentPrayer,
                 nextPrayer: controller.nextPrayerName,
-                nextPrayerTime: _displayTime(controller.nextPrayerTime, settings.showSeconds),
-                remaining: _displayTime(controller.timeRemainingForNextPrayer, settings.showSeconds),
+                nextPrayerTime: _staticTime(controller.nextPrayerTime),
+                remaining: _countdownTime(
+                  controller.timeRemainingForNextPrayer,
+                  settings.showSeconds,
+                ),
                 progress: controller.prayerProgress,
-                sunrise: _displayTime(controller.sunriseTime, settings.showSeconds),
-                sunset: _displayTime(controller.sunsetTime, settings.showSeconds),
+                sunrise: _staticTime(controller.sunriseTime),
+                sunset: _staticTime(controller.sunsetTime),
                 languageCode: languageCode,
               ),
               const SizedBox(height: 12),
-              _PrayerStrip(prayers: prayers, languageCode: languageCode, showSeconds: settings.showSeconds),
+              _PrayerStrip(prayers: prayers, languageCode: languageCode),
               const SizedBox(height: 18),
-              _SectionTitle(title: _label(languageCode, 'প্রয়োজনীয়', 'Essentials')),
+              _SectionTitle(
+                  title: _label(languageCode, 'প্রয়োজনীয়', 'Essentials')),
               const SizedBox(height: 9),
               _EssentialGrid(
                 languageCode: languageCode,
@@ -225,19 +231,20 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
               if (hasLastRead) ...[
                 const SizedBox(height: 18),
                 _SectionTitle(
-                  title: _label(languageCode, 'কুরআন চালিয়ে যান', 'Continue Quran'),
+                  title: _label(
+                      languageCode, 'কুরআন চালিয়ে যান', 'Continue Quran'),
                 ),
                 const SizedBox(height: 9),
                 ContinueReadingCard(
-                  surahName: lastRead!['surahName']?.toString() ?? '',
-                  paraNo: lastRead!['paraNo'] is int
-                      ? lastRead!['paraNo'] as int
-                      : int.tryParse('${lastRead!['paraNo']}') ?? 1,
-                  pageNo: lastRead!['pageNo'] is int
-                      ? lastRead!['pageNo'] as int
-                      : int.tryParse('${lastRead!['pageNo']}') ?? 1,
-                  progress: ((lastRead!['progress'] is num
-                              ? (lastRead!['progress'] as num).toDouble()
+                  surahName: lastRead['surahName']?.toString() ?? '',
+                  paraNo: lastRead['paraNo'] is int
+                      ? lastRead['paraNo'] as int
+                      : int.tryParse('${lastRead['paraNo']}') ?? 1,
+                  pageNo: lastRead['pageNo'] is int
+                      ? lastRead['pageNo'] as int
+                      : int.tryParse('${lastRead['pageNo']}') ?? 1,
+                  progress: ((lastRead['progress'] is num
+                              ? (lastRead['progress'] as num).toDouble()
                               : 0.0)
                           .clamp(0.0, 1.0))
                       .toDouble(),
@@ -250,8 +257,9 @@ class _SimpleHomeScreenState extends State<SimpleHomeScreen> {
               const SizedBox(height: 18),
               _DateFooter(
                 englishDate: DateService.englishDate(),
-                sunrise: _displayTime(controller.sunriseTime, settings.showSeconds),
-                sunset: _displayTime(controller.sunsetTime, settings.showSeconds),
+                banglaDate: DateService.banglaCalendarDate(),
+                sunrise: _staticTime(controller.sunriseTime),
+                sunset: _staticTime(controller.sunsetTime),
                 languageCode: languageCode,
               ),
             ],
@@ -524,11 +532,10 @@ class _ScenicPrayerHero extends StatelessWidget {
 }
 
 class _PrayerStrip extends StatelessWidget {
-  const _PrayerStrip({required this.prayers, required this.languageCode, required this.showSeconds});
+  const _PrayerStrip({required this.prayers, required this.languageCode});
 
   final List<Map<String, dynamic>> prayers;
   final String languageCode;
-  final bool showSeconds;
 
   String _name(Map<String, dynamic> prayer) {
     if (languageCode != 'en') return prayer['nameBn']?.toString() ?? '--';
@@ -542,22 +549,22 @@ class _PrayerStrip extends StatelessWidget {
 
     return Row(
       children: List.generate(5, (index) {
-        final prayer = index < prayers.length
-            ? prayers[index]
-            : const <String, dynamic>{};
+        final prayer =
+            index < prayers.length ? prayers[index] : const <String, dynamic>{};
         final active = prayer['isCurrent'] == true;
         final name = _name(prayer);
         final rawTime = prayer['start']?.toString() ?? '--:--';
-        final time = showSeconds ? rawTime : (RegExp(r'^(\d{1,2}:\d{2})').firstMatch(rawTime.trim())?.group(1) ?? rawTime);
+        final time =
+            RegExp(r'^(\d{1,2}:\d{2})').firstMatch(rawTime.trim())?.group(1) ??
+                rawTime;
 
         return Expanded(
           child: Container(
             margin: EdgeInsets.only(left: index == 0 ? 0 : 4),
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 3),
             decoration: BoxDecoration(
-              color: active
-                  ? primary.withValues(alpha: .10)
-                  : context.cardColor,
+              color:
+                  active ? primary.withValues(alpha: .10) : context.cardColor,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: active
@@ -641,12 +648,16 @@ class _EssentialGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      _EssentialItem(Icons.menu_book_rounded, _label('কুরআন', 'Quran'), onQuran),
+      _EssentialItem(
+          Icons.menu_book_rounded, _label('কুরআন', 'Quran'), onQuran),
       _EssentialItem(Icons.explore_rounded, _label('কিবলা', 'Qibla'), onQibla),
       _EssentialItem(Icons.favorite_rounded, _label('দোয়া', 'Dua'), onDua),
-      _EssentialItem(Icons.touch_app_rounded, _label('তাসবিহ', 'Tasbih'), onTasbih),
-      _EssentialItem(Icons.auto_awesome_rounded, _label('৯৯ নাম', '99 Names'), onNames),
-      _EssentialItem(Icons.auto_stories_rounded, _label('হাদিস', 'Hadith'), onHadith),
+      _EssentialItem(
+          Icons.touch_app_rounded, _label('তাসবিহ', 'Tasbih'), onTasbih),
+      _EssentialItem(
+          Icons.auto_awesome_rounded, _label('৯৯ নাম', '99 Names'), onNames),
+      _EssentialItem(
+          Icons.auto_stories_rounded, _label('হাদিস', 'Hadith'), onHadith),
     ];
 
     return GridView.builder(
@@ -738,12 +749,14 @@ class _EssentialTile extends StatelessWidget {
 class _DateFooter extends StatelessWidget {
   const _DateFooter({
     required this.englishDate,
+    required this.banglaDate,
     required this.sunrise,
     required this.sunset,
     required this.languageCode,
   });
 
   final String englishDate;
+  final String banglaDate;
   final String sunrise;
   final String sunset;
   final String languageCode;
@@ -766,7 +779,7 @@ class _DateFooter extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              '${_label('তারিখ', 'Date')}: $englishDate',
+              '${_label('তারিখ', 'Date')}: ${languageCode == 'bn' ? banglaDate : englishDate}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: secondary, fontSize: 11.5),
@@ -811,14 +824,16 @@ class _PhasePill extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w800),
+        style: TextStyle(
+            color: color, fontSize: 10.5, fontWeight: FontWeight.w800),
       ),
     );
   }
 }
 
 class _HeroChip extends StatelessWidget {
-  const _HeroChip({required this.icon, required this.text, required this.color});
+  const _HeroChip(
+      {required this.icon, required this.text, required this.color});
   final IconData icon;
   final String text;
   final Color color;
@@ -840,7 +855,8 @@ class _HeroChip extends StatelessWidget {
             text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w800),
+            style: TextStyle(
+                color: color, fontSize: 11.5, fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -849,7 +865,8 @@ class _HeroChip extends StatelessWidget {
 }
 
 class _HeroTimeChip extends StatelessWidget {
-  const _HeroTimeChip({required this.label, required this.value, required this.color});
+  const _HeroTimeChip(
+      {required this.label, required this.value, required this.color});
   final String label;
   final String value;
   final Color color;
@@ -861,12 +878,18 @@ class _HeroTimeChip extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(color: color.withValues(alpha: .60), fontSize: 10, fontWeight: FontWeight.w700),
+          style: TextStyle(
+              color: color.withValues(alpha: .60),
+              fontSize: 10,
+              fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 1),
         Text(
           value,
-          style: TextStyle(color: color.withValues(alpha: .92), fontSize: 11.5, fontWeight: FontWeight.w800),
+          style: TextStyle(
+              color: color.withValues(alpha: .92),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800),
         ),
       ],
     );
@@ -975,7 +998,11 @@ class _SkylinePainter extends CustomPainter {
     final celestial = Paint()..color = palette.sun;
     final cx = size.width * (phase == _DayPhase.night ? .77 : .73);
     final cy = size.height *
-        (phase == _DayPhase.dawn ? .29 : phase == _DayPhase.sunset ? .38 : .22);
+        (phase == _DayPhase.dawn
+            ? .29
+            : phase == _DayPhase.sunset
+                ? .38
+                : .22);
     canvas.drawCircle(
       Offset(cx, cy),
       phase == _DayPhase.night ? 21 : 24,

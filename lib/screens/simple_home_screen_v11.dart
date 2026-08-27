@@ -70,7 +70,6 @@ class _SimpleHomeScreenV11State extends State<SimpleHomeScreenV11> with SingleTi
 
   String _remaining(PrayerController c, bool showSeconds) {
     final value = c.timeRemainingForNextPrayer;
-    if (value == null) return showSeconds ? '--:--:--' : '--:--';
     final raw = value.toString();
     return showSeconds ? raw : _withoutSeconds(raw);
   }
@@ -120,13 +119,13 @@ class _SimpleHomeScreenV11State extends State<SimpleHomeScreenV11> with SingleTi
                   now: _now,
                   motion: _motion.value,
                   clock: _clock(settings.showSeconds),
-                  nextPrayer: '${controller.nextPrayerName}',
-                  nextPrayerTime: _withoutSeconds('${controller.nextPrayerTime}'),
+                  nextPrayer: controller.nextPrayerName,
+                  nextPrayerTime: _withoutSeconds(controller.nextPrayerTime),
                   remaining: _remaining(controller, settings.showSeconds),
-                  currentPrayer: '${controller.currentPrayer}',
+                  currentPrayer: controller.currentPrayer,
                   progress: controller.prayerProgress.clamp(0.0, 1.0),
-                  sunrise: _withoutSeconds('${controller.sunriseTime}'),
-                  sunset: _withoutSeconds('${controller.sunsetTime}'),
+                  sunrise: _withoutSeconds(controller.sunriseTime),
+                  sunset: _withoutSeconds(controller.sunsetTime),
                 ),
               ),
               const SizedBox(height: 22),

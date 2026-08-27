@@ -50,9 +50,18 @@ class PrayerController extends ChangeNotifier {
   double _prayerProgress = 0.0;
   String _prayerStatus = 'সালাতের সময় গণনা করা হচ্ছে...';
   final List<Map<String, dynamic>> _prayers = [];
-  DateTime? _ishraqStart, _ishraqEnd, _duhaStart, _duhaEnd,
-      _awwwabinStart, _awwwabinEnd, _tahajjudStart, _tahajjudEnd,
-      _prohibitedStart, _prohibitedEnd, _makruhStart, _makruhEnd;
+  DateTime? _ishraqStart,
+      _ishraqEnd,
+      _duhaStart,
+      _duhaEnd,
+      _awwwabinStart,
+      _awwwabinEnd,
+      _tahajjudStart,
+      _tahajjudEnd,
+      _prohibitedStart,
+      _prohibitedEnd,
+      _makruhStart,
+      _makruhEnd;
 
   bool get loading => _loading;
   String? get error => _error;
@@ -74,7 +83,8 @@ class PrayerController extends ChangeNotifier {
   String get makruhTimeText => _makruhTimeText;
   String get prohibitedTimeText => _prohibitedTimeText;
   double get prayerProgress => _prayerProgress;
-  int get prayerProgressPercentage => (_prayerProgress * 100).round().clamp(0, 100);
+  int get prayerProgressPercentage =>
+      (_prayerProgress * 100).round().clamp(0, 100);
   String get prayerStatus => _prayerStatus;
   List<Map<String, dynamic>> get prayers => List.unmodifiable(_prayers);
   double? get latitude => _position?.latitude;
@@ -162,43 +172,49 @@ class PrayerController extends ChangeNotifier {
     _safeRefresh();
   }
 
-  Future<void> determinePositionAndAddress() async {
+  Future<void> determinePositionAndAddress({bool forceFresh = false}) async {
     try {
       _loading = true;
       _error = null;
       notifyListeners();
-      final Position position = await _locationService.getCurrentPosition();
+      final Position position = forceFresh
+          ? await _locationService.getFreshCurrentPosition()
+          : await _locationService.getCurrentPosition();
       _position = position;
       try {
-        final List<Placemark> placemarks =
-            await placemarkFromCoordinates(position.latitude, position.longitude);
+        final List<Placemark> placemarks = await placemarkFromCoordinates(
+            position.latitude, position.longitude);
         if (placemarks.isNotEmpty) {
           final Placemark place = placemarks.first;
-          final String subLocality = place.subLocality?.trim().isNotEmpty == true
-              ? place.subLocality!.trim()
-              : '';
+          final String subLocality =
+              place.subLocality?.trim().isNotEmpty == true
+                  ? place.subLocality!.trim()
+                  : '';
           final String locality = place.locality?.trim().isNotEmpty == true
               ? place.locality!.trim()
               : '';
-          String district = place.subAdministrativeArea?.trim().isNotEmpty == true
-              ? place.subAdministrativeArea!.trim()
-              : (place.administrativeArea?.trim() ?? '');
+          String district =
+              place.subAdministrativeArea?.trim().isNotEmpty == true
+                  ? place.subAdministrativeArea!.trim()
+                  : (place.administrativeArea?.trim() ?? '');
           final String country = place.country?.trim().isNotEmpty == true
               ? place.country!.trim()
               : '';
           district = district.replaceAll(RegExp(r'\s+[Dd]istrict$'), '').trim();
           final List<String> parts = [];
           if (subLocality.isNotEmpty) parts.add(subLocality);
-          if (locality.isNotEmpty && locality != subLocality) parts.add(locality);
-          if (district.isNotEmpty && district != locality && district != subLocality) {
+          if (locality.isNotEmpty && locality != subLocality)
+            parts.add(locality);
+          if (district.isNotEmpty &&
+              district != locality &&
+              district != subLocality) {
             parts.add(district);
           }
           if (country.isNotEmpty && country.toLowerCase() == 'bangladesh') {
             parts.add('Bangladesh');
           }
-          _currentLocationName = parts.isNotEmpty
-              ? parts.join(', ')
-              : 'লোকেশন পাওয়া যায়নি';
+          _currentLocationName =
+              parts.isNotEmpty ? parts.join(', ') : 'লোকেশন পাওয়া যায়নি';
         } else {
           _currentLocationName = _coordinateFallback(position);
         }
@@ -225,7 +241,8 @@ class PrayerController extends ChangeNotifier {
   String _coordinateFallback(Position position) =>
       '${position.latitude.toStringAsFixed(3)}, ${position.longitude.toStringAsFixed(3)}';
 
-  Future<void> refreshLocation() async => determinePositionAndAddress();
+  Future<void> refreshLocation() async =>
+      determinePositionAndAddress(forceFresh: true);
 
   Future<void> refreshPrayerTimes() async {
     _loading = true;
@@ -262,7 +279,8 @@ class PrayerController extends ChangeNotifier {
       'Fajr',
       _safeTime(prayerTimes.fajr, DateTime(now.year, now.month, now.day, 5)),
     );
-    final DateTime sunrise = _safeTime(prayerTimes.sunrise, fajr.add(const Duration(hours: 1)));
+    final DateTime sunrise =
+        _safeTime(prayerTimes.sunrise, fajr.add(const Duration(hours: 1)));
     final DateTime dhuhr = _applyPrayerAdjustment(
       'Dhuhr',
       _safeTime(prayerTimes.dhuhr, DateTime(now.year, now.month, now.day, 12)),
@@ -277,7 +295,8 @@ class PrayerController extends ChangeNotifier {
     );
     final DateTime isha = _applyPrayerAdjustment(
       'Isha',
-      _safeTime(prayerTimes.isha, maghrib.add(const Duration(hours: 1, minutes: 30))),
+      _safeTime(
+          prayerTimes.isha, maghrib.add(const Duration(hours: 1, minutes: 30))),
     );
     final Map<String, DateTime> times = {
       'Fajr': fajr,
@@ -302,8 +321,8 @@ class PrayerController extends ChangeNotifier {
 
   DateTime _safeTime(DateTime? value, DateTime fallback) => value ?? fallback;
 
-  DateTime _applyPrayerAdjustment(String prayerName, DateTime time) =>
-      time.add(Duration(minutes: _prayerAdjustments[prayerName]?.clamp(-60, 60) ?? 0));
+  DateTime _applyPrayerAdjustment(String prayerName, DateTime time) => time.add(
+      Duration(minutes: _prayerAdjustments[prayerName]?.clamp(-60, 60) ?? 0));
 
   void _calculateSpecialWindows({
     required Map<String, DateTime> times,
@@ -320,9 +339,11 @@ class PrayerController extends ChangeNotifier {
     _duhaEnd = dhuhr.subtract(const Duration(minutes: 10));
     _awwwabinStart = maghrib;
     _awwwabinEnd = isha;
-    _tahajjudStart = _calculateTahajjudStart(now: now, todayIsha: isha, tomorrowFajr: tomorrowFajr);
+    _tahajjudStart = _calculateTahajjudStart(
+        now: now, todayIsha: isha, tomorrowFajr: tomorrowFajr);
     _tahajjudEnd = tomorrowFajr;
-    final DateTime sunriseProhibitedEnd = sunrise.add(const Duration(minutes: 15));
+    final DateTime sunriseProhibitedEnd =
+        sunrise.add(const Duration(minutes: 15));
     final DateTime zawalStart = dhuhr.subtract(const Duration(minutes: 10));
     final DateTime sunsetStart = maghrib.subtract(const Duration(minutes: 15));
     final List<List<DateTime>> prohibitedWindows = [
@@ -335,15 +356,18 @@ class PrayerController extends ChangeNotifier {
       [zawalStart, dhuhr.add(const Duration(minutes: 5))],
       [sunsetStart, maghrib.add(const Duration(minutes: 15))],
     ];
-    final List<DateTime>? prohibited = _selectCurrentOrNextWindow(prohibitedWindows, now);
-    final List<DateTime>? makruh = _selectCurrentOrNextWindow(makruhWindows, now);
+    final List<DateTime>? prohibited =
+        _selectCurrentOrNextWindow(prohibitedWindows, now);
+    final List<DateTime>? makruh =
+        _selectCurrentOrNextWindow(makruhWindows, now);
     _prohibitedStart = prohibited?[0];
     _prohibitedEnd = prohibited?[1];
     _makruhStart = makruh?[0];
     _makruhEnd = makruh?[1];
   }
 
-  List<DateTime>? _selectCurrentOrNextWindow(List<List<DateTime>> windows, DateTime now) {
+  List<DateTime>? _selectCurrentOrNextWindow(
+      List<List<DateTime>> windows, DateTime now) {
     for (final window in windows) {
       final DateTime start = window[0];
       final DateTime end = window[1];
@@ -355,10 +379,12 @@ class PrayerController extends ChangeNotifier {
     return null;
   }
 
-  void _buildPrayerList({required Map<String, DateTime> times, required DateTime now}) {
+  void _buildPrayerList(
+      {required Map<String, DateTime> times, required DateTime now}) {
     final bool isFriday = now.weekday == DateTime.friday;
     _prayers.clear();
-    void add(String name, String nameBn, String nameAr, DateTime start, DateTime end, String jamaat, String category) {
+    void add(String name, String nameBn, String nameAr, DateTime start,
+        DateTime end, String jamaat, String category) {
       _prayers.add({
         'name': name,
         'nameBn': nameBn,
@@ -370,14 +396,33 @@ class PrayerController extends ChangeNotifier {
         'category': category,
       });
     }
-    add('Fajr', 'ফজর', 'الفجر', times['Fajr']!, times['Sunrise']!, JamaatService.get('Fajr'), 'obligatory');
-    add(isFriday ? 'Jumuah' : 'Dhuhr', isFriday ? 'জুমুআ' : 'যোহর', isFriday ? 'الجمعة' : 'الظهر', times['Dhuhr']!, times['Asr']!, JamaatService.get('Dhuhr'), 'obligatory');
-    add('Asr', 'আসর', 'العصر', times['Asr']!, times['Maghrib']!, JamaatService.get('Asr'), 'obligatory');
-    add('Maghrib', 'মাগরিব', 'المغرب', times['Maghrib']!, times['Isha']!, JamaatService.get('Maghrib'), 'obligatory');
-    add('Isha', 'ইশা', 'العشاء', times['Isha']!, _tomorrowPrayerTime(now, PrayerField.fajr), JamaatService.get('Isha'), 'obligatory');
+
+    add('Fajr', 'ফজর', 'الفجر', times['Fajr']!, times['Sunrise']!,
+        JamaatService.get('Fajr'), 'obligatory');
+    add(
+        isFriday ? 'Jumuah' : 'Dhuhr',
+        isFriday ? 'জুমুআ' : 'যোহর',
+        isFriday ? 'الجمعة' : 'الظهر',
+        times['Dhuhr']!,
+        times['Asr']!,
+        JamaatService.get('Dhuhr'),
+        'obligatory');
+    add('Asr', 'আসর', 'العصر', times['Asr']!, times['Maghrib']!,
+        JamaatService.get('Asr'), 'obligatory');
+    add('Maghrib', 'মাগরিব', 'المغرب', times['Maghrib']!, times['Isha']!,
+        JamaatService.get('Maghrib'), 'obligatory');
+    add(
+        'Isha',
+        'ইশা',
+        'العشاء',
+        times['Isha']!,
+        _tomorrowPrayerTime(now, PrayerField.fajr),
+        JamaatService.get('Isha'),
+        'obligatory');
   }
 
-  void _updatePrayerState({required Map<String, DateTime> times, required DateTime now}) {
+  void _updatePrayerState(
+      {required Map<String, DateTime> times, required DateTime now}) {
     final DateTime fajr = times['Fajr']!;
     final DateTime dhuhr = times['Dhuhr']!;
     final DateTime asr = times['Asr']!;
@@ -386,12 +431,14 @@ class PrayerController extends ChangeNotifier {
     final DateTime tomorrowFajr = _tomorrowPrayerTime(now, PrayerField.fajr);
     _clearCurrentPrayer();
     if (now.isBefore(fajr)) {
+      final DateTime yesterdayIsha =
+          _yesterdayPrayerTime(now, PrayerField.isha);
       _currentPrayer = 'ওয়াক্ত নেই';
       _currentPrayerStart = '--:--';
       _currentPrayerEnd = _formatTime(fajr);
       _currentIqamahTime = '--:--';
       _previousPrayer = 'ইশা';
-      _previousPrayerTime = _formatTime(isha);
+      _previousPrayerTime = _formatTime(yesterdayIsha);
       _previousPrayerText = 'ইশা শেষ হয়েছে';
       _nextPrayerName = 'ফজর';
       _nextPrayer = 'ফজর';
@@ -463,7 +510,8 @@ class PrayerController extends ChangeNotifier {
     _setCurrentPrayer('Isha');
   }
 
-  void _setPrayerRange(String displayName, DateTime start, DateTime end, String prayerName) {
+  void _setPrayerRange(
+      String displayName, DateTime start, DateTime end, String prayerName) {
     _currentPrayer = displayName;
     _currentPrayerStart = _formatTime(start);
     _currentPrayerEnd = _formatTime(end);
@@ -483,7 +531,8 @@ class PrayerController extends ChangeNotifier {
     }
   }
 
-  void _updateRemainingTime({required Map<String, DateTime> times, required DateTime now}) {
+  void _updateRemainingTime(
+      {required Map<String, DateTime> times, required DateTime now}) {
     late final DateTime target;
     if (now.isBefore(times['Fajr']!)) {
       target = times['Fajr']!;
@@ -501,7 +550,8 @@ class PrayerController extends ChangeNotifier {
     _timeRemainingForNextPrayer = _formatDuration(target.difference(now));
   }
 
-  void _updatePrayerProgress({required Map<String, DateTime> times, required DateTime now}) {
+  void _updatePrayerProgress(
+      {required Map<String, DateTime> times, required DateTime now}) {
     DateTime? start;
     DateTime? end;
     if (!now.isBefore(times['Fajr']!) && now.isBefore(times['Sunrise']!)) {
@@ -510,10 +560,12 @@ class PrayerController extends ChangeNotifier {
     } else if (!now.isBefore(times['Dhuhr']!) && now.isBefore(times['Asr']!)) {
       start = times['Dhuhr'];
       end = times['Asr'];
-    } else if (!now.isBefore(times['Asr']!) && now.isBefore(times['Maghrib']!)) {
+    } else if (!now.isBefore(times['Asr']!) &&
+        now.isBefore(times['Maghrib']!)) {
       start = times['Asr'];
       end = times['Maghrib'];
-    } else if (!now.isBefore(times['Maghrib']!) && now.isBefore(times['Isha']!)) {
+    } else if (!now.isBefore(times['Maghrib']!) &&
+        now.isBefore(times['Isha']!)) {
       start = times['Maghrib'];
       end = times['Isha'];
     } else if (!now.isBefore(times['Isha']!)) {
@@ -526,14 +578,20 @@ class PrayerController extends ChangeNotifier {
     }
     final int totalSeconds = end.difference(start).inSeconds;
     final int elapsedSeconds = now.difference(start).inSeconds;
-    _prayerProgress = totalSeconds <= 0 ? 0.0 : (elapsedSeconds / totalSeconds).clamp(0.0, 1.0);
+    _prayerProgress = totalSeconds <= 0
+        ? 0.0
+        : (elapsedSeconds / totalSeconds).clamp(0.0, 1.0);
   }
 
-  void _updateDailyTimeInformation({required Map<String, DateTime> times, required DateTime now}) {
+  void _updateDailyTimeInformation(
+      {required Map<String, DateTime> times, required DateTime now}) {
     final DateTime sunrise = times['Sunrise']!;
     final DateTime dhuhr = times['Dhuhr']!;
     final DateTime zawalStart = dhuhr.subtract(const Duration(minutes: 10));
-    final List<DateTime> prohibited = _prohibitedStart != null && _prohibitedEnd != null ? [_prohibitedStart!, _prohibitedEnd!] : [];
+    final List<DateTime> prohibited =
+        _prohibitedStart != null && _prohibitedEnd != null
+            ? [_prohibitedStart!, _prohibitedEnd!]
+            : [];
     if (prohibited.isEmpty) {
       _prohibitedTimeText = 'আজ আর কোনো নিষিদ্ধ সময় নেই';
     } else if (!now.isBefore(prohibited[0]) && now.isBefore(prohibited[1])) {
@@ -553,7 +611,9 @@ class PrayerController extends ChangeNotifier {
         _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: সূর্যাস্ত';
       }
     }
-    final List<DateTime> makruh = _makruhStart != null && _makruhEnd != null ? [_makruhStart!, _makruhEnd!] : [];
+    final List<DateTime> makruh = _makruhStart != null && _makruhEnd != null
+        ? [_makruhStart!, _makruhEnd!]
+        : [];
     if (makruh.isEmpty) {
       _makruhTimeText = 'আজ আর কোনো বিশেষ মাকরূহ সময় নেই';
     } else if (!now.isBefore(makruh[0]) && now.isBefore(makruh[1])) {
@@ -575,38 +635,79 @@ class PrayerController extends ChangeNotifier {
     }
   }
 
-  DateTime _calculateTahajjudStart({required DateTime now, required DateTime todayIsha, required DateTime tomorrowFajr}) {
+  DateTime _calculateTahajjudStart(
+      {required DateTime now,
+      required DateTime todayIsha,
+      required DateTime tomorrowFajr}) {
     final Duration nightDuration = tomorrowFajr.difference(todayIsha);
-    if (nightDuration.isNegative || nightDuration.inSeconds <= 0) return tomorrowFajr;
-    final Duration lastThird = Duration(milliseconds: (nightDuration.inMilliseconds / 3).round());
+    if (nightDuration.isNegative || nightDuration.inSeconds <= 0)
+      return tomorrowFajr;
+    final Duration lastThird =
+        Duration(milliseconds: (nightDuration.inMilliseconds / 3).round());
     return tomorrowFajr.subtract(lastThird);
   }
 
-  String _windowText(DateTime? start, DateTime? end) => start == null || end == null ? '--:--' : '${_formatTime(start)} – ${_formatTime(end)}';
+  String _windowText(DateTime? start, DateTime? end) =>
+      start == null || end == null
+          ? '--:--'
+          : '${_formatTime(start)} – ${_formatTime(end)}';
 
   DateTime _tomorrowPrayerTime(DateTime now, PrayerField field) {
     final Position? position = _position;
     if (position == null) return _fallbackPrayerTime(now, field);
     final DateTime tomorrow = DateTime(now.year, now.month, now.day + 1);
-    final PrayerTimes tomorrowTimes = _prayerEngine.getPrayerTimes(position: position, date: tomorrow, config: _calculationConfig);
+    final PrayerTimes tomorrowTimes = _prayerEngine.getPrayerTimes(
+        position: position, date: tomorrow, config: _calculationConfig);
     switch (field) {
       case PrayerField.fajr:
-        return tomorrowTimes.fajr ?? DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 5);
+        return tomorrowTimes.fajr;
       case PrayerField.sunrise:
-        return tomorrowTimes.sunrise ?? DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 6);
+        return tomorrowTimes.sunrise;
       case PrayerField.dhuhr:
-        return tomorrowTimes.dhuhr ?? DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 12);
+        return tomorrowTimes.dhuhr;
       case PrayerField.asr:
-        return tomorrowTimes.asr ?? DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 15);
+        return tomorrowTimes.asr;
       case PrayerField.maghrib:
-        return tomorrowTimes.maghrib ?? DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 18);
+        return tomorrowTimes.maghrib;
       case PrayerField.isha:
-        return tomorrowTimes.isha ?? DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 19);
+        return tomorrowTimes.isha;
     }
   }
 
+  DateTime _yesterdayPrayerTime(DateTime now, PrayerField field) {
+    final Position? position = _position;
+    final DateTime yesterday = DateTime(now.year, now.month, now.day - 1);
+    if (position == null) return _fallbackPrayerTime(yesterday, field);
+    final PrayerTimes yesterdayTimes = _prayerEngine.getPrayerTimes(
+        position: position, date: yesterday, config: _calculationConfig);
+    final DateTime rawTime = switch (field) {
+      PrayerField.fajr => yesterdayTimes.fajr,
+      PrayerField.sunrise => yesterdayTimes.sunrise,
+      PrayerField.dhuhr => yesterdayTimes.dhuhr,
+      PrayerField.asr => yesterdayTimes.asr,
+      PrayerField.maghrib => yesterdayTimes.maghrib,
+      PrayerField.isha => yesterdayTimes.isha,
+    };
+    if (field == PrayerField.sunrise) return rawTime;
+    final String prayerName = switch (field) {
+      PrayerField.fajr => 'Fajr',
+      PrayerField.dhuhr => 'Dhuhr',
+      PrayerField.asr => 'Asr',
+      PrayerField.maghrib => 'Maghrib',
+      PrayerField.isha => 'Isha',
+      PrayerField.sunrise => 'Sunrise',
+    };
+    return _applyPrayerAdjustment(prayerName, rawTime);
+  }
+
   DateTime _fallbackPrayerTime(DateTime now, PrayerField field) {
-    final DateTime day = DateTime(now.year, now.month, now.day + (field == PrayerField.fajr || field == PrayerField.sunrise ? 1 : 0));
+    final DateTime day = DateTime(
+        now.year,
+        now.month,
+        now.day +
+            (field == PrayerField.fajr || field == PrayerField.sunrise
+                ? 1
+                : 0));
     switch (field) {
       case PrayerField.fajr:
         return DateTime(day.year, day.month, day.day, 5);
@@ -623,7 +724,7 @@ class PrayerController extends ChangeNotifier {
     }
   }
 
-  String _formatTime(DateTime value) => DateFormat('hh:mm:ss a').format(value);
+  String _formatTime(DateTime value) => DateFormat('hh:mm').format(value);
 
   String _formatDuration(Duration duration) {
     if (duration.isNegative) return '00:00:00';

@@ -71,7 +71,8 @@ class SunTimeService {
     Madhab madhab = Madhab.hanafi,
   }) {
     final now = date ?? DateTime.now();
-    final info = getSunTimes(position, date: now, method: method, madhab: madhab);
+    final info =
+        getSunTimes(position, date: now, method: method, madhab: madhab);
     return !now.isBefore(info.sunrise) && now.isBefore(info.sunset);
   }
 
@@ -91,7 +92,8 @@ class SunTimeService {
     Madhab madhab = Madhab.hanafi,
   }) {
     final now = date ?? DateTime.now();
-    final today = getSunTimes(position, date: now, method: method, madhab: madhab);
+    final today =
+        getSunTimes(position, date: now, method: method, madhab: madhab);
     if (now.isBefore(today.sunrise)) {
       return _safeDuration(today.sunrise.difference(now));
     }
@@ -113,7 +115,8 @@ class SunTimeService {
     Madhab madhab = Madhab.hanafi,
   }) {
     final now = date ?? DateTime.now();
-    final today = getSunTimes(position, date: now, method: method, madhab: madhab);
+    final today =
+        getSunTimes(position, date: now, method: method, madhab: madhab);
     if (now.isBefore(today.sunset)) {
       return _safeDuration(today.sunset.difference(now));
     }

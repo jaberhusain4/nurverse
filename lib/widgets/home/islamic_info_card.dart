@@ -70,9 +70,7 @@ class IslamicInfoCard extends StatelessWidget {
             .join();
       }
 
-      final month = h.hMonth >= 1 && h.hMonth <= 12
-          ? months[h.hMonth - 1]
-          : '';
+      final month = h.hMonth >= 1 && h.hMonth <= 12 ? months[h.hMonth - 1] : '';
       return '${bnDigits(h.hDay)} $month ${bnDigits(h.hYear)} হিজরি';
     } catch (_) {
       return hijriDate;
@@ -197,9 +195,11 @@ class IslamicInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
+    final text =
+        theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary = context.secondaryTextColor;
-    final datePreference = context.watch<SettingsProvider>().dateDisplayPreference;
+    final datePreference =
+        context.watch<SettingsProvider>().dateDisplayPreference;
     final locationIconSize = compactLocation ? 17.0 : 18.0;
     final locationIconBox = compactLocation ? 34.0 : 36.0;
     final locationFontSize = compactLocation ? 11.5 : 14.0;
@@ -223,6 +223,12 @@ class IslamicInfoCard extends StatelessWidget {
       );
     }
 
+    if (languageCode == 'bn') {
+      addDateBlock(
+        label: 'বাংলা',
+        value: banglaDate,
+      );
+    }
     if (datePreference == 'gregorian' || datePreference == 'both') {
       addDateBlock(
         label: _label(bn: 'ইংরেজি', en: 'Gregorian', ar: 'ميلادي'),
