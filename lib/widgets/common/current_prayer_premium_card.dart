@@ -77,14 +77,26 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
   }
 
   DateTime? _parseTime(String value, DateTime base) {
-    final match = RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)$', caseSensitive: false).firstMatch(value.trim());
+    final raw = value.trim();
+    final match = RegExp(
+      r'^([0-9]{1,2}):([0-9]{2})(?:[ ]*(AM|PM))?$',
+      caseSensitive: false,
+    ).firstMatch(raw);
     if (match == null) return null;
+
     var hour = int.tryParse(match.group(1)!) ?? -1;
     final minute = int.tryParse(match.group(2)!) ?? -1;
-    if (hour < 1 || hour > 12 || minute < 0 || minute > 59) return null;
-    final period = match.group(3)!.toUpperCase();
-    if (period == 'AM' && hour == 12) hour = 0;
-    if (period == 'PM' && hour != 12) hour += 12;
+    if (minute < 0 || minute > 59) return null;
+
+    final period = match.group(3)?.toUpperCase();
+    if (period == null) {
+      if (hour < 0 || hour > 23) return null;
+    } else {
+      if (hour < 1 || hour > 12) return null;
+      if (period == 'AM' && hour == 12) hour = 0;
+      if (period == 'PM' && hour != 12) hour += 12;
+    }
+
     return DateTime(base.year, base.month, base.day, hour, minute);
   }
 
