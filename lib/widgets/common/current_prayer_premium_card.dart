@@ -79,7 +79,7 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
   DateTime? _parseTime(String value, DateTime base) {
     final raw = value.trim();
     final match = RegExp(
-      r'^(\\d{1,2}):(\\d{2})(?:\\s*(AM|PM))?$',
+      r'^([0-9]{1,2}):([0-9]{2})(?:[ ]*(AM|PM))?$',
       caseSensitive: false,
     ).firstMatch(raw);
     if (match == null) return null;
