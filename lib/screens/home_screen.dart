@@ -47,6 +47,8 @@ class _HomeScreenState extends State<HomeScreen> {
   double? _sunLatitude;
   double? _sunLongitude;
   DateTime? _sunDate;
+  String? _sunCalculationMethod;
+  String? _sunMadhab;
   SunTimeInfo? _sunTimeInfo;
 
   @override
@@ -212,11 +214,16 @@ class _HomeScreenState extends State<HomeScreen> {
         _sunDate!.month == now.month &&
         _sunDate!.day == now.day;
     final sameLocation = _sunLatitude == position.latitude && _sunLongitude == position.longitude;
+    final calculationMethod = controller.calculationMethod.toString();
+    final madhab = controller.madhhab.toString();
+    final sameCalculation = _sunCalculationMethod == calculationMethod && _sunMadhab == madhab;
 
-    if (_sunTimeInfo == null || !sameDay || !sameLocation) {
+    if (_sunTimeInfo == null || !sameDay || !sameLocation || !sameCalculation) {
       _sunLatitude = position.latitude;
       _sunLongitude = position.longitude;
       _sunDate = now;
+      _sunCalculationMethod = calculationMethod;
+      _sunMadhab = madhab;
       _sunTimeInfo = const SunTimeService().getSunTimes(
         position,
         date: null,
