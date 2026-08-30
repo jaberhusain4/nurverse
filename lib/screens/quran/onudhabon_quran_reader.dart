@@ -31,6 +31,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   final _tafsir = QuranTafsirService.instance;
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
+  final _pickerScrollController = ScrollController();
   final _ayahKeys = <int, GlobalKey>{};
 
   bool _loading = true;
@@ -128,6 +129,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
+    _pickerScrollController.dispose();
     super.dispose();
   }
 
@@ -396,6 +398,7 @@ class _OnudhabonQuranReaderState extends State<OnudhabonQuranReader> {
       return surah.number.toString().contains(query) || surah.transliteration.toLowerCase().contains(query) || surah.arabicName.contains(query) || (surah.banglaName ?? '').contains(query);
     }).toList();
     return ListView(
+      controller: _pickerScrollController,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
       children: [
         _introCard(context), const SizedBox(height: 12),
