@@ -420,6 +420,8 @@ class _NextPrayerHero extends StatelessWidget {
               );
 
     final progressValue = progress.clamp(0.0, 1.0).toDouble();
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final heroHeight = (340.0 + ((textScale - 1.0).clamp(0.0, 1.0) * 170.0));
     final clockStyle = GoogleFonts.googleSansTextTheme().displaySmall?.copyWith(
           color: Colors.white,
           fontSize: 17,
@@ -434,7 +436,7 @@ class _NextPrayerHero extends StatelessWidget {
         );
 
     return Container(
-      height: 340,
+      height: heroHeight,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
@@ -702,11 +704,7 @@ class _HeroScenePainter extends CustomPainter {
       );
     }
 
-    canvas.drawCircle(
-      Offset(size.width * .12, size.height * .18),
-      2,
-      sky,
-    );
+    canvas.drawCircle(Offset(size.width * .12, size.height * .18), 2, sky);
   }
 
   @override
