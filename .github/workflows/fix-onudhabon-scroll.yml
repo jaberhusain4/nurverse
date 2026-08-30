@@ -1,0 +1,71 @@
+name: One-time Onudhabon Scroll Fix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply exact scroll-state patch
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/screens/quran/onudhabon_quran_reader.dart')
+          s = p.read_text(encoding='utf-8')
+
+          old = """  final _searchController = TextEditingController();
+  final _scrollController = ScrollController();
+  final _ayahKeys = <int, GlobalKey>{};"""
+          new = """  final _searchController = TextEditingController();
+  final _scrollController = ScrollController();
+  final _pickerScrollController = ScrollController();
+  final _ayahKeys = <int, GlobalKey>{};"""
+          if old not in s:
+              raise SystemExit('Expected controller block not found')
+          s = s.replace(old, new, 1)
+
+          old = """    _searchController.dispose();
+    _scrollController.dispose();
+    super.dispose();"""
+          new = """    _searchController.dispose();
+    _scrollController.dispose();
+    _pickerScrollController.dispose();
+    super.dispose();"""
+          if old not in s:
+              raise SystemExit('Expected dispose block not found')
+          s = s.replace(old, new, 1)
+
+          old = """    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),"""
+          new = """    return ListView(
+      key: const PageStorageKey<String>('onudhabon-surah-picker'),
+      controller: _pickerScrollController,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),"""
+          if old not in s:
+              raise SystemExit('Expected picker ListView block not found')
+          s = s.replace(old, new, 1)
+
+          p.write_text(s, encoding='utf-8', newline='\n')
+
+      - name: Commit patch and remove one-time workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/fix-onudhabon-scroll.yml
+          git add lib/screens/quran/onudhabon_quran_reader.dart .github/workflows/fix-onudhabon-scroll.yml
+          git diff --cached --check
+          git diff --cached -- lib/screens/quran/onudhabon_quran_reader.dart
+          git commit -m "fix(quran): preserve Onudhabon surah list scroll position"
+          git push origin main
