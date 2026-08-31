@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../controllers/prayer_controller.dart';
 import '../localization/app_localizations.dart';
 import '../providers/settings_provider.dart';
+import '../services/prayer_calculation_config.dart';
 import '../theme/app_theme.dart';
 import 'home_switcher_screen.dart';
 import 'more_screen_with_home_shortcut.dart';
