@@ -1,0 +1,53 @@
+name: Repair Current CI
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+
+      - name: Repair and verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/screens/settings_hub_screen_v4.dart')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace("    final isArabic = languageCode == 'ar';\n", "")
+          s = s.replace("    final isEnglish = languageCode == 'en';\n", "", 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+          dart format lib/screens/settings_hub_screen_v4.dart
+          flutter pub get
+          flutter analyze lib/screens/settings_hub_screen_v4.dart
+          flutter analyze
+          flutter build apk --debug
+          git diff --check
+
+      - name: Commit repair and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/settings_hub_screen_v4.dart
+          git commit -m 'fix(settings): remove unused localization variables' || true
+          git rm .github/workflows/repair-current-ci.yml
+          git commit -m 'chore(ci): remove temporary repair workflow'
+          git push
