@@ -1,5 +1,7 @@
 name: Apply Settings Now
 
+# Trigger the existing one-time settings layout repair workflow.
+
 on:
   push:
     branches: [main]
@@ -16,7 +18,6 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
           p = Path('lib/screens/settings_hub_screen_v4.dart')
           s = p.read_text()
           patches = [
