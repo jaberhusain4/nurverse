@@ -12,13 +12,17 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Patch settings UI
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Patch and commit settings UI
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p = Path('lib/screens/settings_hub_screen_v4.dart')
           s = p.read_text()
-
           replacements = [
             ("""                const ['Bangla', 'English'],
                 settings.setQuranTranslation,
@@ -42,7 +46,6 @@ jobs:
           for old, new in replacements:
               if old in s:
                   s = s.replace(old, new, 1)
-
           anchor = """            _switchTile(
               context,
               Icons.notifications_active_outlined,
@@ -83,14 +86,15 @@ jobs:
             ),"""
           if 'Notification Sound' not in s and anchor in s:
               s = s.replace(anchor, extra, 1)
-
           p.write_text(s)
           PY
           dart format lib/screens/settings_hub_screen_v4.dart
+          flutter pub get
+          flutter analyze lib/screens/settings_hub_screen_v4.dart
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lib/screens/settings_hub_screen_v4.dart
-          git commit -m 'feat(settings): complete preference selection controls' || true
+          git commit -m 'feat(settings): complete preference selection controls'
           git rm .github/workflows/finish-settings-apply.yml
           git commit -m 'chore: remove temporary settings apply workflow'
           git push
