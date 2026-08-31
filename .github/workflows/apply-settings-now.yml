@@ -1,7 +1,5 @@
 name: Apply Settings Now
 
-# Trigger the existing one-time settings layout repair workflow.
-
 on:
   push:
     branches: [main]
@@ -14,81 +12,18 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Patch settings
+      - name: Fix choice sheet layout
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('lib/screens/settings_hub_screen_v4.dart')
-          s = p.read_text()
-          patches = [
-            ("""                const ['Bangla', 'English'],
-                settings.setQuranTranslation,
-              ),""", """                const ['Bangla', 'English'],
-                settings.setQuranTranslation,
-                selectedValue: settings.quranTranslation,
-              ),"""),
-            ("""                const ['Default', 'Amiri', 'Scheherazade'],
-                settings.setQuranArabicFont,
-              ),""", """                const ['Default', 'Amiri', 'Scheherazade'],
-                settings.setQuranArabicFont,
-                selectedValue: settings.quranArabicFont,
-              ),"""),
-            ("""                const ['hijri', 'gregorian', 'both'],
-                settings.setDateDisplayPreference,
-              ),""", """                const ['hijri', 'gregorian', 'both'],
-                settings.setDateDisplayPreference,
-                selectedValue: settings.dateDisplayPreference,
-              ),"""),
-          ]
-          for old, new in patches:
-              s = s.replace(old, new, 1)
 
-          anchor = """            _switchTile(
-              context,
-              Icons.notifications_active_outlined,
-              _t(languageCode, 'আজান নোটিফিকেশন', 'Adhan Notifications'),
-              _t(languageCode, 'সালাতের সময়ের নোটিফিকেশন চালু রাখুন',
-                  'Enable prayer-time notifications'),
-              settings.isAdhanNotificationEnabled,
-              settings.toggleAdhanNotification,
-            ),"""
-          extra = anchor + """
-            _divider(),
-            _tile(
-              context,
-              Icons.music_note_outlined,
-              _t(languageCode, 'নোটিফিকেশন সাউন্ড', 'Notification Sound'),
-              settings.notificationSound,
-              () => _showChoiceSheet(
-                context,
-                _t(languageCode, 'নোটিফিকেশন সাউন্ড', 'Notification Sound'),
-                const ['Default', 'Silent'],
-                settings.setNotificationSound,
-                selectedValue: settings.notificationSound,
-              ),
-            ),
-            _divider(),
-            _tile(
-              context,
-              Icons.alarm_outlined,
-              _t(languageCode, 'সালাত রিমাইন্ডার', 'Prayer Reminder'),
-              settings.prayerReminderMinutes == 0
-                  ? _t(languageCode, 'বন্ধ', 'Off')
-                  : '${settings.prayerReminderMinutes} ${_t(languageCode, 'মিনিট আগে', 'min before')}',
-              () => _showChoiceSheet(
-                context,
-                _t(languageCode, 'সালাত রিমাইন্ডার', 'Prayer Reminder'),
-                const ['0', '5', '10', '15', '30', '60'],
-                (value) => settings.setPrayerReminderMinutes(int.parse(value)),
-                selectedValue: settings.prayerReminderMinutes.toString(),
-              ),
-            ),"""
-          if 'Notification Sound' not in s and anchor in s:
-              s = s.replace(anchor, extra, 1)
+          p = Path('lib/screens/settings_hub_screen_v4.dart')
+          s = p.read_text(encoding='utf-8')
 
           start = s.index('  Future<void> _showChoiceSheet(')
           end = s.index('  Future<void> _showTextSizeSheet(', start)
-          fixed = r'''  Future<void> _showChoiceSheet(BuildContext context, String title,
+
+          fixed = '''  Future<void> _showChoiceSheet(BuildContext context, String title,
       List<String> options, Future<void> Function(String) onSelected,
       {String? selectedValue}) async {
     final languageCode = Localizations.localeOf(context).languageCode;
@@ -117,7 +52,6 @@ jobs:
                 ),
                 Flexible(
                   child: ListView.builder(
-                    shrinkWrap: true,
                     padding: EdgeInsets.zero,
                     itemCount: options.length,
                     itemBuilder: (context, index) {
@@ -127,22 +61,10 @@ jobs:
                               options.contains('en') &&
                               options.contains('ar')
                           ? (isEnglish
-                              ? ({
-                                    'bn': 'Bangla',
-                                    'en': 'English',
-                                    'ar': 'Arabic'
-                                  }[option] ?? option)
+                              ? ({'bn': 'Bangla', 'en': 'English', 'ar': 'Arabic'}[option] ?? option)
                               : (isArabic
-                                  ? ({
-                                        'bn': 'البنغالية',
-                                        'en': 'الإنجليزية',
-                                        'ar': 'العربية'
-                                      }[option] ?? option)
-                                  : ({
-                                        'bn': 'বাংলা',
-                                        'en': 'ইংরেজি',
-                                        'ar': 'আরবি'
-                                      }[option] ?? option)))
+                                  ? ({'bn': 'البنغالية', 'en': 'الإنجليزية', 'ar': 'العربية'}[option] ?? option)
+                                  : ({'bn': 'বাংলা', 'en': 'ইংরেজি', 'ar': 'আরবি'}[option] ?? option)))
                           : _choiceLabel(option, languageCode);
                       return ListTile(
                         title: Text(label),
@@ -152,7 +74,9 @@ jobs:
                             : null,
                         onTap: () async {
                           await onSelected(option);
-                          if (sheetContext.mounted) Navigator.pop(sheetContext);
+                          if (sheetContext.mounted) {
+                            Navigator.pop(sheetContext);
+                          }
                         },
                       );
                     },
@@ -168,15 +92,15 @@ jobs:
   }
 
 '''
+
           s = s[:start] + fixed + s[end:]
-          p.write_text(s)
+          p.write_text(s, encoding='utf-8')
           PY
-      - name: Commit changes
+          dart format lib/screens/settings_hub_screen_v4.dart
+      - name: Commit fix
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lib/screens/settings_hub_screen_v4.dart
-          git commit -m 'fix(settings): make choice sheet scrollable'
-          git rm .github/workflows/apply-settings-now.yml
-          git commit -m 'chore: remove temporary settings workflow'
+          git commit -m 'fix(settings): prevent choice sheet overflow'
           git push
