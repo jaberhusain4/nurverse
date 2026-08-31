@@ -23,6 +23,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
   int _homeRefreshId = 0;
   SettingsProvider? _settingsProvider;
+  PrayerCalculationConfig? _lastSyncedCalculationConfig;
+  Map<String, int>? _lastSyncedPrayerAdjustments;
 
   @override
   void didChangeDependencies() {
@@ -34,7 +36,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       _settingsProvider!.addListener(_onSettingsChanged);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || _settingsProvider != settings) return;
-        _syncPrayerSettings(settings);
+        _syncPrayerSettings(settings, force: true);
       });
     }
   }
@@ -44,13 +46,36 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _syncPrayerSettings(_settingsProvider!);
   }
 
-  void _syncPrayerSettings(SettingsProvider settings) {
+  void _syncPrayerSettings(SettingsProvider settings, {bool force = false}) {
+    final calculationConfig = settings.prayerCalculationConfig;
+    final adjustments = Map<String, int>.from(settings.prayerAdjustments);
+
+    final calculationChanged =
+        force || _lastSyncedCalculationConfig != calculationConfig;
+    final adjustmentsChanged =
+        force || !_mapsEqual(_lastSyncedPrayerAdjustments, adjustments);
+
+    if (!calculationChanged && !adjustmentsChanged) return;
+
     final prayerController = context.read<PrayerController>();
-    prayerController.updateCalculationSettings(
-      calculationMethod: settings.calculationMethod,
-      madhhab: settings.madhhab,
-    );
-    prayerController.updatePrayerAdjustments(settings.prayerAdjustments);
+
+    if (calculationChanged) {
+      prayerController.setCalculationConfig(calculationConfig);
+      _lastSyncedCalculationConfig = calculationConfig;
+    }
+
+    if (adjustmentsChanged) {
+      prayerController.updatePrayerAdjustments(adjustments);
+      _lastSyncedPrayerAdjustments = adjustments;
+    }
+  }
+
+  bool _mapsEqual(Map<String, int>? a, Map<String, int> b) {
+    if (a == null || a.length != b.length) return false;
+    for (final entry in b.entries) {
+      if (a[entry.key] != entry.value) return false;
+    }
+    return true;
   }
 
   void _onNavigateTab(int index) {
