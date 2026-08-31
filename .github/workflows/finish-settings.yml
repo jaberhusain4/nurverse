@@ -1,0 +1,148 @@
+name: Finish Settings
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  finish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply settings finishing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/screens/settings_hub_screen_v4.dart')
+          s = p.read_text()
+
+          def replace_once(old, new, label):
+              global s
+              if old not in s:
+                  raise SystemExit(f'{label}: anchor not found')
+              s = s.replace(old, new, 1)
+
+          replace_once(
+              """                const ['Bangla', 'English'],
+                settings.setQuranTranslation,
+              ),""",
+              """                const ['Bangla', 'English'],
+                settings.setQuranTranslation,
+                selectedValue: settings.quranTranslation,
+              ),""",
+              'translation selection',
+          )
+
+          replace_once(
+              """                const ['Default', 'Amiri', 'Scheherazade'],
+                settings.setQuranArabicFont,
+              ),""",
+              """                const ['Default', 'Amiri', 'Scheherazade'],
+                settings.setQuranArabicFont,
+                selectedValue: settings.quranArabicFont,
+              ),""",
+              'arabic font selection',
+          )
+
+          replace_once(
+              """                const ['hijri', 'gregorian', 'both'],
+                settings.setDateDisplayPreference,
+              ),""",
+              """                const ['hijri', 'gregorian', 'both'],
+                settings.setDateDisplayPreference,
+                selectedValue: settings.dateDisplayPreference,
+              ),""",
+              'date selection',
+          )
+
+          adhan = """            _switchTile(
+              context,
+              Icons.notifications_active_outlined,
+              _t(languageCode, 'আজান নোটিফিকেশন', 'Adhan Notifications'),
+              _t(languageCode, 'সালাতের সময়ের নোটিফিকেশন চালু রাখুন',
+                  'Enable prayer-time notifications'),
+              settings.isAdhanNotificationEnabled,
+              settings.toggleAdhanNotification,
+            ),"""
+          insert = adhan + """
+            _divider(),
+            _tile(
+              context,
+              Icons.music_note_outlined,
+              _t(languageCode, 'নোটিফিকেশন সাউন্ড', 'Notification Sound'),
+              settings.notificationSound,
+              () => _showChoiceSheet(
+                context,
+                _t(languageCode, 'নোটিফিকেশন সাউন্ড', 'Notification Sound'),
+                const ['Default', 'Silent'],
+                settings.setNotificationSound,
+                selectedValue: settings.notificationSound,
+              ),
+            ),
+            _divider(),
+            _tile(
+              context,
+              Icons.alarm_outlined,
+              _t(languageCode, 'সালাত রিমাইন্ডার', 'Prayer Reminder'),
+              _reminderLabel(settings.prayerReminderMinutes, languageCode),
+              () => _showChoiceSheet(
+                context,
+                _t(languageCode, 'সালাত রিমাইন্ডার', 'Prayer Reminder'),
+                const ['0', '5', '10', '15', '30', '60'],
+                (value) => settings.setPrayerReminderMinutes(int.parse(value)),
+                selectedValue: settings.prayerReminderMinutes.toString(),
+              ),
+            ),"""
+          replace_once(adhan, insert, 'notification options')
+
+          prayer_adjust = """            _tile(
+              context,
+              Icons.tune_rounded,
+              _t(languageCode, 'সালাতের সময় সমন্বয়', 'Prayer Adjustments'),"""
+          location = """            _divider(),
+            _tile(
+              context,
+              Icons.location_on_outlined,
+              _t(languageCode, 'লোকেশন', 'Location'),
+              settings.autoLocation
+                  ? _t(languageCode, 'স্বয়ংক্রিয়', 'Automatic')
+                  : _t(languageCode, 'ম্যানুয়াল', 'Manual'),
+              () => _showChoiceSheet(
+                context,
+                _t(languageCode, 'লোকেশন', 'Location'),
+                const ['automatic', 'manual'],
+                settings.setLocationMode,
+                selectedValue: settings.locationMode,
+              ),
+            ),
+            _divider(),
+            _tile(
+              context,
+              Icons.calendar_month_outlined,
+              _t(languageCode, 'হিজরি তারিখ সমন্বয়', 'Hijri Date Adjustment'),
+              _hijriAdjustmentLabel(settings.hijriAdjustment, languageCode),
+              () => _showHijriAdjustmentDialog(context, settings),
+            ),
+            _divider(),
+""" + prayer_adjust
+          replace_once(prayer_adjust, location, 'location/hijri options')
+
+          p.write_text(s)
+          PY
+      - name: Validate
+        run: |
+          dart format lib/screens/settings_hub_screen_v4.dart
+          flutter pub get
+          flutter analyze lib/screens/settings_hub_screen_v4.dart
+      - name: Commit and remove workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/settings_hub_screen_v4.dart
+          git commit -m 'feat(settings): finish missing preference controls'
+          git rm .github/workflows/finish-settings.yml
+          git commit -m 'chore: remove temporary settings workflow'
+          git push
