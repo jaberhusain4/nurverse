@@ -1,0 +1,31 @@
+{
+  "enabled": true,
+  "cooldownMs": 60000,
+  "fallbackMode": "stop",
+  "fallbackModels": [
+    {
+      "providerID": "ollama",
+      "modelID": "qwen2.5-coder:7b"
+    }
+  ],
+  "retryPolicy": {
+    "maxRetries": 1,
+    "strategy": "immediate",
+    "baseDelayMs": 0,
+    "maxDelayMs": 0,
+    "jitterEnabled": false
+  },
+  "enableSubagentFallback": true,
+  "maxSubagentDepth": 10,
+  "dynamicPrioritization": {
+    "enabled": false
+  },
+  "metrics": {
+    "enabled": true,
+    "output": {
+      "console": true,
+      "format": "pretty"
+    },
+    "resetInterval": "daily"
+  }
+}
