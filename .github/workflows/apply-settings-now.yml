@@ -16,6 +16,7 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
           p = Path('lib/screens/settings_hub_screen_v4.dart')
           s = p.read_text()
           patches = [
@@ -40,6 +41,7 @@ jobs:
           ]
           for old, new in patches:
               s = s.replace(old, new, 1)
+
           anchor = """            _switchTile(
               context,
               Icons.notifications_active_outlined,
@@ -82,6 +84,90 @@ jobs:
             ),"""
           if 'Notification Sound' not in s and anchor in s:
               s = s.replace(anchor, extra, 1)
+
+          start = s.index('  Future<void> _showChoiceSheet(')
+          end = s.index('  Future<void> _showTextSizeSheet(', start)
+          fixed = r'''  Future<void> _showChoiceSheet(BuildContext context, String title,
+      List<String> options, Future<void> Function(String) onSelected,
+      {String? selectedValue}) async {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final isEnglish = languageCode == 'en';
+    final isArabic = languageCode == 'ar';
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final maxHeight = MediaQuery.sizeOf(sheetContext).height * .82;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+                  child: Text(
+                    title,
+                    style: Theme.of(sheetContext)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final option = options[index];
+                      final label = options.length == 3 &&
+                              options.contains('bn') &&
+                              options.contains('en') &&
+                              options.contains('ar')
+                          ? (isEnglish
+                              ? ({
+                                    'bn': 'Bangla',
+                                    'en': 'English',
+                                    'ar': 'Arabic'
+                                  }[option] ?? option)
+                              : (isArabic
+                                  ? ({
+                                        'bn': 'البنغالية',
+                                        'en': 'الإنجليزية',
+                                        'ar': 'العربية'
+                                      }[option] ?? option)
+                                  : ({
+                                        'bn': 'বাংলা',
+                                        'en': 'ইংরেজি',
+                                        'ar': 'আরবি'
+                                      }[option] ?? option)))
+                          : _choiceLabel(option, languageCode);
+                      return ListTile(
+                        title: Text(label),
+                        trailing: option == selectedValue
+                            ? const Icon(Icons.check_circle_rounded,
+                                color: AppColors.seaBlue)
+                            : null,
+                        onTap: () async {
+                          await onSelected(option);
+                          if (sheetContext.mounted) Navigator.pop(sheetContext);
+                        },
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+'''
+          s = s[:start] + fixed + s[end:]
           p.write_text(s)
           PY
       - name: Commit changes
@@ -89,7 +175,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lib/screens/settings_hub_screen_v4.dart
-          git commit -m 'feat(settings): complete missing preference controls'
+          git commit -m 'fix(settings): make choice sheet scrollable'
           git rm .github/workflows/apply-settings-now.yml
           git commit -m 'chore: remove temporary settings workflow'
           git push
