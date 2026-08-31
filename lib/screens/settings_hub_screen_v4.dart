@@ -14,113 +14,120 @@ class SettingsHubScreenV4 extends StatelessWidget {
   const SettingsHubScreenV4({super.key});
 
   static const Map<String, String> _ar = {
-    'Settings': 'الإعدادات',
-    'Personalization': 'التخصيص',
-    'Home Screen': 'الشاشة الرئيسية',
+    'Settings': 'Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª',
+    'Personalization': 'Ø§Ù„ØªØ®ØµÙŠØµ',
+    'Home Screen': 'Ø§Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©',
     'Choose Simple or Informative Home':
-        'اختر الصفحة الرئيسية البسيطة أو التفصيلية',
-    'Appearance': 'المظهر',
-    'Theme': 'السمة',
-    'Language': 'اللغة',
-    'English': 'الإنجليزية',
-    'Bangla': 'البنغالية',
-    'Arabic': 'العربية',
-    'App Text Size': 'حجم نص التطبيق',
-    'Show seconds': 'إظهار الثواني',
-    'Show seconds where supported': 'إظهار الثواني حيثما كانت مدعومة',
-    'Vibration': 'الاهتزاز',
-    'Allow supported haptic feedback': 'السماح بالتغذية اللمسية المدعومة',
-    'Prayer & Adhan': 'الصلاة والأذان',
-    'Prayer Calculation': 'حساب أوقات الصلاة',
-    'Madhhab': 'المذهب',
-    'Adhan Notifications': 'إشعارات الأذان',
-    'Enable prayer-time notifications': 'تفعيل إشعارات أوقات الصلاة',
-    'Prayer Adjustments': 'تعديلات أوقات الصلاة',
-    'Jamaat Times': 'أوقات الجماعة',
-    'Set local Jamaat times': 'تعيين أوقات الجماعة المحلية',
-    'Quran': 'القرآن',
-    'Quran Reading': 'قراءة القرآن',
-    'Translation': 'الترجمة',
-    'Arabic Font': 'الخط العربي',
-    'Auto-play next': 'التشغيل التلقائي التالي',
+        'Ø§Ø®ØªØ± Ø§Ù„ØµÙØ­Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ© Ø§Ù„Ø¨Ø³ÙŠØ·Ø© Ø£Ùˆ Ø§Ù„ØªÙØµÙŠÙ„ÙŠØ©',
+    'Appearance': 'Ø§Ù„Ù…Ø¸Ù‡Ø±',
+    'Theme': 'Ø§Ù„Ø³Ù…Ø©',
+    'Language': 'Ø§Ù„Ù„ØºØ©',
+    'English': 'Ø§Ù„Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠØ©',
+    'Bangla': 'Ø§Ù„Ø¨Ù†ØºØ§Ù„ÙŠØ©',
+    'Arabic': 'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©',
+    'App Text Size': 'Ø­Ø¬Ù… Ù†Øµ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚',
+    'Show seconds': 'Ø¥Ø¸Ù‡Ø§Ø± Ø§Ù„Ø«ÙˆØ§Ù†ÙŠ',
+    'Show seconds where supported':
+        'Ø¥Ø¸Ù‡Ø§Ø± Ø§Ù„Ø«ÙˆØ§Ù†ÙŠ Ø­ÙŠØ«Ù…Ø§ ÙƒØ§Ù†Øª Ù…Ø¯Ø¹ÙˆÙ…Ø©',
+    'Vibration': 'Ø§Ù„Ø§Ù‡ØªØ²Ø§Ø²',
+    'Allow supported haptic feedback':
+        'Ø§Ù„Ø³Ù…Ø§Ø­ Ø¨Ø§Ù„ØªØºØ°ÙŠØ© Ø§Ù„Ù„Ù…Ø³ÙŠØ© Ø§Ù„Ù…Ø¯Ø¹ÙˆÙ…Ø©',
+    'Prayer & Adhan': 'Ø§Ù„ØµÙ„Ø§Ø© ÙˆØ§Ù„Ø£Ø°Ø§Ù†',
+    'Prayer Calculation': 'Ø­Ø³Ø§Ø¨ Ø£ÙˆÙ‚Ø§Øª Ø§Ù„ØµÙ„Ø§Ø©',
+    'Madhhab': 'Ø§Ù„Ù…Ø°Ù‡Ø¨',
+    'Adhan Notifications': 'Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø§Ù„Ø£Ø°Ø§Ù†',
+    'Enable prayer-time notifications':
+        'ØªÙØ¹ÙŠÙ„ Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø£ÙˆÙ‚Ø§Øª Ø§Ù„ØµÙ„Ø§Ø©',
+    'Prayer Adjustments': 'ØªØ¹Ø¯ÙŠÙ„Ø§Øª Ø£ÙˆÙ‚Ø§Øª Ø§Ù„ØµÙ„Ø§Ø©',
+    'Jamaat Times': 'Ø£ÙˆÙ‚Ø§Øª Ø§Ù„Ø¬Ù…Ø§Ø¹Ø©',
+    'Set local Jamaat times':
+        'ØªØ¹ÙŠÙŠÙ† Ø£ÙˆÙ‚Ø§Øª Ø§Ù„Ø¬Ù…Ø§Ø¹Ø© Ø§Ù„Ù…Ø­Ù„ÙŠØ©',
+    'Quran': 'Ø§Ù„Ù‚Ø±Ø¢Ù†',
+    'Quran Reading': 'Ù‚Ø±Ø§Ø¡Ø© Ø§Ù„Ù‚Ø±Ø¢Ù†',
+    'Translation': 'Ø§Ù„ØªØ±Ø¬Ù…Ø©',
+    'Arabic Font': 'Ø§Ù„Ø®Ø· Ø§Ù„Ø¹Ø±Ø¨ÙŠ',
+    'Auto-play next': 'Ø§Ù„ØªØ´ØºÙŠÙ„ Ø§Ù„ØªÙ„Ù‚Ø§Ø¦ÙŠ Ø§Ù„ØªØ§Ù„ÙŠ',
     'Continue with the next supported audio item':
-        'المتابعة مع العنصر الصوتي التالي المدعوم',
-    'Wi-Fi only downloads': 'التنزيل عبر Wi-Fi فقط',
+        'Ø§Ù„Ù…ØªØ§Ø¨Ø¹Ø© Ù…Ø¹ Ø§Ù„Ø¹Ù†ØµØ± Ø§Ù„ØµÙˆØªÙŠ Ø§Ù„ØªØ§Ù„ÙŠ Ø§Ù„Ù…Ø¯Ø¹ÙˆÙ…',
+    'Wi-Fi only downloads': 'Ø§Ù„ØªÙ†Ø²ÙŠÙ„ Ø¹Ø¨Ø± Wi-Fi ÙÙ‚Ø·',
     'Prefer Wi-Fi for downloadable Quran resources':
-        'تفضيل Wi-Fi لموارد القرآن القابلة للتنزيل',
-    'Worship & Dates': 'العبادة والتواريخ',
-    'Daily Content': 'المحتوى اليومي',
-    'Ayah, Hadith and Dua visibility': 'إظهار الآية والحديث والدعاء',
-    'Date Preferences': 'تفضيلات التاريخ',
-    'Data & App': 'البيانات والتطبيق',
-    'Reset Settings': 'إعادة ضبط الإعدادات',
+        'ØªÙØ¶ÙŠÙ„ Wi-Fi Ù„Ù…ÙˆØ§Ø±Ø¯ Ø§Ù„Ù‚Ø±Ø¢Ù† Ø§Ù„Ù‚Ø§Ø¨Ù„Ø© Ù„Ù„ØªÙ†Ø²ÙŠÙ„',
+    'Worship & Dates': 'Ø§Ù„Ø¹Ø¨Ø§Ø¯Ø© ÙˆØ§Ù„ØªÙˆØ§Ø±ÙŠØ®',
+    'Daily Content': 'Ø§Ù„Ù…Ø­ØªÙˆÙ‰ Ø§Ù„ÙŠÙˆÙ…ÙŠ',
+    'Ayah, Hadith and Dua visibility':
+        'Ø¥Ø¸Ù‡Ø§Ø± Ø§Ù„Ø¢ÙŠØ© ÙˆØ§Ù„Ø­Ø¯ÙŠØ« ÙˆØ§Ù„Ø¯Ø¹Ø§Ø¡',
+    'Date Preferences': 'ØªÙØ¶ÙŠÙ„Ø§Øª Ø§Ù„ØªØ§Ø±ÙŠØ®',
+    'Data & App': 'Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª ÙˆØ§Ù„ØªØ·Ø¨ÙŠÙ‚',
+    'Reset Settings': 'Ø¥Ø¹Ø§Ø¯Ø© Ø¶Ø¨Ø· Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª',
     'Restore configurable preferences':
-        'إعادة التفضيلات القابلة للتكوين إلى الوضع الافتراضي',
-    'About NurVerse': 'حول نورفيرس',
-    'Open Source Licenses': 'تراخيص المصادر المفتوحة',
-    'Libraries used by NurVerse': 'المكتبات المستخدمة في نورفيرس',
-    'NurVerse': 'نورفيرس',
-    'NurVerse Premium': 'نورفيرس بريميوم',
-    'ACTIVE': 'نشط',
-    'Your premium experience is active': 'تجربة بريميوم الخاصة بك مفعلة',
+        'Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„ØªÙØ¶ÙŠÙ„Ø§Øª Ø§Ù„Ù‚Ø§Ø¨Ù„Ø© Ù„Ù„ØªÙƒÙˆÙŠÙ† Ø¥Ù„Ù‰ Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„Ø§ÙØªØ±Ø§Ø¶ÙŠ',
+    'About NurVerse': 'Ø­ÙˆÙ„ Ù†ÙˆØ±ÙÙŠØ±Ø³',
+    'Open Source Licenses': 'ØªØ±Ø§Ø®ÙŠØµ Ø§Ù„Ù…ØµØ§Ø¯Ø± Ø§Ù„Ù…ÙØªÙˆØ­Ø©',
+    'Libraries used by NurVerse':
+        'Ø§Ù„Ù…ÙƒØªØ¨Ø§Øª Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…Ø© ÙÙŠ Ù†ÙˆØ±ÙÙŠØ±Ø³',
+    'NurVerse': 'Ù†ÙˆØ±ÙÙŠØ±Ø³',
+    'NurVerse Premium': 'Ù†ÙˆØ±ÙÙŠØ±Ø³ Ø¨Ø±ÙŠÙ…ÙŠÙˆÙ…',
+    'ACTIVE': 'Ù†Ø´Ø·',
+    'Your premium experience is active':
+        'ØªØ¬Ø±Ø¨Ø© Ø¨Ø±ÙŠÙ…ÙŠÙˆÙ… Ø§Ù„Ø®Ø§ØµØ© Ø¨Ùƒ Ù…ÙØ¹Ù„Ø©',
     'Unlock a richer, calmer NurVerse':
-        'اكتشف تجربة نورفيرس أكثر ثراءً وهدوءًا',
+        'Ø§ÙƒØªØ´Ù ØªØ¬Ø±Ø¨Ø© Ù†ÙˆØ±ÙÙŠØ±Ø³ Ø£ÙƒØ«Ø± Ø«Ø±Ø§Ø¡Ù‹ ÙˆÙ‡Ø¯ÙˆØ¡Ù‹Ø§',
     'AMOLED': 'AMOLED',
-    'Premium Themes': 'سمات بريميوم',
-    'Recitations': 'تلاوات',
-    'Cloud Sync': 'مزامنة سحابية',
-    'Manage Premium': 'إدارة بريميوم',
-    'Explore Premium': 'استكشاف بريميوم',
-    'NurVerse User': 'مستخدم نورفيرس',
-    'Logout': 'تسجيل الخروج',
-    'Premium is active.': 'بريميوم مفعّل.',
-    'Done': 'تم',
-    'Light Mode': 'الوضع الفاتح',
-    'Dark Mode': 'الوضع الداكن',
-    'System Default': 'افتراضي النظام',
-    'AMOLED Black': 'أسود AMOLED',
-    'Small': 'صغير',
-    'Normal': 'عادي',
-    'Large': 'كبير',
-    'Very Large': 'كبير جدًا',
-    'No adjustments': 'لا توجد تعديلات',
-    'min': 'د',
-    'Hijri only': 'هجري فقط',
-    'Gregorian only': 'ميلادي فقط',
-    'Both dates': 'كلا التاريخين',
-    'system': 'افتراضي النظام',
-    'light': 'الوضع الفاتح',
-    'dark': 'الوضع الداكن',
-    'amoled': 'أسود AMOLED',
-    'Default': 'افتراضي',
-    'hijri': 'هجري',
-    'gregorian': 'ميلادي',
-    'both': 'كلاهما',
-    'Karachi': 'كراتشي',
-    'Muslim World League': 'رابطة العالم الإسلامي',
-    'Egyptian': 'المصري',
-    'Umm Al Qura': 'أم القرى',
-    'Dubai': 'دبي',
-    'Qatar': 'قطر',
-    'Kuwait': 'الكويت',
-    'Singapore': 'سنغافورة',
-    'North America': 'أمريكا الشمالية',
-    'Moonsighting Committee': 'لجنة رؤية الهلال',
-    'Hanafi': 'حنفي',
-    'Shafi': 'شافعي',
-    'Fajr': 'الفجر',
-    'Dhuhr': 'الظهر',
-    'Asr': 'العصر',
-    'Maghrib': 'المغرب',
-    'Isha': 'العشاء',
-    'Cancel': 'إلغاء',
-    'Save': 'حفظ',
-    'Reset': 'إعادة ضبط',
-    'Premium': 'بريميوم',
-    'Daily Ayah': 'آية اليوم',
-    'Daily Hadith': 'حديث اليوم',
-    'Daily Dua': 'دعاء اليوم',
-    'Quran Arabic': 'عربي القرآن',
+    'Premium Themes': 'Ø³Ù…Ø§Øª Ø¨Ø±ÙŠÙ…ÙŠÙˆÙ…',
+    'Recitations': 'ØªÙ„Ø§ÙˆØ§Øª',
+    'Cloud Sync': 'Ù…Ø²Ø§Ù…Ù†Ø© Ø³Ø­Ø§Ø¨ÙŠØ©',
+    'Manage Premium': 'Ø¥Ø¯Ø§Ø±Ø© Ø¨Ø±ÙŠÙ…ÙŠÙˆÙ…',
+    'Explore Premium': 'Ø§Ø³ØªÙƒØ´Ø§Ù Ø¨Ø±ÙŠÙ…ÙŠÙˆÙ…',
+    'NurVerse User': 'Ù…Ø³ØªØ®Ø¯Ù… Ù†ÙˆØ±ÙÙŠØ±Ø³',
+    'Logout': 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬',
+    'Premium is active.': 'Ø¨Ø±ÙŠÙ…ÙŠÙˆÙ… Ù…ÙØ¹Ù‘Ù„.',
+    'Done': 'ØªÙ…',
+    'Light Mode': 'Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„ÙØ§ØªØ­',
+    'Dark Mode': 'Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„Ø¯Ø§ÙƒÙ†',
+    'System Default': 'Ø§ÙØªØ±Ø§Ø¶ÙŠ Ø§Ù„Ù†Ø¸Ø§Ù…',
+    'AMOLED Black': 'Ø£Ø³ÙˆØ¯ AMOLED',
+    'Small': 'ØµØºÙŠØ±',
+    'Normal': 'Ø¹Ø§Ø¯ÙŠ',
+    'Large': 'ÙƒØ¨ÙŠØ±',
+    'Very Large': 'ÙƒØ¨ÙŠØ± Ø¬Ø¯Ù‹Ø§',
+    'No adjustments': 'Ù„Ø§ ØªÙˆØ¬Ø¯ ØªØ¹Ø¯ÙŠÙ„Ø§Øª',
+    'min': 'Ø¯',
+    'Hijri only': 'Ù‡Ø¬Ø±ÙŠ ÙÙ‚Ø·',
+    'Gregorian only': 'Ù…ÙŠÙ„Ø§Ø¯ÙŠ ÙÙ‚Ø·',
+    'Both dates': 'ÙƒÙ„Ø§ Ø§Ù„ØªØ§Ø±ÙŠØ®ÙŠÙ†',
+    'system': 'Ø§ÙØªØ±Ø§Ø¶ÙŠ Ø§Ù„Ù†Ø¸Ø§Ù…',
+    'light': 'Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„ÙØ§ØªØ­',
+    'dark': 'Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„Ø¯Ø§ÙƒÙ†',
+    'amoled': 'Ø£Ø³ÙˆØ¯ AMOLED',
+    'Default': 'Ø§ÙØªØ±Ø§Ø¶ÙŠ',
+    'hijri': 'Ù‡Ø¬Ø±ÙŠ',
+    'gregorian': 'Ù…ÙŠÙ„Ø§Ø¯ÙŠ',
+    'both': 'ÙƒÙ„Ø§Ù‡Ù…Ø§',
+    'Karachi': 'ÙƒØ±Ø§ØªØ´ÙŠ',
+    'Muslim World League': 'Ø±Ø§Ø¨Ø·Ø© Ø§Ù„Ø¹Ø§Ù„Ù… Ø§Ù„Ø¥Ø³Ù„Ø§Ù…ÙŠ',
+    'Egyptian': 'Ø§Ù„Ù…ØµØ±ÙŠ',
+    'Umm Al Qura': 'Ø£Ù… Ø§Ù„Ù‚Ø±Ù‰',
+    'Dubai': 'Ø¯Ø¨ÙŠ',
+    'Qatar': 'Ù‚Ø·Ø±',
+    'Kuwait': 'Ø§Ù„ÙƒÙˆÙŠØª',
+    'Singapore': 'Ø³Ù†ØºØ§ÙÙˆØ±Ø©',
+    'North America': 'Ø£Ù…Ø±ÙŠÙƒØ§ Ø§Ù„Ø´Ù…Ø§Ù„ÙŠØ©',
+    'Moonsighting Committee': 'Ù„Ø¬Ù†Ø© Ø±Ø¤ÙŠØ© Ø§Ù„Ù‡Ù„Ø§Ù„',
+    'Hanafi': 'Ø­Ù†ÙÙŠ',
+    'Shafi': 'Ø´Ø§ÙØ¹ÙŠ',
+    'Fajr': 'Ø§Ù„ÙØ¬Ø±',
+    'Dhuhr': 'Ø§Ù„Ø¸Ù‡Ø±',
+    'Asr': 'Ø§Ù„Ø¹ØµØ±',
+    'Maghrib': 'Ø§Ù„Ù…ØºØ±Ø¨',
+    'Isha': 'Ø§Ù„Ø¹Ø´Ø§Ø¡',
+    'Cancel': 'Ø¥Ù„ØºØ§Ø¡',
+    'Save': 'Ø­ÙØ¸',
+    'Reset': 'Ø¥Ø¹Ø§Ø¯Ø© Ø¶Ø¨Ø·',
+    'Premium': 'Ø¨Ø±ÙŠÙ…ÙŠÙˆÙ…',
+    'Daily Ayah': 'Ø¢ÙŠØ© Ø§Ù„ÙŠÙˆÙ…',
+    'Daily Hadith': 'Ø­Ø¯ÙŠØ« Ø§Ù„ÙŠÙˆÙ…',
+    'Daily Dua': 'Ø¯Ø¹Ø§Ø¡ Ø§Ù„ÙŠÙˆÙ…',
+    'Quran Arabic': 'Ø¹Ø±Ø¨ÙŠ Ø§Ù„Ù‚Ø±Ø¢Ù†',
   };
 
   String _t(String languageCode, String bn, String en, [String? ar]) {
@@ -143,170 +150,213 @@ class SettingsHubScreenV4 extends StatelessWidget {
           title: Text(isEnglish
               ? 'Settings'
               : isArabic
-                  ? 'الإعدادات'
-                  : 'সেটিংস')),
+                  ? 'Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª'
+                  : 'à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸')),
       body: ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
           _buildPremiumHero(context, settings, premium),
           const SizedBox(height: 14),
-          _section(context, _t(languageCode, 'ব্যক্তিগতকরণ', 'Personalization'),
-              Icons.tune_rounded, [
-            _tile(
+          _section(
               context,
-              Icons.dashboard_customize_outlined,
-              _t(languageCode, 'হোম স্ক্রিন', 'Home Screen'),
-              _t(languageCode, 'সহজ বা বিস্তারিত হোম স্ক্রিন বেছে নিন',
-                  'Choose Simple or Informative Home'),
-              () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                      builder: (_) => const HomeModeSettingsScreen()),
-                );
-              },
-            ),
-          ]),
-          const SizedBox(height: 20),
-          _section(context, _t(languageCode, 'অ্যাপের চেহারা', 'Appearance'),
-              Icons.palette_outlined, [
-            _tile(
-              context,
-              Icons.palette_outlined,
-              _t(languageCode, 'থিম', 'Theme'),
-              _themeLabel(settings),
-              () => _showChoiceSheet(
-                context,
-                _t(languageCode, 'থিম', 'Theme'),
-                const ['system', 'light', 'dark', 'amoled'],
-                (value) async {
-                  switch (value) {
-                    case 'system':
-                      await settings.setSystemTheme();
-                      break;
-                    case 'light':
-                      await settings.setLightTheme();
-                      break;
-                    case 'dark':
-                      await settings.setDarkTheme();
-                      break;
-                    case 'amoled':
-                      await settings.setAmoledTheme();
-                      break;
-                  }
-                },
-                selectedValue:
-                    settings.isAmoledMode ? 'amoled' : settings.themeMode.name,
-              ),
-            ),
-            _divider(),
-            _tile(
-              context,
-              Icons.language_rounded,
-              _t(languageCode, 'ভাষা', 'Language', 'اللغة'),
-              _t(languageCode, 'বাংলা', 'English', 'العربية'),
-              () => _showChoiceSheet(
-                context,
-                _t(languageCode, 'ভাষা', 'Language', 'اللغة'),
-                const ['bn', 'en', 'ar'],
-                settings.setLanguage,
-                selectedValue: settings.languageCode,
-              ),
-            ),
-            _divider(),
-            _tile(
-              context,
-              Icons.text_fields_rounded,
-              _t(languageCode, 'অ্যাপের লেখা', 'App Text Size'),
-              _textSizeLabel(textScale.level, languageCode),
-              () => _showTextSizeSheet(context, textScale, isEnglish),
-            ),
-            _divider(),
-            _switchTile(
-              context,
-              Icons.timer_outlined,
-              _t(languageCode, 'সেকেন্ড দেখান', 'Show seconds'),
-              _t(languageCode, 'যেখানে সমর্থিত সেখানে সেকেন্ড দেখাবে',
-                  'Show seconds where supported'),
-              settings.showSeconds,
-              settings.toggleShowSeconds,
-            ),
-            _divider(),
-            _switchTile(
-              context,
-              Icons.vibration_rounded,
-              _t(languageCode, 'ভাইব্রেশন', 'Vibration'),
-              _t(languageCode, 'সমর্থিত অ্যাকশনে হ্যাপটিক ফিডব্যাক চালু রাখুন',
-                  'Allow supported haptic feedback'),
-              settings.vibrationEnabled,
-              settings.toggleVibration,
-            ),
-          ]),
-          const SizedBox(height: 20),
-          _section(context, _t(languageCode, 'সালাত ও আজান', 'Prayer & Adhan'),
-              Icons.mosque_outlined, [
-            _tile(
-              context,
-              Icons.calculate_outlined,
-              _t(languageCode, 'সালাতের হিসাব পদ্ধতি', 'Prayer Calculation'),
-              _calculationLabel(settings.calculationMethod, languageCode),
-              () => _showChoiceSheet(
-                context,
-                _t(languageCode, 'সালাতের হিসাব পদ্ধতি', 'Prayer Calculation'),
-                SettingsProvider.calculationMethods,
-                settings.setCalculationMethod,
-                selectedValue: settings.calculationMethod,
-              ),
-            ),
-            _divider(),
-            _tile(
-              context,
-              Icons.mosque_outlined,
-              _t(languageCode, 'মাযহাব', 'Madhhab'),
-              _madhabLabel(settings.madhab, languageCode),
-              () => _showChoiceSheet(
-                context,
-                _t(languageCode, 'মাযহাব', 'Madhhab'),
-                SettingsProvider.madhabs,
-                settings.setMadhhab,
-                selectedValue: settings.madhhab,
-              ),
-            ),
-            _divider(),
-            _switchTile(
-              context,
-              Icons.notifications_active_outlined,
-              _t(languageCode, 'আজান নোটিফিকেশন', 'Adhan Notifications'),
-              _t(languageCode, 'সালাতের সময়ের নোটিফিকেশন চালু রাখুন',
-                  'Enable prayer-time notifications'),
-              settings.isAdhanNotificationEnabled,
-              settings.toggleAdhanNotification,
-            ),
-            _divider(),
-            _tile(
-              context,
+              _t(languageCode, 'à¦¬à§à¦¯à¦•à§à¦¤à¦¿à¦—à¦¤à¦•à¦°à¦£',
+                  'Personalization'),
               Icons.tune_rounded,
-              _t(languageCode, 'সালাতের সময় সমন্বয়', 'Prayer Adjustments'),
-              _adjustmentLabel(settings, languageCode),
-              () => _showAdjustmentDialog(context, settings),
-            ),
-            _divider(),
-            _tile(
-              context,
-              Icons.access_time_rounded,
-              _t(languageCode, 'জামাতের সময়', 'Jamaat Times'),
-              _t(languageCode, 'নিজের এলাকার জামাতের সময় সেট করুন',
-                  'Set local Jamaat times'),
-              () => _showJamaatDialog(context, settings),
-            ),
-          ]),
+              [
+                _tile(
+                  context,
+                  Icons.dashboard_customize_outlined,
+                  _t(languageCode, 'à¦¹à§‹à¦® à¦¸à§à¦•à§à¦°à¦¿à¦¨',
+                      'Home Screen'),
+                  _t(
+                      languageCode,
+                      'à¦¸à¦¹à¦œ à¦¬à¦¾ à¦¬à¦¿à¦¸à§à¦¤à¦¾à¦°à¦¿à¦¤ à¦¹à§‹à¦® à¦¸à§à¦•à§à¦°à¦¿à¦¨ à¦¬à§‡à¦›à§‡ à¦¨à¦¿à¦¨',
+                      'Choose Simple or Informative Home'),
+                  () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                          builder: (_) => const HomeModeSettingsScreen()),
+                    );
+                  },
+                ),
+              ]),
           const SizedBox(height: 20),
-          _section(context, _t(languageCode, 'কুরআন', 'Quran'),
+          _section(
+              context,
+              _t(languageCode, 'à¦…à§à¦¯à¦¾à¦ªà§‡à¦° à¦šà§‡à¦¹à¦¾à¦°à¦¾',
+                  'Appearance'),
+              Icons.palette_outlined,
+              [
+                _tile(
+                  context,
+                  Icons.palette_outlined,
+                  _t(languageCode, 'à¦¥à¦¿à¦®', 'Theme'),
+                  _themeLabel(settings),
+                  () => _showChoiceSheet(
+                    context,
+                    _t(languageCode, 'à¦¥à¦¿à¦®', 'Theme'),
+                    const ['system', 'light', 'dark', 'amoled'],
+                    (value) async {
+                      switch (value) {
+                        case 'system':
+                          await settings.setSystemTheme();
+                          break;
+                        case 'light':
+                          await settings.setLightTheme();
+                          break;
+                        case 'dark':
+                          await settings.setDarkTheme();
+                          break;
+                        case 'amoled':
+                          await settings.setAmoledTheme();
+                          break;
+                      }
+                    },
+                    selectedValue: settings.isAmoledMode
+                        ? 'amoled'
+                        : settings.themeMode.name,
+                  ),
+                ),
+                _divider(),
+                _tile(
+                  context,
+                  Icons.language_rounded,
+                  _t(languageCode, 'à¦­à¦¾à¦·à¦¾', 'Language', 'Ø§Ù„Ù„ØºØ©'),
+                  _t(languageCode, 'à¦¬à¦¾à¦‚à¦²à¦¾', 'English',
+                      'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©'),
+                  () => _showChoiceSheet(
+                    context,
+                    _t(languageCode, 'à¦­à¦¾à¦·à¦¾', 'Language', 'Ø§Ù„Ù„ØºØ©'),
+                    const ['bn', 'en', 'ar'],
+                    settings.setLanguage,
+                    selectedValue: settings.languageCode,
+                  ),
+                ),
+                _divider(),
+                _tile(
+                  context,
+                  Icons.text_fields_rounded,
+                  _t(languageCode, 'à¦…à§à¦¯à¦¾à¦ªà§‡à¦° à¦²à§‡à¦–à¦¾',
+                      'App Text Size'),
+                  _textSizeLabel(textScale.level, languageCode),
+                  () => _showTextSizeSheet(context, textScale, isEnglish),
+                ),
+                _divider(),
+                _switchTile(
+                  context,
+                  Icons.timer_outlined,
+                  _t(languageCode, 'à¦¸à§‡à¦•à§‡à¦¨à§à¦¡ à¦¦à§‡à¦–à¦¾à¦¨',
+                      'Show seconds'),
+                  _t(
+                      languageCode,
+                      'à¦¯à§‡à¦–à¦¾à¦¨à§‡ à¦¸à¦®à¦°à§à¦¥à¦¿à¦¤ à¦¸à§‡à¦–à¦¾à¦¨à§‡ à¦¸à§‡à¦•à§‡à¦¨à§à¦¡ à¦¦à§‡à¦–à¦¾à¦¬à§‡',
+                      'Show seconds where supported'),
+                  settings.showSeconds,
+                  settings.toggleShowSeconds,
+                ),
+                _divider(),
+                _switchTile(
+                  context,
+                  Icons.vibration_rounded,
+                  _t(languageCode, 'à¦­à¦¾à¦‡à¦¬à§à¦°à§‡à¦¶à¦¨', 'Vibration'),
+                  _t(
+                      languageCode,
+                      'à¦¸à¦®à¦°à§à¦¥à¦¿à¦¤ à¦…à§à¦¯à¦¾à¦•à¦¶à¦¨à§‡ à¦¹à§à¦¯à¦¾à¦ªà¦Ÿà¦¿à¦• à¦«à¦¿à¦¡à¦¬à§à¦¯à¦¾à¦• à¦šà¦¾à¦²à§ à¦°à¦¾à¦–à§à¦¨',
+                      'Allow supported haptic feedback'),
+                  settings.vibrationEnabled,
+                  settings.toggleVibration,
+                ),
+              ]),
+          const SizedBox(height: 20),
+          _section(
+              context,
+              _t(languageCode, 'à¦¸à¦¾à¦²à¦¾à¦¤ à¦“ à¦†à¦œà¦¾à¦¨',
+                  'Prayer & Adhan'),
+              Icons.mosque_outlined,
+              [
+                _tile(
+                  context,
+                  Icons.calculate_outlined,
+                  _t(
+                      languageCode,
+                      'à¦¸à¦¾à¦²à¦¾à¦¤à§‡à¦° à¦¹à¦¿à¦¸à¦¾à¦¬ à¦ªà¦¦à§à¦§à¦¤à¦¿',
+                      'Prayer Calculation'),
+                  _calculationLabel(settings.calculationMethod, languageCode),
+                  () => _showChoiceSheet(
+                    context,
+                    _t(
+                        languageCode,
+                        'à¦¸à¦¾à¦²à¦¾à¦¤à§‡à¦° à¦¹à¦¿à¦¸à¦¾à¦¬ à¦ªà¦¦à§à¦§à¦¤à¦¿',
+                        'Prayer Calculation'),
+                    SettingsProvider.calculationMethods,
+                    settings.setCalculationMethod,
+                    selectedValue: settings.calculationMethod,
+                  ),
+                ),
+                _divider(),
+                _tile(
+                  context,
+                  Icons.mosque_outlined,
+                  _t(languageCode, 'à¦®à¦¾à¦¯à¦¹à¦¾à¦¬', 'Madhhab'),
+                  _madhabLabel(settings.madhab, languageCode),
+                  () => _showChoiceSheet(
+                    context,
+                    _t(languageCode, 'à¦®à¦¾à¦¯à¦¹à¦¾à¦¬', 'Madhhab'),
+                    SettingsProvider.madhabs,
+                    settings.setMadhhab,
+                    selectedValue: settings.madhhab,
+                  ),
+                ),
+                _divider(),
+                _switchTile(
+                  context,
+                  Icons.notifications_active_outlined,
+                  _t(
+                      languageCode,
+                      'à¦†à¦œà¦¾à¦¨ à¦¨à§‹à¦Ÿà¦¿à¦«à¦¿à¦•à§‡à¦¶à¦¨',
+                      'Adhan Notifications'),
+                  _t(
+                      languageCode,
+                      'à¦¸à¦¾à¦²à¦¾à¦¤à§‡à¦° à¦¸à¦®à§Ÿà§‡à¦° à¦¨à§‹à¦Ÿà¦¿à¦«à¦¿à¦•à§‡à¦¶à¦¨ à¦šà¦¾à¦²à§ à¦°à¦¾à¦–à§à¦¨',
+                      'Enable prayer-time notifications'),
+                  settings.isAdhanNotificationEnabled,
+                  settings.toggleAdhanNotification,
+                ),
+                _divider(),
+                _tile(
+                  context,
+                  Icons.tune_rounded,
+                  _t(
+                      languageCode,
+                      'à¦¸à¦¾à¦²à¦¾à¦¤à§‡à¦° à¦¸à¦®à§Ÿ à¦¸à¦®à¦¨à§à¦¬à§Ÿ',
+                      'Prayer Adjustments'),
+                  _adjustmentLabel(settings, languageCode),
+                  () => _showAdjustmentDialog(context, settings),
+                ),
+                _divider(),
+                _tile(
+                  context,
+                  Icons.access_time_rounded,
+                  _t(languageCode, 'à¦œà¦¾à¦®à¦¾à¦¤à§‡à¦° à¦¸à¦®à§Ÿ',
+                      'Jamaat Times'),
+                  _t(
+                      languageCode,
+                      'à¦¨à¦¿à¦œà§‡à¦° à¦à¦²à¦¾à¦•à¦¾à¦° à¦œà¦¾à¦®à¦¾à¦¤à§‡à¦° à¦¸à¦®à§Ÿ à¦¸à§‡à¦Ÿ à¦•à¦°à§à¦¨',
+                      'Set local Jamaat times'),
+                  () => _showJamaatDialog(context, settings),
+                ),
+              ]),
+          const SizedBox(height: 20),
+          _section(context, _t(languageCode, 'à¦•à§à¦°à¦†à¦¨', 'Quran'),
               Icons.menu_book_outlined, [
             _tile(
               context,
               Icons.format_size_rounded,
-              _t(languageCode, 'কুরআন পড়ার সেটিংস', 'Quran Reading'),
+              _t(
+                  languageCode,
+                  'à¦•à§à¦°à¦†à¦¨ à¦ªà¦¡à¦¼à¦¾à¦° à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸',
+                  'Quran Reading'),
               '${settings.quranFontSize.round()} / ${settings.translationFontSize.round()}',
               () => _showQuranFontSheet(context, settings),
             ),
@@ -314,11 +364,11 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _tile(
               context,
               Icons.translate_rounded,
-              _t(languageCode, 'অনুবাদ', 'Translation'),
+              _t(languageCode, 'à¦…à¦¨à§à¦¬à¦¾à¦¦', 'Translation'),
               _quranTranslationLabel(settings.quranTranslation, languageCode),
               () => _showChoiceSheet(
                 context,
-                _t(languageCode, 'অনুবাদ', 'Translation'),
+                _t(languageCode, 'à¦…à¦¨à§à¦¬à¦¾à¦¦', 'Translation'),
                 const ['Bangla', 'English'],
                 settings.setQuranTranslation,
               ),
@@ -327,13 +377,13 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _tile(
               context,
               Icons.font_download_outlined,
-              _t(languageCode, 'আরবি ফন্ট', 'Arabic Font'),
+              _t(languageCode, 'à¦†à¦°à¦¬à¦¿ à¦«à¦¨à§à¦Ÿ', 'Arabic Font'),
               settings.quranArabicFont == 'Default'
-                  ? _t(languageCode, 'ডিফল্ট', 'Default')
+                  ? _t(languageCode, 'à¦¡à¦¿à¦«à¦²à§à¦Ÿ', 'Default')
                   : settings.quranArabicFont,
               () => _showChoiceSheet(
                 context,
-                _t(languageCode, 'আরবি ফন্ট', 'Arabic Font'),
+                _t(languageCode, 'à¦†à¦°à¦¬à¦¿ à¦«à¦¨à§à¦Ÿ', 'Arabic Font'),
                 const ['Default', 'Amiri', 'Scheherazade'],
                 settings.setQuranArabicFont,
               ),
@@ -342,8 +392,13 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _switchTile(
               context,
               Icons.skip_next_rounded,
-              _t(languageCode, 'পরেরটি স্বয়ংক্রিয় চালান', 'Auto-play next'),
-              _t(languageCode, 'সমর্থিত অডিওতে পরেরটি স্বয়ংক্রিয়ভাবে চালাবে',
+              _t(
+                  languageCode,
+                  'à¦ªà¦°à§‡à¦°à¦Ÿà¦¿ à¦¸à§à¦¬à¦¯à¦¼à¦‚à¦•à§à¦°à¦¿à¦¯à¦¼ à¦šà¦¾à¦²à¦¾à¦¨',
+                  'Auto-play next'),
+              _t(
+                  languageCode,
+                  'à¦¸à¦®à¦°à§à¦¥à¦¿à¦¤ à¦…à¦¡à¦¿à¦“à¦¤à§‡ à¦ªà¦°à§‡à¦°à¦Ÿà¦¿ à¦¸à§à¦¬à¦¯à¦¼à¦‚à¦•à§à¦°à¦¿à¦¯à¦¼à¦­à¦¾à¦¬à§‡ à¦šà¦¾à¦²à¦¾à¦¬à§‡',
                   'Continue with the next supported audio item'),
               settings.autoPlayNext,
               settings.toggleAutoPlayNext,
@@ -352,11 +407,13 @@ class SettingsHubScreenV4 extends StatelessWidget {
             _switchTile(
               context,
               Icons.wifi_outlined,
-              _t(languageCode, 'শুধু ওয়াই-ফাই ডাউনলোড',
+              _t(
+                  languageCode,
+                  'à¦¶à§à¦§à§ à¦“à¦¯à¦¼à¦¾à¦‡-à¦«à¦¾à¦‡ à¦¡à¦¾à¦‰à¦¨à¦²à§‹à¦¡',
                   'Wi-Fi only downloads'),
               _t(
                   languageCode,
-                  'ডাউনলোডযোগ্য কুরআন রিসোর্সে ওয়াই-ফাই অগ্রাধিকার দিন',
+                  'à¦¡à¦¾à¦‰à¦¨à¦²à§‹à¦¡à¦¯à§‹à¦—à§à¦¯ à¦•à§à¦°à¦†à¦¨ à¦°à¦¿à¦¸à§‹à¦°à§à¦¸à§‡ à¦“à¦¯à¦¼à¦¾à¦‡-à¦«à¦¾à¦‡ à¦…à¦—à§à¦°à¦¾à¦§à¦¿à¦•à¦¾à¦° à¦¦à¦¿à¦¨',
                   'Prefer Wi-Fi for downloadable Quran resources'),
               settings.downloadWifiOnly,
               settings.toggleDownloadWifiOnly,
@@ -365,67 +422,92 @@ class SettingsHubScreenV4 extends StatelessWidget {
           const SizedBox(height: 20),
           _section(
               context,
-              _t(languageCode, 'ইবাদত ও তারিখ', 'Worship & Dates'),
-              Icons.event_available_outlined, [
-            _tile(
-              context,
-              Icons.today_outlined,
-              _t(languageCode, 'দৈনিক কনটেন্ট', 'Daily Content'),
-              _t(languageCode, 'আয়াত, হাদিস ও দোয়ার দৃশ্যমানতা',
-                  'Ayah, Hadith and Dua visibility'),
-              () => _showDailyContentSheet(context),
-            ),
-            _divider(),
-            _tile(
-              context,
-              Icons.calendar_month_outlined,
-              _t(languageCode, 'তারিখের পছন্দ', 'Date Preferences'),
-              _dateLabel(settings, languageCode),
-              () => _showChoiceSheet(
-                context,
-                _t(languageCode, 'তারিখের পছন্দ', 'Date Preferences'),
-                const ['hijri', 'gregorian', 'both'],
-                settings.setDateDisplayPreference,
-              ),
-            ),
-          ]),
+              _t(languageCode, 'à¦‡à¦¬à¦¾à¦¦à¦¤ à¦“ à¦¤à¦¾à¦°à¦¿à¦–',
+                  'Worship & Dates'),
+              Icons.event_available_outlined,
+              [
+                _tile(
+                  context,
+                  Icons.today_outlined,
+                  _t(languageCode, 'à¦¦à§ˆà¦¨à¦¿à¦• à¦•à¦¨à¦Ÿà§‡à¦¨à§à¦Ÿ',
+                      'Daily Content'),
+                  _t(
+                      languageCode,
+                      'à¦†à§Ÿà¦¾à¦¤, à¦¹à¦¾à¦¦à¦¿à¦¸ à¦“ à¦¦à§‹à§Ÿà¦¾à¦° à¦¦à§ƒà¦¶à§à¦¯à¦®à¦¾à¦¨à¦¤à¦¾',
+                      'Ayah, Hadith and Dua visibility'),
+                  () => _showDailyContentSheet(context),
+                ),
+                _divider(),
+                _tile(
+                  context,
+                  Icons.calendar_month_outlined,
+                  _t(languageCode, 'à¦¤à¦¾à¦°à¦¿à¦–à§‡à¦° à¦ªà¦›à¦¨à§à¦¦',
+                      'Date Preferences'),
+                  _dateLabel(settings, languageCode),
+                  () => _showChoiceSheet(
+                    context,
+                    _t(languageCode, 'à¦¤à¦¾à¦°à¦¿à¦–à§‡à¦° à¦ªà¦›à¦¨à§à¦¦',
+                        'Date Preferences'),
+                    const ['hijri', 'gregorian', 'both'],
+                    settings.setDateDisplayPreference,
+                  ),
+                ),
+              ]),
           const SizedBox(height: 20),
-          _section(context, _t(languageCode, 'ডেটা ও অ্যাপ', 'Data & App'),
-              Icons.settings_applications_outlined, [
-            _tile(
+          _section(
               context,
-              Icons.restart_alt_rounded,
-              _t(languageCode, 'সেটিংস রিসেট', 'Reset Settings'),
-              _t(languageCode, 'সব কনফিগারযোগ্য সেটিংস ডিফল্টে ফিরিয়ে দিন',
-                  'Restore configurable preferences'),
-              () => _showResetDialog(context, settings),
-            ),
-            _divider(),
-            _tile(
-              context,
-              Icons.info_outline_rounded,
-              _t(languageCode, 'নূরভার্স সম্পর্কে', 'About NurVerse'),
-              _t(languageCode, 'সংস্করণ ১.০.০', 'Version 1.0.0'),
-              () => showAboutDialog(
-                context: context,
-                applicationName: _t(languageCode, 'নূরভার্স', 'NurVerse'),
-                applicationVersion: '1.0.0',
-              ),
-            ),
-            _divider(),
-            _tile(
-              context,
-              Icons.code_rounded,
-              _t(languageCode, 'ওপেন সোর্স লাইসেন্স', 'Open Source Licenses'),
-              _t(languageCode, 'নূরভার্সে ব্যবহৃত লাইব্রেরি',
-                  'Libraries used by NurVerse'),
-              () => showLicensePage(
-                context: context,
-                applicationName: _t(languageCode, 'নূরভার্স', 'NurVerse'),
-                applicationVersion: '1.0.0',
-              ),
-            ),
-          ]),
+              _t(languageCode, 'à¦¡à§‡à¦Ÿà¦¾ à¦“ à¦…à§à¦¯à¦¾à¦ª',
+                  'Data & App'),
+              Icons.settings_applications_outlined,
+              [
+                _tile(
+                  context,
+                  Icons.restart_alt_rounded,
+                  _t(languageCode, 'à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸ à¦°à¦¿à¦¸à§‡à¦Ÿ',
+                      'Reset Settings'),
+                  _t(
+                      languageCode,
+                      'à¦¸à¦¬ à¦•à¦¨à¦«à¦¿à¦—à¦¾à¦°à¦¯à§‹à¦—à§à¦¯ à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸ à¦¡à¦¿à¦«à¦²à§à¦Ÿà§‡ à¦«à¦¿à¦°à¦¿à§Ÿà§‡ à¦¦à¦¿à¦¨',
+                      'Restore configurable preferences'),
+                  () => _showResetDialog(context, settings),
+                ),
+                _divider(),
+                _tile(
+                  context,
+                  Icons.info_outline_rounded,
+                  _t(
+                      languageCode,
+                      'à¦¨à§‚à¦°à¦­à¦¾à¦°à§à¦¸ à¦¸à¦®à§à¦ªà¦°à§à¦•à§‡',
+                      'About NurVerse'),
+                  _t(languageCode, 'à¦¸à¦‚à¦¸à§à¦•à¦°à¦£ à§§.à§¦.à§¦',
+                      'Version 1.0.0'),
+                  () => showAboutDialog(
+                    context: context,
+                    applicationName: _t(
+                        languageCode, 'à¦¨à§‚à¦°à¦­à¦¾à¦°à§à¦¸', 'NurVerse'),
+                    applicationVersion: '1.0.0',
+                  ),
+                ),
+                _divider(),
+                _tile(
+                  context,
+                  Icons.code_rounded,
+                  _t(
+                      languageCode,
+                      'à¦“à¦ªà§‡à¦¨ à¦¸à§‹à¦°à§à¦¸ à¦²à¦¾à¦‡à¦¸à§‡à¦¨à§à¦¸',
+                      'Open Source Licenses'),
+                  _t(
+                      languageCode,
+                      'à¦¨à§‚à¦°à¦­à¦¾à¦°à§à¦¸à§‡ à¦¬à§à¦¯à¦¬à¦¹à§ƒà¦¤ à¦²à¦¾à¦‡à¦¬à§à¦°à§‡à¦°à¦¿',
+                      'Libraries used by NurVerse'),
+                  () => showLicensePage(
+                    context: context,
+                    applicationName: _t(
+                        languageCode, 'à¦¨à§‚à¦°à¦­à¦¾à¦°à§à¦¸', 'NurVerse'),
+                    applicationVersion: '1.0.0',
+                  ),
+                ),
+              ]),
         ],
       ),
     );
@@ -505,7 +587,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                    _t(languageCode, 'সক্রিয়', 'ACTIVE'),
+                                    _t(languageCode, 'à¦¸à¦•à§à¦°à¦¿à¦¯à¦¼',
+                                        'ACTIVE'),
                                     style: const TextStyle(
                                         color: AppColors.seaBlue,
                                         fontSize: 8,
@@ -519,11 +602,11 @@ class SettingsHubScreenV4 extends StatelessWidget {
                           isActive
                               ? (_t(
                                   languageCode,
-                                  'আপনার প্রিমিয়াম অভিজ্ঞতা সক্রিয়',
+                                  'à¦†à¦ªà¦¨à¦¾à¦° à¦ªà§à¦°à¦¿à¦®à¦¿à¦¯à¦¼à¦¾à¦® à¦…à¦­à¦¿à¦œà§à¦žà¦¤à¦¾ à¦¸à¦•à§à¦°à¦¿à¦¯à¦¼',
                                   'Your premium experience is active'))
                               : (_t(
                                   languageCode,
-                                  'আরও সমৃদ্ধ ও সুন্দর নূরভার্স উপভোগ করুন',
+                                  'à¦†à¦°à¦“ à¦¸à¦®à§ƒà¦¦à§à¦§ à¦“ à¦¸à§à¦¨à§à¦¦à¦° à¦¨à§‚à¦°à¦­à¦¾à¦°à§à¦¸ à¦‰à¦ªà¦­à§‹à¦— à¦•à¦°à§à¦¨',
                                   'Unlock a richer, calmer NurVerse')),
                           style: TextStyle(
                               fontSize: 11,
@@ -546,14 +629,24 @@ class SettingsHubScreenV4 extends StatelessWidget {
                 spacing: 7,
                 runSpacing: 7,
                 children: [
-                  _premiumChip(Icons.contrast_rounded,
-                      _t(languageCode, 'অ্যামোলেড', 'AMOLED')),
-                  _premiumChip(Icons.palette_outlined,
-                      _t(languageCode, 'প্রিমিয়াম থিম', 'Premium Themes')),
-                  _premiumChip(Icons.headphones_outlined,
-                      _t(languageCode, 'তেলাওয়াত', 'Recitations')),
-                  _premiumChip(Icons.cloud_outlined,
-                      _t(languageCode, 'ক্লাউড সিঙ্ক', 'Cloud Sync')),
+                  _premiumChip(
+                      Icons.contrast_rounded,
+                      _t(languageCode, 'à¦…à§à¦¯à¦¾à¦®à§‹à¦²à§‡à¦¡',
+                          'AMOLED')),
+                  _premiumChip(
+                      Icons.palette_outlined,
+                      _t(
+                          languageCode,
+                          'à¦ªà§à¦°à¦¿à¦®à¦¿à¦¯à¦¼à¦¾à¦® à¦¥à¦¿à¦®',
+                          'Premium Themes')),
+                  _premiumChip(
+                      Icons.headphones_outlined,
+                      _t(languageCode, 'à¦¤à§‡à¦²à¦¾à¦“à¦¯à¦¼à¦¾à¦¤',
+                          'Recitations')),
+                  _premiumChip(
+                      Icons.cloud_outlined,
+                      _t(languageCode, 'à¦•à§à¦²à¦¾à¦‰à¦¡ à¦¸à¦¿à¦™à§à¦•',
+                          'Cloud Sync')),
                 ],
               ),
               const SizedBox(height: 18),
@@ -573,9 +666,13 @@ class SettingsHubScreenV4 extends StatelessWidget {
                           : Icons.auto_awesome_rounded,
                       size: 18),
                   label: Text(premium.isPremium
-                      ? (_t(languageCode, 'প্রিমিয়াম পরিচালনা করুন',
+                      ? (_t(
+                          languageCode,
+                          'à¦ªà§à¦°à¦¿à¦®à¦¿à¦¯à¦¼à¦¾à¦® à¦ªà¦°à¦¿à¦šà¦¾à¦²à¦¨à¦¾ à¦•à¦°à§à¦¨',
                           'Manage Premium'))
-                      : (_t(languageCode, 'প্রিমিয়াম দেখুন',
+                      : (_t(
+                          languageCode,
+                          'à¦ªà§à¦°à¦¿à¦®à¦¿à¦¯à¦¼à¦¾à¦® à¦¦à§‡à¦–à§à¦¨',
                           'Explore Premium'))),
                 ),
               ),
@@ -692,7 +789,9 @@ class SettingsHubScreenV4 extends StatelessWidget {
                 Text(
                   user.displayName?.trim().isNotEmpty == true
                       ? user.displayName!
-                      : (_t(languageCode, 'নূরভার্স ব্যবহারকারী',
+                      : (_t(
+                          languageCode,
+                          'à¦¨à§‚à¦°à¦­à¦¾à¦°à§à¦¸ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦°à¦•à¦¾à¦°à§€',
                           'NurVerse User')),
                   style: theme.textTheme.titleLarge
                       ?.copyWith(fontWeight: FontWeight.w800),
@@ -714,7 +813,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                       await AuthService.instance.signOut();
                     },
                     icon: const Icon(Icons.logout_rounded),
-                    label: Text(_t(languageCode, 'লগআউট', 'Logout')),
+                    label: Text(_t(languageCode, 'à¦²à¦—à¦†à¦‰à¦Ÿ', 'Logout')),
                   ),
                 ),
               ],
@@ -732,12 +831,14 @@ class SettingsHubScreenV4 extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text('NurVerse Premium'),
-        content: Text(
-            _t(languageCode, 'প্রিমিয়াম সক্রিয় আছে।', 'Premium is active.')),
+        content: Text(_t(
+            languageCode,
+            'à¦ªà§à¦°à¦¿à¦®à¦¿à¦¯à¦¼à¦¾à¦® à¦¸à¦•à§à¦°à¦¿à¦¯à¦¼ à¦†à¦›à§‡à¥¤',
+            'Premium is active.')),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: Text(_t(languageCode, 'ঠিক আছে', 'Done'))),
+              child: Text(_t(languageCode, 'à¦ à¦¿à¦• à¦†à¦›à§‡', 'Done'))),
         ],
       ),
     );
@@ -873,27 +974,31 @@ class SettingsHubScreenV4 extends StatelessWidget {
 
   String _themeLabel(SettingsProvider settings) {
     if (settings.isAmoledMode)
-      return _t(settings.languageCode, 'অ্যামোলেড কালো', 'AMOLED Black');
+      return _t(settings.languageCode,
+          'à¦…à§à¦¯à¦¾à¦®à§‹à¦²à§‡à¦¡ à¦•à¦¾à¦²à§‹', 'AMOLED Black');
     switch (settings.themeMode) {
       case ThemeMode.light:
-        return _t(settings.languageCode, 'লাইট মোড', 'Light Mode');
+        return _t(
+            settings.languageCode, 'à¦²à¦¾à¦‡à¦Ÿ à¦®à§‹à¦¡', 'Light Mode');
       case ThemeMode.dark:
-        return _t(settings.languageCode, 'ডার্ক মোড', 'Dark Mode');
+        return _t(
+            settings.languageCode, 'à¦¡à¦¾à¦°à§à¦• à¦®à§‹à¦¡', 'Dark Mode');
       case ThemeMode.system:
-        return _t(settings.languageCode, 'সিস্টেম অনুযায়ী', 'System Default');
+        return _t(settings.languageCode,
+            'à¦¸à¦¿à¦¸à§à¦Ÿà§‡à¦® à¦…à¦¨à§à¦¯à¦¾à§Ÿà§€', 'System Default');
     }
   }
 
   String _textSizeLabel(int level, String languageCode) {
     switch (level) {
       case 0:
-        return _t(languageCode, 'ছোট', 'Small');
+        return _t(languageCode, 'à¦›à§‹à¦Ÿ', 'Small');
       case 2:
-        return _t(languageCode, 'বড়', 'Large');
+        return _t(languageCode, 'à¦¬à§œ', 'Large');
       case 3:
-        return _t(languageCode, 'খুব বড়', 'Very Large');
+        return _t(languageCode, 'à¦–à§à¦¬ à¦¬à§œ', 'Very Large');
       default:
-        return _t(languageCode, 'স্বাভাবিক', 'Normal');
+        return _t(languageCode, 'à¦¸à§à¦¬à¦¾à¦­à¦¾à¦¬à¦¿à¦•', 'Normal');
     }
   }
 
@@ -902,21 +1007,23 @@ class SettingsHubScreenV4 extends StatelessWidget {
         .where((entry) => entry.value != 0)
         .toList();
     if (active.isEmpty)
-      return _t(languageCode, 'কোনো সমন্বয় নেই', 'No adjustments');
+      return _t(languageCode, 'à¦•à§‹à¦¨à§‹ à¦¸à¦®à¦¨à§à¦¬à§Ÿ à¦¨à§‡à¦‡',
+          'No adjustments');
     final entry = active.first;
     final sign = entry.value > 0 ? '+' : '';
     final prayer = _prayerLabel(entry.key, languageCode);
-    return '$prayer: $sign${entry.value} ${_t(languageCode, 'মিনিট', 'min')}';
+    return '$prayer: $sign${entry.value} ${_t(languageCode, 'à¦®à¦¿à¦¨à¦¿à¦Ÿ', 'min')}';
   }
 
   String _dateLabel(SettingsProvider settings, String languageCode) {
     switch (settings.dateDisplayPreference) {
       case 'hijri':
-        return _t(languageCode, 'শুধু হিজরি', 'Hijri only');
+        return _t(languageCode, 'à¦¶à§à¦§à§ à¦¹à¦¿à¦œà¦°à¦¿', 'Hijri only');
       case 'gregorian':
-        return _t(languageCode, 'শুধু গ্রেগরিয়ান', 'Gregorian only');
+        return _t(languageCode,
+            'à¦¶à§à¦§à§ à¦—à§à¦°à§‡à¦—à¦°à¦¿à¦¯à¦¼à¦¾à¦¨', 'Gregorian only');
       default:
-        return _t(languageCode, 'উভয় তারিখ', 'Both dates');
+        return _t(languageCode, 'à¦‰à¦­à§Ÿ à¦¤à¦¾à¦°à¦¿à¦–', 'Both dates');
     }
   }
 
@@ -931,30 +1038,31 @@ class SettingsHubScreenV4 extends StatelessWidget {
       return _ar[option] ?? option;
     }
     const labels = <String, String>{
-      'system': 'সিস্টেম অনুযায়ী',
-      'light': 'লাইট মোড',
-      'dark': 'ডার্ক মোড',
-      'amoled': 'অ্যামোলেড কালো',
-      'bn': 'বাংলা',
-      'en': 'ইংরেজি',
-      'Bangla': 'বাংলা',
-      'English': 'ইংরেজি',
-      'Default': 'ডিফল্ট',
-      'hijri': 'হিজরি',
-      'gregorian': 'গ্রেগরিয়ান',
-      'both': 'উভয় তারিখ',
-      'Karachi': 'করাচি',
-      'Muslim World League': 'মুসলিম ওয়ার্ল্ড লীগ',
-      'Egyptian': 'মিশরীয়',
-      'Umm Al Qura': 'উম্মুল কুরা',
-      'Dubai': 'দুবাই',
-      'Qatar': 'কাতার',
-      'Kuwait': 'কুয়েত',
-      'Singapore': 'সিঙ্গাপুর',
-      'North America': 'উত্তর আমেরিকা',
-      'Moonsighting Committee': 'চাঁদ দেখা কমিটি',
-      'Hanafi': 'হানাফি',
-      'Shafi': 'শাফেয়ী',
+      'system': 'à¦¸à¦¿à¦¸à§à¦Ÿà§‡à¦® à¦…à¦¨à§à¦¯à¦¾à§Ÿà§€',
+      'light': 'à¦²à¦¾à¦‡à¦Ÿ à¦®à§‹à¦¡',
+      'dark': 'à¦¡à¦¾à¦°à§à¦• à¦®à§‹à¦¡',
+      'amoled': 'à¦…à§à¦¯à¦¾à¦®à§‹à¦²à§‡à¦¡ à¦•à¦¾à¦²à§‹',
+      'bn': 'à¦¬à¦¾à¦‚à¦²à¦¾',
+      'en': 'à¦‡à¦‚à¦°à§‡à¦œà¦¿',
+      'Bangla': 'à¦¬à¦¾à¦‚à¦²à¦¾',
+      'English': 'à¦‡à¦‚à¦°à§‡à¦œà¦¿',
+      'Default': 'à¦¡à¦¿à¦«à¦²à§à¦Ÿ',
+      'hijri': 'à¦¹à¦¿à¦œà¦°à¦¿',
+      'gregorian': 'à¦—à§à¦°à§‡à¦—à¦°à¦¿à¦¯à¦¼à¦¾à¦¨',
+      'both': 'à¦‰à¦­à§Ÿ à¦¤à¦¾à¦°à¦¿à¦–',
+      'Karachi': 'à¦•à¦°à¦¾à¦šà¦¿',
+      'Muslim World League':
+          'à¦®à§à¦¸à¦²à¦¿à¦® à¦“à¦¯à¦¼à¦¾à¦°à§à¦²à§à¦¡ à¦²à§€à¦—',
+      'Egyptian': 'à¦®à¦¿à¦¶à¦°à§€à¦¯à¦¼',
+      'Umm Al Qura': 'à¦‰à¦®à§à¦®à§à¦² à¦•à§à¦°à¦¾',
+      'Dubai': 'à¦¦à§à¦¬à¦¾à¦‡',
+      'Qatar': 'à¦•à¦¾à¦¤à¦¾à¦°',
+      'Kuwait': 'à¦•à§à¦¯à¦¼à§‡à¦¤',
+      'Singapore': 'à¦¸à¦¿à¦™à§à¦—à¦¾à¦ªà§à¦°',
+      'North America': 'à¦‰à¦¤à§à¦¤à¦° à¦†à¦®à§‡à¦°à¦¿à¦•à¦¾',
+      'Moonsighting Committee': 'à¦šà¦¾à¦à¦¦ à¦¦à§‡à¦–à¦¾ à¦•à¦®à¦¿à¦Ÿà¦¿',
+      'Hanafi': 'à¦¹à¦¾à¦¨à¦¾à¦«à¦¿',
+      'Shafi': 'à¦¶à¦¾à¦«à§‡à¦¯à¦¼à§€',
     };
     return labels[option] ?? option;
   }
@@ -963,11 +1071,11 @@ class SettingsHubScreenV4 extends StatelessWidget {
     if (languageCode == 'en') return prayer;
     if (languageCode == 'ar') return _ar[prayer] ?? prayer;
     const labels = <String, String>{
-      'Fajr': 'ফজর',
-      'Dhuhr': 'জোহর',
-      'Asr': 'আসর',
-      'Maghrib': 'মাগরিব',
-      'Isha': 'এশা',
+      'Fajr': 'à¦«à¦œà¦°',
+      'Dhuhr': 'à¦œà§‹à¦¹à¦°',
+      'Asr': 'à¦†à¦¸à¦°',
+      'Maghrib': 'à¦®à¦¾à¦—à¦°à¦¿à¦¬',
+      'Isha': 'à¦à¦¶à¦¾',
     };
     return labels[prayer] ?? prayer;
   }
@@ -987,65 +1095,93 @@ class SettingsHubScreenV4 extends StatelessWidget {
     final languageCode = Localizations.localeOf(context).languageCode;
     final isEnglish = languageCode == 'en';
     final isArabic = languageCode == 'ar';
+
     await showModalBottomSheet<void>(
       context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(18),
-              child: Text(
-                title,
-                style: Theme.of(sheetContext)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w900),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final maxHeight = MediaQuery.sizeOf(sheetContext).height * 0.82;
+
+        return SafeArea(
+          child: Container(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            decoration: BoxDecoration(
+              color: Theme.of(sheetContext).cardColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
               ),
             ),
-            ...options.map(
-              (option) => ListTile(
-                title: Text(
-                  options.length == 3 &&
-                          options.contains('bn') &&
-                          options.contains('en') &&
-                          options.contains('ar')
-                      ? (isEnglish
-                          ? ({
-                                'bn': 'Bangla',
-                                'en': 'English',
-                                'ar': 'Arabic'
-                              }[option] ??
-                              option)
-                          : (isArabic
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+                  child: Text(
+                    title,
+                    style: Theme.of(sheetContext)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                Flexible(
+                  child: ListView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final option = options[index];
+
+                      final label = options.length == 3 &&
+                              options.contains('bn') &&
+                              options.contains('en') &&
+                              options.contains('ar')
+                          ? (isEnglish
                               ? ({
-                                    'bn': 'البنغالية',
-                                    'en': 'الإنجليزية',
-                                    'ar': 'العربية'
+                                    'bn': 'Bangla',
+                                    'en': 'English',
+                                    'ar': 'Arabic'
                                   }[option] ??
                                   option)
-                              : ({
-                                    'bn': 'বাংলা',
-                                    'en': 'ইংরেজি',
-                                    'ar': 'আরবি'
-                                  }[option] ??
-                                  option)))
-                      : _choiceLabel(option, languageCode),
+                              : (isArabic
+                                  ? ({
+                                        'bn': 'البنغالية',
+                                        'en': 'الإنجليزية',
+                                        'ar': 'العربية'
+                                      }[option] ??
+                                      option)
+                                  : ({
+                                        'bn': 'বাংলা',
+                                        'en': 'ইংরেজি',
+                                        'ar': 'আরবি'
+                                      }[option] ??
+                                      option)))
+                          : _choiceLabel(option, languageCode);
+
+                      return ListTile(
+                        title: Text(label),
+                        trailing: option == selectedValue
+                            ? const Icon(
+                                Icons.check_circle_rounded,
+                                color: AppColors.seaBlue,
+                              )
+                            : null,
+                        onTap: () async {
+                          await onSelected(option);
+                          if (sheetContext.mounted) {
+                            Navigator.pop(sheetContext);
+                          }
+                        },
+                      );
+                    },
+                  ),
                 ),
-                trailing: option == selectedValue
-                    ? const Icon(Icons.check_circle_rounded,
-                        color: AppColors.seaBlue)
-                    : null,
-                onTap: () async {
-                  await onSelected(option);
-                  if (sheetContext.mounted) Navigator.pop(sheetContext);
-                },
-              ),
+              ],
             ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -1055,8 +1191,13 @@ class SettingsHubScreenV4 extends StatelessWidget {
     final labels = languageCode == 'en'
         ? const ['Small', 'Normal', 'Large', 'Very Large']
         : languageCode == 'ar'
-            ? const ['صغير', 'عادي', 'كبير', 'كبير جدًا']
-            : const ['ছোট', 'স্বাভাবিক', 'বড়', 'খুব বড়'];
+            ? const ['ØµØºÙŠØ±', 'Ø¹Ø§Ø¯ÙŠ', 'ÙƒØ¨ÙŠØ±', 'ÙƒØ¨ÙŠØ± Ø¬Ø¯Ù‹Ø§']
+            : const [
+                'à¦›à§‹à¦Ÿ',
+                'à¦¸à§à¦¬à¦¾à¦­à¦¾à¦¬à¦¿à¦•',
+                'à¦¬à§œ',
+                'à¦–à§à¦¬ à¦¬à§œ'
+              ];
     await showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -1065,7 +1206,9 @@ class SettingsHubScreenV4 extends StatelessWidget {
           children: [
             Padding(
                 padding: const EdgeInsets.all(18),
-                child: Text(_t(languageCode, 'অ্যাপের লেখা', 'App Text Size'),
+                child: Text(
+                    _t(languageCode, 'à¦…à§à¦¯à¦¾à¦ªà§‡à¦° à¦²à§‡à¦–à¦¾',
+                        'App Text Size'),
                     style: Theme.of(sheetContext)
                         .textTheme
                         .titleLarge
@@ -1095,7 +1238,9 @@ class SettingsHubScreenV4 extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(_t(
-            settings.languageCode, 'সালাতের সময় সমন্বয়', 'Prayer Adjustments')),
+            settings.languageCode,
+            'à¦¸à¦¾à¦²à¦¾à¦¤à§‡à¦° à¦¸à¦®à§Ÿ à¦¸à¦®à¦¨à§à¦¬à§Ÿ',
+            'Prayer Adjustments')),
         content: SingleChildScrollView(
           child: Column(
             children: [
@@ -1103,7 +1248,7 @@ class SettingsHubScreenV4 extends StatelessWidget {
                 ListTile(
                   title: Text(_prayerLabel(prayer, settings.languageCode)),
                   subtitle: Text(
-                      '${settings.prayerAdjustments[prayer] ?? 0} ${_t(settings.languageCode, 'মিনিট', 'min')}'),
+                      '${settings.prayerAdjustments[prayer] ?? 0} ${_t(settings.languageCode, 'à¦®à¦¿à¦¨à¦¿à¦Ÿ', 'min')}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1124,7 +1269,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: Text(_t(settings.languageCode, 'সম্পন্ন', 'Done')))
+              child: Text(
+                  _t(settings.languageCode, 'à¦¸à¦®à§à¦ªà¦¨à§à¦¨', 'Done')))
         ],
       ),
     );
@@ -1141,7 +1287,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: Text(_t(settings.languageCode, 'জামাতের সময়', 'Jamaat Times')),
+          title: Text(_t(settings.languageCode,
+              'à¦œà¦¾à¦®à¦¾à¦¤à§‡à¦° à¦¸à¦®à§Ÿ', 'Jamaat Times')),
           content: SingleChildScrollView(
             child: Column(
               children: [
@@ -1162,7 +1309,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: Text(_t(settings.languageCode, 'বাতিল', 'Cancel'))),
+                child: Text(
+                    _t(settings.languageCode, 'à¦¬à¦¾à¦¤à¦¿à¦²', 'Cancel'))),
             FilledButton(
               onPressed: () async {
                 for (final prayer in prayers) {
@@ -1171,7 +1319,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
                 }
                 if (dialogContext.mounted) Navigator.pop(dialogContext);
               },
-              child: Text(_t(settings.languageCode, 'সংরক্ষণ', 'Save')),
+              child: Text(
+                  _t(settings.languageCode, 'à¦¸à¦‚à¦°à¦•à§à¦·à¦£', 'Save')),
             ),
           ],
         ),
@@ -1193,7 +1342,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
             children: [
               _slider(
                   sheetContext,
-                  _t(settings.languageCode, 'কুরআন আরবি', 'Quran Arabic'),
+                  _t(settings.languageCode, 'à¦•à§à¦°à¦†à¦¨ à¦†à¦°à¦¬à¦¿',
+                      'Quran Arabic'),
                   settings.quranFontSize,
                   14,
                   50,
@@ -1201,7 +1351,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
               const SizedBox(height: 14),
               _slider(
                   sheetContext,
-                  _t(settings.languageCode, 'অনুবাদ', 'Translation'),
+                  _t(settings.languageCode, 'à¦…à¦¨à§à¦¬à¦¾à¦¦',
+                      'Translation'),
                   settings.translationFontSize,
                   10,
                   30,
@@ -1249,21 +1400,24 @@ class SettingsHubScreenV4 extends StatelessWidget {
                 _switchTile(
                     context,
                     Icons.menu_book_outlined,
-                    _t(current.languageCode, 'দৈনিক আয়াত', 'Daily Ayah'),
+                    _t(current.languageCode, 'à¦¦à§ˆà¦¨à¦¿à¦• à¦†à§Ÿà¦¾à¦¤',
+                        'Daily Ayah'),
                     '',
                     current.showDailyAyah,
                     (v) => current.setDailyContentPreferences(ayah: v)),
                 _switchTile(
                     context,
                     Icons.auto_stories_outlined,
-                    _t(current.languageCode, 'দৈনিক হাদিস', 'Daily Hadith'),
+                    _t(current.languageCode, 'à¦¦à§ˆà¦¨à¦¿à¦• à¦¹à¦¾à¦¦à¦¿à¦¸',
+                        'Daily Hadith'),
                     '',
                     current.showDailyHadith,
                     (v) => current.setDailyContentPreferences(hadith: v)),
                 _switchTile(
                     context,
                     Icons.volunteer_activism_outlined,
-                    _t(current.languageCode, 'দৈনিক দোয়া', 'Daily Dua'),
+                    _t(current.languageCode, 'à¦¦à§ˆà¦¨à¦¿à¦• à¦¦à§‹à§Ÿà¦¾',
+                        'Daily Dua'),
                     '',
                     current.showDailyDua,
                     (v) => current.setDailyContentPreferences(dua: v)),
@@ -1281,21 +1435,24 @@ class SettingsHubScreenV4 extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(_t(
-            settings.languageCode, 'সেটিংস রিসেট করবেন?', 'Reset settings?')),
+            settings.languageCode,
+            'à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸ à¦°à¦¿à¦¸à§‡à¦Ÿ à¦•à¦°à¦¬à§‡à¦¨?',
+            'Reset settings?')),
         content: Text(_t(
             settings.languageCode,
-            'সব সংরক্ষিত সেটিংস ডিফল্ট অবস্থায় ফিরে যাবে।',
+            'à¦¸à¦¬ à¦¸à¦‚à¦°à¦•à§à¦·à¦¿à¦¤ à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸ à¦¡à¦¿à¦«à¦²à§à¦Ÿ à¦…à¦¬à¦¸à§à¦¥à¦¾à§Ÿ à¦«à¦¿à¦°à§‡ à¦¯à¦¾à¦¬à§‡à¥¤',
             'All saved preferences will return to their default values.')),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: Text(_t(settings.languageCode, 'বাতিল', 'Cancel'))),
+              child:
+                  Text(_t(settings.languageCode, 'à¦¬à¦¾à¦¤à¦¿à¦²', 'Cancel'))),
           FilledButton(
             onPressed: () async {
               await settings.resetSettings();
               if (dialogContext.mounted) Navigator.pop(dialogContext);
             },
-            child: Text(_t(settings.languageCode, 'রিসেট', 'Reset')),
+            child: Text(_t(settings.languageCode, 'à¦°à¦¿à¦¸à§‡à¦Ÿ', 'Reset')),
           ),
         ],
       ),
