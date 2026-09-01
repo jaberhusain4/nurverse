@@ -1,0 +1,122 @@
+name: Finish Prayer Settings
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  finish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch prayer settings
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              s = p.read_text(encoding='utf-8')
+              if old not in s:
+                  raise SystemExit(f'Expected block not found in {path}')
+              p.write_text(s.replace(old, new, 1), encoding='utf-8')
+
+          # SettingsProvider: all supported methods + four selectable madhhabs.
+          replace_once(
+              'lib/providers/settings_provider.dart',
+              """  static const List<String> calculationMethods = [\n    'Karachi',\n    'Muslim World League',\n    'Egyptian',\n    'Umm Al Qura',\n    'Dubai',\n    'Qatar',\n    'Kuwait',\n    'Singapore',\n    'North America',\n    'Moonsighting Committee',\n  ];\n\n  static const List<String> madhabs = ['Hanafi', 'Shafi'];\n""",
+              """  static const List<String> calculationMethods = [\n    'Karachi',\n    'Muslim World League',\n    'Egyptian',\n    'Umm Al Qura',\n    'Dubai',\n    'Qatar',\n    'Kuwait',\n    'Singapore',\n    'North America',\n    'Moonsighting Committee',\n    'Tehran',\n    'Turkey',\n    'Other',\n  ];\n\n  static const List<String> madhabs = [\n    'Hanafi',\n    'Shafi',\n    'Maliki',\n    'Hanbali',\n  ];\n""",
+          )
+
+          replace_once(
+              'lib/providers/settings_provider.dart',
+              """  String get calculationMethod => _calculationMethod;\n\n  String get madhhab => _madhab;\n\n  String get madhab => _madhab;\n""",
+              """  String get calculationMethod => _calculationMethod;\n\n  String get madhhab => _madhab;\n""",
+          )
+
+          replace_once(
+              'lib/providers/settings_provider.dart',
+              """      case 'moonsighting':\n      case 'moonsighting_committee':\n        return 'Moonsighting Committee';\n\n      case 'karachi':\n""",
+              """      case 'moonsighting':\n      case 'moonsighting_committee':\n        return 'Moonsighting Committee';\n\n      case 'tehran':\n        return 'Tehran';\n\n      case 'turkey':\n      case 'turkiye':\n        return 'Turkey';\n\n      case 'other':\n        return 'Other';\n\n      case 'karachi':\n""",
+          )
+
+          replace_once(
+              'lib/providers/settings_provider.dart',
+              """  String _normalizeMadhab(String value) {\n    final String normalized = value.trim().toLowerCase();\n\n    if (normalized == 'shafi' ||\n        normalized == 'shafii' ||\n        normalized == \"shafi'i\" ||\n        normalized == 'shafi’i') {\n      return 'Shafi';\n    }\n\n    return 'Hanafi';\n  }\n""",
+              """  String _normalizeMadhab(String value) {\n    final String normalized = value.trim().toLowerCase();\n\n    switch (normalized) {\n      case 'shafi':\n      case 'shafii':\n      case \"shafi'i\":\n      case 'shafi’i':\n        return 'Shafi';\n      case 'maliki':\n        return 'Maliki';\n      case 'hanbali':\n      case 'hambali':\n        return 'Hanbali';\n      case 'hanafi':\n      default:\n        return 'Hanafi';\n    }\n  }\n""",
+          )
+
+          # PrayerCalculationConfig: preserve the selected madhhab name while\n          # resolving to adhan's two available shadow-rule modes.\n          replace_once(
+              'lib/services/prayer_calculation_config.dart',
+              """class PrayerCalculationConfig {\n  final CalculationMethod method;\n  final Madhab madhab;\n\n  const PrayerCalculationConfig({required this.method, required this.madhab});\n""",
+              """class PrayerCalculationConfig {\n  final CalculationMethod method;\n  final Madhab madhab;\n  final String? madhhabName;\n\n  const PrayerCalculationConfig({\n    required this.method,\n    required this.madhab,\n    this.madhhabName,\n  });\n""",
+          )
+
+          replace_once(
+              'lib/services/prayer_calculation_config.dart',
+              """    return PrayerCalculationConfig(\n      method: _parseCalculationMethod(calculationMethod),\n      madhab: _parseMadhab(madhhab),\n    );\n""",
+              """    final String normalizedMadhhab = _normalizeMadhhabName(madhhab);\n\n    return PrayerCalculationConfig(\n      method: _parseCalculationMethod(calculationMethod),\n      madhab: _parseMadhab(normalizedMadhhab),\n      madhhabName: normalizedMadhhab,\n    );\n""",
+          )
+
+          replace_once(
+              'lib/services/prayer_calculation_config.dart',
+              """  static Madhab _parseMadhab(String value) {\n    final String normalized = value.trim().toLowerCase();\n\n    switch (normalized) {\n      case 'hanafi':\n        return Madhab.hanafi;\n\n      case 'shafi':\n      case 'shafii':\n      case 'shafi’i':\n      case \"shafi'i\":\n      case 'maliki':\n      case 'hanbali':\n      case 'standard':\n      case 'shafi_maliki_hanbali':\n        return Madhab.shafi;\n\n      default:\n        return Madhab.hanafi;\n    }\n  }\n""",
+              """  static String _normalizeMadhhabName(String value) {\n    switch (value.trim().toLowerCase()) {\n      case 'shafi':\n      case 'shafii':\n      case 'shafi’i':\n      case \"shafi'i\":\n        return 'Shafi';\n      case 'maliki':\n        return 'Maliki';\n      case 'hanbali':\n      case 'hambali':\n        return 'Hanbali';\n      case 'hanafi':\n      default:\n        return 'Hanafi';\n    }\n  }\n\n  static Madhab _parseMadhab(String value) {\n    return value == 'Hanafi' ? Madhab.hanafi : Madhab.shafi;\n  }\n""",
+          )
+
+          replace_once(
+              'lib/services/prayer_calculation_config.dart',
+              """  String get madhhabId {\n    return madhab == Madhab.hanafi ? 'Hanafi' : 'Shafi';\n  }\n""",
+              """  String get madhhabId {\n    return madhhabName ??\n        (madhab == Madhab.hanafi ? 'Hanafi' : 'Shafi');\n  }\n""",
+          )
+
+          replace_once(
+              'lib/services/prayer_calculation_config.dart',
+              """    return PrayerCalculationConfig(\n      method: method ?? this.method,\n      madhab: madhab ?? this.madhab,\n    );\n""",
+              """    final Madhab resolvedMadhab = madhab ?? this.madhab;\n    return PrayerCalculationConfig(\n      method: method ?? this.method,\n      madhab: resolvedMadhab,\n      madhhabName: madhab == null\n          ? madhhabName\n          : (resolvedMadhab == Madhab.hanafi ? 'Hanafi' : 'Shafi'),\n    );\n""",
+          )
+
+          replace_once(
+              'lib/services/prayer_calculation_config.dart',
+              """        other.method == method &&\n        other.madhab == madhab;\n""",
+              """        other.method == method &&\n        other.madhab == madhab &&\n        other.madhhabName == madhhabName;\n""",
+          )
+
+          replace_once(
+              'lib/services/prayer_calculation_config.dart',
+              """  int get hashCode => Object.hash(method, madhab);\n""",
+              """  int get hashCode => Object.hash(method, madhab, madhhabName);\n""",
+          )
+
+          replace_once(
+              'lib/services/prayer_calculation_config.dart',
+              """        'method: $method, '\n        'madhab: $madhab'\n""",
+              """        'method: $method, '\n        'madhab: $madhab, '\n        'madhhabName: $madhhabName'\n""",
+          )
+
+          # Active settings UI: proper names remain unchanged in Arabic, and\n          # the selector is content-sized while remaining scrollable for long lists.\n          p = Path('lib/screens/settings_hub_screen_v4.dart')\n          s = p.read_text(encoding='utf-8')\n          replacements = {\n              "'Karachi': 'كراتشي'": "'Karachi': 'Karachi'",\n              "'Muslim World League': 'رابطة العالم الإسلامي'": "'Muslim World League': 'Muslim World League'",\n              "'Egyptian': 'المصري'": "'Egyptian': 'Egyptian'",\n              "'Umm Al Qura': 'أم القرى'": "'Umm Al Qura': 'Umm Al Qura'",\n              "'Dubai': 'دبي'": "'Dubai': 'Dubai'",\n              "'Qatar': 'قطر'": "'Qatar': 'Qatar'",\n              "'Kuwait': 'الكويت'": "'Kuwait': 'Kuwait'",\n              "'Singapore': 'سنغافورة'": "'Singapore': 'Singapore'",\n              "'North America': 'أمريكا الشمالية'": "'North America': 'North America'",\n              "'Moonsighting Committee': 'لجنة رؤية الهلال'": "'Moonsighting Committee': 'Moonsighting Committee'",\n              "'Hanafi': 'حنفي'": "'Hanafi': 'Hanafi'",\n              "'Shafi': 'شافعي'": "'Shafi': 'Shafi'",\n          }\n          for old, new in replacements.items():\n              s = s.replace(old, new)\n          marker = "    'Moonsighting Committee': 'Moonsighting Committee',\n"\n          additions = marker + "    'Tehran': 'Tehran',\n    'Turkey': 'Turkey',\n    'Other': 'Other',\n    'Maliki': 'Maliki',\n    'Hanbali': 'Hanbali',\n"\n          if "    'Tehran': 'Tehran'," not in s:\n              if marker not in s:\n                  raise SystemExit('Calculation map marker missing')\n              s = s.replace(marker, additions, 1)\n          p.write_text(s, encoding='utf-8')\n\n          start = s.index('  Future<void> _showChoiceSheet(')\n          end = s.index('  Future<void> _showTextSizeSheet(', start)\n          fixed = '''  Future<void> _showChoiceSheet(BuildContext context, String title,\n      List<String> options, Future<void> Function(String) onSelected,\n      {String? selectedValue}) async {\n    final languageCode = Localizations.localeOf(context).languageCode;\n    final isEnglish = languageCode == 'en';\n    final isArabic = languageCode == 'ar';\n\n    await showModalBottomSheet<void>(\n      context: context,\n      isScrollControlled: true,\n      builder: (sheetContext) {\n        final screenHeight = MediaQuery.sizeOf(sheetContext).height;\n        final maxHeight = screenHeight * 0.82;\n        final contentHeight = 72.0 + (options.length * 56.0) + 8.0;\n        final sheetHeight = contentHeight.clamp(0.0, maxHeight);\n\n        return SafeArea(\n          child: SizedBox(\n            height: sheetHeight,\n            child: Column(\n              children: [\n                Padding(\n                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),\n                  child: Text(\n                    title,\n                    style: Theme.of(sheetContext)\n                        .textTheme\n                        .titleLarge\n                        ?.copyWith(fontWeight: FontWeight.w900),\n                  ),\n                ),\n                Expanded(\n                  child: ListView.builder(\n                    padding: EdgeInsets.zero,\n                    itemCount: options.length,\n                    itemBuilder: (context, index) {\n                      final option = options[index];\n                      final label = options.length == 3 &&\n                              options.contains('bn') &&\n                              options.contains('en') &&\n                              options.contains('ar')\n                          ? (isEnglish\n                              ? ({\n                                    'bn': 'Bangla',\n                                    'en': 'English',\n                                    'ar': 'Arabic',\n                                  }[option] ?? option)\n                              : (isArabic\n                                  ? ({\n                                        'bn': 'البنغالية',\n                                        'en': 'الإنجليزية',\n                                        'ar': 'العربية',\n                                      }[option] ?? option)\n                                  : ({\n                                        'bn': 'বাংলা',\n                                        'en': 'ইংরেজি',\n                                        'ar': 'আরবি',\n                                      }[option] ?? option)))\n                          : _choiceLabel(option, languageCode);\n\n                      return ListTile(\n                        title: Text(label),\n                        trailing: option == selectedValue\n                            ? const Icon(\n                                Icons.check_circle_rounded,\n                                color: AppColors.seaBlue,\n                              )\n                            : null,\n                        onTap: () async {\n                          await onSelected(option);\n                          if (sheetContext.mounted) {\n                            Navigator.pop(sheetContext);\n                          }\n                        },\n                      );\n                    },\n                  ),\n                ),\n              ],\n            ),\n          ),\n        );\n      },\n    );\n  }\n\n'''
+          s = s[:start] + fixed + s[end:]\n          p.write_text(s, encoding='utf-8')\n          PY
+\n      - name: Format and analyze
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+      - run: flutter pub get
+      - run: dart format lib/providers/settings_provider.dart lib/services/prayer_calculation_config.dart lib/screens/settings_hub_screen_v4.dart
+      - run: flutter analyze
+
+      - name: Commit source changes and remove one-shot workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/finish-prayer-settings.yml
+          git add lib/providers/settings_provider.dart lib/services/prayer_calculation_config.dart lib/screens/settings_hub_screen_v4.dart
+          git diff --cached --check
+          git commit -m 'fix(settings): support four madhhabs and compact selectors'
+          git push
