@@ -12,18 +12,247 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Patch active Settings choice sheet
+
+      - name: Apply final prayer settings fix
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
 
+          def replace_once(path, old, new):
+              p = Path(path)
+              s = p.read_text(encoding='utf-8')
+              if old not in s:
+                  raise SystemExit(f'Expected block not found in {path}')
+              p.write_text(s.replace(old, new, 1), encoding='utf-8')
+
+          # SettingsProvider: all supported calculation methods and four madhhabs.
+          replace_once(
+              'lib/providers/settings_provider.dart',
+              """  static const List<String> calculationMethods = [
+    'Karachi',
+    'Muslim World League',
+    'Egyptian',
+    'Umm Al Qura',
+    'Dubai',
+    'Qatar',
+    'Kuwait',
+    'Singapore',
+    'North America',
+    'Moonsighting Committee',
+  ];
+
+  static const List<String> madhabs = ['Hanafi', 'Shafi'];
+""",
+              """  static const List<String> calculationMethods = [
+    'Karachi',
+    'Muslim World League',
+    'Egyptian',
+    'Umm Al Qura',
+    'Dubai',
+    'Qatar',
+    'Kuwait',
+    'Singapore',
+    'North America',
+    'Moonsighting Committee',
+    'Tehran',
+    'Turkey',
+    'Other',
+  ];
+
+  static const List<String> madhabs = [
+    'Hanafi',
+    'Shafi',
+    'Maliki',
+    'Hanbali',
+  ];
+""",
+          )
+
+          # Remove the accidental duplicate getter if present.
+          p = Path('lib/providers/settings_provider.dart')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace(
+              "  String get madhhab => _madhab;\n\n  String get madhab => _madhab;\n",
+              "  String get madhhab => _madhab;\n",
+          )
+          p.write_text(s, encoding='utf-8')
+
+          # Accept and persist all four madhhab names.
+          replace_once(
+              'lib/providers/settings_provider.dart',
+              """  String _normalizeMadhab(String value) {
+    final String normalized = value.trim().toLowerCase();
+
+    if (normalized == 'shafi' ||
+        normalized == 'shafii' ||
+        normalized == \"shafi'i\" ||
+        normalized == 'shafi’i') {
+      return 'Shafi';
+    }
+
+    return 'Hanafi';
+  }
+""",
+              """  String _normalizeMadhab(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'shafi':
+      case 'shafii':
+      case \"shafi'i\":
+      case 'shafi’i':
+        return 'Shafi';
+      case 'maliki':
+        return 'Maliki';
+      case 'hanbali':
+      case 'hambali':
+        return 'Hanbali';
+      case 'hanafi':
+      default:
+        return 'Hanafi';
+    }
+  }
+""",
+          )
+
+          # Keep config compatible with adhan while preserving the user's four-way selection.
+          replace_once(
+              'lib/services/prayer_calculation_config.dart',
+              """class PrayerCalculationConfig {
+  final CalculationMethod method;
+  final Madhab madhab;
+
+  const PrayerCalculationConfig({required this.method, required this.madhab});
+""",
+              """class PrayerCalculationConfig {
+  final CalculationMethod method;
+  final Madhab madhab;
+  final String? madhhabName;
+
+  const PrayerCalculationConfig({
+    required this.method,
+    required this.madhab,
+    this.madhhabName,
+  });
+""",
+          )
+
+          replace_once(
+              'lib/services/prayer_calculation_config.dart',
+              """    return PrayerCalculationConfig(
+      method: _parseCalculationMethod(calculationMethod),
+      madhab: _parseMadhab(madhhab),
+    );
+""",
+              """    final String normalizedMadhhab = _normalizeMadhhabName(madhhab);
+
+    return PrayerCalculationConfig(
+      method: _parseCalculationMethod(calculationMethod),
+      madhab: _parseMadhab(normalizedMadhhab),
+      madhhabName: normalizedMadhhab,
+    );
+""",
+          )
+
+          replace_once(
+              'lib/services/prayer_calculation_config.dart',
+              """  static Madhab _parseMadhab(String value) {
+    final String normalized = value.trim().toLowerCase();
+
+    switch (normalized) {
+      case 'hanafi':
+        return Madhab.hanafi;
+
+      case 'shafi':
+      case 'shafii':
+      case 'shafi’i':
+      case \"shafi'i\":
+      case 'maliki':
+      case 'hanbali':
+      case 'standard':
+      case 'shafi_maliki_hanbali':
+        return Madhab.shafi;
+
+      default:
+        return Madhab.hanafi;
+    }
+  }
+""",
+              """  static String _normalizeMadhhabName(String value) {
+    switch (value.trim().toLowerCase()) {
+      case 'shafi':
+      case 'shafii':
+      case 'shafi’i':
+      case \"shafi'i\":
+        return 'Shafi';
+      case 'maliki':
+        return 'Maliki';
+      case 'hanbali':
+      case 'hambali':
+        return 'Hanbali';
+      case 'hanafi':
+      default:
+        return 'Hanafi';
+    }
+  }
+
+  static Madhab _parseMadhab(String value) {
+    return value == 'Hanafi' ? Madhab.hanafi : Madhab.shafi;
+  }
+""",
+          )
+
+          replace_once(
+              'lib/services/prayer_calculation_config.dart',
+              """  String get madhhabId {
+    return madhab == Madhab.hanafi ? 'Hanafi' : 'Shafi';
+  }
+""",
+              """  String get madhhabId {
+    return madhhabName ??
+        (madhab == Madhab.hanafi ? 'Hanafi' : 'Shafi');
+  }
+""",
+          )
+
+          # UI proper names are not translated/transliterated.
           p = Path('lib/screens/settings_hub_screen_v4.dart')
           s = p.read_text(encoding='utf-8')
+          for old, new in {
+              "'Karachi': 'كراتشي'": "'Karachi': 'Karachi'",
+              "'Muslim World League': 'رابطة العالم الإسلامي'": "'Muslim World League': 'Muslim World League'",
+              "'Egyptian': 'المصري'": "'Egyptian': 'Egyptian'",
+              "'Umm Al Qura': 'أم القرى'": "'Umm Al Qura': 'Umm Al Qura'",
+              "'Dubai': 'دبي'": "'Dubai': 'Dubai'",
+              "'Qatar': 'قطر'": "'Qatar': 'Qatar'",
+              "'Kuwait': 'الكويت'": "'Kuwait': 'Kuwait'",
+              "'Singapore': 'سنغافورة'": "'Singapore': 'Singapore'",
+              "'North America': 'أمريكا الشمالية'": "'North America': 'North America'",
+              "'Moonsighting Committee': 'لجنة رؤية الهلال'": "'Moonsighting Committee': 'Moonsighting Committee'",
+              "'Hanafi': 'حنفي'": "'Hanafi': 'Hanafi'",
+              "'Shafi': 'شافعي'": "'Shafi': 'Shafi'",
+          }.items():
+              s = s.replace(old, new)
+          if "    'Tehran': 'Tehran'," not in s:
+              marker = "    'Moonsighting Committee': 'Moonsighting Committee',\n"
+              if marker not in s:
+                  raise SystemExit('Calculation method label marker missing')
+              s = s.replace(
+                  marker,
+                  marker +
+                  "    'Tehran': 'Tehran',\n"
+                  "    'Turkey': 'Turkey',\n"
+                  "    'Other': 'Other',\n"
+                  "    'Maliki': 'Maliki',\n"
+                  "    'Hanbali': 'Hanbali',\n",
+                  1,
+              )
+          p.write_text(s, encoding='utf-8')
 
+          # Compact choice sheet: short lists use only the space they need; long lists scroll.
+          p = Path('lib/screens/settings_hub_screen_v4.dart')
+          s = p.read_text(encoding='utf-8')
           start = s.index('  Future<void> _showChoiceSheet(')
           end = s.index('  Future<void> _showTextSizeSheet(', start)
-
           fixed = '''  Future<void> _showChoiceSheet(BuildContext context, String title,
       List<String> options, Future<void> Function(String) onSelected,
       {String? selectedValue}) async {
@@ -36,15 +265,16 @@ jobs:
       isScrollControlled: true,
       builder: (sheetContext) {
         final maxHeight = MediaQuery.sizeOf(sheetContext).height * 0.82;
+        final contentHeight = 72.0 + (options.length * 56.0) + 8.0;
+        final sheetHeight = contentHeight.clamp(0.0, maxHeight);
 
         return SafeArea(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxHeight),
+          child: SizedBox(
+            height: sheetHeight,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
                   child: Text(
                     title,
                     style: Theme.of(sheetContext)
@@ -53,7 +283,7 @@ jobs:
                         ?.copyWith(fontWeight: FontWeight.w900),
                   ),
                 ),
-                Flexible(
+                Expanded(
                   child: ListView.builder(
                     padding: EdgeInsets.zero,
                     itemCount: options.length,
@@ -100,7 +330,6 @@ jobs:
                     },
                   ),
                 ),
-                const SizedBox(height: 8),
               ],
             ),
           ),
@@ -110,26 +339,39 @@ jobs:
   }
 
 '''
-
           s = s[:start] + fixed + s[end:]
           p.write_text(s, encoding='utf-8')
 
-          print('Patched active SettingsHubScreenV4._showChoiceSheet')
+          # Remove the one-shot helper workflow created during this repair.
+          one_shot = Path('.github/workflows/finish-prayer-settings.yml')
+          if one_shot.exists():
+              one_shot.unlink()
           PY
 
-      - name: Verify patch
-        run: |
-          grep -n -A75 "Future<void> _showChoiceSheet" lib/screens/settings_hub_screen_v4.dart
-          test "$(grep -o "Future<void> _showChoiceSheet" lib/screens/settings_hub_screen_v4.dart | wc -l)" -eq 1
-          test "$(grep -o "isScrollControlled: true" lib/screens/settings_hub_screen_v4.dart | wc -l)" -ge 1
-          test "$(grep -o "ConstrainedBox" lib/screens/settings_hub_screen_v4.dart | wc -l)" -ge 1
-          test "$(grep -o "ListView.builder" lib/screens/settings_hub_screen_v4.dart | wc -l)" -ge 1
+      - name: Format and analyze
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+      - run: flutter pub get
+      - run: dart format lib/providers/settings_provider.dart lib/services/prayer_calculation_config.dart lib/screens/settings_hub_screen_v4.dart
+      - run: flutter analyze
 
-      - name: Commit patch
+      - name: Verify and commit source
+        shell: bash
         run: |
+          grep -n -A90 "Future<void> _showChoiceSheet" lib/screens/settings_hub_screen_v4.dart
+          grep -q "'Maliki'" lib/providers/settings_provider.dart
+          grep -q "'Hanbali'" lib/providers/settings_provider.dart
+          grep -q "'Tehran'" lib/providers/settings_provider.dart
+          grep -q "'Turkey'" lib/providers/settings_provider.dart
+          grep -q "'Other'" lib/providers/settings_provider.dart
+          test "$(grep -o "Future<void> _showChoiceSheet" lib/screens/settings_hub_screen_v4.dart | wc -l)" -eq 1
+          git rm -f .github/workflows/finish-prayer-settings.yml 2>/dev/null || true
+          git add lib/providers/settings_provider.dart lib/services/prayer_calculation_config.dart lib/screens/settings_hub_screen_v4.dart
+          git diff --cached --check
+          git diff --cached --quiet && { echo 'No source changes produced'; exit 1; }
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add lib/screens/settings_hub_screen_v4.dart
-          git diff --cached --quiet && { echo 'No source changes produced'; exit 1; }
-          git commit -m 'fix(settings): prevent calculation selector overflow'
+          git commit -m 'fix(settings): support four madhhabs and compact selectors'
           git push
