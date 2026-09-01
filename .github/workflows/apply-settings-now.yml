@@ -13,38 +13,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Apply final prayer settings fix
+      - name: Patch prayer settings source
         shell: bash
         run: |
+          set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
-          def replace_once(path, old, new):
+          def edit(path, fn):
               p = Path(path)
               s = p.read_text(encoding='utf-8')
+              s = fn(s)
+              p.write_text(s, encoding='utf-8')
+
+          def replace_required(s, old, new, label):
               if old not in s:
-                  raise SystemExit(f'Expected block not found in {path}')
-              p.write_text(s.replace(old, new, 1), encoding='utf-8')
+                  raise SystemExit(f'missing expected block: {label}')
+              return s.replace(old, new, 1)
 
-          # SettingsProvider: all supported calculation methods and four madhhabs.
-          replace_once(
-              'lib/providers/settings_provider.dart',
-              """  static const List<String> calculationMethods = [
-    'Karachi',
-    'Muslim World League',
-    'Egyptian',
-    'Umm Al Qura',
-    'Dubai',
-    'Qatar',
-    'Kuwait',
-    'Singapore',
-    'North America',
-    'Moonsighting Committee',
-  ];
-
-  static const List<String> madhabs = ['Hanafi', 'Shafi'];
-""",
-              """  static const List<String> calculationMethods = [
+          # SettingsProvider lists and normalization.
+          def provider(s):
+              s = re.sub(
+                  r"  static const List<String> calculationMethods = \[.*?\n  \];\n\n  static const List<String> madhabs = \[.*?\];\n",
+                  """  static const List<String> calculationMethods = [
     'Karachi',
     'Muslim World League',
     'Egyptian',
@@ -67,39 +59,23 @@ jobs:
     'Hanbali',
   ];
 """,
-          )
-
-          # Remove the accidental duplicate getter if present.
-          p = Path('lib/providers/settings_provider.dart')
-          s = p.read_text(encoding='utf-8')
-          s = s.replace(
-              "  String get madhhab => _madhab;\n\n  String get madhab => _madhab;\n",
-              "  String get madhhab => _madhab;\n",
-          )
-          p.write_text(s, encoding='utf-8')
-
-          # Accept and persist all four madhhab names.
-          replace_once(
-              'lib/providers/settings_provider.dart',
-              """  String _normalizeMadhab(String value) {
-    final String normalized = value.trim().toLowerCase();
-
-    if (normalized == 'shafi' ||
-        normalized == 'shafii' ||
-        normalized == \"shafi'i\" ||
-        normalized == 'shafi’i') {
-      return 'Shafi';
-    }
-
-    return 'Hanafi';
-  }
-""",
-              """  String _normalizeMadhab(String value) {
+                  s,
+                  count=1,
+                  flags=re.S,
+              )
+              s = s.replace(
+                  "  String get madhhab => _madhab;\n\n  String get madhab => _madhab;\n",
+                  "  String get madhhab => _madhab;\n",
+                  1,
+              )
+              s = re.sub(
+                  r"  String _normalizeMadhab\(String value\) \{.*?\n  \}\n\n  // ==========================================================================\n  // HELPER",
+                  """  String _normalizeMadhab(String value) {
     switch (value.trim().toLowerCase()) {
       case 'shafi':
       case 'shafii':
-      case \"shafi'i\":
       case 'shafi’i':
+      case \"shafi'i\":
         return 'Shafi';
       case 'maliki':
         return 'Maliki';
@@ -111,19 +87,28 @@ jobs:
         return 'Hanafi';
     }
   }
-""",
-          )
 
-          # Keep config compatible with adhan while preserving the user's four-way selection.
-          replace_once(
-              'lib/services/prayer_calculation_config.dart',
-              """class PrayerCalculationConfig {
+  // ===========================================================================
+  // HELPER""",
+                  s,
+                  count=1,
+                  flags=re.S,
+              )
+              return s
+          edit('lib/providers/settings_provider.dart', provider)
+
+          # PrayerCalculationConfig keeps four-way persistence while mapping
+          # non-Hanafi methods to adhan's available one-shadow Asr rule.
+          def config(s):
+              s = replace_required(
+                  s,
+                  """class PrayerCalculationConfig {
   final CalculationMethod method;
   final Madhab madhab;
 
   const PrayerCalculationConfig({required this.method, required this.madhab});
 """,
-              """class PrayerCalculationConfig {
+                  """class PrayerCalculationConfig {
   final CalculationMethod method;
   final Madhab madhab;
   final String? madhhabName;
@@ -134,16 +119,16 @@ jobs:
     this.madhhabName,
   });
 """,
-          )
-
-          replace_once(
-              'lib/services/prayer_calculation_config.dart',
-              """    return PrayerCalculationConfig(
+                  'config fields',
+              )
+              s = replace_required(
+                  s,
+                  """    return PrayerCalculationConfig(
       method: _parseCalculationMethod(calculationMethod),
       madhab: _parseMadhab(madhhab),
     );
 """,
-              """    final String normalizedMadhhab = _normalizeMadhhabName(madhhab);
+                  """    final String normalizedMadhhab = _normalizeMadhhabName(madhhab);
 
     return PrayerCalculationConfig(
       method: _parseCalculationMethod(calculationMethod),
@@ -151,33 +136,11 @@ jobs:
       madhhabName: normalizedMadhhab,
     );
 """,
-          )
-
-          replace_once(
-              'lib/services/prayer_calculation_config.dart',
-              """  static Madhab _parseMadhab(String value) {
-    final String normalized = value.trim().toLowerCase();
-
-    switch (normalized) {
-      case 'hanafi':
-        return Madhab.hanafi;
-
-      case 'shafi':
-      case 'shafii':
-      case 'shafi’i':
-      case \"shafi'i\":
-      case 'maliki':
-      case 'hanbali':
-      case 'standard':
-      case 'shafi_maliki_hanbali':
-        return Madhab.shafi;
-
-      default:
-        return Madhab.hanafi;
-    }
-  }
-""",
-              """  static String _normalizeMadhhabName(String value) {
+                  'config fromSettings',
+              )
+              s = re.sub(
+                  r"  static Madhab _parseMadhab\(String value\) \{.*?\n  \}\n\n  // ==========================================================================\n  // DISPLAY VALUES",
+                  """  static String _normalizeMadhhabName(String value) {
     switch (value.trim().toLowerCase()) {
       case 'shafi':
       case 'shafii':
@@ -198,62 +161,64 @@ jobs:
   static Madhab _parseMadhab(String value) {
     return value == 'Hanafi' ? Madhab.hanafi : Madhab.shafi;
   }
-""",
-          )
 
-          replace_once(
-              'lib/services/prayer_calculation_config.dart',
-              """  String get madhhabId {
+  // ===========================================================================
+  // DISPLAY VALUES""",
+                  s,
+                  count=1,
+                  flags=re.S,
+              )
+              s = replace_required(
+                  s,
+                  """  String get madhhabId {
     return madhab == Madhab.hanafi ? 'Hanafi' : 'Shafi';
   }
 """,
-              """  String get madhhabId {
+                  """  String get madhhabId {
     return madhhabName ??
         (madhab == Madhab.hanafi ? 'Hanafi' : 'Shafi');
   }
 """,
-          )
-
-          # UI proper names are not translated/transliterated.
-          p = Path('lib/screens/settings_hub_screen_v4.dart')
-          s = p.read_text(encoding='utf-8')
-          for old, new in {
-              "'Karachi': 'كراتشي'": "'Karachi': 'Karachi'",
-              "'Muslim World League': 'رابطة العالم الإسلامي'": "'Muslim World League': 'Muslim World League'",
-              "'Egyptian': 'المصري'": "'Egyptian': 'Egyptian'",
-              "'Umm Al Qura': 'أم القرى'": "'Umm Al Qura': 'Umm Al Qura'",
-              "'Dubai': 'دبي'": "'Dubai': 'Dubai'",
-              "'Qatar': 'قطر'": "'Qatar': 'Qatar'",
-              "'Kuwait': 'الكويت'": "'Kuwait': 'Kuwait'",
-              "'Singapore': 'سنغافورة'": "'Singapore': 'Singapore'",
-              "'North America': 'أمريكا الشمالية'": "'North America': 'North America'",
-              "'Moonsighting Committee': 'لجنة رؤية الهلال'": "'Moonsighting Committee': 'Moonsighting Committee'",
-              "'Hanafi': 'حنفي'": "'Hanafi': 'Hanafi'",
-              "'Shafi': 'شافعي'": "'Shafi': 'Shafi'",
-          }.items():
-              s = s.replace(old, new)
-          if "    'Tehran': 'Tehran'," not in s:
-              marker = "    'Moonsighting Committee': 'Moonsighting Committee',\n"
-              if marker not in s:
-                  raise SystemExit('Calculation method label marker missing')
-              s = s.replace(
-                  marker,
-                  marker +
-                  "    'Tehran': 'Tehran',\n"
-                  "    'Turkey': 'Turkey',\n"
-                  "    'Other': 'Other',\n"
-                  "    'Maliki': 'Maliki',\n"
-                  "    'Hanbali': 'Hanbali',\n",
-                  1,
+                  'config madhhabId',
               )
-          p.write_text(s, encoding='utf-8')
+              return s
+          edit('lib/services/prayer_calculation_config.dart', config)
 
-          # Compact choice sheet: short lists use only the space they need; long lists scroll.
-          p = Path('lib/screens/settings_hub_screen_v4.dart')
-          s = p.read_text(encoding='utf-8')
-          start = s.index('  Future<void> _showChoiceSheet(')
-          end = s.index('  Future<void> _showTextSizeSheet(', start)
-          fixed = '''  Future<void> _showChoiceSheet(BuildContext context, String title,
+          # Settings labels: proper names remain unchanged across app languages.
+          def screen(s):
+              for old, new in {
+                  "'Karachi': 'كراتشي'": "'Karachi': 'Karachi'",
+                  "'Muslim World League': 'رابطة العالم الإسلامي'": "'Muslim World League': 'Muslim World League'",
+                  "'Egyptian': 'المصري'": "'Egyptian': 'Egyptian'",
+                  "'Umm Al Qura': 'أم القرى'": "'Umm Al Qura': 'Umm Al Qura'",
+                  "'Dubai': 'دبي'": "'Dubai': 'Dubai'",
+                  "'Qatar': 'قطر'": "'Qatar': 'Qatar'",
+                  "'Kuwait': 'الكويت'": "'Kuwait': 'Kuwait'",
+                  "'Singapore': 'سنغافورة'": "'Singapore': 'Singapore'",
+                  "'North America': 'أمريكا الشمالية'": "'North America': 'North America'",
+                  "'Moonsighting Committee': 'لجنة رؤية الهلال'": "'Moonsighting Committee': 'Moonsighting Committee'",
+                  "'Hanafi': 'حنفي'": "'Hanafi': 'Hanafi'",
+                  "'Shafi': 'شافعي'": "'Shafi': 'Shafi'",
+              }.items():
+                  s = s.replace(old, new)
+              marker = "    'Moonsighting Committee': 'Moonsighting Committee',\n"
+              if "    'Tehran': 'Tehran'," not in s:
+                  if marker not in s:
+                      raise SystemExit('missing calculation label marker')
+                  s = s.replace(
+                      marker,
+                      marker +
+                      "    'Tehran': 'Tehran',\n"
+                      "    'Turkey': 'Turkey',\n"
+                      "    'Other': 'Other',\n"
+                      "    'Maliki': 'Maliki',\n"
+                      "    'Hanbali': 'Hanbali',\n",
+                      1,
+                  )
+
+              start = s.index('  Future<void> _showChoiceSheet(')
+              end = s.index('  Future<void> _showTextSizeSheet(', start)
+              fixed = '''  Future<void> _showChoiceSheet(BuildContext context, String title,
       List<String> options, Future<void> Function(String) onSelected,
       {String? selectedValue}) async {
     final languageCode = Localizations.localeOf(context).languageCode;
@@ -339,39 +304,23 @@ jobs:
   }
 
 '''
-          s = s[:start] + fixed + s[end:]
-          p.write_text(s, encoding='utf-8')
-
-          # Remove the one-shot helper workflow created during this repair.
-          one_shot = Path('.github/workflows/finish-prayer-settings.yml')
-          if one_shot.exists():
-              one_shot.unlink()
+              s = s[:start] + fixed + s[end:]
+              return s
+          edit('lib/screens/settings_hub_screen_v4.dart', screen)
           PY
 
-      - name: Format and analyze
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.44.8'
-          channel: stable
-      - run: flutter pub get
-      - run: dart format lib/providers/settings_provider.dart lib/services/prayer_calculation_config.dart lib/screens/settings_hub_screen_v4.dart
-      - run: flutter analyze
+          # Keep this repair workflow self-contained; remove the one-shot copy if present.
+          rm -f .github/workflows/finish-prayer-settings.yml
+          git diff --check
 
-      - name: Verify and commit source
+      - name: Commit source changes
         shell: bash
         run: |
-          grep -n -A90 "Future<void> _showChoiceSheet" lib/screens/settings_hub_screen_v4.dart
-          grep -q "'Maliki'" lib/providers/settings_provider.dart
-          grep -q "'Hanbali'" lib/providers/settings_provider.dart
-          grep -q "'Tehran'" lib/providers/settings_provider.dart
-          grep -q "'Turkey'" lib/providers/settings_provider.dart
-          grep -q "'Other'" lib/providers/settings_provider.dart
-          test "$(grep -o "Future<void> _showChoiceSheet" lib/screens/settings_hub_screen_v4.dart | wc -l)" -eq 1
-          git rm -f .github/workflows/finish-prayer-settings.yml 2>/dev/null || true
-          git add lib/providers/settings_provider.dart lib/services/prayer_calculation_config.dart lib/screens/settings_hub_screen_v4.dart
-          git diff --cached --check
-          git diff --cached --quiet && { echo 'No source changes produced'; exit 1; }
+          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/providers/settings_provider.dart lib/services/prayer_calculation_config.dart lib/screens/settings_hub_screen_v4.dart .github/workflows/finish-prayer-settings.yml
+          git diff --cached --check
+          git diff --cached --quiet && { echo 'No source changes produced'; exit 1; }
           git commit -m 'fix(settings): support four madhhabs and compact selectors'
           git push
