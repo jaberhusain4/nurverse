@@ -40,6 +40,9 @@ dependencies:
   google_sign_in: ^7.2.0
   flutter_cache_manager: ^3.4.1
   esmaulhusna_muslimbg: ^1.0.9
+  flutter_local_notifications: ^19.5.0
+  timezone: ^0.10.1
+  flutter_timezone: ^5.1.0
 
 dev_dependencies:
   flutter_test:
