@@ -17,6 +17,7 @@ import '../widgets/home/islamic_info_card.dart';
 import '../widgets/home/islamic_ornamental_background.dart';
 import '../widgets/home/prayer_timeline_card.dart';
 import '../widgets/home/top_header.dart';
+import '../widgets/prayer/prayer_special_times_detail_card.dart';
 import 'prayer/jamaat_settings_screen.dart';
 
 class PrayerScreen extends StatefulWidget {
@@ -233,6 +234,8 @@ class _PrayerScreenState extends State<PrayerScreen> {
               _sectionHeader(context, primary, Icons.wb_sunny_outlined, l10n.importantTimes),
               const SizedBox(height: 9),
               _importantTimes(context, l10n, controller, primary, sunTimes),
+              const SizedBox(height: 10),
+              PrayerSpecialTimesDetailCard(languageCode: languageCode),
               const SizedBox(height: 16),
               _sectionHeader(context, primary, Icons.nightlight_round, l10n.naflAndOtherPrayers),
               const SizedBox(height: 9),
