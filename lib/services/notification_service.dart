@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:adhan/adhan.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -104,17 +103,9 @@ class NotificationService {
     _lastSyncKey = key;
 
     try {
-      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-      AndroidScheduleMode scheduleMode = AndroidScheduleMode.exactAllowWhileIdle;
-      if (androidPlugin != null) {
-        final canScheduleExact = await androidPlugin.canScheduleExactAlarms();
-        if (canScheduleExact != true) {
-          await androidPlugin.requestExactAlarmsPermission();
-        }
-        if (await androidPlugin.canScheduleExactAlarms() != true) {
-          scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
-        }
-      }
+      final scheduleMode = Platform.isAndroid
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexactAllowWhileIdle;
 
       await cancelPrayerNotifications();
       final now = DateTime.now();
@@ -160,15 +151,36 @@ class NotificationService {
                   ? 'It is time for $prayerName.'
                   : '$prayerName-এর সময় হয়েছে।');
 
-          await _plugin.zonedSchedule(
-            id++,
-            title,
-            body,
-            notificationTime,
-            _notificationDetails(sound),
-            androidScheduleMode: scheduleMode,
-            payload: 'prayer:${entry.key}',
-          );
+          try {
+            await _plugin.zonedSchedule(
+              id++,
+              title,
+              body,
+              notificationTime,
+              _notificationDetails(sound),
+              androidScheduleMode: scheduleMode,
+              payload: 'prayer:${entry.key}',
+            );
+          } catch (error) {
+            if (Platform.isAndroid && scheduleMode == AndroidScheduleMode.exactAllowWhileIdle) {
+              try {
+                await _plugin.zonedSchedule(
+                  id++,
+                  title,
+                  body,
+                  notificationTime,
+                  _notificationDetails(sound),
+                  androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+                  payload: 'prayer:${entry.key}',
+                );
+                debugPrint('Exact alarm permission unavailable; scheduled ${entry.key} inexactly.');
+              } catch (_) {
+                rethrow;
+              }
+            } else {
+              rethrow;
+            }
+          }
         }
       }
     } catch (error) {
