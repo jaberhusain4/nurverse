@@ -955,6 +955,8 @@ class SettingsHubScreenV4 extends StatelessWidget {
       'Moonsighting Committee': 'চাঁদ দেখা কমিটি',
       'Hanafi': 'হানাফি',
       'Shafi': 'শাফেয়ী',
+      'Maliki': 'মালিকি',
+      'Hanbali': 'হাম্বলি',
     };
     return labels[option] ?? option;
   }
@@ -989,63 +991,56 @@ class SettingsHubScreenV4 extends StatelessWidget {
     final isArabic = languageCode == 'ar';
     await showModalBottomSheet<void>(
       context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(18),
-              child: Text(
-                title,
-                style: Theme.of(sheetContext)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w900),
-              ),
-            ),
-            ...options.map(
-              (option) => ListTile(
-                title: Text(
-                  options.length == 3 &&
-                          options.contains('bn') &&
-                          options.contains('en') &&
-                          options.contains('ar')
-                      ? (isEnglish
-                          ? ({
-                                'bn': 'Bangla',
-                                'en': 'English',
-                                'ar': 'Arabic'
-                              }[option] ??
-                              option)
-                          : (isArabic
-                              ? ({
-                                    'bn': 'البنغالية',
-                                    'en': 'الإنجليزية',
-                                    'ar': 'العربية'
-                                  }[option] ??
-                                  option)
-                              : ({
-                                    'bn': 'বাংলা',
-                                    'en': 'ইংরেজি',
-                                    'ar': 'আরবি'
-                                  }[option] ??
-                                  option)))
-                      : _choiceLabel(option, languageCode),
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final maxHeight = MediaQuery.sizeOf(sheetContext).height * .72;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+                  child: Text(
+                    title,
+                    style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                trailing: option == selectedValue
-                    ? const Icon(Icons.check_circle_rounded,
-                        color: AppColors.seaBlue)
-                    : null,
-                onTap: () async {
-                  await onSelected(option);
-                  if (sheetContext.mounted) Navigator.pop(sheetContext);
-                },
-              ),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final option = options[index];
+                      final label = options.length == 3 && options.contains('bn') && options.contains('en') && options.contains('ar')
+                          ? (isEnglish
+                              ? ({'bn': 'Bangla', 'en': 'English', 'ar': 'Arabic'}[option] ?? option)
+                              : (isArabic
+                                  ? ({'bn': 'البنغالية', 'en': 'الإنجليزية', 'ar': 'العربية'}[option] ?? option)
+                                  : ({'bn': 'বাংলা', 'en': 'ইংরেজি', 'ar': 'আরবি'}[option] ?? option)))
+                          : _choiceLabel(option, languageCode);
+                      return ListTile(
+                        title: Text(label),
+                        trailing: option == selectedValue
+                            ? const Icon(Icons.check_circle_rounded, color: AppColors.seaBlue)
+                            : null,
+                        onTap: () async {
+                          await onSelected(option);
+                          if (sheetContext.mounted) Navigator.pop(sheetContext);
+                        },
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

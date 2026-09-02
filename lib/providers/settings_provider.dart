@@ -80,7 +80,7 @@ class SettingsProvider extends ChangeNotifier {
     'Moonsighting Committee',
   ];
 
-  static const List<String> madhabs = ['Hanafi', 'Shafi'];
+  static const List<String> madhabs = ['Hanafi', 'Shafi', 'Maliki', 'Hanbali'];
 
   // ==========================================================================
   // DEFAULTS

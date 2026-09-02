@@ -118,8 +118,14 @@ class PrayerCalculationConfig {
       case 'shafii':
       case 'shafi’i':
       case "shafi'i":
+        return Madhab.shafi;
+
       case 'maliki':
+        return Madhab.maliki;
+
       case 'hanbali':
+        return Madhab.hanbali;
+
       case 'standard':
       case 'shafi_maliki_hanbali':
         return Madhab.shafi;
@@ -177,7 +183,16 @@ class PrayerCalculationConfig {
   }
 
   String get madhhabId {
-    return madhab == Madhab.hanafi ? 'Hanafi' : 'Shafi';
+    switch (madhab) {
+      case Madhab.hanafi:
+        return 'Hanafi';
+      case Madhab.shafi:
+        return 'Shafi';
+      case Madhab.maliki:
+        return 'Maliki';
+      case Madhab.hanbali:
+        return 'Hanbali';
+    }
   }
 
   // ==========================================================================
