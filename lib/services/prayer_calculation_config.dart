@@ -20,6 +20,9 @@ class PrayerCalculationConfig {
     madhab: Madhab.hanafi,
   );
 
+  /// Compatibility alias for older callers that use the double-h spelling.
+  Madhab get madhhab => madhab;
+
   factory PrayerCalculationConfig.fromSettings({
     required String calculationMethod,
     required String madhhab,
