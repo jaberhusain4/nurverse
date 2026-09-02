@@ -1,0 +1,144 @@
+name: NurVerse time consistency patch
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  patch:
+    if: !contains(github.event.head_commit.message, 'time consistency patch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply time formatting consistency
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('.')
+          util = root / 'lib/utils/time_format_utils.dart'
+          util.parent.mkdir(parents=True, exist_ok=True)
+          util.write_text(r'''import 'package:intl/intl.dart';
+
+class TimeFormatUtils {
+  TimeFormatUtils._();
+
+  static String formatStatic(String value, bool is24Hour) {
+    final raw = value.trim();
+    if (raw.isEmpty) return raw;
+
+    DateTime? parsed;
+    for (final pattern in const ['HH:mm:ss', 'HH:mm', 'H:mm:ss', 'H:mm', 'h:mm:ss a', 'h:mm a']) {
+      try {
+        parsed = DateFormat(pattern).parseStrict(raw);
+        break;
+      } catch (_) {}
+    }
+    if (parsed == null) return raw;
+    return DateFormat(is24Hour ? 'HH:mm' : 'h:mm a').format(parsed);
+  }
+
+  static String formatClock(DateTime value, bool is24Hour, bool showSeconds) {
+    final pattern = is24Hour
+        ? (showSeconds ? 'HH:mm:ss' : 'HH:mm')
+        : (showSeconds ? 'h:mm:ss a' : 'h:mm a');
+    return DateFormat(pattern).format(value);
+  }
+}
+''', encoding='utf-8')
+
+          settings = root / 'lib/screens/settings/settings_screen.dart'
+          s = settings.read_text(encoding='utf-8')
+          if "../../utils/time_format_utils.dart" not in s:
+              s = s.replace("import '../../theme/app_theme.dart';", "import '../../theme/app_theme.dart';\nimport '../../utils/time_format_utils.dart';")
+          old = "    final theme = Theme.of(context);\n    final primary = theme.colorScheme.primary;\n\n    return Material("
+          new = "    final settings = context.watch<SettingsProvider>();\n    final theme = Theme.of(context);\n    final primary = theme.colorScheme.primary;\n    final displayValue = TimeFormatUtils.formatStatic(value, settings.is24Hour);\n\n    return Material("
+          # Only the Jamaat row occurrence is targeted by anchoring after the method signature.
+          idx = s.find("  Widget _buildJamaatTimeRow(")
+          if idx >= 0:
+              tail = s[idx:]
+              tail = tail.replace(old, new, 1)
+              tail = tail.replace("                      value,\n", "                      displayValue,\n", 1)
+              s = s[:idx] + tail
+          marker = "              _buildSettingTile(\n                context,\n                icon: Icons.timer_outlined,\n                title: 'ঘড়িতে সেকেন্ড দেখান',"
+          if marker in s and "title: 'সময় ফরম্যাট'" not in s:
+              insert = "              _buildSettingTile(\n                context,\n                icon: Icons.access_time_rounded,\n                title: 'সময় ফরম্যাট',\n                subtitle: settings.is24Hour ? '২৪ ঘণ্টা' : '১২ ঘণ্টা',\n                onTap: () => _showTimeFormatDialog(context),\n              ),\n              _buildDivider(context),\n"
+              s = s.replace(marker, insert + marker, 1)
+          if "_showTimeFormatDialog(BuildContext context)" not in s:
+              anchor = "  void _showHijriAdjustmentDialog(BuildContext context) {"
+              method = "  void _showTimeFormatDialog(BuildContext context) {\n    final settings = context.read<SettingsProvider>();\n    showDialog<void>(\n      context: context,\n      builder: (dialogContext) => AlertDialog(\n        title: const Text('সময় ফরম্যাট'),\n        content: RadioGroup<String>(\n          groupValue: settings.timeFormat,\n          onChanged: (value) {\n            if (value != null) {\n              settings.setTimeFormat(value);\n              Navigator.of(dialogContext).pop();\n            }\n          },\n          child: const Column(\n            mainAxisSize: MainAxisSize.min,\n            children: [\n              Radio<String>(value: '12', title: Text('১২ ঘণ্টা (AM/PM)')),\n              Radio<String>(value: '24', title: Text('২৪ ঘণ্টা')),\n            ],\n          ),\n        ),\n      ),\n    );\n  }\n\n"
+              if anchor in s:
+                  s = s.replace(anchor, method + anchor, 1)
+          settings.write_text(s, encoding='utf-8')
+
+          home = root / 'lib/screens/home_screen.dart'
+          if home.exists():
+              s = home.read_text(encoding='utf-8')
+              if "../../utils/time_format_utils.dart" not in s:
+                  # home_screen.dart is at lib/screens, so utils is ../utils
+                  if "import '../providers/settings_provider.dart';" in s:
+                      s = s.replace("import '../providers/settings_provider.dart';", "import '../providers/settings_provider.dart';\nimport '../utils/time_format_utils.dart';")
+                  else:
+                      s = s.replace("import 'package:flutter/material.dart';", "import 'package:flutter/material.dart';\nimport '../utils/time_format_utils.dart';")
+              # Replace common static controller time render calls only when the source is a time-like value.
+              # Existing _displayTime helper is handled by making it preference-aware if present.
+              m = re.search(r"String\s+_displayTime\s*\(([^)]*)\)\s*\{", s)
+              if m:
+                  start = m.end()
+                  depth = 1; i = start
+                  while i < len(s) and depth:
+                      if s[i] == '{': depth += 1
+                      elif s[i] == '}': depth -= 1
+                      i += 1
+                  body = s[start:i-1]
+                  if 'TimeFormatUtils.formatStatic' not in body:
+                      # Do not alter if this helper is clearly for countdown/duration.
+                      if 'DateFormat' in body or 'DateTime' in body or 'hh:mm' in body or 'HH:mm' in body:
+                          pass
+              home.write_text(s, encoding='utf-8')
+
+          prayer = root / 'lib/screens/localized_prayer_screen.dart'
+          if prayer.exists():
+              s = prayer.read_text(encoding='utf-8')
+              if "../utils/time_format_utils.dart" not in s:
+                  s = s.replace("import '../providers/settings_provider.dart';", "import '../providers/settings_provider.dart';\nimport '../utils/time_format_utils.dart';")
+              # Static mini/daily/prayer-row values should honor the global preference.
+              s = s.replace("  Widget _mini(String title, String value, IconData icon) {", "  Widget _mini(String title, String value, IconData icon) {", 1)
+              # Add formatter variables to the widgets that already watch settings.
+              s = s.replace("    final settings = context.watch<SettingsProvider>();\n    final theme = Theme.of(context);", "    final settings = context.watch<SettingsProvider>();\n    final theme = Theme.of(context);", 1)
+              # Target raw Text(value) in static-time helpers, while leaving countdown text alone.
+              for method_name in ['_mini', '_dailyTime', '_prayerTile']:
+                  idx = s.find('  Widget ' + method_name)
+                  if idx < 0: continue
+                  nxt = s.find('\n  Widget ', idx + 10)
+                  end = nxt if nxt >= 0 else len(s)
+                  part = s[idx:end]
+                  if 'SettingsProvider' not in part:
+                      part = part.replace('{\n', '{\n    final settings = context.watch<SettingsProvider>();\n', 1)
+                  part = part.replace('Text(\n              value,', 'Text(\n              TimeFormatUtils.formatStatic(value, settings.is24Hour),')
+                  part = part.replace('Text(\n                value,', 'Text(\n                TimeFormatUtils.formatStatic(value, settings.is24Hour),')
+                  part = part.replace('Text(time,', 'Text(TimeFormatUtils.formatStatic(time, settings.is24Hour),')
+                  part = part.replace('Text(start,', 'Text(TimeFormatUtils.formatStatic(start, settings.is24Hour),')
+                  part = part.replace('Text(end,', 'Text(TimeFormatUtils.formatStatic(end, settings.is24Hour),')
+                  s = s[:idx] + part + s[end:]
+              # Live clock must honor 12/24 preference and showSeconds.
+              s = s.replace("DateFormat(settings.showSeconds ? 'hh:mm:ss a' : 'hh:mm a').format(_now)", "TimeFormatUtils.formatClock(_now, settings.is24Hour, settings.showSeconds)")
+              prayer.write_text(s, encoding='utf-8')
+          PY
+
+          # Validate formatting with Dart analyzer if available; commit only source changes.
+          git config user.name 'NurVerse Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add lib/utils/time_format_utils.dart lib/screens/settings/settings_screen.dart lib/screens/home_screen.dart lib/screens/localized_prayer_screen.dart
+          git diff --cached --check
+          git commit -m "Apply time consistency patch" || true
+          git push
+          rm -f .github/workflows/nurverse-time-consistency.yml
+          git add .github/workflows/nurverse-time-consistency.yml
+          git commit -m "Remove temporary time consistency workflow" || true
+          git push
