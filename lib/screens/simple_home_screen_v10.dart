@@ -87,9 +87,14 @@ class _SimpleHomeScreenV10State extends State<SimpleHomeScreenV10>
     return _tr('শুভ রাত্রি', 'Good Night', languageCode);
   }
 
-  String _clock() {
+  String _clock(bool is24Hour) {
+    final minute = _now.minute.toString().padLeft(2, '0');
+    if (is24Hour) {
+      return '${_now.hour.toString().padLeft(2, '0')}:$minute';
+    }
     final hour = _now.hour % 12 == 0 ? 12 : _now.hour % 12;
-    return '${hour.toString().padLeft(2, '0')}:${_now.minute.toString().padLeft(2, '0')}:${_now.second.toString().padLeft(2, '0')}';
+    final period = _now.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
   }
 
   String _hijri(String languageCode) {
@@ -186,7 +191,7 @@ class _SimpleHomeScreenV10State extends State<SimpleHomeScreenV10>
                 builder: (_, __) => _V10Hero(
                   now: _now,
                   motion: _motion.value,
-                  clock: _clock(),
+                  clock: _clock(settings.is24Hour),
                   nextPrayer: controller.nextPrayerName,
                   nextPrayerTime: controller.nextPrayerTime,
                   remaining: controller.timeRemainingForNextPrayer,

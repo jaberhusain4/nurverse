@@ -54,27 +54,24 @@ class PrayerSpecialTimesDetailCard extends StatelessWidget {
     return DateTime(now.year, now.month, now.day, hour, minute, second);
   }
 
-  String _time(DateTime value, bool showSeconds) {
-    final hour = value.hour == 0 ? 12 : value.hour > 12 ? value.hour - 12 : value.hour;
+  String _time(DateTime value, bool is24Hour) {
     final minute = value.minute.toString().padLeft(2, '0');
-    final second = value.second.toString().padLeft(2, '0');
-    final base = '$hour:$minute';
-    return showSeconds
-        ? '$base:$second ${value.hour >= 12 ? 'PM' : 'AM'}'
-        : '$base ${value.hour >= 12 ? 'PM' : 'AM'}';
+    if (is24Hour) {
+      return '${value.hour.toString().padLeft(2, '0')}:$minute';
+    }
+    final hour = value.hour == 0 ? 12 : value.hour > 12 ? value.hour - 12 : value.hour;
+    final period = value.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
   }
 
   bool _active(DateTime start, DateTime end, DateTime now) =>
       !now.isBefore(start) && now.isBefore(end);
 
-  String _remaining(DateTime end, DateTime now, bool showSeconds) {
+  String _remaining(DateTime end, DateTime now) {
     final seconds = end.difference(now).inSeconds.clamp(0, 86400);
     final h = seconds ~/ 3600;
     final m = (seconds % 3600) ~/ 60;
     final s = seconds % 60;
-    if (!showSeconds) {
-      return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
-    }
     return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
@@ -87,7 +84,7 @@ class PrayerSpecialTimesDetailCard extends StatelessWidget {
     final text = theme.colorScheme.onSurface;
     final secondary = theme.textTheme.bodySmall?.color ?? text.withValues(alpha: .68);
     final now = DateTime.now();
-    final showSeconds = context.watch<SettingsProvider>().showSeconds;
+    final is24Hour = context.watch<SettingsProvider>().is24Hour;
     final sunrise = _parse(c.sunriseTime);
     final noon = _parse(c.solarNoonTime);
     final sunset = _parse(c.sunsetTime);
@@ -141,9 +138,9 @@ class PrayerSpecialTimesDetailCard extends StatelessWidget {
             style: TextStyle(fontSize: 11.5, color: secondary, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 12),
-          _group(_label('নিষিদ্ধ সময়', 'Prohibited Times', 'أوقات النهي'), prohibited, now, warning, text, secondary, showSeconds),
+          _group(_label('নিষিদ্ধ সময়', 'Prohibited Times', 'أوقات النهي'), prohibited, now, warning, text, secondary, is24Hour),
           const SizedBox(height: 12),
-          _group(_label('মাকরূহ সময়', 'Makruh Times', 'أوقات الكراهة'), makruh, now, primary, text, secondary, showSeconds),
+          _group(_label('মাকরূহ সময়', 'Makruh Times', 'أوقات الكراهة'), makruh, now, primary, text, secondary, is24Hour),
         ],
       ),
     );
@@ -156,7 +153,7 @@ class PrayerSpecialTimesDetailCard extends StatelessWidget {
     Color accent,
     Color text,
     Color secondary,
-    bool showSeconds,
+    bool is24Hour,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,13 +180,13 @@ class PrayerSpecialTimesDetailCard extends StatelessWidget {
                     children: [
                       Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 12.5, fontWeight: FontWeight.w700)),
                       const SizedBox(height: 2),
-                      Text('${_time(item.start, showSeconds)} – ${_time(item.end, showSeconds)}', style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
+                      Text('${_time(item.start, is24Hour)} – ${_time(item.end, is24Hour)}', style: TextStyle(color: secondary, fontSize: 11, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),
                 if (active) ...[
                   const SizedBox(width: 8),
-                  Text(_remaining(item.end, now, showSeconds), style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.w800)),
+                  Text(_remaining(item.end, now), style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.w800)),
                 ],
               ],
             ),
