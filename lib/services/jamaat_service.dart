@@ -20,8 +20,8 @@ class JamaatService {
     'Isha': 'jamaat_isha',
   };
 
-  // Delay after the calculated Dhaka prayer start used as the reference
-  // Jamaat. These are offsets, not hard-coded clock times.
+  // Reference delay after each calculated Dhaka prayer start. These are
+  // offsets, not hard-coded clock times.
   static const Map<String, Duration> _dhakaJamaatOffsets = {
     'Fajr': Duration(minutes: 20),
     'Dhuhr': Duration(minutes: 20),
@@ -37,7 +37,11 @@ class JamaatService {
   static bool _automaticMode = false;
 
   static const List<String> prayers = <String>[
-    'Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha',
+    'Fajr',
+    'Dhuhr',
+    'Asr',
+    'Maghrib',
+    'Isha',
   ];
 
   static bool get isAutomatic => _automaticMode;
@@ -94,14 +98,21 @@ class JamaatService {
   /// Backward-compatible entry point used by existing callers. The reference
   /// location remains Dhaka rather than the user's current location.
   static void configureDefaults(Map<String, DateTime> prayerTimes) {
-    final reference = prayerTimes['Fajr'] ?? prayerTimes['Dhuhr'] ?? DateTime.now();
-    configureDhakaDefaults(date: reference, config: PrayerCalculationConfig.defaults);
+    final reference =
+        prayerTimes['Fajr'] ?? prayerTimes['Dhuhr'] ?? DateTime.now();
+    configureDhakaDefaults(
+      date: reference,
+      config: PrayerCalculationConfig.defaults,
+    );
   }
 
-  static void configureDefaultsFromPrayerList(List<Map<String, dynamic>> prayerList) {
+  static void configureDefaultsFromPrayerList(
+    List<Map<String, dynamic>> prayerList,
+  ) {
     DateTime? reference;
     for (final prayer in prayerList) {
-      final dynamic value = prayer['time'] ?? prayer['start'] ?? prayer['prayerTime'];
+      final dynamic value =
+          prayer['time'] ?? prayer['start'] ?? prayer['prayerTime'];
       if (value is DateTime) {
         reference = value;
         break;
@@ -115,12 +126,15 @@ class JamaatService {
 
   static String get(String prayer) => _jamaat[prayer] ?? '--:--';
 
-  static String defaultTime(String prayer) => _dhakaDefaults[prayer] ?? '--:--';
+  static String defaultTime(String prayer) =>
+      _dhakaDefaults[prayer] ?? '--:--';
 
   static bool isDhakaDefault(String prayer) =>
-      !_customPrayers.contains(prayer) && _jamaat[prayer] == _dhakaDefaults[prayer];
+      !_customPrayers.contains(prayer) &&
+      _jamaat[prayer] == _dhakaDefaults[prayer];
 
   static bool isCustom(String prayer) => _customPrayers.contains(prayer);
+
   static Map<String, String> get all => Map.unmodifiable(_jamaat);
 
   /// Compatibility bridge for SettingsProvider. Dynamic Dhaka defaults are
@@ -194,9 +208,13 @@ class JamaatService {
     DateTime date,
     PrayerCalculationConfig config,
   ) {
-    const coordinates = Coordinates(23.8103, 90.4125);
+    final coordinates = Coordinates(23.8103, 90.4125);
     final params = config.method.getParameters()..madhab = config.madhab;
-    final times = PrayerTimes(coordinates, DateComponents.from(date), params);
+    final times = PrayerTimes(
+      coordinates,
+      DateComponents.from(date),
+      params,
+    );
 
     final starts = <String, DateTime>{
       'Fajr': times.fajr,
@@ -217,7 +235,8 @@ class JamaatService {
 
   static void _applyDhakaDefaultsToUncustomized() {
     for (final prayer in prayers) {
-      if (!_customPrayers.contains(prayer) && _dhakaDefaults.containsKey(prayer)) {
+      if (!_customPrayers.contains(prayer) &&
+          _dhakaDefaults.containsKey(prayer)) {
         _jamaat[prayer] = _dhakaDefaults[prayer]!;
       }
     }
@@ -234,18 +253,38 @@ class JamaatService {
   static String _normalizeTime(String value) {
     final raw = value.trim();
     if (raw.isEmpty || raw == '--:--') return '--:--';
-    final amPm = RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)$', caseSensitive: false).firstMatch(raw);
+
+    final amPm = RegExp(
+      r'^(\d{1,2}):(\d{2})\s*(AM|PM)$',
+      caseSensitive: false,
+    ).firstMatch(raw);
     if (amPm != null) {
       final hour = int.tryParse(amPm.group(1)!);
       final minute = int.tryParse(amPm.group(2)!);
-      if (hour == null || minute == null || hour < 1 || hour > 12 || minute < 0 || minute > 59) return '--:--';
-      return '$hour:${minute.toString().padLeft(2, '0')} ${amPm.group(3)!.toUpperCase()}';
+      if (hour == null ||
+          minute == null ||
+          hour < 1 ||
+          hour > 12 ||
+          minute < 0 ||
+          minute > 59) {
+        return '--:--';
+      }
+      return '$hour:${minute.toString().padLeft(2, '0')} '
+          '${amPm.group(3)!.toUpperCase()}';
     }
+
     final twentyFour = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(raw);
     if (twentyFour != null) {
       final hour = int.tryParse(twentyFour.group(1)!);
       final minute = int.tryParse(twentyFour.group(2)!);
-      if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) return '--:--';
+      if (hour == null ||
+          minute == null ||
+          hour < 0 ||
+          hour > 23 ||
+          minute < 0 ||
+          minute > 59) {
+        return '--:--';
+      }
       final period = hour >= 12 ? 'PM' : 'AM';
       final displayHour = hour % 12 == 0 ? 12 : hour % 12;
       return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
