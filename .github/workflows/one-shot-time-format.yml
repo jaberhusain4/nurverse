@@ -20,7 +20,6 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
 
           def patch(path, fn):
               p = Path(path)
@@ -32,8 +31,6 @@ jobs:
                   p.write_text(updated, encoding='utf-8')
                   print(f'Updated: {path}')
 
-          # Controller static time strings carry AM/PM. The UI converts them
-          # to 24-hour form when the user selects that setting.
           patch('lib/controllers/prayer_controller.dart', lambda s: s.replace(
               "String _formatTime(DateTime value) => DateFormat('hh:mm').format(value);",
               "String _formatTime(DateTime value) => DateFormat('hh:mm a').format(value);",
@@ -69,11 +66,7 @@ jobs:
     }
     return '$hour:$minute $period';
   }"""
-              if old in s:
-                  s = s.replace(old, new, 1)
-              else:
-                  print('Prayer V2 formatter block already changed or not found')
-              return s
+              return s.replace(old, new, 1) if old in s else s
           patch('lib/screens/prayer_screen_v2.dart', prayer_v2)
 
           def home(s):
@@ -95,19 +88,9 @@ jobs:
 """
               if '_staticTime(String value, bool is24Hour)' not in s and marker in s:
                   s = s.replace(marker, helper + marker, 1)
-              s = s.replace(
-                  "nextPrayerTime: controller.nextPrayerTime,",
-                  "nextPrayerTime: _staticTime(controller.nextPrayerTime, settings.is24Hour),",
-                  1,
-              )
-              s = s.replace(
-                  "sunrise: controller.sunriseTime,\n                  sunset: controller.sunsetTime,",
-                  "sunrise: _staticTime(controller.sunriseTime, settings.is24Hour),\n                  sunset: _staticTime(controller.sunsetTime, settings.is24Hour),",
-                  1,
-              )
-              s = s.replace(
-                  "_V10PrayerTimeline(prayers: prayers, languageCode: languageCode),",
-                  """_V10PrayerTimeline(
+              s = s.replace("nextPrayerTime: controller.nextPrayerTime,", "nextPrayerTime: _staticTime(controller.nextPrayerTime, settings.is24Hour),", 1)
+              s = s.replace("sunrise: controller.sunriseTime,\n                  sunset: controller.sunsetTime,", "sunrise: _staticTime(controller.sunriseTime, settings.is24Hour),\n                  sunset: _staticTime(controller.sunsetTime, settings.is24Hour),", 1)
+              s = s.replace("_V10PrayerTimeline(prayers: prayers, languageCode: languageCode),", """_V10PrayerTimeline(
                 prayers: prayers
                     .map((prayer) => {
                       ...prayer,
@@ -116,9 +99,7 @@ jobs:
                     })
                     .toList(),
                 languageCode: languageCode,
-              ),""",
-                  1,
-              )
+              ),""", 1)
               return s
           patch('lib/screens/simple_home_screen_v10.dart', home)
           PY
