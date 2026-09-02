@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/apply-time-format-fix.yml'
+      - 'README.md'
 
 permissions:
   contents: write
@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Patch time formatting
+      - name: Patch source files
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -26,26 +26,22 @@ jobs:
               p = Path(path)
               s = p.read_text()
               if old not in s:
-                  raise SystemExit(f'Expected text not found in {path}: {old[:100]!r}')
+                  return False
               p.write_text(s.replace(old, new, 1))
+              return True
 
-          replace(
-              'lib/controllers/prayer_controller.dart',
+          changed = False
+          changed |= replace('lib/controllers/prayer_controller.dart',
               "String _formatTime(DateTime value) => DateFormat('hh:mm').format(value);",
-              "String _formatTime(DateTime value) => DateFormat('h:mm a').format(value);",
-          )
+              "String _formatTime(DateTime value) => DateFormat('h:mm a').format(value);")
 
-          replace(
-              'lib/screens/prayer_screen_v2.dart',
+          changed |= replace('lib/screens/prayer_screen_v2.dart',
               """                      settings.showSeconds
                           ? c.timeRemainingForNextPrayer
                           : _withoutSeconds(c.timeRemainingForNextPrayer),""",
-              """                      c.timeRemainingForNextPrayer,""",
-          )
+              """                      c.timeRemainingForNextPrayer,""")
 
-          replace(
-              'lib/screens/prayer_screen_v2.dart',
-              """  String _displayTime(SettingsProvider settings, String value) {
+          old = """  String _displayTime(SettingsProvider settings, String value) {
     if (settings.showSeconds) return value;
     final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(value.trim());
     return match?.group(1) ?? value;
@@ -55,110 +51,75 @@ jobs:
     final match = RegExp(r'^(\\d{2}):(\\d{2})').firstMatch(value.trim());
     return match == null ? value : '${match.group(1)}:${match.group(2)}';
   }
-""",
-              """  String _displayTime(SettingsProvider settings, String value) {
+"""
+          new = """  String _displayTime(SettingsProvider settings, String value) {
     final trimmed = value.trim();
     if (trimmed.isEmpty || trimmed == '--:--') return trimmed;
-
     final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AaPp][Mm])?$').firstMatch(trimmed);
     if (match == null) return trimmed;
-
     final hour = int.tryParse(match.group(1)!) ?? 0;
     final minute = match.group(2)!;
     final period = match.group(3)?.toUpperCase();
-
     if (settings.is24Hour) {
-      final hour24 = period == null
-          ? hour
-          : (period == 'AM' ? (hour == 12 ? 0 : hour) : (hour == 12 ? 12 : hour + 12));
+      final hour24 = period == null ? hour : (period == 'AM' ? (hour == 12 ? 0 : hour) : (hour == 12 ? 12 : hour + 12));
       return '${hour24.toString().padLeft(2, '0')}:$minute';
     }
-
-    if (period != null) {
-      return '$hour:$minute $period';
-    }
+    if (period != null) return '$hour:$minute $period';
     final hour12 = hour % 12 == 0 ? 12 : hour % 12;
-    final inferredPeriod = hour >= 12 ? 'PM' : 'AM';
-    return '$hour12:$minute $inferredPeriod';
+    return '$hour12:$minute ${hour >= 12 ? 'PM' : 'AM'}';
   }
-""",
-          )
+"""
+          changed |= replace('lib/screens/prayer_screen_v2.dart', old, new)
 
-          replace(
-              'lib/screens/simple_home_screen_v10.dart',
-              "import 'package:provider/provider.dart';",
-              "import 'package:provider/provider.dart';\nimport 'package:intl/intl.dart';",
-          )
+          p = Path('lib/screens/simple_home_screen_v10.dart')
+          s = p.read_text()
+          if "import 'package:intl/intl.dart';" not in s:
+              s = s.replace("import 'package:provider/provider.dart';", "import 'package:provider/provider.dart';\nimport 'package:intl/intl.dart';", 1)
+              p.write_text(s)
+              changed = True
 
-          replace(
-              'lib/screens/simple_home_screen_v10.dart',
-              """  String _hijri(String languageCode) {""",
-              """  String _formatStaticTime(String value, bool is24Hour) {
+          def r(old, new):
+              nonlocal_changed[0] |= replace('lib/screens/simple_home_screen_v10.dart', old, new)
+
+          nonlocal_changed = [False]
+          r("""  String _hijri(String languageCode) {""",
+            """  String _formatStaticTime(String value, bool is24Hour) {
     final trimmed = value.trim();
     if (trimmed.isEmpty || trimmed == '--:--') return trimmed;
     final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AaPp][Mm])?$').firstMatch(trimmed);
     if (match == null) return trimmed;
-
     final hour = int.tryParse(match.group(1)!) ?? 0;
     final minute = match.group(2)!;
     final period = match.group(3)?.toUpperCase();
-    final hour24 = period == null
-        ? hour
-        : (period == 'AM' ? (hour == 12 ? 0 : hour) : (hour == 12 ? 12 : hour + 12));
-
+    final hour24 = period == null ? hour : (period == 'AM' ? (hour == 12 ? 0 : hour) : (hour == 12 ? 12 : hour + 12));
     if (is24Hour) return '${hour24.toString().padLeft(2, '0')}:$minute';
     final hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12;
-    final suffix = hour24 >= 12 ? 'PM' : 'AM';
-    return '$hour12:$minute $suffix';
+    return '$hour12:$minute ${hour24 >= 12 ? 'PM' : 'AM'}';
   }
 
-  String _hijri(String languageCode) {""",
-          )
-
-          replace(
-              'lib/screens/simple_home_screen_v10.dart',
-              """                  nextPrayerTime: controller.nextPrayerTime,
+  String _hijri(String languageCode) {""")
+          r("""                  nextPrayerTime: controller.nextPrayerTime,
                   remaining: controller.timeRemainingForNextPrayer,""",
-              """                  nextPrayerTime: _formatStaticTime(controller.nextPrayerTime, settings.is24Hour),
-                  remaining: controller.timeRemainingForNextPrayer,""",
-          )
-
-          replace(
-              'lib/screens/simple_home_screen_v10.dart',
-              """                  sunrise: controller.sunriseTime,
+            """                  nextPrayerTime: _formatStaticTime(controller.nextPrayerTime, settings.is24Hour),
+                  remaining: controller.timeRemainingForNextPrayer,""")
+          r("""                  sunrise: controller.sunriseTime,
                   sunset: controller.sunsetTime,""",
-              """                  sunrise: _formatStaticTime(controller.sunriseTime, settings.is24Hour),
-                  sunset: _formatStaticTime(controller.sunsetTime, settings.is24Hour),""",
-          )
-
-          replace(
-              'lib/screens/simple_home_screen_v10.dart',
-              """_V10PrayerTimeline(prayers: prayers, languageCode: languageCode),""",
-              """_V10PrayerTimeline(prayers: prayers, languageCode: languageCode, is24Hour: settings.is24Hour),""",
-          )
-
-          replace(
-              'lib/screens/simple_home_screen_v10.dart',
-              """  const _V10PrayerTimeline({required this.prayers, required this.languageCode});
+            """                  sunrise: _formatStaticTime(controller.sunriseTime, settings.is24Hour),
+                  sunset: _formatStaticTime(controller.sunsetTime, settings.is24Hour),""")
+          r("""_V10PrayerTimeline(prayers: prayers, languageCode: languageCode),""",
+            """_V10PrayerTimeline(prayers: prayers, languageCode: languageCode, is24Hour: settings.is24Hour),""")
+          r("""  const _V10PrayerTimeline({required this.prayers, required this.languageCode});
   final List<Map<String, dynamic>> prayers;
   final String languageCode;""",
-              """  const _V10PrayerTimeline({required this.prayers, required this.languageCode, required this.is24Hour});
+            """  const _V10PrayerTimeline({required this.prayers, required this.languageCode, required this.is24Hour});
   final List<Map<String, dynamic>> prayers;
   final String languageCode;
-  final bool is24Hour;""",
-          )
-
-          replace(
-              'lib/screens/simple_home_screen_v10.dart',
-              """        final time = prayer['start']?.toString() ?? '—';""",
-              """        final rawTime = prayer['start']?.toString() ?? '—';
-        final time = _formatStaticPrayerTime(rawTime, is24Hour);""",
-          )
-
-          replace(
-              'lib/screens/simple_home_screen_v10.dart',
-              """class _V10PrayerTimeline extends StatelessWidget {""",
-              """String _formatStaticPrayerTime(String value, bool is24Hour) {
+  final bool is24Hour;""")
+          r("""        final time = prayer['start']?.toString() ?? '—';""",
+            """        final rawTime = prayer['start']?.toString() ?? '—';
+        final time = _formatStaticPrayerTime(rawTime, is24Hour);""")
+          r("""class _V10PrayerTimeline extends StatelessWidget {""",
+            """String _formatStaticPrayerTime(String value, bool is24Hour) {
   final trimmed = value.trim();
   if (trimmed.isEmpty || trimmed == '—' || trimmed == '--:--') return trimmed;
   final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AaPp])?[Mm]?$').firstMatch(trimmed);
@@ -166,28 +127,27 @@ jobs:
   final hour = int.tryParse(match.group(1)!) ?? 0;
   final minute = match.group(2)!;
   final period = match.group(3)?.toUpperCase();
-  final hour24 = period == null
-      ? hour
-      : (period == 'AM' ? (hour == 12 ? 0 : hour) : (hour == 12 ? 12 : hour + 12));
+  final hour24 = period == null ? hour : (period == 'AM' ? (hour == 12 ? 0 : hour) : (hour == 12 ? 12 : hour + 12));
   if (is24Hour) return '${hour24.toString().padLeft(2, '0')}:$minute';
   final hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12;
   return '$hour12:$minute ${hour24 >= 12 ? 'PM' : 'AM'}';
 }
 
-class _V10PrayerTimeline extends StatelessWidget {""",
-          )
+class _V10PrayerTimeline extends StatelessWidget {""")
+          changed |= nonlocal_changed[0]
 
-          p = Path('.github/workflows/apply-time-format-fix.yml')
-          p.unlink()
+          if changed:
+              Path('/tmp/changed').write_text('1')
           PY
 
-      - name: Commit source changes
+      - name: Commit source patch
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add lib/controllers/prayer_controller.dart lib/screens/prayer_screen_v2.dart lib/screens/simple_home_screen_v10.dart .github/workflows/apply-time-format-fix.yml
-          git commit -m "Apply 12/24-hour static time formatting" || exit 0
+          if [ ! -f /tmp/changed ]; then
+            echo 'No source changes were needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/controllers/prayer_controller.dart lib/screens/prayer_screen_v2.dart lib/screens/simple_home_screen_v10.dart
+          git commit -m 'Apply 12/24-hour static time formatting'
           git push origin main
-
-# Trigger the one-shot patch workflow after repository sync.
-# Run marker: 2026-09-02T18:45
