@@ -381,6 +381,36 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
     return match == null ? value : '${match.group(1)}:${match.group(2)}';
   }
 
+
+  bool _isProhibited(PrayerController c) {
+    final start = c.prohibitedStart;
+    final end = c.prohibitedEnd;
+
+    return start != null &&
+        end != null &&
+        !_now.isBefore(start) &&
+        _now.isBefore(end);
+  }
+
+  String _prohibitedCountdown(PrayerController c) {
+    final target = _isProhibited(c) ? c.prohibitedEnd : c.prohibitedStart;
+
+    if (target == null) return '--:--:--';
+
+    final difference = target.difference(_now);
+
+    if (difference.isNegative) return '00:00:00';
+
+    final totalSeconds = difference.inSeconds;
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+
+    return '${hours.toString().padLeft(2, '0')}:'
+        '${minutes.toString().padLeft(2, '0')}:'
+        '${seconds.toString().padLeft(2, '0')}';
+  }
+
   Widget _importantTimes(BuildContext context, PrayerController c) {
     final primary = Theme.of(context).colorScheme.primary;
     final settings = context.watch<SettingsProvider>();
@@ -421,11 +451,11 @@ class _PrayerScreenV2State extends State<PrayerScreenV2> {
                 const SizedBox(width: 7),
                 Expanded(
                   child: Text(
-                    _label(context, 'সময় ও কাউন্টডাউন প্রতি সেকেন্ডে আপডেট হচ্ছে', 'Times and countdowns update every second'),
+                    _label(context, 'পরবর্তী নিষিদ্ধ সময় বাকি', 'Time remaining until next prohibited time'),
                     style: TextStyle(color: context.secondaryTextColor, fontSize: 11.5, fontWeight: FontWeight.w600),
                   ),
                 ),
-                Text(DateFormat(settings.showSeconds ? 'hh:mm:ss a' : 'hh:mm a').format(_now), style: TextStyle(color: primary, fontSize: 11.5, fontWeight: FontWeight.w800)),
+                Text(_prohibitedCountdown(c), style: TextStyle(color: primary, fontSize: 11.5, fontWeight: FontWeight.w800)),
               ],
             ),
           ),
