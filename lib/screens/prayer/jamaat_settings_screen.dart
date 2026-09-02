@@ -7,16 +7,8 @@ import '../../theme/app_theme.dart';
 
 class JamaatSettingsScreen extends StatelessWidget {
   const JamaatSettingsScreen({super.key});
-
   static const List<String> _prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-
-  static const Map<String, String> _bnNames = {
-    'Fajr': 'ফজর',
-    'Dhuhr': 'যোহর / জুমু\'আ',
-    'Asr': 'আসর',
-    'Maghrib': 'মাগরিব',
-    'Isha': 'ইশা',
-  };
+  static const Map<String, String> _bnNames = {'Fajr': 'ফজর', 'Dhuhr': 'যোহর / জুমু\'আ', 'Asr': 'আসর', 'Maghrib': 'মাগরিব', 'Isha': 'ইশা'};
 
   TimeOfDay? _parseTime(String value) {
     final text = value.trim();
@@ -55,16 +47,12 @@ class JamaatSettingsScreen extends StatelessWidget {
 
   void _openPicker(BuildContext context, String prayer) {
     final settings = context.read<SettingsProvider>();
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => _JamaatTimePickerScreen(
-          prayer: prayer,
-          prayerName: _bnNames[prayer] ?? prayer,
-          initialTime: _parseTime(JamaatService.get(prayer)),
-          is24Hour: settings.is24Hour,
-        ),
-      ),
-    );
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => _JamaatTimePickerScreen(
+      prayer: prayer,
+      prayerName: _bnNames[prayer] ?? prayer,
+      initialTime: _parseTime(JamaatService.get(prayer)),
+      is24Hour: settings.is24Hour,
+    )));
   }
 
   @override
@@ -74,7 +62,6 @@ class JamaatSettingsScreen extends StatelessWidget {
     final primary = theme.colorScheme.primary;
     final secondary = context.secondaryTextColor;
     final isEnglish = settings.isEnglish;
-
     return Scaffold(
       appBar: AppBar(title: Text(isEnglish ? 'Jamaat Times' : 'জামাআত সেটিংস')),
       body: ListView(
@@ -83,40 +70,29 @@ class JamaatSettingsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: primary.withValues(alpha: 0.07), borderRadius: BorderRadius.circular(20)),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.groups_rounded, color: primary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    isEnglish
-                        ? 'Set the local mosque Jamaat time for each prayer. These times are saved on this device.'
-                        : 'আপনার এলাকার মসজিদের প্রতিটি ওয়াক্তের জামাআত সময় এখানে সেট করুন। সময়গুলো এই ডিভাইসেই সংরক্ষিত থাকবে।',
-                    style: TextStyle(color: secondary, fontSize: 12.5, height: 1.5),
-                  ),
-                ),
-              ],
-            ),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Icon(Icons.groups_rounded, color: primary),
+              const SizedBox(width: 12),
+              Expanded(child: Text(
+                isEnglish ? 'Set the local mosque Jamaat time for each prayer. These times are saved on this device.' : 'আপনার এলাকার মসজিদের প্রতিটি ওয়াক্তের জামাআত সময় এখানে সেট করুন। সময়গুলো এই ডিভাইসেই সংরক্ষিত থাকবে।',
+                style: TextStyle(color: secondary, fontSize: 12.5, height: 1.5),
+              )),
+            ]),
           ),
           const SizedBox(height: 18),
-          ..._prayers.map(
-            (prayer) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _JamaatTimeCard(
-                name: _bnNames[prayer] ?? prayer,
-                time: _displayTime(JamaatService.get(prayer), settings.is24Hour),
-                isEnglish: isEnglish,
-                isDhakaDefault: JamaatService.isDhakaDefault(prayer),
-                onTap: () => _openPicker(context, prayer),
-              ),
+          ..._prayers.map((prayer) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _JamaatTimeCard(
+              name: _bnNames[prayer] ?? prayer,
+              time: _displayTime(JamaatService.get(prayer), settings.is24Hour),
+              isEnglish: isEnglish,
+              isDhakaDefault: JamaatService.isDhakaDefault(prayer),
+              onTap: () => _openPicker(context, prayer),
             ),
-          ),
+          )),
           const SizedBox(height: 4),
           Text(
-            isEnglish
-                ? '12-hour mode uses AM/PM. 24-hour mode uses HH:mm. Jamaat times never show seconds.'
-                : '১২ ঘণ্টা ফরম্যাটে AM/PM এবং ২৪ ঘণ্টা ফরম্যাটে HH:mm দেখানো হবে। জামাআতের নির্দিষ্ট সময়ে কখনো সেকেন্ড দেখানো হবে না।',
+            isEnglish ? '12-hour mode uses AM/PM. 24-hour mode uses HH:mm. Jamaat times never show seconds.' : '১২ ঘণ্টা ফরম্যাটে AM/PM এবং ২৪ ঘণ্টা ফরম্যাটে HH:mm দেখানো হবে। জামাআতের নির্দিষ্ট সময়ে কখনো সেকেন্ড দেখানো হবে না।',
             style: TextStyle(color: secondary, fontSize: 11, height: 1.5),
           ),
         ],
@@ -131,7 +107,6 @@ class _JamaatTimeCard extends StatelessWidget {
   final bool isEnglish;
   final bool isDhakaDefault;
   final VoidCallback onTap;
-
   const _JamaatTimeCard({required this.name, required this.time, required this.isEnglish, required this.isDhakaDefault, required this.onTap});
 
   @override
@@ -148,31 +123,22 @@ class _JamaatTimeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(15, 14, 10, 14),
-          child: Row(
-            children: [
-              Container(width: 40, height: 40, decoration: BoxDecoration(color: primary.withValues(alpha: 0.09), borderRadius: BorderRadius.circular(12)), child: Icon(Icons.schedule_rounded, color: primary, size: 20)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 3),
-                    Text(
-                      isDhakaDefault
-                          ? (isEnglish ? 'Dhaka default time • Tap to change' : 'ঢাকার ডিফল্ট সময় • ট্যাপ করে পরিবর্তন করুন')
-                          : (isEnglish ? 'Local mosque time • Tap to change' : 'আপনার এলাকার মসজিদের সময় • ট্যাপ করে পরিবর্তন করুন'),
-                      style: TextStyle(color: secondary, fontSize: 10.5),
-                    ),
-                  ],
-                ),
+          child: Row(children: [
+            Container(width: 40, height: 40, decoration: BoxDecoration(color: primary.withValues(alpha: 0.09), borderRadius: BorderRadius.circular(12)), child: Icon(Icons.schedule_rounded, color: primary, size: 20)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(name, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 3),
+              Text(
+                isDhakaDefault ? (isEnglish ? 'Dhaka default time • Tap to change' : 'ঢাকার ডিফল্ট সময় • ট্যাপ করে পরিবর্তন করুন') : (isEnglish ? 'Local mosque time • Tap to change' : 'আপনার এলাকার মসজিদের সময় • ট্যাপ করে পরিবর্তন করুন'),
+                style: TextStyle(color: secondary, fontSize: 10.5),
               ),
-              const SizedBox(width: 8),
-              Text(time, style: TextStyle(color: text, fontSize: 12, fontWeight: FontWeight.w800)),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right_rounded, color: secondary),
-            ],
-          ),
+            ])),
+            const SizedBox(width: 8),
+            Text(time, style: TextStyle(color: text, fontSize: 12, fontWeight: FontWeight.w800)),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right_rounded, color: secondary),
+          ]),
         ),
       ),
     );
@@ -184,9 +150,7 @@ class _JamaatTimePickerScreen extends StatefulWidget {
   final String prayerName;
   final TimeOfDay? initialTime;
   final bool is24Hour;
-
   const _JamaatTimePickerScreen({required this.prayer, required this.prayerName, required this.initialTime, required this.is24Hour});
-
   @override
   State<_JamaatTimePickerScreen> createState() => _JamaatTimePickerScreenState();
 }
@@ -207,10 +171,10 @@ class _JamaatTimePickerScreenState extends State<_JamaatTimePickerScreen> {
 
   Future<void> _save() async {
     final settings = context.read<SettingsProvider>();
-    final hour24 = widget.is24Hour
-        ? _hour
-        : (_isPm ? (_hour == 12 ? 12 : _hour + 12) : (_hour == 12 ? 0 : _hour));
-    final value = '$_hour:${_minute.toString().padLeft(2, '0')} ${hour24 >= 12 ? 'PM' : 'AM'}';
+    final hour24 = widget.is24Hour ? _hour : (_isPm ? (_hour == 12 ? 12 : _hour + 12) : (_hour == 12 ? 0 : _hour));
+    final value = widget.is24Hour
+        ? '${hour24.toString().padLeft(2, '0')}:${_minute.toString().padLeft(2, '0')}'
+        : '$_hour:${_minute.toString().padLeft(2, '0')} ${_isPm ? 'PM' : 'AM'}';
     await settings.setJamaatTime(widget.prayer, value);
     if (!mounted) return;
     Navigator.of(context).pop();
@@ -224,21 +188,11 @@ class _JamaatTimePickerScreenState extends State<_JamaatTimePickerScreen> {
     final secondary = context.secondaryTextColor;
     final isEnglish = settings.isEnglish;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.prayerName),
-        actions: [TextButton(onPressed: _save, child: Text(isEnglish ? 'Save' : 'সংরক্ষণ'))],
-      ),
+      appBar: AppBar(title: Text(widget.prayerName), actions: [TextButton(onPressed: _save, child: Text(isEnglish ? 'Save' : 'সংরক্ষণ'))]),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: primary.withValues(alpha: 0.07), borderRadius: BorderRadius.circular(20)),
-            child: Text(
-              isEnglish ? 'Choose the Jamaat time for your local mosque.' : 'আপনার এলাকার মসজিদের জামাআতের সময় নির্বাচন করুন।',
-              style: TextStyle(color: secondary, fontSize: 12.5, height: 1.5),
-            ),
-          ),
+          Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: primary.withValues(alpha: 0.07), borderRadius: BorderRadius.circular(20)), child: Text(isEnglish ? 'Choose the Jamaat time for your local mosque.' : 'আপনার এলাকার মসজিদের জামাআতের সময় নির্বাচন করুন।', style: TextStyle(color: secondary, fontSize: 12.5, height: 1.5))),
           const SizedBox(height: 20),
           if (widget.is24Hour)
             _NumberGrid(title: isEnglish ? 'Hour' : 'ঘণ্টা', values: List<int>.generate(24, (index) => index), selected: _hour, format: (value) => value.toString().padLeft(2, '0'), onSelected: (value) => setState(() => _hour = value), primary: primary)
@@ -264,38 +218,25 @@ class _NumberGrid extends StatelessWidget {
   final String Function(int) format;
   final ValueChanged<int> onSelected;
   final Color primary;
-
   const _NumberGrid({required this.title, required this.values, required this.selected, required this.format, required this.onSelected, required this.primary});
-
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 10),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: values.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 6, mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 1.35),
-          itemBuilder: (context, index) {
-            final value = values[index];
-            final isSelected = value == selected;
-            return Material(
-              color: isSelected ? primary : context.cardColor,
-              borderRadius: BorderRadius.circular(12),
-              child: InkWell(
-                onTap: () => onSelected(value),
-                borderRadius: BorderRadius.circular(12),
-                child: Center(child: Text(format(value), style: TextStyle(color: isSelected ? Theme.of(context).colorScheme.onPrimary : text, fontSize: 13, fontWeight: FontWeight.w800))),
-              ),
-            );
-          },
-        ),
-      ],
-    );
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(title, style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 10),
+      GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: values.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 6, mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 1.35),
+        itemBuilder: (context, index) {
+          final value = values[index];
+          final isSelected = value == selected;
+          return Material(color: isSelected ? primary : context.cardColor, borderRadius: BorderRadius.circular(12), child: InkWell(onTap: () => onSelected(value), borderRadius: BorderRadius.circular(12), child: Center(child: Text(format(value), style: TextStyle(color: isSelected ? Theme.of(context).colorScheme.onPrimary : text, fontSize: 13, fontWeight: FontWeight.w800))));
+        },
+      ),
+    ]);
   }
 }
 
@@ -304,38 +245,22 @@ class _PeriodSelector extends StatelessWidget {
   final bool isEnglish;
   final Color primary;
   final ValueChanged<bool> onChanged;
-
   const _PeriodSelector({required this.isPm, required this.isEnglish, required this.primary, required this.onChanged});
-
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(isEnglish ? 'Period' : 'সময়কাল', style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(child: _periodButton(context, label: 'AM', selected: !isPm, onTap: () => onChanged(false))),
-            const SizedBox(width: 10),
-            Expanded(child: _periodButton(context, label: 'PM', selected: isPm, onTap: () => onChanged(true))),
-          ],
-        ),
-      ],
-    );
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(isEnglish ? 'Period' : 'সময়কাল', style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 10),
+      Row(children: [
+        Expanded(child: _periodButton(context, label: 'AM', selected: !isPm, onTap: () => onChanged(false))),
+        const SizedBox(width: 10),
+        Expanded(child: _periodButton(context, label: 'PM', selected: isPm, onTap: () => onChanged(true))),
+      ]),
+    ]);
   }
-
   Widget _periodButton(BuildContext context, {required String label, required bool selected, required VoidCallback onTap}) {
     final text = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-    return Material(
-      color: selected ? primary : context.cardColor,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(padding: const EdgeInsets.symmetric(vertical: 14), child: Center(child: Text(label, style: TextStyle(color: selected ? Theme.of(context).colorScheme.onPrimary : text, fontWeight: FontWeight.w800)))),
-      ),
-    );
+    return Material(color: selected ? primary : context.cardColor, borderRadius: BorderRadius.circular(14), child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(14), child: Padding(padding: const EdgeInsets.symmetric(vertical: 14), child: Center(child: Text(label, style: TextStyle(color: selected ? Theme.of(context).colorScheme.onPrimary : text, fontWeight: FontWeight.w800)))));
   }
 }
