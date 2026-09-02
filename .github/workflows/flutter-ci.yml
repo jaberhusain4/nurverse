@@ -6,12 +6,184 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   analyze-and-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply time format source patch
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p = Path(path)
+              s = p.read_text()
+              if old not in s:
+                  return False
+              p.write_text(s.replace(old, new, 1))
+              return True
+
+          changed = False
+
+          changed |= replace(
+              'lib/controllers/prayer_controller.dart',
+              "String _formatTime(DateTime value) => DateFormat('hh:mm').format(value);",
+              "String _formatTime(DateTime value) => DateFormat('h:mm a').format(value);",
+          )
+
+          changed |= replace(
+              'lib/screens/prayer_screen_v2.dart',
+              """                      settings.showSeconds
+                          ? c.timeRemainingForNextPrayer
+                          : _withoutSeconds(c.timeRemainingForNextPrayer),""",
+              """                      c.timeRemainingForNextPrayer,""",
+          )
+
+          old_display = """  String _displayTime(SettingsProvider settings, String value) {
+    if (settings.showSeconds) return value;
+    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(value.trim());
+    return match?.group(1) ?? value;
+  }
+
+  String _withoutSeconds(String value) {
+    final match = RegExp(r'^(\\d{2}):(\\d{2})').firstMatch(value.trim());
+    return match == null ? value : '${match.group(1)}:${match.group(2)}';
+  }
+"""
+          new_display = """  String _displayTime(SettingsProvider settings, String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty || trimmed == '--:--') return trimmed;
+
+    final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AaPp][Mm])?$').firstMatch(trimmed);
+    if (match == null) return trimmed;
+
+    final hour = int.tryParse(match.group(1)!) ?? 0;
+    final minute = match.group(2)!;
+    final period = match.group(3)?.toUpperCase();
+
+    if (settings.is24Hour) {
+      final hour24 = period == null
+          ? hour
+          : (period == 'AM' ? (hour == 12 ? 0 : hour) : (hour == 12 ? 12 : hour + 12));
+      return '${hour24.toString().padLeft(2, '0')}:$minute';
+    }
+
+    if (period != null) return '$hour:$minute $period';
+    final hour12 = hour % 12 == 0 ? 12 : hour % 12;
+    final inferredPeriod = hour >= 12 ? 'PM' : 'AM';
+    return '$hour12:$minute $inferredPeriod';
+  }
+"""
+          changed |= replace('lib/screens/prayer_screen_v2.dart', old_display, new_display)
+
+          p = Path('lib/screens/simple_home_screen_v10.dart')
+          s = p.read_text()
+          if "import 'package:intl/intl.dart';" not in s:
+              s = s.replace("import 'package:provider/provider.dart';", "import 'package:provider/provider.dart';\nimport 'package:intl/intl.dart';", 1)
+              p.write_text(s)
+              changed = True
+
+          def replace_simple(old, new):
+              nonlocal_dummy = False
+              global_changed[0] = True if old in p.read_text() else global_changed[0]
+              if old not in p.read_text():
+                  return
+              p.write_text(p.read_text().replace(old, new, 1))
+
+          global_changed = [changed]
+          replace_simple(
+              """  String _hijri(String languageCode) {""",
+              """  String _formatStaticTime(String value, bool is24Hour) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty || trimmed == '--:--') return trimmed;
+    final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AaPp][Mm])?$').firstMatch(trimmed);
+    if (match == null) return trimmed;
+    final hour = int.tryParse(match.group(1)!) ?? 0;
+    final minute = match.group(2)!;
+    final period = match.group(3)?.toUpperCase();
+    final hour24 = period == null ? hour : (period == 'AM' ? (hour == 12 ? 0 : hour) : (hour == 12 ? 12 : hour + 12));
+    if (is24Hour) return '${hour24.toString().padLeft(2, '0')}:$minute';
+    final hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12;
+    return '$hour12:$minute ${hour24 >= 12 ? 'PM' : 'AM'}';
+  }
+
+  String _hijri(String languageCode) {""",
+          )
+          replace_simple(
+              """                  nextPrayerTime: controller.nextPrayerTime,
+                  remaining: controller.timeRemainingForNextPrayer,""",
+              """                  nextPrayerTime: _formatStaticTime(controller.nextPrayerTime, settings.is24Hour),
+                  remaining: controller.timeRemainingForNextPrayer,""",
+          )
+          replace_simple(
+              """                  sunrise: controller.sunriseTime,
+                  sunset: controller.sunsetTime,""",
+              """                  sunrise: _formatStaticTime(controller.sunriseTime, settings.is24Hour),
+                  sunset: _formatStaticTime(controller.sunsetTime, settings.is24Hour),""",
+          )
+          replace_simple(
+              """_V10PrayerTimeline(prayers: prayers, languageCode: languageCode),""",
+              """_V10PrayerTimeline(prayers: prayers, languageCode: languageCode, is24Hour: settings.is24Hour),""",
+          )
+          replace_simple(
+              """  const _V10PrayerTimeline({required this.prayers, required this.languageCode});
+  final List<Map<String, dynamic>> prayers;
+  final String languageCode;""",
+              """  const _V10PrayerTimeline({required this.prayers, required this.languageCode, required this.is24Hour});
+  final List<Map<String, dynamic>> prayers;
+  final String languageCode;
+  final bool is24Hour;""",
+          )
+          replace_simple(
+              """        final time = prayer['start']?.toString() ?? '—';""",
+              """        final rawTime = prayer['start']?.toString() ?? '—';
+        final time = _formatStaticPrayerTime(rawTime, is24Hour);""",
+          )
+          replace_simple(
+              """class _V10PrayerTimeline extends StatelessWidget {""",
+              """String _formatStaticPrayerTime(String value, bool is24Hour) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty || trimmed == '—' || trimmed == '--:--') return trimmed;
+  final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AaPp])?[Mm]?$').firstMatch(trimmed);
+  if (match == null) return trimmed;
+  final hour = int.tryParse(match.group(1)!) ?? 0;
+  final minute = match.group(2)!;
+  final period = match.group(3)?.toUpperCase();
+  final hour24 = period == null ? hour : (period == 'AM' ? (hour == 12 ? 0 : hour) : (hour == 12 ? 12 : hour + 12));
+  if (is24Hour) return '${hour24.toString().padLeft(2, '0')}:$minute';
+  final hour12 = hour24 % 12 == 0 ? 12 : hour24 % 12;
+  return '$hour12:$minute ${hour24 >= 12 ? 'PM' : 'AM'}';
+}
+
+class _V10PrayerTimeline extends StatelessWidget {""",
+          )
+          changed = global_changed[0]
+
+          if changed:
+              Path('/tmp/time_patch_changed').write_text('yes')
+          PY
+
+      - name: Commit source patch if needed
+        run: |
+          if [ ! -f /tmp/time_patch_changed ]; then
+            echo "Time format source already patched; continuing CI."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/controllers/prayer_controller.dart lib/screens/prayer_screen_v2.dart lib/screens/simple_home_screen_v10.dart
+          git commit -m "Apply 12/24-hour static time formatting"
+          git push origin main
+          echo "Source patch committed; CI will run again on the new commit."
+          exit 0
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
