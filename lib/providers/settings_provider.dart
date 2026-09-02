@@ -176,7 +176,7 @@ class SettingsProvider extends ChangeNotifier {
       _isAdhanNotificationEnabled = prefs.getBool(_adhanNotificationKey) ?? true;
       _locationMode = prefs.getString(_locationModeKey) ?? 'automatic';
       _autoLocation = prefs.getBool(_autoLocationKey) ?? true;
-      _hijriAdjustment = prefs.getInt(_hijriAdjustmentKey) ?? 0;
+      _hijriAdjustment = (prefs.getInt(_hijriAdjustmentKey) ?? 0).clamp(-3, 3);
       _showSeconds = prefs.getBool(_showSecondsKey) ?? false;
       _timeFormat = prefs.getString(_timeFormatKey) == '24' ? '24' : '12';
       _vibrationEnabled = prefs.getBool(_vibrationKey) ?? true;
@@ -245,14 +245,14 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<void> setCalculationMethod(String method) async { final normalized = _normalizeCalculationMethod(method); if (_calculationMethod == normalized) return; _calculationMethod = normalized; notifyListeners(); try { await (await SharedPreferences.getInstance()).setString(_calculationMethodKey, normalized); } catch (_) {} }
   Future<void> setMadhhab(String madhhab) async { final normalized = _normalizeMadhab(madhhab); if (_madhab == normalized) return; _madhab = normalized; notifyListeners(); try { await (await SharedPreferences.getInstance()).setString(_madhabKey, normalized); } catch (_) {} }
-  Future<void> setMadhab(String madhab) async => setMadhhab(madhab);
+  Future<void> setMadhab(String madhhab) async => setMadhhab(madhhab);
 
   Future<void> updateQuranFontSize(double size) async { _quranFontSize = size.clamp(14.0, 50.0).toDouble(); notifyListeners(); try { await (await SharedPreferences.getInstance()).setDouble(_quranFontSizeKey, _quranFontSize); } catch (_) {} }
   Future<void> updateTranslationFontSize(double size) async { _translationFontSize = size.clamp(10.0, 30.0).toDouble(); notifyListeners(); try { await (await SharedPreferences.getInstance()).setDouble(_translationFontSizeKey, _translationFontSize); } catch (_) {} }
   Future<void> toggleAdhanNotification(bool value) async { _isAdhanNotificationEnabled = value; notifyListeners(); try { await (await SharedPreferences.getInstance()).setBool(_adhanNotificationKey, value); } catch (_) {} }
   Future<void> setLocationMode(String mode) async { if (mode != 'automatic' && mode != 'manual') return; _locationMode = mode; _autoLocation = mode == 'automatic'; notifyListeners(); try { final prefs = await SharedPreferences.getInstance(); await prefs.setString(_locationModeKey, mode); await prefs.setBool(_autoLocationKey, _autoLocation); } catch (_) {} }
   Future<void> setAutoLocation(bool value) async { _autoLocation = value; _locationMode = value ? 'automatic' : 'manual'; notifyListeners(); try { final prefs = await SharedPreferences.getInstance(); await prefs.setBool(_autoLocationKey, value); await prefs.setString(_locationModeKey, _locationMode); } catch (_) {} }
-  Future<void> setHijriAdjustment(int value) async { _hijriAdjustment = value.clamp(-2, 2); notifyListeners(); try { await (await SharedPreferences.getInstance()).setInt(_hijriAdjustmentKey, _hijriAdjustment); } catch (_) {} }
+  Future<void> setHijriAdjustment(int value) async { _hijriAdjustment = value.clamp(-3, 3); notifyListeners(); try { await (await SharedPreferences.getInstance()).setInt(_hijriAdjustmentKey, _hijriAdjustment); } catch (_) {} }
   Future<void> setTimeFormat(String value) async { final normalized = value == '24' ? '24' : '12'; if (_timeFormat == normalized) return; _timeFormat = normalized; notifyListeners(); try { await (await SharedPreferences.getInstance()).setString(_timeFormatKey, normalized); } catch (_) {} }
   Future<void> toggleShowSeconds(bool value) async { _showSeconds = value; notifyListeners(); try { await (await SharedPreferences.getInstance()).setBool(_showSecondsKey, value); } catch (_) {} }
   Future<void> toggleVibration(bool value) async { _vibrationEnabled = value; notifyListeners(); try { await (await SharedPreferences.getInstance()).setBool(_vibrationKey, value); } catch (_) {} }
