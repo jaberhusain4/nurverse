@@ -15,9 +15,6 @@ class PrayerCalculationConfig {
 
   const PrayerCalculationConfig({required this.method, required this.madhab});
 
-  /// Compatibility alias used by older callers.
-  Madhab get madhhab => madhab;
-
   static const PrayerCalculationConfig defaults = PrayerCalculationConfig(
     method: CalculationMethod.karachi,
     madhab: Madhab.hanafi,
@@ -83,11 +80,12 @@ class PrayerCalculationConfig {
 
   static Madhab _parseMadhab(String value) {
     final String normalized = value.trim().toLowerCase();
-    if (normalized == 'shafi' || normalized == 'shafii' || normalized == "shafi'i" || normalized == 'shafi’i') {
+    if (normalized == 'shafi' ||
+        normalized == 'shafii' ||
+        normalized == "shafi'i" ||
+        normalized == 'shafi’i') {
       return Madhab.shafi;
     }
-    if (normalized == 'maliki') return Madhab.maliki;
-    if (normalized == 'hanbali') return Madhab.hanbali;
     return Madhab.hanafi;
   }
 }
