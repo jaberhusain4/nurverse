@@ -1,0 +1,62 @@
+name: Restore Prayer Special Times Card
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Restore detailed special-times card
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('lib/screens/prayer_screen.dart')
+          text = path.read_text(encoding='utf-8')
+
+          import_line = "import '../widgets/prayer/prayer_special_times_detail_card.dart';"
+          if import_line not in text:
+              anchor = "import '../widgets/home/top_header.dart';\n"
+              if anchor not in text:
+                  raise SystemExit('Could not find import anchor in prayer_screen.dart')
+              text = text.replace(anchor, anchor + import_line + "\n", 1)
+
+          card = "PrayerSpecialTimesDetailCard(languageCode: languageCode),"
+          if card not in text:
+              anchor = "              _importantTimes(context, l10n, controller, primary, sunTimes),\n              const SizedBox(height: 16),\n              _sectionHeader(context, primary, Icons.nightlight_round, l10n.naflAndOtherPrayers),"
+              replacement = "              _importantTimes(context, l10n, controller, primary, sunTimes),\n              const SizedBox(height: 10),\n              PrayerSpecialTimesDetailCard(languageCode: languageCode),\n              const SizedBox(height: 16),\n              _sectionHeader(context, primary, Icons.nightlight_round, l10n.naflAndOtherPrayers),"
+              if anchor not in text:
+                  raise SystemExit('Could not find Prayer Screen insertion anchor')
+              text = text.replace(anchor, replacement, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          git diff --check
+          git diff -- lib/screens/prayer_screen.dart
+
+      - name: Commit and push patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/screens/prayer_screen.dart
+          if git diff --cached --quiet; then
+            echo "No patch needed."
+            exit 0
+          fi
+          git commit -m "fix: restore detailed prayer special times card"
+          git push origin HEAD:main
