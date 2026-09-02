@@ -12,4 +12,78 @@ jobs:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Triggering the prayer method and madhhab UI fix workflow"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply time formatting
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'Expected text not found in {path}: {old[:100]!r}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace('lib/controllers/prayer_controller.dart', "  String _formatTime(DateTime value) => DateFormat('hh:mm').format(value);", "  String _formatTime(DateTime value) => DateFormat('h:mm a').format(value);")
+
+          replace('lib/screens/prayer_screen_v2.dart', """                      settings.showSeconds
+                          ? c.timeRemainingForNextPrayer
+                          : _withoutSeconds(c.timeRemainingForNextPrayer),""", """                      c.timeRemainingForNextPrayer,""")
+
+          replace('lib/screens/prayer_screen_v2.dart', """  String _displayTime(SettingsProvider settings, String value) {
+    if (settings.showSeconds) return value;
+    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(value.trim());
+    return match?.group(1) ?? value;
+  }
+
+  String _withoutSeconds(String value) {
+    final match = RegExp(r'^(\\d{2}):(\\d{2})').firstMatch(value.trim());
+    return match == null ? value : '${match.group(1)}:${match.group(2)}';
+  }
+""", """  String _displayTime(SettingsProvider settings, String value) {
+    final trimmed = value.trim();
+    final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AP]M)$', caseSensitive: false).firstMatch(trimmed);
+    if (match == null) return value;
+    final hour = int.parse(match.group(1)!);
+    final minute = match.group(2)!;
+    final period = match.group(3)!.toUpperCase();
+    if (settings.is24Hour) {
+      final hour24 = (hour % 12) + (period == 'PM' ? 12 : 0);
+      return '${hour24.toString().padLeft(2, '0')}:$minute';
+    }
+    return '$hour:$minute $period';
+  }
+""")
+
+          replace('lib/screens/simple_home_screen_v10.dart', "import 'package:hijri/hijri_calendar.dart';\nimport 'package:provider/provider.dart';", "import 'package:hijri/hijri_calendar.dart';\nimport 'package:intl/intl.dart';\nimport 'package:provider/provider.dart';")
+          replace('lib/screens/simple_home_screen_v10.dart', "  String _clock(bool is24Hour) {", """  String _staticTime(String value, bool is24Hour) {
+    final trimmed = value.trim();
+    final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AP]M)$', caseSensitive: false).firstMatch(trimmed);
+    if (match == null) return value;
+    final parsed = DateFormat('h:mm a', 'en').parse(trimmed);
+    if (is24Hour) return DateFormat('HH:mm').format(parsed);
+    return DateFormat('h:mm a').format(parsed);
+  }
+
+  String _clock(bool is24Hour) {""")
+          replace('lib/screens/simple_home_screen_v10.dart', "                  nextPrayerTime: controller.nextPrayerTime,\n                  remaining: controller.timeRemainingForNextPrayer,", "                  nextPrayerTime: _staticTime(controller.nextPrayerTime, settings.is24Hour),\n                  remaining: controller.timeRemainingForNextPrayer,")
+          replace('lib/screens/simple_home_screen_v10.dart', "                  sunrise: controller.sunriseTime,\n                  sunset: controller.sunsetTime,", "                  sunrise: _staticTime(controller.sunriseTime, settings.is24Hour),\n                  sunset: _staticTime(controller.sunsetTime, settings.is24Hour),")
+          replace('lib/screens/simple_home_screen_v10.dart', "              _V10PrayerTimeline(prayers: prayers, languageCode: languageCode),", """              _V10PrayerTimeline(
+                prayers: prayers.map((prayer) => {
+                  ...prayer,
+                  'start': _staticTime(prayer['start']?.toString() ?? '—', settings.is24Hour),
+                  'end': _staticTime(prayer['end']?.toString() ?? '—', settings.is24Hour),
+                }).toList(),
+                languageCode: languageCode,
+              ),""")
+
+          replace('lib/widgets/home/live_prayer_restriction_card.dart', "final is24Hour = settings.is24Hour;", "final is24Hour = settings.is24Hour;")
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/controllers/prayer_controller.dart lib/screens/prayer_screen_v2.dart lib/screens/simple_home_screen_v10.dart
+          git commit -m 'Apply 12/24-hour static time formatting' || exit 0
+          git push origin main
