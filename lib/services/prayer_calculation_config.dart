@@ -15,6 +15,9 @@ class PrayerCalculationConfig {
 
   const PrayerCalculationConfig({required this.method, required this.madhab});
 
+  /// Compatibility alias used by older callers.
+  Madhab get madhhab => madhab;
+
   static const PrayerCalculationConfig defaults = PrayerCalculationConfig(
     method: CalculationMethod.karachi,
     madhab: Madhab.hanafi,
@@ -80,95 +83,11 @@ class PrayerCalculationConfig {
 
   static Madhab _parseMadhab(String value) {
     final String normalized = value.trim().toLowerCase();
-
-    switch (normalized) {
-      case 'hanafi':
-        return Madhab.hanafi;
-      case 'shafi':
-      case 'shafii':
-      case 'shafi’i':
-      case "shafi'i":
-        return Madhab.shafi;
-      // The current adhan package exposes only Hanafi and Shafi as Madhab
-      // enum values. Maliki and Hanbali use the same one-shadow Asr rule as
-      // Shafi for prayer-time calculation, so they are represented by the
-      // Shafi enum at the calculation layer while their original selection
-      // remains persisted by SettingsProvider.
-      case 'maliki':
-      case 'hanbali':
-      case 'standard':
-      case 'shafi_maliki_hanbali':
-        return Madhab.shafi;
-      default:
-        return Madhab.hanafi;
+    if (normalized == 'shafi' || normalized == 'shafii' || normalized == "shafi'i" || normalized == 'shafi’i') {
+      return Madhab.shafi;
     }
-  }
-
-  String get methodId {
-    switch (method) {
-      case CalculationMethod.muslim_world_league:
-        return 'Muslim World League';
-      case CalculationMethod.egyptian:
-        return 'Egyptian';
-      case CalculationMethod.karachi:
-        return 'Karachi';
-      case CalculationMethod.umm_al_qura:
-        return 'Umm Al-Qura';
-      case CalculationMethod.dubai:
-        return 'Dubai';
-      case CalculationMethod.moon_sighting_committee:
-        return 'Moon Sighting Committee';
-      case CalculationMethod.north_america:
-        return 'North America';
-      case CalculationMethod.kuwait:
-        return 'Kuwait';
-      case CalculationMethod.qatar:
-        return 'Qatar';
-      case CalculationMethod.singapore:
-        return 'Singapore';
-      case CalculationMethod.turkey:
-        return 'Turkey';
-      case CalculationMethod.tehran:
-        return 'Tehran';
-      case CalculationMethod.other:
-        return 'Other';
-    }
-  }
-
-  // adhan currently has only Hanafi and Shafi enum values. The Settings UI
-  // may still expose all four fiqh madhhabs; Maliki and Hanbali are calculated
-  // with the same one-shadow Asr rule used by Shafi in this package.
-  String get madhhabId => madhab == Madhab.hanafi ? 'Hanafi' : 'Shafi';
-
-  PrayerCalculationConfig copyWith({
-    CalculationMethod? method,
-    Madhab? madhab,
-  }) {
-    return PrayerCalculationConfig(
-      method: method ?? this.method,
-      madhab: madhab ?? this.madhab,
-    );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-
-    return other is PrayerCalculationConfig &&
-        other.method == method &&
-        other.madhab == madhab;
-  }
-
-  @override
-  int get hashCode => Object.hash(method, madhab);
-
-  @override
-  String toString() {
-    return 'PrayerCalculationConfig('
-        'method: $method, '
-        'madhab: $madhab'
-        ')';
+    if (normalized == 'maliki') return Madhab.maliki;
+    if (normalized == 'hanbali') return Madhab.hanbali;
+    return Madhab.hanafi;
   }
 }
