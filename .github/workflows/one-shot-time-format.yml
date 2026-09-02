@@ -1,0 +1,137 @@
+name: One-shot time format fix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch active time displays
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def patch(path, fn):
+              p = Path(path)
+              s = p.read_text(encoding='utf-8')
+              updated = fn(s)
+              if updated == s:
+                  print(f'No changes needed: {path}')
+              else:
+                  p.write_text(updated, encoding='utf-8')
+                  print(f'Updated: {path}')
+
+          # Controller static time strings carry AM/PM. The UI converts them
+          # to 24-hour form when the user selects that setting.
+          patch('lib/controllers/prayer_controller.dart', lambda s: s.replace(
+              "String _formatTime(DateTime value) => DateFormat('hh:mm').format(value);",
+              "String _formatTime(DateTime value) => DateFormat('hh:mm a').format(value);",
+          ))
+
+          def prayer_v2(s):
+              s = s.replace(
+                  "settings.showSeconds\n                          ? c.timeRemainingForNextPrayer\n                          : _withoutSeconds(c.timeRemainingForNextPrayer),",
+                  "c.timeRemainingForNextPrayer,",
+              )
+              old = """  String _displayTime(SettingsProvider settings, String value) {
+    if (settings.showSeconds) return value;
+    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(value.trim());
+    return match?.group(1) ?? value;
+  }
+
+  String _withoutSeconds(String value) {
+    final match = RegExp(r'^(\\d{2}):(\\d{2})').firstMatch(value.trim());
+    return match == null ? value : '${match.group(1)}:${match.group(2)}';
+  }"""
+              new = """  String _displayTime(SettingsProvider settings, String value) {
+    final trimmed = value.trim();
+    final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AP]M)$', caseSensitive: false)
+        .firstMatch(trimmed);
+    if (match == null) return value;
+
+    final hour = int.parse(match.group(1)!);
+    final minute = match.group(2)!;
+    final period = match.group(3)!.toUpperCase();
+    if (settings.is24Hour) {
+      final hour24 = (hour % 12) + (period == 'PM' ? 12 : 0);
+      return '${hour24.toString().padLeft(2, '0')}:$minute';
+    }
+    return '$hour:$minute $period';
+  }"""
+              if old in s:
+                  s = s.replace(old, new, 1)
+              else:
+                  print('Prayer V2 formatter block already changed or not found')
+              return s
+          patch('lib/screens/prayer_screen_v2.dart', prayer_v2)
+
+          def home(s):
+              s = s.replace(
+                  "import 'package:hijri/hijri_calendar.dart';\nimport 'package:provider/provider.dart';",
+                  "import 'package:hijri/hijri_calendar.dart';\nimport 'package:intl/intl.dart';\nimport 'package:provider/provider.dart';",
+                  1,
+              )
+              marker = "  String _clock(bool is24Hour) {"
+              helper = """  String _staticTime(String value, bool is24Hour) {
+    final trimmed = value.trim();
+    final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AP]M)$', caseSensitive: false)
+        .firstMatch(trimmed);
+    if (match == null) return value;
+    final parsed = DateFormat('h:mm a', 'en').parse(trimmed);
+    return is24Hour ? DateFormat('HH:mm').format(parsed) : DateFormat('h:mm a').format(parsed);
+  }
+
+"""
+              if '_staticTime(String value, bool is24Hour)' not in s and marker in s:
+                  s = s.replace(marker, helper + marker, 1)
+              s = s.replace(
+                  "nextPrayerTime: controller.nextPrayerTime,",
+                  "nextPrayerTime: _staticTime(controller.nextPrayerTime, settings.is24Hour),",
+                  1,
+              )
+              s = s.replace(
+                  "sunrise: controller.sunriseTime,\n                  sunset: controller.sunsetTime,",
+                  "sunrise: _staticTime(controller.sunriseTime, settings.is24Hour),\n                  sunset: _staticTime(controller.sunsetTime, settings.is24Hour),",
+                  1,
+              )
+              s = s.replace(
+                  "_V10PrayerTimeline(prayers: prayers, languageCode: languageCode),",
+                  """_V10PrayerTimeline(
+                prayers: prayers
+                    .map((prayer) => {
+                      ...prayer,
+                      'start': _staticTime(prayer['start']?.toString() ?? '—', settings.is24Hour),
+                      'end': _staticTime(prayer['end']?.toString() ?? '—', settings.is24Hour),
+                    })
+                    .toList(),
+                languageCode: languageCode,
+              ),""",
+                  1,
+              )
+              return s
+          patch('lib/screens/simple_home_screen_v10.dart', home)
+          PY
+      - name: Commit source changes
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/controllers/prayer_controller.dart lib/screens/prayer_screen_v2.dart lib/screens/simple_home_screen_v10.dart
+          if git diff --cached --quiet; then
+            echo 'No source changes to commit.'
+            exit 0
+          fi
+          git diff --cached --check
+          git commit -m 'Fix 12/24-hour static time formatting'
+          git push origin main
