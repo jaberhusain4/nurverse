@@ -103,10 +103,10 @@ jobs:
           p.write_text(s, encoding='utf-8')
           PY
 
-          python3 -m compileall -q lib || true
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add lib/utils/time_format_utils.dart lib/screens/settings/settings_screen.dart .github/workflows/fix-time-format.yml
           git commit -m "Fix Settings time format consistency"
           git push
+
+# Trigger the temporary patch workflow.
