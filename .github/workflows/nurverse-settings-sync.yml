@@ -1,51 +1,34 @@
 name: NurVerse Settings Sync
 
 on:
-  push:
-    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
 
 permissions:
   contents: write
 
 jobs:
   sync-settings:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
       - name: Fix canonical Jamaat and time-format settings
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
-
           path = Path('lib/screens/settings/settings_screen.dart')
           text = path.read_text(encoding='utf-8')
-
-          # Keep only the canonical Jamaat settings navigation tile.
-          jamaat_start = """              _buildSettingTile(
-                context,
-                icon: Icons.tune_rounded,
-                title: 'জামাআত মোড ও সময়',"""
           jamaat_section = text.index("          // JAMAAT")
           date_section = text.index("          // DATE & TIME")
           block = text[jamaat_section:date_section]
-          block = re.sub(
-              r"              _buildDivider\(context\),\n(?:              _buildJamaatTimeRow\(.*?\n              \),\n)*",
-              "",
-              block,
-              flags=re.S,
-          )
+          block = re.sub(r"              _buildDivider\(context\),\n(?:              _buildJamaatTimeRow\(.*?\n              \),\n)*", "", block, flags=re.S)
           text = text[:jamaat_section] + block + text[date_section:]
-
-          # Remove obsolete inline Jamaat editor helpers.
-          text = re.sub(
-              r"\n  // ={20,}\n  // JAMAAT TIME ROW.*?\n  Widget _buildSectionLabel",
-              "\n  Widget _buildSectionLabel",
-              text,
-              flags=re.S,
-          )
-
-          # Add the canonical 12/24-hour selector before seconds.
+          text = re.sub(r"\n  // ={20,}\n  // JAMAAT TIME ROW.*?\n  Widget _buildSectionLabel", "\n  Widget _buildSectionLabel", text, flags=re.S)
           seconds_anchor = """              _buildSettingTile(
                 context,
                 icon: Icons.timer_outlined,
@@ -63,13 +46,10 @@ jobs:
               if seconds_anchor not in text:
                   raise SystemExit('Could not find seconds setting anchor')
               text = text.replace(seconds_anchor, tile + seconds_anchor, 1)
-
-          # Add the time-format dialog if missing.
           if "Future<void> _showTimeFormatDialog" not in text:
               marker = "  Future<void> _showHijriAdjustmentDialog(BuildContext context) async {"
               dialog = """  Future<void> _showTimeFormatDialog(BuildContext context) async {
     final settings = context.read<SettingsProvider>();
-
     final selected = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
@@ -86,14 +66,8 @@ jobs:
               child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  RadioListTile<String>(
-                    title: Text('১২ ঘণ্টা'),
-                    value: '12',
-                  ),
-                  RadioListTile<String>(
-                    title: Text('২৪ ঘণ্টা'),
-                    value: '24',
-                  ),
+                  RadioListTile<String>(title: Text('১২ ঘণ্টা'), value: '12'),
+                  RadioListTile<String>(title: Text('২৪ ঘণ্টা'), value: '24'),
                 ],
               ),
             ),
@@ -101,7 +75,6 @@ jobs:
         );
       },
     );
-
     if (selected != null && selected != settings.timeFormat) {
       await settings.setTimeFormat(selected);
     }
@@ -111,23 +84,16 @@ jobs:
               if marker not in text:
                   raise SystemExit('Could not find Hijri dialog marker')
               text = text.replace(marker, dialog + marker, 1)
-
-          # Guard against accidental UTF-8 mojibake.
           if 'à¦' in text or 'U+008' in text:
               raise SystemExit('Mojibake detected; refusing to commit')
-
           path.write_text(text, encoding='utf-8', newline='\n')
           PY
-
       - name: Commit source changes and remove temporary workflow
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm .github/workflows/nurverse-settings-sync.yml
           git add lib/screens/settings/settings_screen.dart
-          if git diff --cached --quiet; then
-            echo "No source changes needed."
-            exit 0
-          fi
+          if git diff --cached --quiet; then exit 0; fi
           git commit -m "Unify Jamaat settings and add time format control"
-          git push
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
