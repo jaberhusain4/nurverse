@@ -40,25 +40,22 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
   String _label(AppLocalizations l10n, {required String bn, required String en, required String ar}) =>
       l10n.localeText(values: {'bn': bn, 'en': en, 'ar': ar});
 
-  String _clock(DateTime value, bool showSeconds) {
-    final hour = value.hour % 12 == 0 ? 12 : value.hour % 12;
+  String _clock(DateTime value, bool is24Hour) {
     final minute = value.minute.toString().padLeft(2, '0');
-    final second = value.second.toString().padLeft(2, '0');
-    final base = '$hour:$minute';
-    return showSeconds ? '$base:$second ${value.hour >= 12 ? 'PM' : 'AM'}' : '$base ${value.hour >= 12 ? 'PM' : 'AM'}';
+    if (is24Hour) {
+      return '${value.hour.toString().padLeft(2, '0')}:$minute';
+    }
+    final hour = value.hour % 12 == 0 ? 12 : value.hour % 12;
+    final period = value.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
   }
 
-  String _countdown(Duration duration, bool showSeconds) {
+  String _countdown(Duration duration) {
     final totalSeconds = duration.inSeconds.clamp(0, 7 * 86400);
     final hours = totalSeconds ~/ 3600;
     final minutes = (totalSeconds % 3600) ~/ 60;
     final seconds = totalSeconds % 60;
-    if (!showSeconds) {
-      if (hours > 0) return '$hours:${minutes.toString().padLeft(2, '0')}';
-      return '$minutes:00';
-    }
-    if (hours > 0) return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   List<PrayerTimeWindow> _todayAndTomorrowWindows(PrayerController controller, DateTime date) {
@@ -131,7 +128,7 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
     final theme = Theme.of(context);
     final foreground = theme.colorScheme.onSurface;
     final secondary = theme.textTheme.bodySmall?.color ?? foreground.withValues(alpha: .7);
-    final showSeconds = settings.showSeconds;
+    final is24Hour = settings.is24Hour;
 
     return Container(
       width: double.infinity,
@@ -140,9 +137,9 @@ class _LivePrayerRestrictionCardState extends State<LivePrayerRestrictionCard> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [Icon(Icons.block_rounded, size: 21, color: active != null ? theme.colorScheme.error : theme.colorScheme.primary), const SizedBox(width: 8), Expanded(child: Text(_label(l10n, bn: 'নিষিদ্ধ সময়', en: 'Prohibited Prayer Times', ar: 'أوقات النهي'), style: TextStyle(color: foreground, fontSize: 16, fontWeight: FontWeight.w800)))]),
         const SizedBox(height: 10),
-        if (active != null) _timerRow(context: context, title: _label(l10n, bn: 'বর্তমান নিষিদ্ধ সময়', en: 'Current prohibited time', ar: 'وقت النهي الحالي'), subtitle: '${_name(l10n, active)} • ${_clock(active.start, showSeconds)} – ${_clock(active.end, showSeconds)}', timer: _countdown(active.end.difference(_now), showSeconds), active: true),
+        if (active != null) _timerRow(context: context, title: _label(l10n, bn: 'বর্তমান নিষিদ্ধ সময়', en: 'Current prohibited time', ar: 'وقت النهي الحالي'), subtitle: '${_name(l10n, active)} • ${_clock(active.start, is24Hour)} – ${_clock(active.end, is24Hour)}', timer: _countdown(active.end.difference(_now)), active: true),
         if (active != null && next != null) const SizedBox(height: 8),
-        if (next != null) _timerRow(context: context, title: _label(l10n, bn: 'পরবর্তী নিষিদ্ধ সময়', en: 'Next prohibited time', ar: 'وقت النهي التالي'), subtitle: '${_name(l10n, next)} • ${_clock(next.start, showSeconds)} – ${_clock(next.end, showSeconds)}', timer: _countdown(next.start.difference(_now), showSeconds), active: false),
+        if (next != null) _timerRow(context: context, title: _label(l10n, bn: 'পরবর্তী নিষিদ্ধ সময়', en: 'Next prohibited time', ar: 'وقت النهي التالي'), subtitle: '${_name(l10n, next)} • ${_clock(next.start, is24Hour)} – ${_clock(next.end, is24Hour)}', timer: _countdown(next.start.difference(_now)), active: false),
         const SizedBox(height: 7),
         Text(_label(l10n, bn: 'সময়গুলো প্রতি সেকেন্ডে লাইভ আপডেট হচ্ছে।', en: 'Times update live every second.', ar: 'الأوقات تتحدث مباشرة كل ثانية.'), style: TextStyle(color: secondary, fontSize: 10.5)),
       ]),
