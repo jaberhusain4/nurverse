@@ -1,0 +1,15 @@
+name: Trigger Prayer UI Fix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  trigger:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Triggering the prayer method and madhhab UI fix workflow"
