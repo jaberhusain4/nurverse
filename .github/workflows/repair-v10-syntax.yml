@@ -1,0 +1,46 @@
+name: Repair V10 Syntax
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repair exact syntax errors
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('lib/screens/simple_home_screen_v10.dart')
+          text = path.read_text(encoding='utf-8')
+
+          old_hero = "_V10SunData(label: 'Sunset', value: sunset, end: true)])])))))]); }"
+          new_hero = "_V10SunData(label: 'Sunset', value: sunset, end: true)])])))))])); }"
+          if old_hero not in text:
+              raise SystemExit('Expected V10 hero syntax pattern was not found')
+          text = text.replace(old_hero, new_hero, 1)
+
+          old_essentials = "Text(label, style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 12.5, fontWeight: FontWeight.w700))])))); } }); }"
+          new_essentials = "Text(label, style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 12.5, fontWeight: FontWeight.w700))])))); }); }"
+          if old_essentials not in text:
+              raise SystemExit('Expected V10 essentials syntax pattern was not found')
+          text = text.replace(old_essentials, new_essentials, 1)
+
+          path.write_text(text, encoding='utf-8')
+
+      - name: Commit repair and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/screens/simple_home_screen_v10.dart .github/workflows/repair-v10-syntax.yml
+          git commit -m "Fix remaining V10 syntax errors"
+          git rm .github/workflows/repair-v10-syntax.yml
+          git commit -m "Remove temporary V10 syntax repair workflow"
+          git push
