@@ -30,6 +30,7 @@ class SettingsProvider extends ChangeNotifier {
   static const String _hijriAdjustmentKey = 'hijri_adjustment';
 
   static const String _showSecondsKey = 'show_seconds';
+  static const String _timeFormatKey = 'time_format';
   static const String _vibrationKey = 'vibration_enabled';
 
   static const String _quranTranslationKey = 'quran_translation';
@@ -109,6 +110,7 @@ class SettingsProvider extends ChangeNotifier {
   int _hijriAdjustment = 0;
 
   bool _showSeconds = false;
+  String _timeFormat = '12';
 
   bool _vibrationEnabled = true;
 
@@ -186,6 +188,9 @@ class SettingsProvider extends ChangeNotifier {
   int get hijriAdjustment => _hijriAdjustment;
 
   bool get showSeconds => _showSeconds;
+
+  String get timeFormat => _timeFormat;
+  bool get is24Hour => _timeFormat == '24';
 
   bool get vibrationEnabled => _vibrationEnabled;
 
@@ -407,6 +412,7 @@ class SettingsProvider extends ChangeNotifier {
       // ----------------------------------------------------------------------
 
       _showSeconds = prefs.getBool(_showSecondsKey) ?? false;
+      _timeFormat = prefs.getString(_timeFormatKey) == '24' ? '24' : '12';
 
       _vibrationEnabled = prefs.getBool(_vibrationKey) ?? true;
 
@@ -790,6 +796,22 @@ class SettingsProvider extends ChangeNotifier {
   // DISPLAY
   // ==========================================================================
 
+  Future<void> setTimeFormat(String value) async {
+    final String normalized = value == '24' ? '24' : '12';
+
+    if (_timeFormat == normalized) {
+      return;
+    }
+
+    _timeFormat = normalized;
+    notifyListeners();
+
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_timeFormatKey, normalized);
+    } catch (_) {}
+  }
+
   Future<void> toggleShowSeconds(bool value) async {
     _showSeconds = value;
 
@@ -1121,6 +1143,7 @@ class SettingsProvider extends ChangeNotifier {
     _hijriAdjustment = 0;
 
     _showSeconds = false;
+    _timeFormat = '12';
     _vibrationEnabled = true;
 
     _quranTranslation = 'Bangla';
@@ -1173,6 +1196,7 @@ class SettingsProvider extends ChangeNotifier {
         _autoLocationKey,
         _hijriAdjustmentKey,
         _showSecondsKey,
+        _timeFormatKey,
         _vibrationKey,
         _quranTranslationKey,
         _quranArabicFontKey,

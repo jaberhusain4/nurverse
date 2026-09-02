@@ -93,16 +93,20 @@ class SettingsHubScreen extends StatelessWidget {
                 () => _textSizeSheet(context, textScale),
               ),
               _divider(),
-              _switchTile(
-                context,
-                Icons.timer_outlined,
-                isEnglish ? 'Show seconds' : 'সেকেন্ড দেখান',
-                isEnglish
-                    ? 'Show seconds where supported'
-                    : 'যেখানে সমর্থিত সেখানে সেকেন্ড দেখাবে',
-                settings.showSeconds,
-                settings.toggleShowSeconds,
-              ),
+              _tile(
+  context,
+  Icons.access_time_rounded,
+  isEnglish ? 'Time format' : 'সময়ের ফরম্যাট',
+  settings.is24Hour
+      ? (isEnglish ? '24-hour' : '২৪ ঘণ্টা')
+      : (isEnglish ? '12-hour' : '১২ ঘণ্টা'),
+  () => _choiceSheet(
+    context,
+    isEnglish ? 'Time format' : 'সময়ের ফরম্যাট',
+    const ['12', '24'],
+    settings.setTimeFormat,
+  ),
+),
               _divider(),
               _switchTile(
                 context,
