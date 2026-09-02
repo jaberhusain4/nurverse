@@ -21,8 +21,7 @@ class JamaatService {
   };
 
   // Delay after the calculated Dhaka prayer start used as the reference
-  // Jamaat. These are offsets, not hard-coded clock times, so the displayed
-  // default changes automatically as prayer times change through the year.
+  // Jamaat. These are offsets, not hard-coded clock times.
   static const Map<String, Duration> _dhakaJamaatOffsets = {
     'Fajr': Duration(minutes: 20),
     'Dhuhr': Duration(minutes: 20),
@@ -47,10 +46,7 @@ class JamaatService {
   static Future<void> initialize() async {
     if (_initialized) return;
 
-    _calculateDhakaDefaults(
-      DateTime.now(),
-      PrayerCalculationConfig.defaults,
-    );
+    _calculateDhakaDefaults(DateTime.now(), PrayerCalculationConfig.defaults);
 
     final prefs = await SharedPreferences.getInstance();
     final bool hasExplicitMode = prefs.containsKey(_modeKey);
@@ -95,9 +91,8 @@ class JamaatService {
     _applyDhakaDefaultsToUncustomized();
   }
 
-  /// Backward-compatible entry point used by the PrayerController. The date
-  /// comes from the calculated schedule, but the reference location remains
-  /// Dhaka rather than the user's current location.
+  /// Backward-compatible entry point used by existing callers. The reference
+  /// location remains Dhaka rather than the user's current location.
   static void configureDefaults(Map<String, DateTime> prayerTimes) {
     final reference = prayerTimes['Fajr'] ?? prayerTimes['Dhuhr'] ?? DateTime.now();
     configureDhakaDefaults(date: reference, config: PrayerCalculationConfig.defaults);
@@ -112,7 +107,10 @@ class JamaatService {
         break;
       }
     }
-    configureDhakaDefaults(date: reference ?? DateTime.now(), config: PrayerCalculationConfig.defaults);
+    configureDhakaDefaults(
+      date: reference ?? DateTime.now(),
+      config: PrayerCalculationConfig.defaults,
+    );
   }
 
   static String get(String prayer) => _jamaat[prayer] ?? '--:--';
@@ -126,7 +124,7 @@ class JamaatService {
   static Map<String, String> get all => Map.unmodifiable(_jamaat);
 
   /// Compatibility bridge for SettingsProvider. Dynamic Dhaka defaults are
-  /// preserved when the provider passes its old fallback values.
+  /// preserved when the provider passes its old fixed fallback values.
   static void setAll({
     required String fajr,
     required String dhuhr,
@@ -145,11 +143,7 @@ class JamaatService {
     for (final prayer in prayers) {
       final normalized = _normalizeTime(values[prayer]!);
       if (normalized == '--:--') continue;
-      if (!_customPrayers.contains(prayer)) {
-        // Provider fallbacks are legacy fixed values. They must not replace
-        // today's calculated Dhaka reference time.
-        continue;
-      }
+      if (!_customPrayers.contains(prayer)) continue;
       _jamaat[prayer] = normalized;
     }
     _applyDhakaDefaultsToUncustomized();
@@ -180,7 +174,7 @@ class JamaatService {
   static Future<void> reset() async {
     await initialize();
     _automaticMode = false;
-    await configureDhakaDefaults(
+    configureDhakaDefaults(
       date: DateTime.now(),
       config: PrayerCalculationConfig.defaults,
     );
