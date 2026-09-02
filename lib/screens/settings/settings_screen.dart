@@ -166,51 +166,6 @@ class SettingsScreen extends StatelessWidget {
                   );
                 },
               ),
-              _buildDivider(context),
-              _buildJamaatTimeRow(
-                context,
-                prayer: 'Fajr',
-                title: 'ফজর',
-                subtitle: 'Fajr',
-                icon: Icons.nights_stay_outlined,
-                value: settings.fajrJamaat,
-              ),
-              _buildDivider(context),
-              _buildJamaatTimeRow(
-                context,
-                prayer: 'Dhuhr',
-                title: 'যোহর',
-                subtitle: 'Dhuhr',
-                icon: Icons.wb_sunny_outlined,
-                value: settings.dhuhrJamaat,
-              ),
-              _buildDivider(context),
-              _buildJamaatTimeRow(
-                context,
-                prayer: 'Asr',
-                title: 'আসর',
-                subtitle: 'Asr',
-                icon: Icons.wb_twilight_outlined,
-                value: settings.asrJamaat,
-              ),
-              _buildDivider(context),
-              _buildJamaatTimeRow(
-                context,
-                prayer: 'Maghrib',
-                title: 'মাগরিব',
-                subtitle: 'Maghrib',
-                icon: Icons.wb_twilight_rounded,
-                value: settings.maghribJamaat,
-              ),
-              _buildDivider(context),
-              _buildJamaatTimeRow(
-                context,
-                prayer: 'Isha',
-                title: 'এশা',
-                subtitle: 'Isha',
-                icon: Icons.nights_stay_rounded,
-                value: settings.ishaJamaat,
-              ),
             ],
           ),
 
@@ -236,6 +191,14 @@ class SettingsScreen extends StatelessWidget {
                 title: 'হিজরি তারিখ সমন্বয়',
                 subtitle: _hijriAdjustmentLabel(settings.hijriAdjustment),
                 onTap: () => _showHijriAdjustmentDialog(context),
+              ),
+              _buildDivider(context),
+              _buildSettingTile(
+                context,
+                icon: Icons.access_time_rounded,
+                title: 'সময় ফরম্যাট',
+                subtitle: settings.timeFormat == '24' ? '২৪ ঘণ্টা' : '১২ ঘণ্টা',
+                onTap: () => _showTimeFormatDialog(context),
               ),
               _buildDivider(context),
               _buildSettingTile(
@@ -417,218 +380,6 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  // ==========================================================================
-  // JAMAAT TIME ROW
-  // ==========================================================================
-
-  Widget _buildJamaatTimeRow(
-    BuildContext context, {
-    required String prayer,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required String value,
-  }) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _showJamaatTimeDialog(
-          context,
-          prayer: prayer,
-          title: title,
-          currentValue: value,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: .09),
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(icon, size: 21, color: primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: context.secondaryTextColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                constraints: const BoxConstraints(minWidth: 82),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: .07),
-                  borderRadius: BorderRadius.circular(13),
-                  border: Border.all(color: primary.withValues(alpha: .13)),
-                ),
-                child: Text(
-                  value,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: primary,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: .2,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 5),
-              Icon(Icons.edit_outlined,
-                  size: 18, color: context.secondaryTextColor),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ==========================================================================
-  // JAMAAT TIME INPUT DIALOG
-  // ==========================================================================
-
-  Future<void> _showJamaatTimeDialog(
-    BuildContext context, {
-    required String prayer,
-    required String title,
-    required String currentValue,
-  }) async {
-    final settings = context.read<SettingsProvider>();
-    final controller = TextEditingController(text: currentValue);
-    final focusNode = FocusNode();
-    String? errorText;
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Row(
-                children: [
-                  Icon(Icons.access_time_rounded,
-                      color: Theme.of(context).colorScheme.primary),
-                  const SizedBox(width: 10),
-                  Text('$title জামাআতের সময়',
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('জামাআতের সঠিক সময় লিখুন.',
-                      style: Theme.of(context).textTheme.bodyMedium),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    autofocus: true,
-                    keyboardType: const TextInputType.numberWithOptions(
-                        decimal: false, signed: false),
-                    textInputAction: TextInputAction.done,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9:]')),
-                      LengthLimitingTextInputFormatter(5),
-                    ],
-                    decoration: InputDecoration(
-                      labelText: 'সময়',
-                      hintText: 'যেমন 8:45',
-                      prefixIcon: const Icon(Icons.schedule_rounded),
-                      suffixText: 'সময়',
-                      errorText: errorText,
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15)),
-                    ),
-                    onSubmitted: (_) async {
-                      final success = await _saveJamaatTime(
-                          context, settings, prayer, controller.text);
-                      if (success && dialogContext.mounted) {
-                        Navigator.pop(dialogContext);
-                      } else {
-                        setDialogState(
-                            () => errorText = 'সঠিক সময় লিখুন, যেমন 8:45');
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'উদাহরণ: 5:00, 1:30, 8:45',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    child: const Text('বাতিল')),
-                FilledButton(
-                  onPressed: () async {
-                    final success = await _saveJamaatTime(
-                        context, settings, prayer, controller.text);
-                    if (success && dialogContext.mounted) {
-                      Navigator.pop(dialogContext);
-                    } else {
-                      setDialogState(
-                          () => errorText = 'সঠিক সময় লিখুন, যেমন 8:45');
-                      focusNode.requestFocus();
-                    }
-                  },
-                  child: const Text('সংরক্ষণ'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    controller.dispose();
-    focusNode.dispose();
-  }
-
-  Future<bool> _saveJamaatTime(
-    BuildContext context,
-    SettingsProvider settings,
-    String prayer,
-    String value,
-  ) async {
-    final input = value.trim();
-    final match = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(input);
-    if (match == null) return false;
-
-    final hour = int.tryParse(match.group(1)!) ?? 0;
-    final minute = int.tryParse(match.group(2)!) ?? 0;
-    if (hour < 1 || hour > 12 || minute < 0 || minute > 59) return false;
-
-    final normalized = '$hour:${minute.toString().padLeft(2, '0')}';
-    return settings.setJamaatTime(prayer, normalized);
   }
 
   Widget _buildSectionLabel(BuildContext context, String title, IconData icon) {
@@ -953,6 +704,44 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _showTimeFormatDialog(BuildContext context) async {
+    final settings = context.read<SettingsProvider>();
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return SimpleDialog(
+          title: const Text('সময় ফরম্যাট'),
+          children: [
+            RadioGroup<String>(
+              groupValue: settings.timeFormat,
+              onChanged: (value) {
+                if (value != null) {
+                  Navigator.of(dialogContext).pop(value);
+                }
+              },
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<String>(
+                    title: Text('১২ ঘণ্টা'),
+                    value: '12',
+                  ),
+                  RadioListTile<String>(
+                    title: Text('২৪ ঘণ্টা'),
+                    value: '24',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    if (selected != null && selected != settings.timeFormat) {
+      await settings.setTimeFormat(selected);
+    }
   }
 
   Future<void> _showHijriAdjustmentDialog(BuildContext context) async {
