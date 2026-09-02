@@ -161,7 +161,7 @@ jobs:
               """String _formatStaticPrayerTime(String value, bool is24Hour) {
   final trimmed = value.trim();
   if (trimmed.isEmpty || trimmed == '—' || trimmed == '--:--') return trimmed;
-  final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AaPp][Mm])?$').firstMatch(trimmed);
+  final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AaPp])?[Mm]?$').firstMatch(trimmed);
   if (match == null) return trimmed;
   final hour = int.tryParse(match.group(1)!) ?? 0;
   final minute = match.group(2)!;
@@ -188,3 +188,5 @@ class _V10PrayerTimeline extends StatelessWidget {""",
           git add lib/controllers/prayer_controller.dart lib/screens/prayer_screen_v2.dart lib/screens/simple_home_screen_v10.dart .github/workflows/apply-time-format-fix.yml
           git commit -m "Apply 12/24-hour static time formatting" || exit 0
           git push origin main
+
+# Trigger the one-shot patch workflow after repository sync.
