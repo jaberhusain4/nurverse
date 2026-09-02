@@ -1,0 +1,140 @@
+name: Apply final time formatting
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.head_commit.message != 'Apply final time formatting changes'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch time formatting
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          controller = Path('lib/controllers/prayer_controller.dart')
+          text = controller.read_text(encoding='utf-8')
+          old = "return DateFormat('hh:mm').format(value);"
+          new = "return DateFormat('hh:mm a').format(value);"
+          assert text.count(old) == 1, f'controller replacement count={text.count(old)}'
+          controller.write_text(text.replace(old, new), encoding='utf-8')
+
+          prayer = Path('lib/screens/prayer_screen_v2.dart')
+          text = prayer.read_text(encoding='utf-8')
+          old = """settings.showSeconds
+                          ? c.timeRemainingForNextPrayer
+                          : _withoutSeconds(c.timeRemainingForNextPrayer)"""
+          assert text.count(old) == 1, f'prayer countdown replacement count={text.count(old)}'
+          text = text.replace(old, "c.timeRemainingForNextPrayer")
+
+          old_func = re.search(r"  String _displayTime\(SettingsProvider settings, String value\) \{.*?\n  \}\n\n  String _withoutSeconds", text, re.S)
+          assert old_func, 'prayer display function not found'
+          new_func = r'''  String _displayTime(SettingsProvider settings, String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty || trimmed == '--:--') return trimmed;
+
+    final match = RegExp(
+      r'^(\\d{1,2}):(\\d{2})(?:\\s*([AaPp][Mm]))?$',
+    ).firstMatch(trimmed);
+    if (match == null) return trimmed;
+
+    var hour = int.parse(match.group(1)!);
+    final minute = match.group(2)!;
+    final period = match.group(3)?.toUpperCase();
+
+    if (period != null) {
+      if (settings.is24Hour) {
+        if (period == 'AM') {
+          hour = hour == 12 ? 0 : hour;
+        } else {
+          hour = hour == 12 ? 12 : hour + 12;
+        }
+        return '${hour.toString().padLeft(2, '0')}:$minute';
+      }
+      final displayHour = hour == 0 ? 12 : hour;
+      return '$displayHour:$minute $period';
+    }
+
+    if (settings.is24Hour) {
+      return '${hour.toString().padLeft(2, '0')}:$minute';
+    }
+    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+    final displayPeriod = hour >= 12 ? 'PM' : 'AM';
+    return '$displayHour:$minute $displayPeriod';
+  }
+
+  String _withoutSeconds'''
+          text = text[:old_func.start()] + new_func + text[old_func.end():]
+          prayer.write_text(text, encoding='utf-8')
+
+          home = Path('lib/screens/simple_home_screen_v10.dart')
+          text = home.read_text(encoding='utf-8')
+          marker = "  String _hijri(String languageCode) {"
+          assert marker in text, 'home insertion marker not found'
+          helper = r'''  String _staticTime(SettingsProvider settings, String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty || trimmed == '--:--') return trimmed;
+
+    final match = RegExp(
+      r'^(\\d{1,2}):(\\d{2})(?:\\s*([AaPp][Mm]))?$',
+    ).firstMatch(trimmed);
+    if (match == null) return trimmed;
+
+    var hour = int.parse(match.group(1)!);
+    final minute = match.group(2)!;
+    final period = match.group(3)?.toUpperCase();
+
+    if (period != null) {
+      if (settings.is24Hour) {
+        if (period == 'AM') {
+          hour = hour == 12 ? 0 : hour;
+        } else {
+          hour = hour == 12 ? 12 : hour + 12;
+        }
+        return '${hour.toString().padLeft(2, '0')}:$minute';
+      }
+      final displayHour = hour == 0 ? 12 : hour;
+      return '$displayHour:$minute $period';
+    }
+
+    if (settings.is24Hour) {
+      return '${hour.toString().padLeft(2, '0')}:$minute';
+    }
+    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+    final displayPeriod = hour >= 12 ? 'PM' : 'AM';
+    return '$displayHour:$minute $displayPeriod';
+  }
+
+'''
+          text = text.replace(marker, helper + marker, 1)
+          text = re.sub(r"final time = prayer\['start'\]\?\.toString\(\) \?\? '—';", "final time = _staticTime(settings, prayer['start']?.toString() ?? '—');", text, count=1)
+          text = text.replace("Text(nextPrayerTime.isEmpty ? '—' : nextPrayerTime,", "Text(nextPrayerTime.isEmpty ? '—' : _staticTime(settings, nextPrayerTime),", 1)
+          text = text.replace("_V10SunData(label: 'Sunrise', value: sunrise)", "_V10SunData(label: 'Sunrise', value: _staticTime(settings, sunrise))", 1)
+          text = text.replace("_V10SunData(label: 'Sunset', value: sunset, end: true)", "_V10SunData(label: 'Sunset', value: _staticTime(settings, sunset), end: true)", 1)
+          # Ensure the timeline has access to SettingsProvider.
+          text = text.replace("final languageCode = settings.languageCode;", "final languageCode = settings.languageCode;", 1)
+          # Add settings to timeline call and constructor if needed.
+          text = text.replace("_V10PrayerTimeline(prayers: prayers, languageCode: languageCode)", "_V10PrayerTimeline(prayers: prayers, languageCode: languageCode, is24Hour: settings.is24Hour)", 1)
+          text = text.replace("final String languageCode;\n\n  const _V10PrayerTimeline({\n    required this.prayers,\n    required this.languageCode,\n  });", "final String languageCode;\n  final bool is24Hour;\n\n  const _V10PrayerTimeline({\n    required this.prayers,\n    required this.languageCode,\n    required this.is24Hour,\n  });", 1)
+          # The timeline helper is defined outside the State, so format its static values locally.
+          text = text.replace("final time = _staticTime(settings, prayer['start']?.toString() ?? '—');", "final rawTime = prayer['start']?.toString() ?? '—';\n    final match = RegExp(r'^(\\d{1,2}):(\\d{2})(?:\\s*([AaPp][Mm]))?$').firstMatch(rawTime.trim());\n    String time = rawTime;\n    if (match != null) {\n      var hour = int.parse(match.group(1)!);\n      final minute = match.group(2)!;\n      final period = match.group(3)?.toUpperCase();\n      if (period != null && is24Hour) hour = period == 'AM' ? (hour == 12 ? 0 : hour) : (hour == 12 ? 12 : hour + 12);\n      if (period == null && !is24Hour) {\n        final p = hour >= 12 ? 'PM' : 'AM';\n        hour = hour % 12 == 0 ? 12 : hour % 12;\n        time = '$hour:$minute $p';\n      } else if (is24Hour) {\n        time = '${hour.toString().padLeft(2, '0')}:$minute';\n      } else {\n        final displayHour = hour % 12 == 0 ? 12 : hour % 12;\n        time = '$displayHour:$minute ${period ?? (hour >= 12 ? 'PM' : 'AM')}';\n      }\n    }", 1)
+          home.write_text(text, encoding='utf-8')
+
+      - name: Commit source changes and remove one-shot workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/apply-time-format-final.yml
+          git add lib/controllers/prayer_controller.dart lib/screens/prayer_screen_v2.dart lib/screens/simple_home_screen_v10.dart .github/workflows/apply-time-format-final.yml
+          git commit -m "Apply final time formatting changes"
+          git push origin main
