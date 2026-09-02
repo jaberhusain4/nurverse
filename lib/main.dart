@@ -122,25 +122,41 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
   SettingsProvider? _settingsProvider;
+  PrayerController? _prayerController;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final settings = context.read<SettingsProvider>();
+    final prayerController = context.read<PrayerController>();
+
     if (_settingsProvider != settings) {
       _settingsProvider?.removeListener(_onSettingsChanged);
       _settingsProvider = settings;
       _settingsProvider!.addListener(_onSettingsChanged);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || _settingsProvider != settings) return;
-        _syncPrayerSettings(settings);
-      });
     }
+    if (_prayerController != prayerController) {
+      _prayerController?.removeListener(_onPrayerControllerChanged);
+      _prayerController = prayerController;
+      _prayerController!.addListener(_onPrayerControllerChanged);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _syncPrayerSettings(settings);
+      _syncAdhanNotifications();
+    });
   }
 
   void _onSettingsChanged() {
     if (!mounted || _settingsProvider == null) return;
     _syncPrayerSettings(_settingsProvider!);
+    _syncAdhanNotifications();
+  }
+
+  void _onPrayerControllerChanged() {
+    if (!mounted) return;
+    _syncAdhanNotifications();
   }
 
   void _syncPrayerSettings(SettingsProvider settings) {
@@ -150,6 +166,22 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       madhhab: settings.madhhab,
     );
     prayerController.updatePrayerAdjustments(settings.prayerAdjustments);
+  }
+
+  Future<void> _syncAdhanNotifications() async {
+    final settings = _settingsProvider;
+    final prayerController = _prayerController;
+    if (settings == null || prayerController == null) return;
+
+    await NotificationService.instance.syncPrayerNotifications(
+      enabled: settings.isAdhanNotificationEnabled,
+      position: prayerController.position,
+      calculationConfig: settings.prayerCalculationConfig,
+      prayerAdjustments: settings.prayerAdjustments,
+      reminderMinutes: settings.prayerReminderMinutes,
+      languageCode: settings.languageCode,
+      sound: settings.notificationSound,
+    );
   }
 
   void _onNavigateTab(int index) {
@@ -223,7 +255,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void dispose() {
     _settingsProvider?.removeListener(_onSettingsChanged);
+    _prayerController?.removeListener(_onPrayerControllerChanged);
     _settingsProvider = null;
+    _prayerController = null;
     super.dispose();
   }
 }
