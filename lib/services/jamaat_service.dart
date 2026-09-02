@@ -1,9 +1,13 @@
+import 'package:adhan/adhan.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'prayer_calculation_config.dart';
 
 /// Single source of truth for resolved Jamaat times.
 ///
-/// Jamaat times start with fixed Dhaka reference defaults. Users can replace
-/// each prayer independently with their local mosque's actual Jamaat time.
+/// Uncustomized Jamaat times are calculated from the daily Dhaka prayer times
+/// instead of being fixed clock values. Users can replace each prayer
+/// independently with their local mosque's actual Jamaat time.
 class JamaatService {
   static const String _customPrefix = 'nurverse_jamaat_custom_';
   static const String _modeKey = 'nurverse_jamaat_mode';
@@ -16,15 +20,19 @@ class JamaatService {
     'Isha': 'jamaat_isha',
   };
 
-  static const Map<String, String> _dhakaDefaults = {
-    'Fajr': '5:00 AM',
-    'Dhuhr': '1:30 PM',
-    'Asr': '5:15 PM',
-    'Maghrib': '6:57 PM',
-    'Isha': '8:45 PM',
+  // Delay after the calculated Dhaka prayer start used as the reference
+  // Jamaat. These are offsets, not hard-coded clock times, so the displayed
+  // default changes automatically as prayer times change through the year.
+  static const Map<String, Duration> _dhakaJamaatOffsets = {
+    'Fajr': Duration(minutes: 20),
+    'Dhuhr': Duration(minutes: 20),
+    'Asr': Duration(minutes: 20),
+    'Maghrib': Duration(minutes: 5),
+    'Isha': Duration(minutes: 20),
   };
 
-  static final Map<String, String> _jamaat = {..._dhakaDefaults};
+  static final Map<String, String> _jamaat = <String, String>{};
+  static final Map<String, String> _dhakaDefaults = <String, String>{};
   static final Set<String> _customPrayers = <String>{};
   static bool _initialized = false;
   static bool _automaticMode = false;
@@ -38,6 +46,12 @@ class JamaatService {
 
   static Future<void> initialize() async {
     if (_initialized) return;
+
+    _calculateDhakaDefaults(
+      DateTime.now(),
+      PrayerCalculationConfig.defaults,
+    );
+
     final prefs = await SharedPreferences.getInstance();
     final bool hasExplicitMode = prefs.containsKey(_modeKey);
     _automaticMode = prefs.getBool(_modeKey) ?? false;
@@ -67,42 +81,52 @@ class JamaatService {
       }
     }
 
-    // Never let an old automatic-mode flag erase the Dhaka fallback.
-    for (final prayer in prayers) {
-      if (!_customPrayers.contains(prayer)) {
-        _jamaat[prayer] = _dhakaDefaults[prayer]!;
-      }
-    }
+    _applyDhakaDefaultsToUncustomized();
     _initialized = true;
   }
 
-  /// Retained only for backward compatibility. Jamaat is never calculated
-  /// from prayer start times.
-  static Future<void> setAutomaticMode(bool value) async {
-    await initialize();
-    _automaticMode = false;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_modeKey, false);
-    for (final prayer in prayers) {
-      if (!_customPrayers.contains(prayer)) {
-        _jamaat[prayer] = _dhakaDefaults[prayer]!;
-      }
-    }
+  /// Recalculates the Dhaka reference Jamaat times for the supplied date and
+  /// prayer calculation settings. Custom mosque times are never overwritten.
+  static void configureDhakaDefaults({
+    required DateTime date,
+    PrayerCalculationConfig config = PrayerCalculationConfig.defaults,
+  }) {
+    _calculateDhakaDefaults(date, config);
+    _applyDhakaDefaultsToUncustomized();
   }
 
-  static void configureDefaults(Map<String, DateTime> prayerTimes) {}
-  static void configureDefaultsFromPrayerList(List<Map<String, dynamic>> prayerList) {}
+  /// Backward-compatible entry point used by the PrayerController. The date
+  /// comes from the calculated schedule, but the reference location remains
+  /// Dhaka rather than the user's current location.
+  static void configureDefaults(Map<String, DateTime> prayerTimes) {
+    final reference = prayerTimes['Fajr'] ?? prayerTimes['Dhuhr'] ?? DateTime.now();
+    configureDhakaDefaults(date: reference, config: PrayerCalculationConfig.defaults);
+  }
+
+  static void configureDefaultsFromPrayerList(List<Map<String, dynamic>> prayerList) {
+    DateTime? reference;
+    for (final prayer in prayerList) {
+      final dynamic value = prayer['time'] ?? prayer['start'] ?? prayer['prayerTime'];
+      if (value is DateTime) {
+        reference = value;
+        break;
+      }
+    }
+    configureDhakaDefaults(date: reference ?? DateTime.now(), config: PrayerCalculationConfig.defaults);
+  }
 
   static String get(String prayer) => _jamaat[prayer] ?? '--:--';
 
   static String defaultTime(String prayer) => _dhakaDefaults[prayer] ?? '--:--';
 
   static bool isDhakaDefault(String prayer) =>
-      get(prayer) == defaultTime(prayer) && !_customPrayers.contains(prayer);
+      !_customPrayers.contains(prayer) && _jamaat[prayer] == _dhakaDefaults[prayer];
 
   static bool isCustom(String prayer) => _customPrayers.contains(prayer);
   static Map<String, String> get all => Map.unmodifiable(_jamaat);
 
+  /// Compatibility bridge for SettingsProvider. Dynamic Dhaka defaults are
+  /// preserved when the provider passes its old fallback values.
   static void setAll({
     required String fajr,
     required String dhuhr,
@@ -110,14 +134,25 @@ class JamaatService {
     required String maghrib,
     required String isha,
   }) {
-    _jamaat['Fajr'] = _normalizeTime(fajr);
-    _jamaat['Dhuhr'] = _normalizeTime(dhuhr);
-    _jamaat['Asr'] = _normalizeTime(asr);
-    _jamaat['Maghrib'] = _normalizeTime(maghrib);
-    _jamaat['Isha'] = _normalizeTime(isha);
+    final values = <String, String>{
+      'Fajr': fajr,
+      'Dhuhr': dhuhr,
+      'Asr': asr,
+      'Maghrib': maghrib,
+      'Isha': isha,
+    };
+
     for (final prayer in prayers) {
-      if (_jamaat[prayer] == '--:--') _jamaat[prayer] = _dhakaDefaults[prayer]!;
+      final normalized = _normalizeTime(values[prayer]!);
+      if (normalized == '--:--') continue;
+      if (!_customPrayers.contains(prayer)) {
+        // Provider fallbacks are legacy fixed values. They must not replace
+        // today's calculated Dhaka reference time.
+        continue;
+      }
+      _jamaat[prayer] = normalized;
     }
+    _applyDhakaDefaultsToUncustomized();
   }
 
   static Future<void> set(String prayer, String time) async {
@@ -137,23 +172,69 @@ class JamaatService {
     if (!prayers.contains(prayer)) return;
     await initialize();
     _customPrayers.remove(prayer);
-    _jamaat[prayer] = _dhakaDefaults[prayer]!;
+    _jamaat[prayer] = _dhakaDefaults[prayer] ?? '--:--';
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('$_customPrefix$prayer');
   }
 
   static Future<void> reset() async {
-    final prefs = await SharedPreferences.getInstance();
+    await initialize();
     _automaticMode = false;
+    await configureDhakaDefaults(
+      date: DateTime.now(),
+      config: PrayerCalculationConfig.defaults,
+    );
+    final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_modeKey, false);
     for (final prayer in prayers) {
       _customPrayers.remove(prayer);
-      _jamaat[prayer] = _dhakaDefaults[prayer]!;
+      _jamaat[prayer] = _dhakaDefaults[prayer] ?? '--:--';
       await prefs.remove('$_customPrefix$prayer');
     }
     for (final key in _legacyKeys.values) {
       await prefs.remove(key);
     }
+  }
+
+  static void _calculateDhakaDefaults(
+    DateTime date,
+    PrayerCalculationConfig config,
+  ) {
+    const coordinates = Coordinates(23.8103, 90.4125);
+    final params = config.method.getParameters()..madhab = config.madhab;
+    final times = PrayerTimes(coordinates, DateComponents.from(date), params);
+
+    final starts = <String, DateTime>{
+      'Fajr': times.fajr,
+      'Dhuhr': times.dhuhr,
+      'Asr': times.asr,
+      'Maghrib': times.maghrib,
+      'Isha': times.isha,
+    };
+
+    _dhakaDefaults.clear();
+    for (final prayer in prayers) {
+      final start = starts[prayer];
+      final offset = _dhakaJamaatOffsets[prayer];
+      if (start == null || offset == null) continue;
+      _dhakaDefaults[prayer] = _formatTime(start.add(offset));
+    }
+  }
+
+  static void _applyDhakaDefaultsToUncustomized() {
+    for (final prayer in prayers) {
+      if (!_customPrayers.contains(prayer) && _dhakaDefaults.containsKey(prayer)) {
+        _jamaat[prayer] = _dhakaDefaults[prayer]!;
+      }
+    }
+  }
+
+  static String _formatTime(DateTime value) {
+    final hour = value.hour;
+    final minute = value.minute;
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+    return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
   }
 
   static String _normalizeTime(String value) {
