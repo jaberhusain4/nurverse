@@ -1,0 +1,63 @@
+name: Repair Time Format Source
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.event.head_commit.message == 'Repair time-format source'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore known-good sources and apply minimal time-format fix
+        shell: bash
+        run: |
+          git checkout e3e93519470603c4fc8f52a082a4c8b1d4f9599d -- lib/screens/prayer_screen_v2.dart lib/controllers/prayer_controller.dart
+          python3 - <<'PY'
+          from pathlib import Path
+
+          prayer = Path('lib/screens/prayer_screen_v2.dart')
+          text = prayer.read_text(encoding='utf-8')
+          old = """                    Text(\n                      settings.showSeconds\n                          ? c.timeRemainingForNextPrayer\n                          : _withoutSeconds(c.timeRemainingForNextPrayer),\n                      textAlign: TextAlign.end,\n                      style: TextStyle(\n                        color: primary,\n                        fontSize: 18,\n                        fontWeight: FontWeight.w900,\n                      ),\n                    ),"""
+          new = """                    Text(\n                      c.timeRemainingForNextPrayer,\n                      textAlign: TextAlign.end,\n                      style: TextStyle(\n                        color: primary,\n                        fontSize: 18,\n                        fontWeight: FontWeight.w900,\n                      ),\n                    ),"""
+          if old not in text:
+              raise SystemExit('Prayer countdown block not found')
+          text = text.replace(old, new, 1)
+
+          old_helper = """  String _displayTime(SettingsProvider settings, String value) {\n    if (settings.showSeconds) return value;\n    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(value.trim());\n    return match?.group(1) ?? value;\n  }\n\n  String _withoutSeconds(String value) {\n    final match = RegExp(r'^(\\d{2}):(\\d{2})').firstMatch(value.trim());\n    return match == null ? value : '${match.group(1)}:${match.group(2)}';\n  }"""
+          new_helper = """  String _displayTime(SettingsProvider settings, String value) {\n    final input = value.trim();\n    if (input.isEmpty) return value;\n    DateTime? parsed;\n    for (final pattern in ['h:mm a', 'hh:mm a', 'H:mm', 'HH:mm']) {\n      try {\n        parsed = DateFormat(pattern, 'en_US').parseStrict(input);\n        break;\n      } catch (_) {}\n    }\n    if (parsed == null) {\n      final match = RegExp(r'^(\\d{1,2}):(\\d{2})').firstMatch(input);\n      if (match == null) return input;\n      final hour = int.tryParse(match.group(1)!) ?? 0;\n      final minute = int.tryParse(match.group(2)!) ?? 0;\n      parsed = DateTime(2000, 1, 1, hour, minute);\n    }\n    return settings.is24Hour ? DateFormat('HH:mm').format(parsed) : DateFormat('h:mm a', 'en_US').format(parsed);\n  }"""
+          if old_helper not in text:
+              raise SystemExit('Prayer display helper not found')
+          text = text.replace(old_helper, new_helper, 1)
+          prayer.write_text(text, encoding='utf-8')
+
+          controller = Path('lib/controllers/prayer_controller.dart')
+          text = controller.read_text(encoding='utf-8')
+          old = "String _formatTime(DateTime value) => DateFormat('hh:mm').format(value);"
+          new = "String _formatTime(DateTime value) => DateFormat('h:mm a', 'en_US').format(value);"
+          if old not in text:
+              raise SystemExit('Controller format helper not found')
+          text = text.replace(old, new, 1)
+          controller.write_text(text, encoding='utf-8')
+
+          marker = Path('REPAIR_TIME_FORMAT_SOURCE.txt')
+          if marker.exists():
+              marker.unlink()
+          PY
+
+      - name: Commit repaired sources
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/screens/prayer_screen_v2.dart lib/controllers/prayer_controller.dart REPAIR_TIME_FORMAT_SOURCE.txt
+          git commit -m "Repair time-format source"
+          git push
