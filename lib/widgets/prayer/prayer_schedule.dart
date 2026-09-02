@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/prayer_controller.dart';
 import '../../localization/app_localizations.dart';
 import '../../providers/settings_provider.dart';
+import '../../services/jamaat_service.dart';
 import '../../theme/app_theme.dart';
 
 class PrayerSchedule extends StatelessWidget {
@@ -26,7 +27,7 @@ class PrayerSchedule extends StatelessWidget {
         final String start = prayer['start']?.toString() ?? '';
         final String end = prayer['end']?.toString() ?? '';
         final String prayerKey = rawName.toLowerCase() == 'jumuah' || rawName.contains('জুম') ? 'Dhuhr' : rawName;
-        final String jamaat = _formatJamaat(settings.getJamaat(prayerKey), settings.is24Hour);
+        final String jamaat = _formatJamaat(JamaatService.get(prayerKey), settings.is24Hour);
         final bool fridayPrayer = isFriday && (rawName == "জুমু'আ" || rawName == 'জুমু‘আ' || rawName.toLowerCase() == 'jumuah');
         return PrayerScheduleTile(name: name, start: start, end: end, jamaat: jamaat, isCurrent: isCurrent, isFriday: fridayPrayer);
       }).toList(),
