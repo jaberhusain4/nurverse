@@ -60,7 +60,7 @@ class SettingsProvider extends ChangeNotifier {
   bool _isAdhanNotificationEnabled = true;
   String _locationMode = 'automatic';
   bool _autoLocation = true;
-  int _hijriAdjustment = 0;
+  int _hijriAdjustment = 1;
   bool _showSeconds = false;
   String _timeFormat = '12';
   bool _vibrationEnabled = true;
@@ -176,7 +176,7 @@ class SettingsProvider extends ChangeNotifier {
       _isAdhanNotificationEnabled = prefs.getBool(_adhanNotificationKey) ?? true;
       _locationMode = prefs.getString(_locationModeKey) ?? 'automatic';
       _autoLocation = prefs.getBool(_autoLocationKey) ?? true;
-      _hijriAdjustment = (prefs.getInt(_hijriAdjustmentKey) ?? 0).clamp(-3, 3);
+      _hijriAdjustment = (prefs.getInt(_hijriAdjustmentKey) ?? 1).clamp(-3, 3);
       _showSeconds = prefs.getBool(_showSecondsKey) ?? false;
       _timeFormat = prefs.getString(_timeFormatKey) == '24' ? '24' : '12';
       _vibrationEnabled = prefs.getBool(_vibrationKey) ?? true;
@@ -316,7 +316,7 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   Future<void> resetSettings() async {
-    _themeMode = ThemeMode.system; _isAmoledMode = false; _languageCode = 'bn'; _calculationMethod = 'Karachi'; _madhab = 'Hanafi'; _quranFontSize = 24.0; _translationFontSize = 14.0; _isAdhanNotificationEnabled = true; _locationMode = 'automatic'; _autoLocation = true; _hijriAdjustment = 0; _showSeconds = false; _timeFormat = '12'; _vibrationEnabled = true; _quranTranslation = 'Bangla'; _quranArabicFont = 'Default'; _autoPlayNext = false; _downloadWifiOnly = true; _notificationSound = 'Default'; _prayerReminderMinutes = 0; _prayerAdjustments = Map<String, int>.from(_defaultPrayerAdjustments); _showDailyAyah = true; _showDailyHadith = true; _showDailyDua = true; _dateDisplayPreference = 'both'; _fajrJamaat = '5:00 AM'; _dhuhrJamaat = '1:30 PM'; _asrJamaat = '5:15 PM'; _maghribJamaat = '6:57 PM'; _ishaJamaat = '8:45 PM';
+    _themeMode = ThemeMode.system; _isAmoledMode = false; _languageCode = 'bn'; _calculationMethod = 'Karachi'; _madhab = 'Hanafi'; _quranFontSize = 24.0; _translationFontSize = 14.0; _isAdhanNotificationEnabled = true; _locationMode = 'automatic'; _autoLocation = true; _hijriAdjustment = 1; _showSeconds = false; _timeFormat = '12'; _vibrationEnabled = true; _quranTranslation = 'Bangla'; _quranArabicFont = 'Default'; _autoPlayNext = false; _downloadWifiOnly = true; _notificationSound = 'Default'; _prayerReminderMinutes = 0; _prayerAdjustments = Map<String, int>.from(_defaultPrayerAdjustments); _showDailyAyah = true; _showDailyHadith = true; _showDailyDua = true; _dateDisplayPreference = 'both'; _fajrJamaat = '5:00 AM'; _dhuhrJamaat = '1:30 PM'; _asrJamaat = '5:15 PM'; _maghribJamaat = '6:57 PM'; _ishaJamaat = '8:45 PM';
     await JamaatService.reset();
     notifyListeners();
     try {
@@ -333,14 +333,14 @@ class SettingsProvider extends ChangeNotifier {
   String _normalizeJamaatTime(String value, {String? fallback}) {
     final input = value.trim();
     if (input.isEmpty) return fallback ?? '';
-    final amPm = RegExp(r'^(\d{1,2})\s*:\s*(\d{2})\s*([AaPp][Mm])$').firstMatch(input);
+    final amPm = RegExp(r'^(\\d{1,2})\\s*:\\s*(\\d{2})\\s*([AaPp][Mm])$').firstMatch(input);
     if (amPm != null) {
       final hour = int.tryParse(amPm.group(1)!);
       final minute = int.tryParse(amPm.group(2)!);
       if (hour == null || minute == null || hour < 1 || hour > 12 || minute > 59) return fallback ?? '';
       return '$hour:${minute.toString().padLeft(2, '0')} ${amPm.group(3)!.toUpperCase()}';
     }
-    final twentyFour = RegExp(r'^(\d{1,2})\s*:\s*(\d{2})$').firstMatch(input);
+    final twentyFour = RegExp(r'^(\\d{1,2})\\s*:\\s*(\\d{2})$').firstMatch(input);
     if (twentyFour != null) {
       final hour = int.tryParse(twentyFour.group(1)!);
       final minute = int.tryParse(twentyFour.group(2)!);
