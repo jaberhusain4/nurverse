@@ -1,0 +1,38 @@
+name: Repair V10 Home Syntax
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Repair missing closing parenthesis
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('lib/screens/simple_home_screen_v10.dart')
+          text = path.read_text(encoding='utf-8')
+          old = "      ])),\n    );\n  }\n}\n\nclass _V10Header"
+          new = "      ])),\n    ));\n  }\n}\n\nclass _V10Header"
+          if old not in text:
+              raise SystemExit('Expected V10 Scaffold closing sequence was not found.')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+      - name: Commit repaired source and remove temporary workflow
+        shell: bash
+        run: |
+          rm -f .github/workflows/repair-v10-home-syntax.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/screens/simple_home_screen_v10.dart .github/workflows/repair-v10-home-syntax.yml
+          git commit -m "Fix V10 home screen syntax error"
+          git push
