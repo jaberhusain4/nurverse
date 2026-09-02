@@ -47,10 +47,6 @@ jobs:
               raise SystemExit('Controller format helper not found')
           text = text.replace(old, new, 1)
           controller.write_text(text, encoding='utf-8')
-
-          marker = Path('REPAIR_TIME_FORMAT_SOURCE.txt')
-          if marker.exists():
-              marker.unlink()
           PY
 
       - name: Commit repaired sources
@@ -58,6 +54,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add lib/screens/prayer_screen_v2.dart lib/controllers/prayer_controller.dart REPAIR_TIME_FORMAT_SOURCE.txt
+          git add lib/screens/prayer_screen_v2.dart lib/controllers/prayer_controller.dart
           git commit -m "Repair time-format source"
           git push
