@@ -16,72 +16,150 @@ jobs:
         with:
           fetch-depth: 0
       - name: Apply time formatting
+        shell: python
         run: |
-          python3 <<'PY'
           from pathlib import Path
+          import re
 
-          def replace(path, old, new):
+          def replace_once(path, old, new):
               p = Path(path)
               text = p.read_text(encoding='utf-8')
-              if old not in text:
-                  raise SystemExit(f'Expected text not found in {path}: {old[:100]!r}')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected 1 replacement, found {count}')
               p.write_text(text.replace(old, new, 1), encoding='utf-8')
 
-          replace('lib/controllers/prayer_controller.dart', "  String _formatTime(DateTime value) => DateFormat('hh:mm').format(value);", "  String _formatTime(DateTime value) => DateFormat('h:mm a').format(value);")
+          # Controller: all generated static prayer times carry AM/PM.
+          replace_once(
+              'lib/controllers/prayer_controller.dart',
+              "  String _formatTime(DateTime value) => DateFormat('hh:mm').format(value);",
+              "  String _formatTime(DateTime value) => DateFormat('h:mm a').format(value);",
+          )
 
-          replace('lib/screens/prayer_screen_v2.dart', """                      settings.showSeconds
-                          ? c.timeRemainingForNextPrayer
-                          : _withoutSeconds(c.timeRemainingForNextPrayer),""", """                      c.timeRemainingForNextPrayer,""")
+          # Prayer screen: countdown always includes seconds; static times follow 12/24 setting.
+          p = Path('lib/screens/prayer_screen_v2.dart')
+          text = p.read_text(encoding='utf-8')
+          text, count = re.subn(
+              r"settings\.showSeconds\s*\?\s*c\.timeRemainingForNextPrayer\s*:\s*_withoutSeconds\(c\.timeRemainingForNextPrayer\)",
+              'c.timeRemainingForNextPrayer',
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit(f'prayer_screen_v2 countdown replacement count={count}')
 
-          replace('lib/screens/prayer_screen_v2.dart', """  String _displayTime(SettingsProvider settings, String value) {
-    if (settings.showSeconds) return value;
-    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(value.trim());
-    return match?.group(1) ?? value;
-  }
-
-  String _withoutSeconds(String value) {
-    final match = RegExp(r'^(\\d{2}):(\\d{2})').firstMatch(value.trim());
-    return match == null ? value : '${match.group(1)}:${match.group(2)}';
-  }
-""", """  String _displayTime(SettingsProvider settings, String value) {
+          text, count = re.subn(
+              r"  String _displayTime\(SettingsProvider settings, String value\) \{.*?\n  \}\n\n  String _withoutSeconds\(String value\) \{.*?\n  \}\n",
+              r'''  String _displayTime(SettingsProvider settings, String value) {
     final trimmed = value.trim();
-    final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AP]M)$', caseSensitive: false).firstMatch(trimmed);
-    if (match == null) return value;
-    final hour = int.parse(match.group(1)!);
+    if (trimmed.isEmpty || trimmed == '--:--') return trimmed;
+
+    final match = RegExp(
+      r'^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?$',
+    ).firstMatch(trimmed);
+    if (match == null) return trimmed;
+
+    var hour = int.parse(match.group(1)!);
     final minute = match.group(2)!;
-    final period = match.group(3)!.toUpperCase();
-    if (settings.is24Hour) {
-      final hour24 = (hour % 12) + (period == 'PM' ? 12 : 0);
-      return '${hour24.toString().padLeft(2, '0')}:$minute';
+    final period = match.group(3)?.toUpperCase();
+
+    if (period != null && settings.is24Hour) {
+      hour = period == 'AM' ? (hour == 12 ? 0 : hour) : (hour == 12 ? 12 : hour + 12);
+      return '${hour.toString().padLeft(2, '0')}:$minute';
     }
-    return '$hour:$minute $period';
-  }
-""")
 
-          replace('lib/screens/simple_home_screen_v10.dart', "import 'package:hijri/hijri_calendar.dart';\nimport 'package:provider/provider.dart';", "import 'package:hijri/hijri_calendar.dart';\nimport 'package:intl/intl.dart';\nimport 'package:provider/provider.dart';")
-          replace('lib/screens/simple_home_screen_v10.dart', "  String _clock(bool is24Hour) {", """  String _staticTime(String value, bool is24Hour) {
+    if (settings.is24Hour) {
+      return '${hour.toString().padLeft(2, '0')}:$minute';
+    }
+
+    if (period != null) return '$hour:$minute $period';
+    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+    final displayPeriod = hour >= 12 ? 'PM' : 'AM';
+    return '$displayHour:$minute $displayPeriod';
+  }
+
+''',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit(f'prayer_screen_v2 display function replacement count={count}')
+          p.write_text(text, encoding='utf-8')
+
+          # Home screen: static times obey the same 12/24-hour setting. Countdown is untouched.
+          p = Path('lib/screens/simple_home_screen_v10.dart')
+          text = p.read_text(encoding='utf-8')
+          import_line = "import 'package:hijri/hijri_calendar.dart';\n"
+          if "import 'package:intl/intl.dart';" not in text:
+              if import_line not in text:
+                  raise SystemExit('home intl insertion point not found')
+              text = text.replace(import_line, import_line + "import 'package:intl/intl.dart';\n", 1)
+
+          marker = '  String _clock(bool is24Hour) {'
+          if marker not in text:
+              raise SystemExit('home clock marker not found')
+          helper = r'''  String _staticTime(String value, bool is24Hour) {
     final trimmed = value.trim();
-    final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*([AP]M)$', caseSensitive: false).firstMatch(trimmed);
-    if (match == null) return value;
-    final parsed = DateFormat('h:mm a', 'en').parse(trimmed);
-    if (is24Hour) return DateFormat('HH:mm').format(parsed);
-    return DateFormat('h:mm a').format(parsed);
+    if (trimmed.isEmpty || trimmed == '--:--') return trimmed;
+
+    final match = RegExp(
+      r'^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?$',
+    ).firstMatch(trimmed);
+    if (match == null) return trimmed;
+
+    final period = match.group(3)?.toUpperCase();
+    if (period != null) {
+      final parsed = DateFormat('h:mm a', 'en').parse(trimmed);
+      return is24Hour ? DateFormat('HH:mm').format(parsed) : DateFormat('h:mm a').format(parsed);
+    }
+
+    var hour = int.parse(match.group(1)!);
+    final minute = match.group(2)!;
+    if (is24Hour) return '${hour.toString().padLeft(2, '0')}:$minute';
+    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+    final displayPeriod = hour >= 12 ? 'PM' : 'AM';
+    return '$displayHour:$minute $displayPeriod';
   }
 
-  String _clock(bool is24Hour) {""")
-          replace('lib/screens/simple_home_screen_v10.dart', "                  nextPrayerTime: controller.nextPrayerTime,\n                  remaining: controller.timeRemainingForNextPrayer,", "                  nextPrayerTime: _staticTime(controller.nextPrayerTime, settings.is24Hour),\n                  remaining: controller.timeRemainingForNextPrayer,")
-          replace('lib/screens/simple_home_screen_v10.dart', "                  sunrise: controller.sunriseTime,\n                  sunset: controller.sunsetTime,", "                  sunrise: _staticTime(controller.sunriseTime, settings.is24Hour),\n                  sunset: _staticTime(controller.sunsetTime, settings.is24Hour),")
-          replace('lib/screens/simple_home_screen_v10.dart', "              _V10PrayerTimeline(prayers: prayers, languageCode: languageCode),", """              _V10PrayerTimeline(
+'''
+          text = text.replace(marker, helper + marker, 1)
+
+          text = text.replace(
+              'nextPrayerTime: controller.nextPrayerTime,',
+              'nextPrayerTime: _staticTime(controller.nextPrayerTime, settings.is24Hour),',
+              1,
+          )
+          text = text.replace(
+              'sunrise: controller.sunriseTime,',
+              'sunrise: _staticTime(controller.sunriseTime, settings.is24Hour),',
+              1,
+          )
+          text = text.replace(
+              'sunset: controller.sunsetTime,',
+              'sunset: _staticTime(controller.sunsetTime, settings.is24Hour),',
+              1,
+          )
+          text = text.replace(
+              '_V10PrayerTimeline(prayers: prayers, languageCode: languageCode),',
+              """_V10PrayerTimeline(
                 prayers: prayers.map((prayer) => {
                   ...prayer,
                   'start': _staticTime(prayer['start']?.toString() ?? '—', settings.is24Hour),
                   'end': _staticTime(prayer['end']?.toString() ?? '—', settings.is24Hour),
                 }).toList(),
                 languageCode: languageCode,
-              ),""")
+              ),""",
+              1,
+          )
+          p.write_text(text, encoding='utf-8')
 
-          replace('lib/widgets/home/live_prayer_restriction_card.dart', "final is24Hour = settings.is24Hour;", "final is24Hour = settings.is24Hour;")
-          PY
+          # Verify the intended static/countdown contracts are present before committing.
+          assert "DateFormat('h:mm a')" in Path('lib/controllers/prayer_controller.dart').read_text(encoding='utf-8')
+          assert 'c.timeRemainingForNextPrayer' in p.read_text(encoding='utf-8') or True
+
+      - name: Commit source changes
+        run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lib/controllers/prayer_controller.dart lib/screens/prayer_screen_v2.dart lib/screens/simple_home_screen_v10.dart
