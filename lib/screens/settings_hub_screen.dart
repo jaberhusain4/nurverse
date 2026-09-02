@@ -5,6 +5,7 @@ import '../providers/settings_provider.dart';
 import '../providers/text_scale_provider.dart';
 import '../theme/app_theme.dart';
 import 'home_mode_settings_screen.dart';
+import 'prayer/jamaat_settings_screen.dart';
 
 class SettingsHubScreen extends StatelessWidget {
   const SettingsHubScreen({super.key});
@@ -178,7 +179,11 @@ class SettingsHubScreen extends StatelessWidget {
                 isEnglish
                     ? 'Set local Jamaat times'
                     : 'নিজের এলাকার জামাতের সময় সেট করুন',
-                () => _jamaatDialog(context, settings),
+                () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const JamaatSettingsScreen(),
+                  ),
+                ),
               ),
             ],
           ),
