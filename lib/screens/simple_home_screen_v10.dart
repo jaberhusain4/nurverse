@@ -114,7 +114,7 @@ class _SimpleHomeScreenV10State extends State<SimpleHomeScreenV10> with SingleTi
         const SizedBox(height: 22),
         _V10Footer(date: DateService.englishDate(), prohibitedNow: prohibitedNow, countdown: _countdown(prohibitedNow ? controller.prohibitedEnd : controller.prohibitedStart), languageCode: languageCode),
       ])),
-    );
+    ));
   }
 }
 
