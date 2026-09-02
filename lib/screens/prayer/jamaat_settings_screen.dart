@@ -23,26 +23,6 @@ class JamaatSettingsScreen extends StatelessWidget {
     'Isha': 'ইশা',
   };
 
-  Future<void> _pickTime(BuildContext context, String prayer) async {
-    final settings = context.read<SettingsProvider>();
-    final current = _parseTime(settings.getJamaat(prayer));
-
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: current ?? TimeOfDay.now(),
-      helpText: settings.isEnglish
-          ? 'Select Jamaat time'
-          : 'জামাআতের সময় নির্বাচন করুন',
-      cancelText: settings.isEnglish ? 'Cancel' : 'বাতিল',
-      confirmText: settings.isEnglish ? 'OK' : 'ঠিক আছে',
-    );
-
-    if (picked == null || !context.mounted) return;
-
-    final value = _formatTime(picked, settings.is24Hour);
-    await settings.setJamaatTime(prayer, value);
-  }
-
   TimeOfDay? _parseTime(String value) {
     final text = value.trim();
     if (text.isEmpty || text == '--:--') return null;
@@ -86,6 +66,18 @@ class JamaatSettingsScreen extends StatelessWidget {
     final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
     final period = time.period == DayPeriod.am ? 'AM' : 'PM';
     return '$hour:$minute $period';
+  }
+
+  void _openPicker(BuildContext context, String prayer) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _JamaatTimePickerScreen(
+          prayer: prayer,
+          prayerName: _bnNames[prayer] ?? prayer,
+          initialTime: _parseTime(context.read<SettingsProvider>().getJamaat(prayer)),
+        ),
+      ),
+    );
   }
 
   @override
@@ -136,9 +128,8 @@ class JamaatSettingsScreen extends StatelessWidget {
               child: _JamaatTimeCard(
                 name: _bnNames[prayer] ?? prayer,
                 time: settings.getJamaat(prayer),
-                is24Hour: settings.is24Hour,
                 isEnglish: isEnglish,
-                onTap: () => _pickTime(context, prayer),
+                onTap: () => _openPicker(context, prayer),
               ),
             ),
           ),
@@ -158,14 +149,12 @@ class JamaatSettingsScreen extends StatelessWidget {
 class _JamaatTimeCard extends StatelessWidget {
   final String name;
   final String time;
-  final bool is24Hour;
   final bool isEnglish;
   final VoidCallback onTap;
 
   const _JamaatTimeCard({
     required this.name,
     required this.time,
-    required this.is24Hour,
     required this.isEnglish,
     required this.onTap,
   });
@@ -229,6 +218,280 @@ class _JamaatTimeCard extends StatelessWidget {
               const SizedBox(width: 8),
               Icon(Icons.chevron_right_rounded, color: secondary),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _JamaatTimePickerScreen extends StatefulWidget {
+  final String prayer;
+  final String prayerName;
+  final TimeOfDay? initialTime;
+
+  const _JamaatTimePickerScreen({
+    required this.prayer,
+    required this.prayerName,
+    required this.initialTime,
+  });
+
+  @override
+  State<_JamaatTimePickerScreen> createState() => _JamaatTimePickerScreenState();
+}
+
+class _JamaatTimePickerScreenState extends State<_JamaatTimePickerScreen> {
+  late int _hour;
+  late int _minute;
+  late bool _isPm;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialTime ?? const TimeOfDay(hour: 5, minute: 0);
+    _hour = initial.hourOfPeriod == 0 ? 12 : initial.hourOfPeriod;
+    _minute = initial.minute;
+    _isPm = initial.period == DayPeriod.pm;
+  }
+
+  Future<void> _save() async {
+    final settings = context.read<SettingsProvider>();
+    final is24Hour = settings.is24Hour;
+    final hour24 = is24Hour
+        ? _hour
+        : (_isPm ? (_hour == 12 ? 12 : _hour + 12) : (_hour == 12 ? 0 : _hour));
+    final value = is24Hour
+        ? '${hour24.toString().padLeft(2, '0')}:${_minute.toString().padLeft(2, '0')}'
+        : '$_hour:${_minute.toString().padLeft(2, '0')} ${_isPm ? 'PM' : 'AM'}';
+
+    await settings.setJamaatTime(widget.prayer, value);
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final secondary = context.secondaryTextColor;
+    final isEnglish = settings.isEnglish;
+    final is24Hour = settings.is24Hour;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.prayerName),
+        actions: [
+          TextButton(
+            onPressed: _save,
+            child: Text(isEnglish ? 'Save' : 'সংরক্ষণ'),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              isEnglish
+                  ? 'Choose the Jamaat time. No dialog or text field is used here, so the time can be selected safely.'
+                  : 'জামাআতের সময় নির্বাচন করুন। এখানে কোনো ডায়ালগ বা টেক্সট ফিল্ড ব্যবহার করা হয়নি, তাই সময় নিরাপদভাবে নির্বাচন করা যাবে।',
+              style: TextStyle(color: secondary, fontSize: 12.5, height: 1.5),
+            ),
+          ),
+          const SizedBox(height: 20),
+          if (is24Hour)
+            _NumberGrid(
+              title: isEnglish ? 'Hour' : 'ঘণ্টা',
+              values: List<int>.generate(24, (index) => index),
+              selected: _hour,
+              format: (value) => value.toString().padLeft(2, '0'),
+              onSelected: (value) => setState(() => _hour = value),
+              primary: primary,
+            )
+          else ...[
+            _NumberGrid(
+              title: isEnglish ? 'Hour' : 'ঘণ্টা',
+              values: List<int>.generate(12, (index) => index + 1),
+              selected: _hour,
+              format: (value) => value.toString(),
+              onSelected: (value) => setState(() => _hour = value),
+              primary: primary,
+            ),
+            const SizedBox(height: 20),
+            _PeriodSelector(
+              isPm: _isPm,
+              isEnglish: isEnglish,
+              primary: primary,
+              onChanged: (value) => setState(() => _isPm = value),
+            ),
+          ],
+          const SizedBox(height: 20),
+          _NumberGrid(
+            title: isEnglish ? 'Minute' : 'মিনিট',
+            values: List<int>.generate(60, (index) => index),
+            selected: _minute,
+            format: (value) => value.toString().padLeft(2, '0'),
+            onSelected: (value) => setState(() => _minute = value),
+            primary: primary,
+          ),
+          const SizedBox(height: 28),
+          FilledButton.icon(
+            onPressed: _save,
+            icon: const Icon(Icons.check_rounded),
+            label: Text(isEnglish ? 'Save Jamaat Time' : 'জামাআতের সময় সংরক্ষণ করুন'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NumberGrid extends StatelessWidget {
+  final String title;
+  final List<int> values;
+  final int selected;
+  final String Function(int) format;
+  final ValueChanged<int> onSelected;
+  final Color primary;
+
+  const _NumberGrid({
+    required this.title,
+    required this.values,
+    required this.selected,
+    required this.format,
+    required this.onSelected,
+    required this.primary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 10),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: values.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 6,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 1.35,
+          ),
+          itemBuilder: (context, index) {
+            final value = values[index];
+            final isSelected = value == selected;
+            return Material(
+              color: isSelected ? primary : context.cardColor,
+              borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                onTap: () => onSelected(value),
+                borderRadius: BorderRadius.circular(12),
+                child: Center(
+                  child: Text(
+                    format(value),
+                    style: TextStyle(
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : text,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _PeriodSelector extends StatelessWidget {
+  final bool isPm;
+  final bool isEnglish;
+  final Color primary;
+  final ValueChanged<bool> onChanged;
+
+  const _PeriodSelector({
+    required this.isPm,
+    required this.isEnglish,
+    required this.primary,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          isEnglish ? 'Period' : 'সময়কাল',
+          style: TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _periodButton(
+                context,
+                label: 'AM',
+                selected: !isPm,
+                onTap: () => onChanged(false),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _periodButton(
+                context,
+                label: 'PM',
+                selected: isPm,
+                onTap: () => onChanged(true),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _periodButton(
+    BuildContext context, {
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final text = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    return Material(
+      color: selected ? primary : context.cardColor,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: selected ? Theme.of(context).colorScheme.onPrimary : text,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
         ),
       ),
