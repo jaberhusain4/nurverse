@@ -69,7 +69,7 @@ class NotificationService {
     await init();
     if (!enabled) {
       await cancelPrayerNotifications();
-      return;
+      _lastSyncKey = null;
     }
   }
 
@@ -104,9 +104,21 @@ class NotificationService {
     _lastSyncKey = key;
 
     try {
+      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      AndroidScheduleMode scheduleMode = AndroidScheduleMode.exactAllowWhileIdle;
+      if (androidPlugin != null) {
+        final canScheduleExact = await androidPlugin.canScheduleExactAlarms();
+        if (canScheduleExact != true) {
+          await androidPlugin.requestExactAlarmsPermission();
+        }
+        if (await androidPlugin.canScheduleExactAlarms() != true) {
+          scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
+        }
+      }
+
       await cancelPrayerNotifications();
       final now = DateTime.now();
-      final int days = 7;
+      const int days = 7;
       int id = 1000;
 
       for (int dayOffset = 0; dayOffset < days; dayOffset++) {
@@ -154,7 +166,7 @@ class NotificationService {
             body,
             notificationTime,
             _notificationDetails(sound),
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            androidScheduleMode: scheduleMode,
             payload: 'prayer:${entry.key}',
           );
         }
