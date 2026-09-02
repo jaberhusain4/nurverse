@@ -187,7 +187,7 @@ class NotificationService {
   NotificationDetails _notificationDetails(String sound) {
     final normalized = sound.trim().toLowerCase();
     final bool silent = normalized == 'silent';
-    final String channelId = silent ? 'nurverse_prayer_silent' : 'nurverse_prayer_adhan';
+    final String channelId = silent ? 'nurverse_prayer_silent_v2' : 'nurverse_prayer_adhan_v2';
     final String channelName = silent ? 'NurVerse Prayer (Silent)' : 'NurVerse Adhan';
 
     final android = AndroidNotificationDetails(
@@ -200,6 +200,7 @@ class NotificationService {
       priority: Priority.high,
       playSound: !silent,
       silent: silent,
+      sound: silent ? null : const RawResourceAndroidNotificationSound('azan'),
       audioAttributesUsage: AudioAttributesUsage.alarm,
       icon: 'mipmap/ic_launcher',
     );
