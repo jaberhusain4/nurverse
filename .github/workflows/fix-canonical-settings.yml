@@ -32,6 +32,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
           if ! git diff --cached --quiet; then
-            git commit -m 'fix(settings): restore large premium card presentation'
+            git commit -m 'fix(settings): restore premium account logic and styling'
             git push origin HEAD:main
           fi
