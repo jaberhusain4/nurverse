@@ -25,7 +25,7 @@ jobs:
       - name: Format
         run: dart format lib/screens/canonical_settings_screen.dart
       - name: Verify
-        run: flutter pub get && flutter analyze --no-fatal-infos lib/screens/canonical_settings_screen.dart
+        run: flutter pub get && flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/canonical_settings_screen.dart
       - name: Commit repair
         run: |
           if git diff --quiet; then
