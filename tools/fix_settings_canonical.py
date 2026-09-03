@@ -8,8 +8,10 @@ s = p.read_text(encoding='utf-8')
 # Restore the larger premium hero/card with account icon and premium feature chips.
 if "firebase_auth/firebase_auth.dart" not in s:
     s = s.replace("import 'package:flutter/material.dart';", "import 'package:firebase_auth/firebase_auth.dart';\nimport 'package:flutter/material.dart';", 1)
-if "../services/auth_service.dart" not in s:
-    s = s.replace("import '../theme/app_theme.dart';", "import '../services/auth_service.dart';\nimport 'auth/google_login_screen.dart';\nimport '../theme/app_theme.dart';", 1)
+# Keep the imports minimal; GoogleLoginScreen is the only auth screen used here.
+if "auth/google_login_screen.dart" not in s:
+    s = s.replace("import '../theme/app_theme.dart';", "import 'auth/google_login_screen.dart';\nimport '../theme/app_theme.dart';", 1)
+s = s.replace("import '../services/auth_service.dart';\n", "")
 
 start = s.find('  Widget _premium(')
 end = s.find('  Widget _section(', start)
@@ -32,9 +34,7 @@ if start >= 0 and end > start:
           decoration: BoxDecoration(
             color: theme.cardColor,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: AppColors.seaBlue.withValues(alpha: .20),
-            ),
+            border: Border.all(color: AppColors.seaBlue.withValues(alpha: .20)),
             boxShadow: [
               BoxShadow(
                 color: AppColors.seaBlue.withValues(alpha: .07),
@@ -155,20 +155,14 @@ if start >= 0 and end > start:
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: () {
-                    if (premium.isPremium) {
-                      premium.deactivatePremium();
-                    } else {
-                      premium.activatePremium();
-                    }
-                  },
+                  onPressed: () => premium.activatePremium(),
                   icon: Icon(
                     premium.isPremium ? Icons.settings_rounded : Icons.auto_awesome_rounded,
                     size: 18,
                   ),
                   label: Text(
                     premium.isPremium
-                        ? t(languageCode, 'প্রিমিয়াম পরিচালনা করুন', 'Manage Premium', 'إدارة بريميوم')
+                        ? t(languageCode, 'প্রিমিয়াম সক্রিয়', 'Premium Active', 'بريميوم نشط')
                         : t(languageCode, 'প্রিমিয়াম দেখুন', 'Explore Premium', 'استكشاف بريميوم'),
                   ),
                 ),
@@ -199,18 +193,17 @@ if start >= 0 and end > start:
 '''
     s = s[:start] + premium + s[end:]
 
-# Replace the 12/24-hour choice row with a directly interactive segmented control.
 pattern = re.compile(r"\s*_choice\(\s*context,\s*Icons\.access_time_rounded,\s*t\(l, 'সময় ফরম্যাট', 'Time Format', 'تنسيق الوقت'\),.*?\n\s*\),\n\s*_divider\(\),", re.S)
 replacement = r'''
             _timeFormatTile(context, s, l),
             _divider(),'''
 s, count = pattern.subn(replacement, s, count=1)
-if count == 0:
+if count == 0 and '_timeFormatTile(context, s, l)' not in s:
     raise SystemExit('time format row not found')
 
-# Add a real segmented time-format control before _choice.
-marker = '  Widget _choice(\n'
-if '_timeFormatTile(' not in s:
+# The call itself is not a reliable guard; check for the method declaration.
+if '  Widget _timeFormatTile(' not in s:
+    marker = '  Widget _choice(\n'
     helper = r'''  Widget _timeFormatTile(BuildContext c, SettingsProvider s, String l) => ListTile(
     contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
     leading: Container(
@@ -222,7 +215,10 @@ if '_timeFormatTile(' not in s:
       ),
       child: const Icon(Icons.access_time_rounded, size: 21, color: AppColors.seaBlue),
     ),
-    title: Text(t(l, 'সময় ফরম্যাট', 'Time Format', 'تنسيق الوقت'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+    title: Text(
+      t(l, 'সময় ফরম্যাট', 'Time Format', 'تنسيق الوقت'),
+      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+    ),
     subtitle: Text(
       s.is24Hour ? t(l, '২৪ ঘণ্টা', '24-hour', '24 ساعة') : t(l, '১২ ঘণ্টা', '12-hour', '12 ساعة'),
       style: const TextStyle(fontSize: 10.5, height: 1.3),
@@ -242,6 +238,36 @@ if '_timeFormatTile(' not in s:
 
 '''
     s = s.replace(marker, helper + marker, 1)
+
+# Localize common choice values in Bangla mode.
+old_choice = """    const m = {
+      'Karachi': 'করাচি',
+      'Muslim World League': 'মুসলিম ওয়ার্ল্ড লীগ',
+      'Egyptian': 'মিশরীয়',
+      'Umm Al Qura': 'উম্মুল কুরা',
+      'Dubai': 'দুবাই',
+      'Qatar': 'কাতার',
+      'Kuwait': 'কুয়েত',
+      'Singapore': 'সিঙ্গাপুর',
+      'North America': 'উত্তর আমেরিকা',
+      'Moonsighting Committee': 'চাঁদ দেখা কমিটি',
+      'Hanafi': 'হানাফি',
+      'Shafi': 'শাফেয়ি',
+      'Maliki': 'মালিকি',
+      'Hanbali': 'হাম্বলি',
+      'Bangla': 'বাংলা',
+      'English': 'ইংরেজি',
+      'Default': 'ডিফল্ট',
+      'Silent': 'নীরব',
+      'Amiri': 'আমিরি',
+      'Scheherazade': 'শেহেরাজাদে',
+      'hijri': 'হিজরি',
+      'gregorian': 'গ্রেগরিয়ান',
+      'both': 'উভয়',
+    };"""
+new_choice = old_choice.replace("      'both': 'উভয়',", "      'both': 'উভয়',\n      '12': '১২ ঘণ্টা',\n      '24': '২৪ ঘণ্টা',\n      'automatic': 'স্বয়ংক্রিয়',\n      'manual': 'ম্যানুয়াল',")
+if old_choice in s:
+    s = s.replace(old_choice, new_choice, 1)
 
 p.write_text(s, encoding='utf-8')
 print('settings repair applied')
