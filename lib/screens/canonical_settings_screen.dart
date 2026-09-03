@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/premium_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/text_scale_provider.dart';
+import '../services/auth_service.dart';
 import 'auth/google_login_screen.dart';
 import '../theme/app_theme.dart';
 import 'home_mode_settings_screen.dart';
@@ -374,8 +375,8 @@ class CanonicalSettingsScreen extends StatelessWidget {
     final languageCode = settings.languageCode;
     final isActive = premium.isPremium;
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.userChanges(),
-      initialData: FirebaseAuth.instance.currentUser,
+      stream: AuthService.instance.authStateChanges,
+      initialData: AuthService.instance.currentUser,
       builder: (context, authSnapshot) {
         final user = authSnapshot.data;
         final theme = Theme.of(context);
@@ -503,17 +504,144 @@ class CanonicalSettingsScreen extends StatelessWidget {
                           color: AppColors.seaBlue.withValues(alpha: .10),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: user == null
-                            ? Icon(
-                                Icons.person_outline_rounded,
-                                color: theme.colorScheme.primary,
-                                size: 22,
-                              )
-                            : Icon(
-                                Icons.person_rounded,
-                                color: theme.colorScheme.primary,
-                                size: 22,
+                        child: Builder(
+                          builder: (buttonContext) {
+                            final photoUrl = user?.photoURL?.trim();
+                            final hasPhoto =
+                                user != null &&
+                                photoUrl != null &&
+                                photoUrl.isNotEmpty;
+                            return InkWell(
+                              onTap: () async {
+                                if (user == null) {
+                                  await Navigator.of(buttonContext).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => const GoogleLoginScreen(),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                await showModalBottomSheet<void>(
+                                  context: buttonContext,
+                                  showDragHandle: true,
+                                  builder: (sheetContext) => SafeArea(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        20,
+                                        8,
+                                        20,
+                                        24,
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 34,
+                                            backgroundColor: AppColors.seaBlue
+                                                .withValues(alpha: .10),
+                                            backgroundImage: hasPhoto
+                                                ? NetworkImage(photoUrl!)
+                                                : null,
+                                            child: hasPhoto
+                                                ? null
+                                                : Icon(
+                                                    Icons
+                                                        .account_circle_rounded,
+                                                    size: 46,
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primary,
+                                                  ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            user.displayName
+                                                        ?.trim()
+                                                        .isNotEmpty ==
+                                                    true
+                                                ? user.displayName!
+                                                : 'NurVerse User',
+                                            style: theme.textTheme.titleLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          if (user.email?.isNotEmpty ==
+                                              true) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              user.email!,
+                                              style: theme.textTheme.bodyMedium
+                                                  ?.copyWith(
+                                                    color: theme
+                                                        .textTheme
+                                                        .bodyMedium
+                                                        ?.color
+                                                        ?.withValues(
+                                                          alpha: .70,
+                                                        ),
+                                                  ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                          const SizedBox(height: 20),
+                                          SizedBox(
+                                            width: double.infinity,
+                                            child: OutlinedButton.icon(
+                                              onPressed: () async {
+                                                Navigator.of(
+                                                  sheetContext,
+                                                ).pop();
+                                                await AuthService.instance
+                                                    .signOut();
+                                              },
+                                              icon: const Icon(
+                                                Icons.logout_rounded,
+                                              ),
+                                              label: Text(
+                                                languageCode == 'en'
+                                                    ? 'Logout'
+                                                    : 'লগআউট',
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(14),
+                              child: SizedBox(
+                                width: 42,
+                                height: 42,
+                                child: hasPhoto
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(13),
+                                        child: Image.network(
+                                          photoUrl!,
+                                          width: 42,
+                                          height: 42,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => Icon(
+                                            Icons.person_rounded,
+                                            color: theme.colorScheme.primary,
+                                            size: 22,
+                                          ),
+                                        ),
+                                      )
+                                    : Icon(
+                                        user != null
+                                            ? Icons.person_rounded
+                                            : Icons.login_rounded,
+                                        color: theme.colorScheme.primary,
+                                        size: 22,
+                                      ),
                               ),
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -742,6 +870,21 @@ class CanonicalSettingsScreen extends StatelessWidget {
         if (values.isNotEmpty) s.setTimeFormat(values.first);
       },
       showSelectedIcon: false,
+      style: ButtonStyle(
+        foregroundColor: WidgetStateProperty.resolveWith((states) {
+          return states.contains(WidgetState.selected)
+              ? Colors.white
+              : AppColors.seaBlue;
+        }),
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          return states.contains(WidgetState.selected)
+              ? AppColors.seaBlue
+              : Colors.transparent;
+        }),
+        side: WidgetStateProperty.all(
+          BorderSide(color: AppColors.seaBlue.withValues(alpha: .30)),
+        ),
+      ),
     ),
   );
 
