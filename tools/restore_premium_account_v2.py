@@ -22,4 +22,4 @@ if old_account not in text:
 text = text.replace(old_account, new_account, 1)
 
 path.write_text(text, encoding='utf-8')
-print('premium account v2 patch applied')
+print('premium account v2 patch applied - retry trigger')
