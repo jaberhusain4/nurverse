@@ -91,6 +91,34 @@ jobs:
           if 'Notification Sound' not in s and anchor in s:
               s = s.replace(anchor, extra, 1)
 
+          time_format_anchor = """            _switchTile(
+              context,
+              Icons.timer_outlined,
+              _t(languageCode, 'সেকেন্ড দেখান', 'Show seconds'),
+              _t(languageCode, 'যেখানে সমর্থিত সেখানে সেকেন্ড দেখাবে', 'Show seconds where supported'),
+              settings.showSeconds,
+              settings.toggleShowSeconds,
+            ),"""
+          time_format_extra = time_format_anchor + """
+            _divider(),
+            _tile(
+              context,
+              Icons.access_time_rounded,
+              _t(languageCode, 'সময় ফরম্যাট', 'Time Format', 'تنسيق الوقت'),
+              settings.is24Hour
+                  ? _t(languageCode, '২৪ ঘণ্টা', '24-hour', '24 ساعة')
+                  : _t(languageCode, '১২ ঘণ্টা', '12-hour', '12 ساعة'),
+              () => _showChoiceSheet(
+                context,
+                _t(languageCode, 'সময় ফরম্যাট', 'Time Format', 'تنسيق الوقت'),
+                const ['12', '24'],
+                settings.setTimeFormat,
+                selectedValue: settings.timeFormat,
+              ),
+            ),"""
+          if 'Time Format' not in s and time_format_anchor in s:
+              s = s.replace(time_format_anchor, time_format_extra, 1)
+
           start = s.index('  Future<void> _showChoiceSheet(')
           end = s.index('  Future<void> _showTextSizeSheet(', start)
           fixed = r'''  Future<void> _showChoiceSheet(BuildContext context, String title,
@@ -182,7 +210,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lib/screens/settings_hub_screen_v4.dart
-          git commit -m 'fix(settings): make choice sheet scrollable'
+          git commit -m 'fix(settings): add time format setting'
           git rm .github/workflows/finish-settings.yml
           git rm .github/workflows/finish-settings-apply.yml || true
           git commit -m 'chore: remove temporary settings workflows'
