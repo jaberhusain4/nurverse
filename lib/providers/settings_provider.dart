@@ -121,27 +121,17 @@ class SettingsProvider extends ChangeNotifier {
   CalculationMethod get prayerCalculationMethod => prayerCalculationConfig.method;
   Madhab get prayerMadhab => prayerCalculationConfig.madhhab;
 
-  String get fajrJamaat => _fajrJamaat;
-  String get dhuhrJamaat => _dhuhrJamaat;
-  String get asrJamaat => _asrJamaat;
-  String get maghribJamaat => _maghribJamaat;
-  String get ishaJamaat => _ishaJamaat;
+  // JamaatService is the single source of truth. These provider getters
+  // remain as a compatibility API for existing screens/widgets.
+  String get fajrJamaat => JamaatService.get('Fajr');
+  String get dhuhrJamaat => JamaatService.get('Dhuhr');
+  String get asrJamaat => JamaatService.get('Asr');
+  String get maghribJamaat => JamaatService.get('Maghrib');
+  String get ishaJamaat => JamaatService.get('Isha');
 
-  String getJamaat(String prayer) {
-    switch (prayer.trim()) {
-      case 'Fajr': return _fajrJamaat;
-      case 'Dhuhr': return _dhuhrJamaat;
-      case 'Asr': return _asrJamaat;
-      case 'Maghrib': return _maghribJamaat;
-      case 'Isha': return _ishaJamaat;
-      default: return '--:--';
-    }
-  }
+  String getJamaat(String prayer) => JamaatService.get(prayer.trim());
 
-  Map<String, String> get jamaatTimes => {
-    'Fajr': _fajrJamaat, 'Dhuhr': _dhuhrJamaat, 'Asr': _asrJamaat,
-    'Maghrib': _maghribJamaat, 'Isha': _ishaJamaat,
-  };
+  Map<String, String> get jamaatTimes => JamaatService.all;
 
   String get themeId {
     if (_isAmoledMode) return 'amoled';
@@ -167,7 +157,6 @@ class SettingsProvider extends ChangeNotifier {
       if (_isAmoledMode) _themeMode = ThemeMode.dark;
       final String? savedLanguage = prefs.getString(_languageKey);
       _languageCode = savedLanguage == 'en' || savedLanguage == 'ar' ? savedLanguage! : 'bn';
-
       final String savedCalculationMethod = prefs.getString(_calculationMethodKey) ?? 'Karachi';
       _calculationMethod = _normalizeCalculationMethod(savedCalculationMethod);
       _madhab = _normalizeMadhab(prefs.getString(_madhabKey) ?? 'Hanafi');
@@ -190,7 +179,6 @@ class SettingsProvider extends ChangeNotifier {
       _showDailyHadith = prefs.getBool(_dailyHadithKey) ?? true;
       _showDailyDua = prefs.getBool(_dailyDuaKey) ?? true;
       _dateDisplayPreference = _normalizeDateDisplayPreference(prefs.getString(_dateDisplayPreferenceKey) ?? 'both');
-
       final String? savedPrayerAdjustments = prefs.getString(_prayerAdjustmentsKey);
       if (savedPrayerAdjustments != null) {
         try {
@@ -207,13 +195,11 @@ class SettingsProvider extends ChangeNotifier {
           _prayerAdjustments = Map<String, int>.from(_defaultPrayerAdjustments);
         }
       }
-
       _fajrJamaat = _normalizeJamaatTime(prefs.getString(_fajrJamaatKey) ?? '5:00 AM', fallback: '5:00 AM');
       _dhuhrJamaat = _normalizeJamaatTime(prefs.getString(_dhuhrJamaatKey) ?? '1:30 PM', fallback: '1:30 PM');
       _asrJamaat = _normalizeJamaatTime(prefs.getString(_asrJamaatKey) ?? '5:15 PM', fallback: '5:15 PM');
       _maghribJamaat = _normalizeJamaatTime(prefs.getString(_maghribJamaatKey) ?? '6:57 PM', fallback: '6:57 PM');
       _ishaJamaat = _normalizeJamaatTime(prefs.getString(_ishaJamaatKey) ?? '8:45 PM', fallback: '8:45 PM');
-
       JamaatService.setAll(fajr: _fajrJamaat, dhuhr: _dhuhrJamaat, asr: _asrJamaat, maghrib: _maghribJamaat, isha: _ishaJamaat);
     } catch (_) {
       // In-memory Dhaka defaults remain active.
@@ -242,11 +228,9 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setBangla() async => setLanguage('bn');
   Future<void> setEnglish() async => setLanguage('en');
   Future<void> setArabic() async => setLanguage('ar');
-
   Future<void> setCalculationMethod(String method) async { final normalized = _normalizeCalculationMethod(method); if (_calculationMethod == normalized) return; _calculationMethod = normalized; notifyListeners(); try { await (await SharedPreferences.getInstance()).setString(_calculationMethodKey, normalized); } catch (_) {} }
   Future<void> setMadhhab(String madhhab) async { final normalized = _normalizeMadhab(madhhab); if (_madhab == normalized) return; _madhab = normalized; notifyListeners(); try { await (await SharedPreferences.getInstance()).setString(_madhabKey, normalized); } catch (_) {} }
   Future<void> setMadhab(String madhhab) async => setMadhhab(madhhab);
-
   Future<void> updateQuranFontSize(double size) async { _quranFontSize = size.clamp(14.0, 50.0).toDouble(); notifyListeners(); try { await (await SharedPreferences.getInstance()).setDouble(_quranFontSizeKey, _quranFontSize); } catch (_) {} }
   Future<void> updateTranslationFontSize(double size) async { _translationFontSize = size.clamp(10.0, 30.0).toDouble(); notifyListeners(); try { await (await SharedPreferences.getInstance()).setDouble(_translationFontSizeKey, _translationFontSize); } catch (_) {} }
   Future<void> toggleAdhanNotification(bool value) async { _isAdhanNotificationEnabled = value; notifyListeners(); try { await (await SharedPreferences.getInstance()).setBool(_adhanNotificationKey, value); } catch (_) {} }
@@ -272,13 +256,11 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     try { await (await SharedPreferences.getInstance()).setString(_prayerAdjustmentsKey, jsonEncode(_prayerAdjustments)); } catch (_) {}
   }
-
   Future<void> resetPrayerAdjustments() async {
     _prayerAdjustments = Map<String, int>.from(_defaultPrayerAdjustments);
     notifyListeners();
     try { await (await SharedPreferences.getInstance()).remove(_prayerAdjustmentsKey); } catch (_) {}
   }
-
   Future<bool> setJamaatTime(String prayer, String time) async {
     final normalizedPrayer = prayer.trim();
     final normalizedTime = _normalizeJamaatTime(time);
@@ -307,14 +289,12 @@ class SettingsProvider extends ChangeNotifier {
       return true;
     } catch (_) { return false; }
   }
-
   Future<void> resetJamaatTimes() async {
     _fajrJamaat = '5:00 AM'; _dhuhrJamaat = '1:30 PM'; _asrJamaat = '5:15 PM'; _maghribJamaat = '6:57 PM'; _ishaJamaat = '8:45 PM';
     await JamaatService.reset();
     notifyListeners();
     try { final prefs = await SharedPreferences.getInstance(); for (final key in [_fajrJamaatKey,_dhuhrJamaatKey,_asrJamaatKey,_maghribJamaatKey,_ishaJamaatKey]) { await prefs.remove(key); } } catch (_) {}
   }
-
   Future<void> resetSettings() async {
     _themeMode = ThemeMode.system; _isAmoledMode = false; _languageCode = 'bn'; _calculationMethod = 'Karachi'; _madhab = 'Hanafi'; _quranFontSize = 24.0; _translationFontSize = 14.0; _isAdhanNotificationEnabled = true; _locationMode = 'automatic'; _autoLocation = true; _hijriAdjustment = 1; _showSeconds = false; _timeFormat = '12'; _vibrationEnabled = true; _quranTranslation = 'Bangla'; _quranArabicFont = 'Default'; _autoPlayNext = false; _downloadWifiOnly = true; _notificationSound = 'Default'; _prayerReminderMinutes = 0; _prayerAdjustments = Map<String, int>.from(_defaultPrayerAdjustments); _showDailyAyah = true; _showDailyHadith = true; _showDailyDua = true; _dateDisplayPreference = 'both'; _fajrJamaat = '5:00 AM'; _dhuhrJamaat = '1:30 PM'; _asrJamaat = '5:15 PM'; _maghribJamaat = '6:57 PM'; _ishaJamaat = '8:45 PM';
     await JamaatService.reset();
@@ -325,22 +305,20 @@ class SettingsProvider extends ChangeNotifier {
       for (final key in keys) await prefs.remove(key);
     } catch (_) {}
   }
-
   String _normalizeDateDisplayPreference(String value) {
     switch (value.trim().toLowerCase()) { case 'hijri': return 'hijri'; case 'gregorian': return 'gregorian'; default: return 'both'; }
   }
-
   String _normalizeJamaatTime(String value, {String? fallback}) {
     final input = value.trim();
     if (input.isEmpty) return fallback ?? '';
-    final amPm = RegExp(r'^(\\d{1,2})\\s*:\\s*(\\d{2})\\s*([AaPp][Mm])$').firstMatch(input);
+    final amPm = RegExp(r'^(\d{1,2})\s*:\s*(\d{2})\s*([AaPp][Mm])$').firstMatch(input);
     if (amPm != null) {
       final hour = int.tryParse(amPm.group(1)!);
       final minute = int.tryParse(amPm.group(2)!);
       if (hour == null || minute == null || hour < 1 || hour > 12 || minute > 59) return fallback ?? '';
       return '$hour:${minute.toString().padLeft(2, '0')} ${amPm.group(3)!.toUpperCase()}';
     }
-    final twentyFour = RegExp(r'^(\\d{1,2})\\s*:\\s*(\\d{2})$').firstMatch(input);
+    final twentyFour = RegExp(r'^(\d{1,2})\s*:\s*(\d{2})$').firstMatch(input);
     if (twentyFour != null) {
       final hour = int.tryParse(twentyFour.group(1)!);
       final minute = int.tryParse(twentyFour.group(2)!);
@@ -351,18 +329,15 @@ class SettingsProvider extends ChangeNotifier {
     }
     return fallback ?? '';
   }
-
   String _normalizeCalculationMethod(String value) {
     final normalized = value.trim().toLowerCase();
     for (final method in calculationMethods) { if (method.toLowerCase() == normalized) return method; }
     switch (normalized) { case 'muslim_world_league': case 'mwl': return 'Muslim World League'; case 'egypt': return 'Egyptian'; case 'umm_al_qura': case 'ummalqura': return 'Umm Al Qura'; case 'north_america': case 'isna': return 'North America'; case 'moonsighting': case 'moonsighting_committee': return 'Moonsighting Committee'; default: return 'Karachi'; }
   }
-
   String _normalizeMadhab(String value) {
     final normalized = value.trim().toLowerCase();
     if (normalized == 'shafi' || normalized == 'shafii' || normalized == "shafi'i" || normalized == 'shafi’i') return 'Shafi';
     return 'Hanafi';
   }
-
   String _themeModeToString(ThemeMode mode) { switch (mode) { case ThemeMode.light: return 'light'; case ThemeMode.dark: return 'dark'; case ThemeMode.system: return 'system'; } }
 }
