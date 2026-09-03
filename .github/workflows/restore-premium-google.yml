@@ -1,0 +1,119 @@
+name: Restore Premium Google Account Actions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/restore-premium-google.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore account menu behavior
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/screens/canonical_settings_screen.dart')
+          text = p.read_text(encoding='utf-8')
+          start = text.index('  Widget _premium(')
+          end = text.index('  Widget _premiumChip(', start)
+          block = text[start:end]
+          old = '''                      onTap: () async {
+                        if (user == null) {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const GoogleLoginScreen(),
+                            ),
+                          );
+                        }
+                      },'''
+          new = '''                      onTap: () async {
+                        if (user == null) {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const GoogleLoginScreen(),
+                            ),
+                          );
+                          return;
+                        }
+
+                        if (!context.mounted) return;
+                        await showModalBottomSheet<void>(
+                          context: context,
+                          showDragHandle: true,
+                          builder: (sheetContext) {
+                            return SafeArea(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 34,
+                                      backgroundImage: user.photoURL == null
+                                          ? null
+                                          : NetworkImage(user.photoURL!),
+                                      child: user.photoURL == null
+                                          ? const Icon(Icons.person_rounded, size: 34)
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      user.displayName?.trim().isNotEmpty == true
+                                          ? user.displayName!
+                                          : 'Google Account',
+                                      style: Theme.of(sheetContext)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(fontWeight: FontWeight.w800),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    if (user.email?.isNotEmpty == true) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        user.email!,
+                                        style: Theme.of(sheetContext).textTheme.bodyMedium,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                    const SizedBox(height: 20),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: FilledButton.icon(
+                                        onPressed: () async {
+                                          await FirebaseAuth.instance.signOut();
+                                          if (sheetContext.mounted) {
+                                            Navigator.of(sheetContext).pop();
+                                          }
+                                        },
+                                        icon: const Icon(Icons.logout_rounded),
+                                        label: Text(
+                                          t(languageCode, 'লগআউট', 'Log out', 'تسجيل الخروج'),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },'''
+          if old not in block:
+              raise SystemExit('Expected Premium account block was not found; refusing to modify the file.')
+          p.write_text(text[:start] + block.replace(old, new, 1) + text[end:], encoding='utf-8')
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/screens/canonical_settings_screen.dart
+          git diff --cached --quiet && exit 0
+          git commit -m "fix(settings): restore premium Google account menu"
+          git push
