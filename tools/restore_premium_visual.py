@@ -1,17 +1,22 @@
 from pathlib import Path
-import re
 
 p = Path('lib/screens/canonical_settings_screen.dart')
 s = p.read_text(encoding='utf-8')
 
-# Keep the large Premium hero at the top of Settings.
+# Keep one large Premium hero at the top of the Settings list.
 s = s.replace('          _premium(context, s, premium),\n', '', 1)
-premium_anchor = "        children: [\n          _section(\n            context,\n            t(l, 'ব্যক্তিগতকরণ', 'Personalization'),"
-if premium_anchor not in s:
-    raise SystemExit('Personalization section not found')
-s = s.replace(premium_anchor, "        children: [\n          _premium(context, s, premium),\n          const SizedBox(height: 18),\n          _section(\n            context,\n            t(l, 'ব্যক্তিগতকরণ', 'Personalization'),", 1)
+list_marker = "        children: [\n"
+list_start = s.find(list_marker, s.find('body: ListView('))
+if list_start == -1:
+    raise SystemExit('Settings ListView children not found')
+insert_at = list_start + len(list_marker)
+s = s[:insert_at] + "          _premium(context, s, premium),\n          const SizedBox(height: 18),\n" + s[insert_at:]
 
-# Restore the historical large Premium presentation.
+# Use the shared auth service for the Premium account control.
+if "import '../services/auth_service.dart';" not in s:
+    s = s.replace("import '../providers/text_scale_provider.dart';\n", "import '../providers/text_scale_provider.dart';\nimport '../services/auth_service.dart';\n", 1)
+
+# Restore the large Premium presentation.
 s = s.replace('padding: const EdgeInsets.all(20),\n          decoration: BoxDecoration(', 'padding: const EdgeInsets.all(22),\n          decoration: BoxDecoration(', 1)
 s = s.replace('borderRadius: BorderRadius.circular(28),\n            border: Border.all(color: AppColors.seaBlue.withValues(alpha: .20)),', 'borderRadius: BorderRadius.circular(30),\n            border: Border.all(color: AppColors.seaBlue.withValues(alpha: .20)),', 1)
 s = s.replace('width: 54,\n                    height: 54,', 'width: 60,\n                    height: 60,', 1)
@@ -19,24 +24,21 @@ s = s.replace('size: 30,\n                    ),', 'size: 32,\n                 
 s = s.replace('fontSize: 18,\n                                  fontWeight: FontWeight.w900,', 'fontSize: 20,\n                                  fontWeight: FontWeight.w900,', 1)
 s = s.replace('padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),', 'padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),', 1)
 
-# Use the shared auth service for the Premium account control.
-if "import '../services/auth_service.dart';" not in s:
-    s = s.replace("import '../providers/text_scale_provider.dart';\n", "import '../providers/text_scale_provider.dart';\nimport '../services/auth_service.dart';\n", 1)
-
-# Replace whatever account control is currently in the Premium hero.
-account_start = "              const SizedBox(width: 10),\n"
-account_end = "              const SizedBox(height: 18),\n              Wrap("
-start = s.find(account_start, s.find('Widget _premium('))
-end = s.find(account_end, start)
-if start == -1 or end == -1:
+# Replace the existing Premium account control with the restored login/profile button.
+premium_start = s.find('Widget _premium(')
+if premium_start == -1:
+    raise SystemExit('Premium widget not found')
+account_start = s.find('              const SizedBox(width: 10),\n', premium_start)
+account_end = s.find('              const SizedBox(height: 18),\n              Wrap(', account_start)
+if account_start == -1 or account_end == -1:
     raise SystemExit('Premium account control boundaries not found')
-s = s[:start] + account_start + "              _premiumAccountButton(context),\n" + s[end:]
+s = s[:account_start] + '              const SizedBox(width: 10),\n              _premiumAccountButton(context),\n' + s[account_end:]
 
 if 'Widget _premiumAccountButton(BuildContext context)' not in s:
     marker = '  Widget _premiumChip(IconData icon, String title) => Container(\n'
     if marker not in s:
         raise SystemExit('Premium chip marker not found')
-    helper = r'''  Widget _premiumAccountButton(BuildContext context) {
+    helper = '''  Widget _premiumAccountButton(BuildContext context) {
     final theme = Theme.of(context);
     return StreamBuilder<User?>(
       stream: AuthService.instance.authStateChanges,
@@ -145,9 +147,8 @@ if 'Widget _premiumAccountButton(BuildContext context)' not in s:
 '''
     s = s.replace(marker, helper + marker, 1)
 
-# Restore Premium button behavior: inactive -> activate, active -> show status/manage.
-old_button = '''                  onPressed: () => premium.activatePremium(),
-'''
+# Preserve Premium activation/status behavior.
+old_button = '                  onPressed: () => premium.activatePremium(),\n'
 new_button = '''                  onPressed: () {
                     if (premium.isPremium) {
                       _showPremiumStatus(context, premium, languageCode == 'en');
@@ -161,7 +162,7 @@ if old_button in s:
 
 if 'Future<void> _showPremiumStatus(' not in s:
     marker = '  Widget _premiumChip(IconData icon, String title) => Container(\n'
-    helper = r'''  Future<void> _showPremiumStatus(BuildContext context, PremiumProvider premium, bool isEnglish) async {
+    helper = '''  Future<void> _showPremiumStatus(BuildContext context, PremiumProvider premium, bool isEnglish) async {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -187,12 +188,12 @@ if 'Future<void> _showPremiumStatus(' not in s:
     s = s.replace(marker, helper + marker, 1)
 
 # Force the 12/24 selector to use NurVerse SeaBlue.
-old_segment = """      showSelectedIcon: false,
+old_segment = '''      showSelectedIcon: false,
     ),
   );
 
-  Widget _choice("""
-new_segment = """      showSelectedIcon: false,
+  Widget _choice('''
+new_segment = '''      showSelectedIcon: false,
       style: ButtonStyle(
         foregroundColor: WidgetStateProperty.resolveWith((states) {
           return states.contains(WidgetState.selected) ? Colors.white : AppColors.seaBlue;
@@ -207,7 +208,7 @@ new_segment = """      showSelectedIcon: false,
     ),
   );
 
-  Widget _choice("""
+  Widget _choice('''
 if old_segment not in s:
     raise SystemExit('Time format segmented control marker not found')
 s = s.replace(old_segment, new_segment, 1)
