@@ -1,0 +1,68 @@
+name: Fix Time Format And Lock Premium UI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-time-format-and-lock.yml'
+  workflow_dispatch:
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply targeted fixes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # Make PrayerScreen respect SettingsProvider's 12/24-hour preference
+          # for every displayed clock/prayer time, including Jamaat strings.
+          p = Path('lib/screens/prayer_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          old = """  String _displayTime(String value, bool showSeconds) {\n    final raw = value.trim();\n    if (showSeconds) return raw;\n    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(raw);\n    return match?.group(1) ?? raw;\n  }"""
+          new = """  String _displayTime(String value, bool showSeconds) {\n    final raw = value.trim();\n    final is24Hour = context.read<SettingsProvider>().is24Hour;\n\n    final amPm = RegExp(\n      r'^(\\d{1,2}):(\\d{2})\\s*(AM|PM)$',\n      caseSensitive: false,\n    ).firstMatch(raw);\n    if (amPm != null) {\n      final hour12 = int.tryParse(amPm.group(1)!);\n      final minute = int.tryParse(amPm.group(2)!);\n      final period = amPm.group(3)!.toUpperCase();\n      if (hour12 != null && minute != null && hour12 >= 1 && hour12 <= 12 && minute >= 0 && minute <= 59) {\n        final hour24 = period == 'AM'\n            ? (hour12 == 12 ? 0 : hour12)\n            : (hour12 == 12 ? 12 : hour12 + 12);\n        if (is24Hour) {\n          final result = '${hour24.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';\n          return showSeconds ? result : result;\n        }\n        final result = '${hour12.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';\n        return showSeconds ? result : result;\n      }\n    }\n\n    final match = RegExp(r'^(\\d{1,2}):(\\d{2})').firstMatch(raw);\n    if (match == null) return raw;\n    final hour = int.tryParse(match.group(1)!);\n    final minute = int.tryParse(match.group(2)!);\n    if (hour == null || minute == null) return raw;\n    if (is24Hour) {\n      final result = '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';\n      return showSeconds ? result : result;\n    }\n    final period = hour >= 12 ? 'PM' : 'AM';\n    final hour12 = hour % 12 == 0 ? 12 : hour % 12;\n    final result = '${hour12.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';\n    return showSeconds ? result : result;\n  }"""
+          if old in s:
+              s = s.replace(old, new, 1)
+              p.write_text(s, encoding='utf-8')
+
+          # Lock the already-approved Premium card against accidental redesign.
+          p = Path('lib/screens/canonical_settings_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          marker = "  Widget _premium(\n"
+          lock = "  // LOCKED UI: Premium card is approved and must not be redesigned\n  // without explicit product approval. Keep presentation and interaction intact.\n"
+          if lock not in s and marker in s:
+              s = s.replace(marker, lock + marker, 1)
+              p.write_text(s, encoding='utf-8')
+
+          p = Path('docs/LOCKED_UI_COMPONENTS.md')
+          s = p.read_text(encoding='utf-8')
+          section = """\n## Settings Premium Card\n\nThe Premium card at the top of `lib/screens/canonical_settings_screen.dart` is a **locked canonical NurVerse component**.\n\nDo not redesign, compact, replace, or remove its approved presentation, account interaction, Premium chips, or SeaBlue styling without explicit product approval.\n"""
+          if '## Settings Premium Card' not in s:
+              p.write_text(s.rstrip() + section, encoding='utf-8')
+          PY
+
+      - name: Format and verify
+        run: |
+          dart format lib/screens/prayer_screen.dart lib/screens/canonical_settings_screen.dart
+          flutter pub get
+          flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/prayer_screen.dart lib/screens/canonical_settings_screen.dart
+
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/prayer_screen.dart lib/screens/canonical_settings_screen.dart docs/LOCKED_UI_COMPONENTS.md
+          if git diff --cached --quiet; then
+            echo 'No changes needed.'
+            exit 0
+          fi
+          git commit -m 'fix(settings): honor 24-hour time format and lock premium card'
+          git push
