@@ -1,0 +1,38 @@
+name: Restore Premium Account UI
+
+on:
+  push:
+    paths:
+      - 'tools/restore_premium_account.py'
+  workflow_dispatch:
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+      - name: Apply targeted Premium restore
+        run: python3 tools/restore_premium_account.py
+      - name: Format
+        run: dart format lib/screens/canonical_settings_screen.dart
+      - name: Verify
+        run: flutter pub get && flutter analyze --no-fatal-infos lib/screens/canonical_settings_screen.dart
+      - name: Commit repair
+        run: |
+          if git diff --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/canonical_settings_screen.dart
+          git commit -m 'fix(settings): restore advanced premium account flow'
+          git push
