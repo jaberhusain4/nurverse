@@ -9,6 +9,7 @@ import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'auth/google_login_screen.dart';
 import 'home_mode_settings_screen.dart';
+import 'prayer/jamaat_settings_screen.dart';
 
 class CanonicalSettingsScreen extends StatelessWidget {
   const CanonicalSettingsScreen({super.key});
@@ -79,15 +80,13 @@ class CanonicalSettingsScreen extends StatelessWidget {
             _divider(),
             _choiceTile(context, Icons.calendar_today_outlined, t(lang, 'হিজরি তারিখ সমন্বয়', 'Hijri Date Adjustment'), _hijriLabel(s, lang), List<String>.generate(7, (i) => '${i - 3}'), s.hijriAdjustment.toString(), (v) => s.setHijriAdjustment(int.parse(v))),
             _divider(),
-            _jamaatTile(context, s, 'Fajr', t(lang, 'ফজর', 'Fajr'), s.fajrJamaat),
-            _divider(),
-            _jamaatTile(context, s, 'Dhuhr', t(lang, 'যোহর / জুমু\'আ', 'Dhuhr / Jumu\'ah'), s.dhuhrJamaat),
-            _divider(),
-            _jamaatTile(context, s, 'Asr', t(lang, 'আসর', 'Asr'), s.asrJamaat),
-            _divider(),
-            _jamaatTile(context, s, 'Maghrib', t(lang, 'মাগরিব', 'Maghrib'), s.maghribJamaat),
-            _divider(),
-            _jamaatTile(context, s, 'Isha', t(lang, 'ইশা', 'Isha'), s.ishaJamaat),
+            _tile(
+              context,
+              Icons.groups_rounded,
+              t(lang, 'জামাতের সময়', 'Jamaat Times'),
+              t(lang, 'ফজর, যোহর, আসর, মাগরিব ও ইশার জামাতের সময়', 'Set Fajr, Dhuhr, Asr, Maghrib and Isha Jamaat times'),
+              () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const JamaatSettingsScreen())),
+            ), s.ishaJamaat),
           ]),
           const SizedBox(height: 20),
           _section(context, t(lang, 'কুরআন', 'Quran'), Icons.menu_book_outlined, [
@@ -246,13 +245,12 @@ class CanonicalSettingsScreen extends StatelessWidget {
 
   String _textSizeLabel(int n, String lang) => [t(lang, 'ছোট', 'Small'), t(lang, 'স্বাভাবিক', 'Normal'), t(lang, 'বড়', 'Large'), t(lang, 'খুব বড়', 'Very Large')][n.clamp(0, 3)];
 
-  String _choiceLabel(String value, String lang) {
-    if (lang == 'en') return value == 'bn' ? 'Bangla' : value == 'en' ? 'English' : value == 'ar' ? 'Arabic' : value;
-    const labels = <String, String>{
-      'Karachi': 'করাচি', 'Muslim World League': 'মুসলিম ওয়ার্ল্ড লীগ', 'Egyptian': 'মিশরীয়', 'Umm Al Qura': 'উম্মুল কুরা', 'Dubai': 'দুবাই', 'Qatar': 'কাতার', 'Kuwait': 'কুয়েত', 'Singapore': 'সিঙ্গাপুর', 'North America': 'উত্তর আমেরিকা', 'Moonsighting Committee': 'চাঁদ দেখা কমিটি',
-      'Hanafi': 'হানাফি', 'Shafi': 'শাফেয়ী', 'Maliki': 'মালিকি', 'Hanbali': 'হাম্বলি', 'Bangla': 'বাংলা', 'English': 'ইংরেজি', 'Default': 'ডিফল্ট', 'Adhan': 'আজান', 'Silent': 'নীরব', 'Amiri': 'আমিরি', 'Scheherazade': 'শেহেরাজাদে',
-    };
-    return labels[value] ?? value;
+  String _choiceLabel(String value, String languageCode) {
+    const bn = <String, String>{'system':'সিস্টেম অনুযায়ী','light':'লাইট মোড','dark':'ডার্ক মোড','amoled':'অ্যামোলেড','bn':'বাংলা','en':'ইংরেজি','ar':'আরবি','12':'১২ ঘণ্টা','24':'২৪ ঘণ্টা','automatic':'স্বয়ংক্রিয়','manual':'ম্যানুয়াল','Karachi':'করাচি','Muslim World League':'মুসলিম ওয়ার্ল্ড লীগ','Egyptian':'মিশরীয়','Umm Al Qura':'উম্মুল কুরা','Dubai':'দুবাই','Qatar':'কাতার','Kuwait':'কুয়েত','Singapore':'সিঙ্গাপুর','North America':'উত্তর আমেরিকা','Moonsighting Committee':'চাঁদ দেখা কমিটি','Tehran':'তেহরান','Turkey':'তুরস্ক','Other':'অন্যান্য','Hanafi':'হানাফি','Shafi':'শাফেয়ি','Maliki':'মালিকি','Hanbali':'হাম্বলি','Bangla':'বাংলা','English':'ইংরেজি','Arabic':'আরবি','Default':'ডিফল্ট','Silent':'নীরব','Amiri':'আমিরি','Scheherazade':'শেহেরাজাদে','hijri':'হিজরি','gregorian':'গ্রেগরিয়ান','both':'উভয়'};
+    if (languageCode == 'bn') return bn[value] ?? value;
+    if (languageCode == 'en') { if (value == '12') return '12-hour'; if (value == '24') return '24-hour'; return value; }
+    const ar = <String, String>{'system':'النظام','light':'فاتح','dark':'داكن','amoled':'AMOLED','bn':'البنغالية','en':'الإنجليزية','ar':'العربية','12':'12 ساعة','24':'24 ساعة','automatic':'تلقائي','manual':'يدوي','Karachi':'كراتشي','Muslim World League':'رابطة العالم الإسلامي','Egyptian':'المصري','Umm Al Qura':'أم القرى','Dubai':'دبي','Qatar':'قطر','Kuwait':'الكويت','Singapore':'سنغافورة','North America':'أمريكا الشمالية','Moonsighting Committee':'لجنة رؤية الهلال','Tehran':'طهران','Turkey':'تركيا','Other':'أخرى','Hanafi':'حنفي','Shafi':'شافعي','Maliki':'مالكي','Hanbali':'حنبلي','Bangla':'البنغالية','English':'الإنجليزية','Arabic':'العربية','Default':'افتراضي','Silent':'صامت','Amiri':'أميري','Scheherazade':'شهرزاد','hijri':'هجري','gregorian':'ميلادي','both':'كلاهما'};
+    return ar[value] ?? value;
   }
 
   String _reminderLabel(int minutes, String lang) => minutes <= 0 ? t(lang, 'সময় হলে', 'At prayer time') : '$minutes ${t(lang, 'মিনিট আগে', 'min before')}';
