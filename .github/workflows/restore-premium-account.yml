@@ -3,9 +3,8 @@ name: Restore Premium Account UI
 on:
   push:
     paths:
-      - 'tools/restore_premium_account.py'
+      - 'tools/restore_premium_account_v2.py'
       - '.github/workflows/restore-premium-account.yml'
-      - '.github/premium-restore-trigger'
   workflow_dispatch:
 
 jobs:
@@ -22,7 +21,7 @@ jobs:
           flutter-version: '3.44.8'
           channel: stable
       - name: Apply targeted Premium restore
-        run: python3 tools/restore_premium_account.py
+        run: python3 tools/restore_premium_account_v2.py
       - name: Format
         run: dart format lib/screens/canonical_settings_screen.dart
       - name: Verify
