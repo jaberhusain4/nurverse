@@ -1120,3 +1120,4 @@ class CanonicalSettingsScreen extends StatelessWidget {
     if (ok == true) await s.resetSettings();
   }
 }
+
