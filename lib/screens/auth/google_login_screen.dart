@@ -77,8 +77,6 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // NurVerse brand mark: keep the same mosque identity used
-                  // by the Home header throughout the app.
                   Container(
                     width: 92,
                     height: 92,
@@ -140,7 +138,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                                       height: 20,
                                       child: CircularProgressIndicator(strokeWidth: 2),
                                     )
-                                  : const Icon(Icons.account_circle_outlined),
+                                  : const _GoogleMark(),
                               label: Text(
                                 _loading ? 'Signing in...' : 'Continue with Google',
                                 style: const TextStyle(fontWeight: FontWeight.w700),
@@ -182,6 +180,22 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _GoogleMark extends StatelessWidget {
+  const _GoogleMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Text(
+      'G',
+      style: TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.w900,
+        color: Color(0xFF4285F4),
       ),
     );
   }
