@@ -1,1 +1,1 @@
-// Temporary trigger for the Settings repair workflow.
+// Trigger canonical Settings repair workflow.
