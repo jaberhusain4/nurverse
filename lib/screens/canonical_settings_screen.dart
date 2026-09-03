@@ -33,8 +33,6 @@ class CanonicalSettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          _premium(context, s, premium),
-          const SizedBox(height: 18),
           _section(
             context,
             t(l, 'ব্যক্তিগতকরণ', 'Personalization'),
@@ -58,6 +56,8 @@ class CanonicalSettingsScreen extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          _premium(context, s, premium),
           const SizedBox(height: 20),
           _section(
             context,
@@ -379,10 +379,10 @@ class CanonicalSettingsScreen extends StatelessWidget {
         final user = authSnapshot.data;
         final theme = Theme.of(context);
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: theme.cardColor,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(30),
             border: Border.all(color: AppColors.seaBlue.withValues(alpha: .20)),
             boxShadow: [
               BoxShadow(
@@ -399,8 +399,8 @@ class CanonicalSettingsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 54,
-                    height: 54,
+                    width: 60,
+                    height: 60,
                     decoration: BoxDecoration(
                       color: AppColors.seaBlue.withValues(alpha: .14),
                       borderRadius: BorderRadius.circular(17),
@@ -410,7 +410,7 @@ class CanonicalSettingsScreen extends StatelessWidget {
                           ? Icons.verified_rounded
                           : Icons.workspace_premium_rounded,
                       color: AppColors.seaBlue,
-                      size: 30,
+                      size: 32,
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -425,7 +425,7 @@ class CanonicalSettingsScreen extends StatelessWidget {
                                 'NurVerse Premium',
                                 style: const TextStyle(
                                   color: AppColors.seaBlue,
-                                  fontSize: 18,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.w900,
                                 ),
                               ),
@@ -587,7 +587,7 @@ class CanonicalSettingsScreen extends StatelessWidget {
   }
 
   Widget _premiumChip(IconData icon, String title) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
     decoration: BoxDecoration(
       color: AppColors.seaBlue.withValues(alpha: .09),
       borderRadius: BorderRadius.circular(20),
