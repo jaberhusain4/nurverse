@@ -367,6 +367,8 @@ class CanonicalSettingsScreen extends StatelessWidget {
     );
   }
 
+  // LOCKED UI: Premium card is approved and must not be redesigned
+  // without explicit product approval. Keep presentation and interaction intact.
   Widget _premium(
     BuildContext context,
     SettingsProvider settings,

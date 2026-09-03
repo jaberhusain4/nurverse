@@ -17,3 +17,8 @@ Current canonical rendering:
 - no change to the app's global text or digit typography
 
 Any future change to this marker requires explicit product approval.
+## Settings Premium Card
+
+The Premium card at the top of `lib/screens/canonical_settings_screen.dart` is a **locked canonical NurVerse component**.
+
+Do not redesign, compact, replace, or remove its approved presentation, account interaction, Premium chips, or SeaBlue styling without explicit product approval.

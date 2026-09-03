@@ -269,9 +269,51 @@ class _PrayerScreenState extends State<PrayerScreen> {
 
   String _displayTime(String value, bool showSeconds) {
     final raw = value.trim();
-    if (showSeconds) return raw;
-    final match = RegExp(r'^(\d{1,2}:\d{2})').firstMatch(raw);
-    return match?.group(1) ?? raw;
+    final is24Hour = context.read<SettingsProvider>().is24Hour;
+
+    final amPm = RegExp(
+      r'^(\d{1,2}):(\d{2})\s*(AM|PM)$',
+      caseSensitive: false,
+    ).firstMatch(raw);
+    if (amPm != null) {
+      final hour12 = int.tryParse(amPm.group(1)!);
+      final minute = int.tryParse(amPm.group(2)!);
+      final period = amPm.group(3)!.toUpperCase();
+      if (hour12 != null &&
+          minute != null &&
+          hour12 >= 1 &&
+          hour12 <= 12 &&
+          minute >= 0 &&
+          minute <= 59) {
+        final hour24 = period == 'AM'
+            ? (hour12 == 12 ? 0 : hour12)
+            : (hour12 == 12 ? 12 : hour12 + 12);
+        if (is24Hour) {
+          final result =
+              '${hour24.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+          return showSeconds ? result : result;
+        }
+        final result =
+            '${hour12.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
+        return showSeconds ? result : result;
+      }
+    }
+
+    final match = RegExp(r'^(\d{1,2}):(\d{2})').firstMatch(raw);
+    if (match == null) return raw;
+    final hour = int.tryParse(match.group(1)!);
+    final minute = int.tryParse(match.group(2)!);
+    if (hour == null || minute == null) return raw;
+    if (is24Hour) {
+      final result =
+          '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+      return showSeconds ? result : result;
+    }
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final hour12 = hour % 12 == 0 ? 12 : hour % 12;
+    final result =
+        '${hour12.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
+    return showSeconds ? result : result;
   }
 
   List<Map<String, dynamic>> _displayPrayerTimes(
