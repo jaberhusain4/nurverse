@@ -3,6 +3,7 @@ name: Fix Premium Account And Time Format
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
