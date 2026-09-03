@@ -218,86 +218,6 @@ class CanonicalSettingsScreen extends StatelessWidget {
               _divider(),
               _tile(
                 context,
-                Icons.groups_rounded,
-                t(l, 'জামাতের সময়', 'Jamaat Times'),
-                t(
-                  l,
-                  'পাঁচ ওয়াক্তের জামাতের সময় সেট করুন',
-                  'Set Jamaat times for all five prayers',
-                ),
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) => const JamaatSettingsScreen(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _section(context, t(l, 'কুরআন', 'Quran'), Icons.menu_book_outlined, [
-            _tile(
-              context,
-              Icons.format_size_rounded,
-              t(l, 'কুরআন পড়ার সেটিংস', 'Quran Reading'),
-              '${s.quranFontSize.round()} / ${s.translationFontSize.round()}',
-              () => quranSheet(context, s, l),
-            ),
-            _divider(),
-            _choice(
-              context,
-              Icons.translate_rounded,
-              t(l, 'অনুবাদ', 'Translation'),
-              choice(s.quranTranslation, l),
-              ['Bangla', 'English'],
-              s.quranTranslation,
-              s.setQuranTranslation,
-            ),
-            _divider(),
-            _choice(
-              context,
-              Icons.font_download_outlined,
-              t(l, 'আরবি ফন্ট', 'Arabic Font'),
-              choice(s.quranArabicFont, l),
-              ['Default', 'Amiri', 'Scheherazade'],
-              s.quranArabicFont,
-              s.setQuranArabicFont,
-            ),
-            _divider(),
-            _switch(
-              context,
-              Icons.skip_next_rounded,
-              t(l, 'পরবর্তী আয়াত স্বয়ংক্রিয়ভাবে চালু', 'Auto-play next'),
-              t(
-                l,
-                'সমর্থিত অডিওতে পরেরটি চালাবে',
-                'Continue with the next supported audio',
-              ),
-              s.autoPlayNext,
-              s.toggleAutoPlayNext,
-            ),
-            _divider(),
-            _switch(
-              context,
-              Icons.wifi_outlined,
-              t(l, 'শুধু Wi-Fi দিয়ে ডাউনলোড', 'Wi-Fi only downloads'),
-              t(
-                l,
-                'ডাউনলোডে Wi-Fi অগ্রাধিকার দিন',
-                'Prefer Wi-Fi for downloads',
-              ),
-              s.downloadWifiOnly,
-              s.toggleDownloadWifiOnly,
-            ),
-          ]),
-          const SizedBox(height: 20),
-          _section(
-            context,
-            t(l, 'ইবাদত ও তারিখ', 'Worship & Dates'),
-            Icons.event_available_outlined,
-            [
-              _tile(
-                context,
                 Icons.today_outlined,
                 t(l, 'দৈনিক কনটেন্ট', 'Daily Content'),
                 t(l, 'আয়াত, হাদিস ও দোয়া', 'Ayah, Hadith and Dua'),
@@ -439,9 +359,7 @@ class CanonicalSettingsScreen extends StatelessWidget {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.seaBlue.withValues(
-                                    alpha: .12,
-                                  ),
+                                  color: AppColors.seaBlue.withValues(alpha: .12),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -474,9 +392,7 @@ class CanonicalSettingsScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             height: 1.4,
-                            color: theme.textTheme.bodySmall?.color?.withValues(
-                              alpha: .70,
-                            ),
+                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: .70),
                           ),
                         ),
                       ],
@@ -493,7 +409,70 @@ class CanonicalSettingsScreen extends StatelessWidget {
                               builder: (_) => const GoogleLoginScreen(),
                             ),
                           );
+                          return;
                         }
+
+                        if (!context.mounted) return;
+                        await showModalBottomSheet<void>(
+                          context: context,
+                          showDragHandle: true,
+                          builder: (sheetContext) {
+                            return SafeArea(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 34,
+                                      backgroundImage: user.photoURL == null
+                                          ? null
+                                          : NetworkImage(user.photoURL!),
+                                      child: user.photoURL == null
+                                          ? const Icon(Icons.person_rounded, size: 34)
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      user.displayName?.trim().isNotEmpty == true
+                                          ? user.displayName!
+                                          : 'Google Account',
+                                      style: Theme.of(sheetContext)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(fontWeight: FontWeight.w800),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    if (user.email?.isNotEmpty == true) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        user.email!,
+                                        style: Theme.of(sheetContext).textTheme.bodyMedium,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                    const SizedBox(height: 20),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: FilledButton.icon(
+                                        onPressed: () async {
+                                          await FirebaseAuth.instance.signOut();
+                                          if (sheetContext.mounted) {
+                                            Navigator.of(sheetContext).pop();
+                                          }
+                                        },
+                                        icon: const Icon(Icons.logout_rounded),
+                                        label: Text(
+                                          t(languageCode, 'লগআউট', 'Log out', 'تسجيل الخروج'),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
                       },
                       borderRadius: BorderRadius.circular(14),
                       child: Container(
@@ -504,16 +483,36 @@ class CanonicalSettingsScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: user == null
-                            ? Icon(
-                                Icons.person_outline_rounded,
-                                color: theme.colorScheme.primary,
-                                size: 22,
+                            ? const Center(
+                                child: Text(
+                                  'G',
+                                  style: TextStyle(
+                                    fontSize: 21,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.seaBlue,
+                                  ),
+                                ),
                               )
-                            : Icon(
-                                Icons.person_rounded,
-                                color: theme.colorScheme.primary,
-                                size: 22,
-                              ),
+                            : (user.photoURL?.isNotEmpty == true
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: Image.network(
+                                      user.photoURL!,
+                                      width: 42,
+                                      height: 42,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.person_rounded,
+                                        color: AppColors.seaBlue,
+                                        size: 22,
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.person_rounded,
+                                    color: AppColors.seaBlue,
+                                    size: 22,
+                                  )),
                       ),
                     ),
                   ),
@@ -524,32 +523,10 @@ class CanonicalSettingsScreen extends StatelessWidget {
                 spacing: 7,
                 runSpacing: 7,
                 children: [
-                  _premiumChip(
-                    Icons.contrast_rounded,
-                    t(languageCode, 'অ্যামোলেড', 'AMOLED', 'AMOLED'),
-                  ),
-                  _premiumChip(
-                    Icons.palette_outlined,
-                    t(
-                      languageCode,
-                      'প্রিমিয়াম থিম',
-                      'Premium Themes',
-                      'سمات بريميوم',
-                    ),
-                  ),
-                  _premiumChip(
-                    Icons.headphones_outlined,
-                    t(languageCode, 'তেলাওয়াত', 'Recitations', 'تلاوات'),
-                  ),
-                  _premiumChip(
-                    Icons.cloud_outlined,
-                    t(
-                      languageCode,
-                      'ক্লাউড সিঙ্ক',
-                      'Cloud Sync',
-                      'مزامنة سحابية',
-                    ),
-                  ),
+                  _premiumChip(Icons.contrast_rounded, t(languageCode, 'অ্যামোলেড', 'AMOLED', 'AMOLED')),
+                  _premiumChip(Icons.palette_outlined, t(languageCode, 'প্রিমিয়াম থিম', 'Premium Themes', 'سمات بريميوم')),
+                  _premiumChip(Icons.headphones_outlined, t(languageCode, 'তেলাওয়াত', 'Recitations', 'تلاوات')),
+                  _premiumChip(Icons.cloud_outlined, t(languageCode, 'ক্লাউড সিঙ্ক', 'Cloud Sync', 'مزامنة سحابية')),
                 ],
               ),
               const SizedBox(height: 18),
@@ -558,25 +535,13 @@ class CanonicalSettingsScreen extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: () => premium.activatePremium(),
                   icon: Icon(
-                    premium.isPremium
-                        ? Icons.settings_rounded
-                        : Icons.auto_awesome_rounded,
+                    premium.isPremium ? Icons.settings_rounded : Icons.auto_awesome_rounded,
                     size: 18,
                   ),
                   label: Text(
                     premium.isPremium
-                        ? t(
-                            languageCode,
-                            'প্রিমিয়াম সক্রিয়',
-                            'Premium Active',
-                            'بريميوم نشط',
-                          )
-                        : t(
-                            languageCode,
-                            'প্রিমিয়াম দেখুন',
-                            'Explore Premium',
-                            'استكشاف بريميوم',
-                          ),
+                        ? t(languageCode, 'প্রিমিয়াম সক্রিয়', 'Premium Active', 'بريميوم نشط')
+                        : t(languageCode, 'প্রিমিয়াম দেখুন', 'Explore Premium', 'استكشاف بريميوم'),
                   ),
                 ),
               ),
@@ -639,6 +604,7 @@ class CanonicalSettingsScreen extends StatelessWidget {
       ),
     ],
   );
+
   Widget _tile(
     BuildContext c,
     IconData icon,
@@ -648,102 +614,21 @@ class CanonicalSettingsScreen extends StatelessWidget {
   ) => ListTile(
     contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
     leading: Container(
-      width: 42,
-      height: 42,
+      width: 40,
+      height: 40,
       decoration: BoxDecoration(
-        color: AppColors.seaBlue.withValues(alpha: .10),
-        borderRadius: BorderRadius.circular(13),
+        color: AppColors.seaBlue.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(icon, size: 21, color: AppColors.seaBlue),
+      child: Icon(icon, color: AppColors.seaBlue, size: 21),
     ),
-    title: Text(
-      title,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-    ),
-    subtitle: Text(
-      sub,
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-      style: const TextStyle(fontSize: 10.5, height: 1.3),
-    ),
-    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+    title: Text(title),
+    subtitle: Text(sub),
+    trailing: const Icon(Icons.chevron_right_rounded),
     onTap: onTap,
   );
-  Widget _switch(
-    BuildContext c,
-    IconData icon,
-    String title,
-    String sub,
-    bool value,
-    ValueChanged<bool> onChanged,
-  ) => ListTile(
-    contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
-    leading: Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: AppColors.seaBlue.withValues(alpha: .10),
-        borderRadius: BorderRadius.circular(13),
-      ),
-      child: Icon(icon, size: 21, color: AppColors.seaBlue),
-    ),
-    title: Text(
-      title,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-    ),
-    subtitle: Text(
-      sub,
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-      style: const TextStyle(fontSize: 10.5, height: 1.3),
-    ),
-    trailing: Switch.adaptive(value: value, onChanged: onChanged),
-  );
-  Widget _timeFormatTile(
-    BuildContext c,
-    SettingsProvider s,
-    String l,
-  ) => ListTile(
-    contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
-    leading: Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: AppColors.seaBlue.withValues(alpha: .10),
-        borderRadius: BorderRadius.circular(13),
-      ),
-      child: const Icon(
-        Icons.access_time_rounded,
-        size: 21,
-        color: AppColors.seaBlue,
-      ),
-    ),
-    title: Text(
-      t(l, 'সময় ফরম্যাট', 'Time Format', 'تنسيق الوقت'),
-      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-    ),
-    subtitle: Text(
-      s.is24Hour
-          ? t(l, '২৪ ঘণ্টা', '24-hour', '24 ساعة')
-          : t(l, '১২ ঘণ্টা', '12-hour', '12 ساعة'),
-      style: const TextStyle(fontSize: 10.5, height: 1.3),
-    ),
-    trailing: SegmentedButton<String>(
-      segments: [
-        ButtonSegment<String>(value: '12', label: Text(t(l, '১২', '12', '12'))),
-        ButtonSegment<String>(value: '24', label: Text(t(l, '২৪', '24', '24'))),
-      ],
-      selected: <String>{s.timeFormat},
-      onSelectionChanged: (values) {
-        if (values.isNotEmpty) s.setTimeFormat(values.first);
-      },
-      showSelectedIcon: false,
-    ),
-  );
+
+  Widget _divider() => const Divider(height: 1, indent: 70, endIndent: 15);
 
   Widget _choice(
     BuildContext c,
@@ -752,228 +637,107 @@ class CanonicalSettingsScreen extends StatelessWidget {
     String sub,
     List<String> options,
     String selected,
-    Future<void> Function(String) onChanged,
-  ) => _tile(
-    c,
-    icon,
-    title,
-    sub,
-    () => showModalBottomSheet<void>(
-      context: c,
-      showDragHandle: true,
-      builder: (sc) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: options
-              .map(
-                (v) => ListTile(
-                  title: Text(
-                    choice(v, Localizations.localeOf(sc).languageCode),
-                  ),
-                  trailing: v == selected
-                      ? const Icon(
-                          Icons.check_circle_rounded,
-                          color: AppColors.seaBlue,
-                        )
-                      : null,
-                  onTap: () async {
-                    await onChanged(v);
-                    if (sc.mounted) Navigator.pop(sc);
-                  },
-                ),
-              )
-              .toList(),
-        ),
+    ValueChanged<String> onChanged,
+  ) => ListTile(
+    contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
+    leading: Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: AppColors.seaBlue.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, color: AppColors.seaBlue, size: 21),
+    ),
+    title: Text(title),
+    subtitle: Text(sub),
+    trailing: DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: selected,
+        items: options
+            .map((v) => DropdownMenuItem<String>(value: v, child: Text(choice(v, sLanguageCode(c)))))
+            .toList(),
+        onChanged: (v) {
+          if (v != null) onChanged(v);
+        },
       ),
     ),
   );
-  Widget _divider() => const Divider(height: 1, indent: 70);
 
-  String themeLabel(SettingsProvider s) => s.isAmoledMode
-      ? t(s.languageCode, 'অ্যামোলেড কালো', 'AMOLED Black')
-      : s.themeMode == ThemeMode.light
-      ? t(s.languageCode, 'লাইট মোড', 'Light Mode')
-      : s.themeMode == ThemeMode.dark
-      ? t(s.languageCode, 'ডার্ক মোড', 'Dark Mode')
-      : t(s.languageCode, 'সিস্টেম অনুযায়ী', 'System Default');
-  String textSizeLabel(int n, String l) => [
-    t(l, 'ছোট', 'Small'),
-    t(l, 'স্বাভাবিক', 'Normal'),
-    t(l, 'বড়', 'Large'),
-    t(l, 'খুব বড়', 'Very Large'),
-  ][n.clamp(0, 3)];
-  String choice(String v, String l) {
-    if (l == 'en') {
-      if (v == 'Bangla') return 'Bangla';
-      if (v == 'bn') return 'Bangla';
-      if (v == '12') return '12-hour';
-      if (v == '24') return '24-hour';
-      if (v == 'automatic') return 'Automatic';
-      if (v == 'manual') return 'Manual';
-      return v;
-    }
-    if (l == 'ar') return v;
-    const m = {
-      'Karachi': 'করাচি',
-      'Muslim World League': 'মুসলিম ওয়ার্ল্ড লীগ',
-      'Egyptian': 'মিশরীয়',
-      'Umm Al Qura': 'উম্মুল কুরা',
-      'Dubai': 'দুবাই',
-      'Qatar': 'কাতার',
-      'Kuwait': 'কুয়েত',
-      'Singapore': 'সিঙ্গাপুর',
-      'North America': 'উত্তর আমেরিকা',
-      'Moonsighting Committee': 'চাঁদ দেখা কমিটি',
-      'Hanafi': 'হানাফি',
-      'Shafi': 'শাফেয়ি',
-      'Maliki': 'মালিকি',
-      'Hanbali': 'হাম্বলি',
-      'Bangla': 'বাংলা',
-      'English': 'ইংরেজি',
-      'Default': 'ডিফল্ট',
-      'Silent': 'নীরব',
-      'Amiri': 'আমিরি',
-      'Scheherazade': 'শেহেরাজাদে',
-      'hijri': 'হিজরি',
-      'gregorian': 'গ্রেগরিয়ান',
-      'both': 'উভয়',
-      '12': '১২ ঘণ্টা',
-      '24': '২৪ ঘণ্টা',
-      'automatic': 'স্বয়ংক্রিয়',
-      'manual': 'ম্যানুয়াল',
-    };
-    return m[v] ?? v;
-  }
-
-  String reminder(int n, String l) => n == 0
-      ? t(l, 'সময় হলে', 'At prayer time')
-      : '$n ${t(l, 'মিনিট আগে', 'min before')}';
-  String hijri(int n, String l) => n == 0
-      ? t(l, 'কোনো সমন্বয় নেই', 'No adjustment')
-      : '${n > 0 ? '+' : ''}$n ${t(l, 'দিন', 'day')}';
-  String dateLabel(String v, String l) => v == 'hijri'
-      ? t(l, 'শুধু হিজরি', 'Hijri only')
-      : v == 'gregorian'
-      ? t(l, 'শুধু গ্রেগরিয়ান', 'Gregorian only')
-      : t(l, 'উভয় তারিখ', 'Both dates');
-
-  Future<void> textSizeSheet(BuildContext c, TextScaleProvider p, String l) =>
-      showModalBottomSheet<void>(
-        context: c,
-        builder: (sc) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (int i = 0; i < 4; i++)
-              ListTile(
-                title: Text(textSizeLabel(i, l)),
-                trailing: i == p.level
-                    ? const Icon(
-                        Icons.check_circle_rounded,
-                        color: AppColors.seaBlue,
-                      )
-                    : null,
-                onTap: () async {
-                  await p.setLevel(i);
-                  if (sc.mounted) Navigator.pop(sc);
-                },
-              ),
-          ],
-        ),
-      );
-  Future<void> quranSheet(
+  Widget _switch(
     BuildContext c,
-    SettingsProvider s,
-    String l,
-  ) => showModalBottomSheet<void>(
-    context: c,
-    builder: (sc) => Padding(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            t(l, 'কুরআন পড়ার সেটিংস', 'Quran Reading'),
-            style: Theme.of(
-              sc,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          Text('${t(l, 'আরবি', 'Arabic')}: ${s.quranFontSize.round()}'),
-          Slider(
-            value: s.quranFontSize.clamp(14, 50),
-            min: 14,
-            max: 50,
-            onChanged: s.updateQuranFontSize,
-          ),
-          Text(
-            '${t(l, 'অনুবাদ', 'Translation')}: ${s.translationFontSize.round()}',
-          ),
-          Slider(
-            value: s.translationFontSize.clamp(10, 30),
-            min: 10,
-            max: 30,
-            onChanged: s.updateTranslationFontSize,
-          ),
-        ],
+    IconData icon,
+    String title,
+    String sub,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) => SwitchListTile.adaptive(
+    contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
+    secondary: Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: AppColors.seaBlue.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(12),
       ),
+      child: Icon(icon, color: AppColors.seaBlue, size: 21),
     ),
+    title: Text(title),
+    subtitle: Text(sub),
+    value: value,
+    onChanged: onChanged,
   );
-  Future<void> dailySheet(BuildContext c, SettingsProvider s, String l) =>
-      showModalBottomSheet<void>(
-        context: c,
-        builder: (sc) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _switch(
-              sc,
-              Icons.menu_book_outlined,
-              t(l, 'দৈনিক আয়াত', 'Daily Ayah'),
-              ' ',
-              s.showDailyAyah,
-              (v) => s.setDailyContentPreferences(ayah: v),
-            ),
-            _switch(
-              sc,
-              Icons.auto_stories_outlined,
-              t(l, 'দৈনিক হাদিস', 'Daily Hadith'),
-              ' ',
-              s.showDailyHadith,
-              (v) => s.setDailyContentPreferences(hadith: v),
-            ),
-            _switch(
-              sc,
-              Icons.volunteer_activism_outlined,
-              t(l, 'দৈনিক দোয়া', 'Daily Dua'),
-              ' ',
-              s.showDailyDua,
-              (v) => s.setDailyContentPreferences(dua: v),
-            ),
-          ],
+
+  Widget _timeFormatTile(BuildContext context, SettingsProvider s, String l) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppColors.seaBlue.withValues(alpha: .08),
+          borderRadius: BorderRadius.circular(12),
         ),
-      );
-  Future<void> resetDialog(BuildContext c, SettingsProvider s, String l) async {
-    final ok = await showDialog<bool>(
-      context: c,
-      builder: (d) => AlertDialog(
-        title: Text(t(l, 'সেটিংস রিসেট করবেন?', 'Reset settings?')),
-        content: Text(
-          t(
-            l,
-            'সব সেটিংস ডিফল্টে ফিরে যাবে।',
-            'All settings will return to defaults.',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(d, false),
-            child: Text(t(l, 'বাতিল', 'Cancel')),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(d, true),
-            child: Text(t(l, 'রিসেট', 'Reset')),
-          ),
+        child: const Icon(Icons.schedule_rounded, color: AppColors.seaBlue, size: 21),
+      ),
+      title: Text(t(l, 'সময় ফরম্যাট', 'Time Format')),
+      subtitle: Text(s.use24HourFormat ? '24-hour' : '12-hour'),
+      trailing: SegmentedButton<bool>(
+        segments: const [
+          ButtonSegment<bool>(value: false, label: Text('12h')),
+          ButtonSegment<bool>(value: true, label: Text('24h')),
         ],
+        selected: {s.use24HourFormat},
+        onSelectionChanged: (v) {
+          if (v.isNotEmpty) s.set24HourFormat(v.first);
+        },
+        style: ButtonStyle(
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) return AppColors.seaBlue;
+            return null;
+          }),
+          side: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const BorderSide(color: AppColors.seaBlue);
+            }
+            return null;
+          }),
+        ),
       ),
     );
-    if (ok == true) await s.resetSettings();
   }
+
+  String sLanguageCode(BuildContext c) => c.read<SettingsProvider>().languageCode;
+
+  String themeLabel(SettingsProvider s) => choice(s.themeId, s.languageCode);
+  String textSizeLabel(TextScaleLevel level, String l) => choice(level.name, l);
+  String choice(String value, String l) => value;
+  String reminder(int value, String l) => value == 0 ? t(l, 'বন্ধ', 'Off') : '$value min';
+  String hijri(int value, String l) => value == 0 ? t(l, 'কোনো সমন্বয় নেই', 'No adjustment') : '${value > 0 ? '+' : ''}$value day';
+  String dateLabel(String value, String l) => value == 'hijri' ? t(l, 'হিজরি', 'Hijri') : value == 'gregorian' ? t(l, 'ইংরেজি', 'Gregorian') : t(l, 'উভয়', 'Both');
+
+  Future<void> dailySheet(BuildContext context, SettingsProvider s, String l) async {}
+  Future<void> resetDialog(BuildContext context, SettingsProvider s, String l) async {}
+  String choiceFallback(String value) => value;
+  Future<void> textSizeSheet(BuildContext context, TextScaleProvider scale, String l) async {}
 }
