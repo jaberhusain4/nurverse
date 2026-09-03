@@ -14,79 +14,85 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Merge Jamaat controls into SettingsScreen
-        shell: python
         run: |
+          python3 <<'PY'
           from pathlib import Path
-
           path = Path('lib/screens/settings/settings_screen.dart')
           s = path.read_text(encoding='utf-8')
-
-          # The app must have one user-facing settings screen. Keep all Jamaat
-          # controls inside SettingsScreen instead of navigating to a second screen.
-          s = s.replace(
-              "import '../prayer/jamaat_settings_screen.dart';\n",
-              "import '../../services/jamaat_service.dart';\n",
-          )
-
-          old_section = '''          _buildSettingsCard(\n            context,\n            children: [\n              _buildSettingTile(\n                context,\n                icon: Icons.tune_rounded,\n                title: 'জামাআত মোড ও সময়',\n                subtitle: 'Automatic / Manual এবং প্রতিটি ওয়াক্তের সময়',\n                onTap: () {\n                  Navigator.of(context).push(\n                    MaterialPageRoute<void>(\n                      builder: (_) => const JamaatSettingsScreen(),\n                    ),\n                  );\n                },\n              ),\n            ],\n          ),'''
-
-          new_section = '''          _buildSettingsCard(\n            context,\n            children: [\n              _buildJamaatSummaryTile(context),\n              _buildDivider(context),\n              _buildJamaatTimeRow(\n                context,\n                prayer: 'Fajr',\n                title: 'ফজর',\n                icon: Icons.nights_stay_outlined,\n              ),\n              _buildDivider(context),\n              _buildJamaatTimeRow(\n                context,\n                prayer: 'Dhuhr',\n                title: 'যোহর / জুমু\'আ',\n                icon: Icons.wb_sunny_outlined,\n              ),\n              _buildDivider(context),\n              _buildJamaatTimeRow(\n                context,\n                prayer: 'Asr',\n                title: 'আসর',\n                icon: Icons.wb_twilight_outlined,\n              ),\n              _buildDivider(context),\n              _buildJamaatTimeRow(\n                context,\n                prayer: 'Maghrib',\n                title: 'মাগরিব',\n                icon: Icons.wb_twilight_rounded,\n              ),\n              _buildDivider(context),\n              _buildJamaatTimeRow(\n                context,\n                prayer: 'Isha',\n                title: 'ইশা',\n                icon: Icons.nights_stay_rounded,\n              ),\n            ],\n          ),'''
-
-          if old_section not in s:
-              raise SystemExit('Expected Jamaat navigation section was not found; refusing to modify the file.')
-          s = s.replace(old_section, new_section, 1)
-
+          s = s.replace("import '../prayer/jamaat_settings_screen.dart';\n", "import '../../services/jamaat_service.dart';\n")
+          old = '''          _buildSettingsCard(
+            context,
+            children: [
+              _buildSettingTile(
+                context,
+                icon: Icons.tune_rounded,
+                title: 'জামাআত মোড ও সময়',
+                subtitle: 'Automatic / Manual এবং প্রতিটি ওয়াক্তের সময়',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const JamaatSettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),'''
+          new = '''          _buildSettingsCard(
+            context,
+            children: [
+              _buildJamaatSummaryTile(context),
+              _buildDivider(context),
+              _buildJamaatTimeRow(context, prayer: 'Fajr', title: 'ফজর', icon: Icons.nights_stay_outlined),
+              _buildDivider(context),
+              _buildJamaatTimeRow(context, prayer: 'Dhuhr', title: 'যোহর / জুমু\\'আ', icon: Icons.wb_sunny_outlined),
+              _buildDivider(context),
+              _buildJamaatTimeRow(context, prayer: 'Asr', title: 'আসর', icon: Icons.wb_twilight_outlined),
+              _buildDivider(context),
+              _buildJamaatTimeRow(context, prayer: 'Maghrib', title: 'মাগরিব', icon: Icons.wb_twilight_rounded),
+              _buildDivider(context),
+              _buildJamaatTimeRow(context, prayer: 'Isha', title: 'ইশা', icon: Icons.nights_stay_rounded),
+            ],
+          ),'''
+          if old not in s:
+              raise SystemExit('Expected Jamaat navigation block not found.')
+          s = s.replace(old, new, 1)
           marker = "  Widget _buildSectionLabel(BuildContext context, String title, IconData icon) {"
-          if marker not in s:
-              raise SystemExit('SettingsScreen helper insertion marker was not found.')
-
           helpers = r'''  Widget _buildJamaatSummaryTile(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    final isEnglish = settings.isEnglish;
     return _buildSettingTile(
       context,
       icon: Icons.groups_rounded,
-      title: isEnglish ? 'Jamaat Times' : 'জামাআত সময়',
-      subtitle: isEnglish
+      title: settings.isEnglish ? 'Jamaat Times' : 'জামাআত সময়',
+      subtitle: settings.isEnglish
           ? 'Default Dhaka reference or your local mosque time'
           : 'ঢাকার ডিফল্ট সময় অথবা আপনার এলাকার মসজিদের সময়',
     );
   }
 
-  Widget _buildJamaatTimeRow(
-    BuildContext context, {
-    required String prayer,
-    required String title,
-    required IconData icon,
-  }) {
+  Widget _buildJamaatTimeRow(BuildContext context, {required String prayer, required String title, required IconData icon}) {
     final settings = context.watch<SettingsProvider>();
-    final isEnglish = settings.isEnglish;
-    final current = JamaatService.get(prayer);
     final isDefault = JamaatService.isDhakaDefault(prayer);
-    final display = _formatJamaatDisplay(current, settings.is24Hour);
-
     return _buildSettingTile(
       context,
       icon: icon,
       title: title,
       subtitle: isDefault
-          ? (isEnglish ? 'Dhaka default time' : 'ঢাকার ডিফল্ট সময়')
-          : (isEnglish ? 'Local mosque time' : 'আপনার এলাকার মসজিদের সময়'),
+          ? (settings.isEnglish ? 'Dhaka default time' : 'ঢাকার ডিফল্ট সময়')
+          : (settings.isEnglish ? 'Local mosque time' : 'আপনার এলাকার মসজিদের সময়'),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            display,
+            _formatJamaatDisplay(JamaatService.get(prayer), settings.is24Hour),
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w800,
+            ),
           ),
-          const SizedBox(width: 8),
           IconButton(
-            tooltip: isEnglish ? 'Set time' : 'সময় সেট করুন',
+            tooltip: settings.isEnglish ? 'Set time' : 'সময় সেট করুন',
             icon: const Icon(Icons.edit_outlined, size: 19),
             onPressed: () => _showJamaatTimeDialog(context, prayer, title),
           ),
@@ -96,67 +102,40 @@ jobs:
   }
 
   String _formatJamaatDisplay(String value, bool is24Hour) {
-    final text = value.trim();
-    final amPm = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*(AM|PM)$', caseSensitive: false).firstMatch(text);
-    if (amPm == null) return text.isEmpty ? '--:--' : text;
-    var hour = int.tryParse(amPm.group(1)!) ?? 0;
-    final minute = amPm.group(2)!;
-    final period = amPm.group(3)!.toUpperCase();
+    final match = RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)$', caseSensitive: false).firstMatch(value.trim());
+    if (match == null) return value.trim().isEmpty ? '--:--' : value.trim();
+    var hour = int.tryParse(match.group(1)!) ?? 0;
+    final minute = match.group(2)!;
+    final period = match.group(3)!.toUpperCase();
     if (!is24Hour) return '$hour:$minute $period';
     if (period == 'PM' && hour != 12) hour += 12;
     if (period == 'AM' && hour == 12) hour = 0;
     return '${hour.toString().padLeft(2, '0')}:$minute';
   }
 
-  Future<void> _showJamaatTimeDialog(
-    BuildContext context,
-    String prayer,
-    String title,
-  ) async {
+  Future<void> _showJamaatTimeDialog(BuildContext context, String prayer, String title) async {
     final settings = context.read<SettingsProvider>();
     await JamaatService.initialize();
-    final current = JamaatService.get(prayer);
-    final controller = TextEditingController(text: _formatJamaatInput(current));
+    final controller = TextEditingController(text: JamaatService.get(prayer));
     String? error;
-
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.access_time_rounded, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(width: 10),
-              Expanded(child: Text('$title জামাআতের সময়')),
-            ],
-          ),
+          title: Text('$title জামাআতের সময়'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('জামাআতের সময় লিখুন। উদাহরণ: 5:00 AM অথবা 17:00'),
-              const SizedBox(height: 14),
               TextField(
                 controller: controller,
                 keyboardType: TextInputType.text,
-                textInputAction: TextInputAction.done,
                 decoration: InputDecoration(
                   labelText: 'সময়',
                   hintText: settings.is24Hour ? 'যেমন 17:00' : 'যেমন 5:00 PM',
                   errorText: error,
-                  prefixIcon: const Icon(Icons.schedule_rounded),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                 ),
-                onSubmitted: (_) async {
-                  final ok = await _saveJamaatInput(settings, prayer, controller.text);
-                  if (ok && dialogContext.mounted) {
-                    Navigator.of(dialogContext).pop();
-                  } else {
-                    setDialogState(() => error = 'সঠিক সময় লিখুন, যেমন 5:00 PM বা 17:00');
-                  }
-                },
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               if (!JamaatService.isDhakaDefault(prayer))
                 TextButton.icon(
                   onPressed: () async {
@@ -169,10 +148,7 @@ jobs:
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('বাতিল'),
-            ),
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('বাতিল')),
             FilledButton(
               onPressed: () async {
                 final ok = await _saveJamaatInput(settings, prayer, controller.text);
@@ -191,31 +167,16 @@ jobs:
     controller.dispose();
   }
 
-  String _formatJamaatInput(String value) {
-    final text = value.trim();
-    final match = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*(AM|PM)$', caseSensitive: false).firstMatch(text);
-    if (match != null) {
-      return '${match.group(1)}:${match.group(2)} ${match.group(3)!.toUpperCase()}';
-    }
-    return text;
-  }
-
-  Future<bool> _saveJamaatInput(
-    SettingsProvider settings,
-    String prayer,
-    String input,
-  ) async {
+  Future<bool> _saveJamaatInput(SettingsProvider settings, String prayer, String input) async {
     final text = input.trim();
-    final amPm = RegExp(r'^(\\d{1,2}):(\\d{2})\\s*(AM|PM)$', caseSensitive: false).firstMatch(text);
+    final amPm = RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)$', caseSensitive: false).firstMatch(text);
     if (amPm != null) {
       final hour = int.tryParse(amPm.group(1)!) ?? -1;
       final minute = int.tryParse(amPm.group(2)!) ?? -1;
       if (hour < 1 || hour > 12 || minute < 0 || minute > 59) return false;
-      final normalized = '$hour:${minute.toString().padLeft(2, '0')} ${amPm.group(3)!.toUpperCase()}';
-      return settings.setJamaatTime(prayer, normalized);
+      return settings.setJamaatTime(prayer, '$hour:${minute.toString().padLeft(2, '0')} ${amPm.group(3)!.toUpperCase()}');
     }
-
-    final twentyFour = RegExp(r'^(\\d{1,2}):(\\d{2})$').firstMatch(text);
+    final twentyFour = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(text);
     if (twentyFour != null) {
       final hour = int.tryParse(twentyFour.group(1)!) ?? -1;
       final minute = int.tryParse(twentyFour.group(2)!) ?? -1;
@@ -228,12 +189,12 @@ jobs:
   }
 
 '''
-
+          if marker not in s:
+              raise SystemExit('SettingsScreen helper marker not found.')
           s = s.replace(marker, helpers + marker, 1)
           path.write_text(s, encoding='utf-8')
-
+          PY
       - name: Verify and commit
-        shell: bash
         run: |
           grep -q "_buildJamaatTimeRow" lib/screens/settings/settings_screen.dart
           grep -q "title: 'সময় ফরম্যাট'" lib/screens/settings/settings_screen.dart
@@ -244,9 +205,7 @@ jobs:
           git add lib/screens/settings/settings_screen.dart
           git commit -m "Unify Settings Screen with Jamaat controls"
           git push
-
       - name: Remove one-time workflow
-        shell: bash
         run: |
           rm -f .github/workflows/unify-settings-screen.yml
           git add .github/workflows/unify-settings-screen.yml
