@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'tools/restore_premium_account.py'
+      - '.github/workflows/restore-premium-account.yml'
+      - '.github/premium-restore-trigger'
   workflow_dispatch:
 
 jobs:
