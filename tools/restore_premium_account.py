@@ -186,3 +186,6 @@ if marker in s:
 
 p.write_text(s, encoding='utf-8')
 print('premium account restore applied')
+
+# One-time workflow trigger: changing this script causes the restoration
+# workflow to run against the current canonical settings screen.
