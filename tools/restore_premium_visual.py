@@ -4,79 +4,36 @@ import re
 p = Path('lib/screens/canonical_settings_screen.dart')
 s = p.read_text(encoding='utf-8')
 
-# Restore the historical layout: the large Premium hero appears first,
-# before the Personalization section.
-premium_call = "          _premium(context, s, premium),\n"
-s = s.replace(premium_call, '', 1)
-
-personalization = """        children: [
-          _section(
-            context,
-            t(l, 'ব্যক্তিগতকরণ', 'Personalization'),"""
-if personalization not in s:
+# Keep the large Premium hero at the top of Settings.
+s = s.replace('          _premium(context, s, premium),\n', '', 1)
+premium_anchor = "        children: [\n          _section(\n            context,\n            t(l, 'ব্যক্তিগতকরণ', 'Personalization'),"
+if premium_anchor not in s:
     raise SystemExit('Personalization section not found')
+s = s.replace(premium_anchor, "        children: [\n          _premium(context, s, premium),\n          const SizedBox(height: 18),\n          _section(\n            context,\n            t(l, 'ব্যক্তিগতকরণ', 'Personalization'),", 1)
 
-replacement = """        children: [
-          _premium(context, s, premium),
-          const SizedBox(height: 18),
-          _section(
-            context,
-            t(l, 'ব্যক্তিগতকরণ', 'Personalization'),"""
-s = s.replace(personalization, replacement, 1)
-
-# Match the historical larger Premium presentation.
-s = s.replace(
-    'padding: const EdgeInsets.all(20),\n          decoration: BoxDecoration(',
-    'padding: const EdgeInsets.all(22),\n          decoration: BoxDecoration(',
-    1,
-)
-s = s.replace(
-    'borderRadius: BorderRadius.circular(28),\n            border: Border.all(color: AppColors.seaBlue.withValues(alpha: .20)),',
-    'borderRadius: BorderRadius.circular(30),\n            border: Border.all(color: AppColors.seaBlue.withValues(alpha: .20)),',
-    1,
-)
+# Restore the historical large Premium presentation.
+s = s.replace('padding: const EdgeInsets.all(20),\n          decoration: BoxDecoration(', 'padding: const EdgeInsets.all(22),\n          decoration: BoxDecoration(', 1)
+s = s.replace('borderRadius: BorderRadius.circular(28),\n            border: Border.all(color: AppColors.seaBlue.withValues(alpha: .20)),', 'borderRadius: BorderRadius.circular(30),\n            border: Border.all(color: AppColors.seaBlue.withValues(alpha: .20)),', 1)
 s = s.replace('width: 54,\n                    height: 54,', 'width: 60,\n                    height: 60,', 1)
 s = s.replace('size: 30,\n                    ),', 'size: 32,\n                    ),', 1)
-s = s.replace(
-    'fontSize: 18,\n                                  fontWeight: FontWeight.w900,',
-    'fontSize: 20,\n                                  fontWeight: FontWeight.w900,',
-    1,
-)
-s = s.replace(
-    'padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),',
-    'padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),',
-    1,
-)
+s = s.replace('fontSize: 18,\n                                  fontWeight: FontWeight.w900,', 'fontSize: 20,\n                                  fontWeight: FontWeight.w900,', 1)
+s = s.replace('padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),', 'padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),', 1)
 
-# Restore the Premium card's Google account login/logout control.
+# Use the shared auth service for the Premium account control.
 if "import '../services/auth_service.dart';" not in s:
-    s = s.replace(
-        "import '../providers/text_scale_provider.dart';\n",
-        "import '../providers/text_scale_provider.dart';\nimport '../services/auth_service.dart';\n",
-        1,
-    )
+    s = s.replace("import '../providers/text_scale_provider.dart';\n", "import '../providers/text_scale_provider.dart';\nimport '../services/auth_service.dart';\n", 1)
 
-account_pattern = re.compile(
-    r"              const SizedBox\(width: 10\),\n"
-    r"              Material\(\n"
-    r"                color: Colors\.transparent,\n"
-    r"                child: InkWell\(\n"
-    r".*?"
-    r"                \),\n"
-    r"              \),\n",
-    re.DOTALL,
-)
-if '_premiumAccountButton(context)' not in s:
-    match = account_pattern.search(s)
-    if not match:
-        raise SystemExit('Premium account control block not found')
-    replacement_account = """              const SizedBox(width: 10),
-              _premiumAccountButton(context),
-"""
-    s = account_pattern.sub(replacement_account, s, count=1)
+# Replace whatever account control is currently in the Premium hero.
+account_start = "              const SizedBox(width: 10),\n"
+account_end = "              const SizedBox(height: 18),\n              Wrap("
+start = s.find(account_start, s.find('Widget _premium('))
+end = s.find(account_end, start)
+if start == -1 or end == -1:
+    raise SystemExit('Premium account control boundaries not found')
+s = s[:start] + account_start + "              _premiumAccountButton(context),\n" + s[end:]
 
-if '_premiumAccountButton(BuildContext context)' not in s:
-    marker = "  Widget _premiumChip(IconData icon, String title) => Container(\n"
+if 'Widget _premiumAccountButton(BuildContext context)' not in s:
+    marker = '  Widget _premiumChip(IconData icon, String title) => Container(\n'
     if marker not in s:
         raise SystemExit('Premium chip marker not found')
     helper = r'''  Widget _premiumAccountButton(BuildContext context) {
@@ -110,11 +67,7 @@ if '_premiumAccountButton(BuildContext context)' not in s:
                         height: 42,
                         fit: BoxFit.cover,
                         filterQuality: FilterQuality.high,
-                        errorBuilder: (_, __, ___) => Icon(
-                          Icons.person_rounded,
-                          color: theme.colorScheme.primary,
-                          size: 22,
-                        ),
+                        errorBuilder: (_, __, ___) => Icon(Icons.person_rounded, color: theme.colorScheme.primary, size: 22),
                       ),
                     )
                   : Icon(
@@ -156,36 +109,18 @@ if '_premiumAccountButton(BuildContext context)' not in s:
                 CircleAvatar(
                   radius: 36,
                   backgroundColor: theme.colorScheme.primary.withValues(alpha: .10),
-                  backgroundImage: photoUrl != null && photoUrl.isNotEmpty
-                      ? NetworkImage(photoUrl)
-                      : null,
-                  child: photoUrl == null || photoUrl.isEmpty
-                      ? Icon(
-                          Icons.account_circle_rounded,
-                          size: 48,
-                          color: theme.colorScheme.primary,
-                        )
-                      : null,
+                  backgroundImage: photoUrl != null && photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                  child: photoUrl == null || photoUrl.isEmpty ? Icon(Icons.account_circle_rounded, size: 48, color: theme.colorScheme.primary) : null,
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  user.displayName?.trim().isNotEmpty == true
-                      ? user.displayName!
-                      : 'NurVerse User',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+                  user.displayName?.trim().isNotEmpty == true ? user.displayName! : 'NurVerse User',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                   textAlign: TextAlign.center,
                 ),
                 if (user.email?.isNotEmpty == true) ...[
                   const SizedBox(height: 4),
-                  Text(
-                    user.email!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: .70),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+                  Text(user.email!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: .70)), textAlign: TextAlign.center),
                 ],
                 const SizedBox(height: 20),
                 SizedBox(
@@ -196,9 +131,7 @@ if '_premiumAccountButton(BuildContext context)' not in s:
                       await AuthService.instance.signOut();
                     },
                     icon: const Icon(Icons.logout_rounded),
-                    label: Text(
-                      languageCode == 'en' ? 'Logout' : 'লগআউট',
-                    ),
+                    label: Text(languageCode == 'en' ? 'Logout' : 'লগআউট'),
                   ),
                 ),
               ],
@@ -212,8 +145,48 @@ if '_premiumAccountButton(BuildContext context)' not in s:
 '''
     s = s.replace(marker, helper + marker, 1)
 
-# Ensure the 12/24 segmented control uses NurVerse's SeaBlue instead of the
-# default Material secondary-container colors.
+# Restore Premium button behavior: inactive -> activate, active -> show status/manage.
+old_button = '''                  onPressed: () => premium.activatePremium(),
+'''
+new_button = '''                  onPressed: () {
+                    if (premium.isPremium) {
+                      _showPremiumStatus(context, premium, languageCode == 'en');
+                    } else {
+                      premium.activatePremium();
+                    }
+                  },
+'''
+if old_button in s:
+    s = s.replace(old_button, new_button, 1)
+
+if 'Future<void> _showPremiumStatus(' not in s:
+    marker = '  Widget _premiumChip(IconData icon, String title) => Container(\n'
+    helper = r'''  Future<void> _showPremiumStatus(BuildContext context, PremiumProvider premium, bool isEnglish) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('NurVerse Premium'),
+        content: Text(
+          premium.purchaseDate == null
+              ? (isEnglish ? 'Premium is active.' : 'Premium সক্রিয় আছে।')
+              : (isEnglish ? 'Premium is active on this device.' : 'এই ডিভাইসে Premium সক্রিয় আছে।'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(isEnglish ? 'Close' : 'বন্ধ করুন'),
+          ),
+        ],
+      ),
+    );
+  }
+
+'''
+    if marker not in s:
+        raise SystemExit('Premium chip marker not found for status helper')
+    s = s.replace(marker, helper + marker, 1)
+
+# Force the 12/24 selector to use NurVerse SeaBlue.
 old_segment = """      showSelectedIcon: false,
     ),
   );
@@ -222,14 +195,10 @@ old_segment = """      showSelectedIcon: false,
 new_segment = """      showSelectedIcon: false,
       style: ButtonStyle(
         foregroundColor: WidgetStateProperty.resolveWith((states) {
-          return states.contains(WidgetState.selected)
-              ? Colors.white
-              : AppColors.seaBlue;
+          return states.contains(WidgetState.selected) ? Colors.white : AppColors.seaBlue;
         }),
         backgroundColor: WidgetStateProperty.resolveWith((states) {
-          return states.contains(WidgetState.selected)
-              ? AppColors.seaBlue
-              : Colors.transparent;
+          return states.contains(WidgetState.selected) ? AppColors.seaBlue : Colors.transparent;
         }),
         side: WidgetStateProperty.all(
           BorderSide(color: AppColors.seaBlue.withValues(alpha: .30)),
