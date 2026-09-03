@@ -25,35 +25,29 @@ jobs:
           v4 = Path('lib/screens/settings_hub_screen_v4.dart')
           s = v4.read_text(encoding='utf-8')
 
-          # Add time format immediately after Show seconds.
-          marker = "_divider(), _switchTile(context, Icons.timer_outlined, _t(languageCode, 'সেকেন্ড দেখান', 'Show seconds'), _t(languageCode, 'যেখানে সমর্থিত সেখানে সেকেন্ড দেখাবে', 'Show seconds where supported'), settings.showSeconds, settings.toggleShowSeconds),"
-          if marker in s and "_t(languageCode, 'সময় ফরম্যাট', 'Time Format')" not in s:
-              s = s.replace(marker, marker + "\n          _divider(), _tile(context, Icons.access_time_rounded, _t(languageCode, 'সময় ফরম্যাট', 'Time Format'), settings.is24Hour ? _t(languageCode, '২৪ ঘণ্টা', '24-hour') : _t(languageCode, '১২ ঘণ্টা', '12-hour'), () => _showChoiceSheet(context, _t(languageCode, 'সময় ফরম্যাট', 'Time Format'), const ['12', '24'], settings.setTimeFormat, selectedValue: settings.timeFormat)),", 1)
+          # Keep the existing V4 premium/login card exactly as the source of truth.
+          # Add one localized 12/24-hour setting to the single canonical screen.
+          time_marker = "_divider(), _switchTile(context, Icons.timer_outlined, _t(languageCode, 'সেকেন্ড দেখান', 'Show seconds'), _t(languageCode, 'যেখানে সমর্থিত সেখানে সেকেন্ড দেখাবে', 'Show seconds where supported'), settings.showSeconds, settings.toggleShowSeconds),"
+          time_tile = "_divider(), _tile(context, Icons.access_time_rounded, _t(languageCode, 'সময় ফরম্যাট', 'Time Format'), settings.is24Hour ? _t(languageCode, '২৪ ঘণ্টা', '24-hour') : _t(languageCode, '১২ ঘণ্টা', '12-hour'), () => _showChoiceSheet(context, _t(languageCode, 'সময় ফরম্যাট', 'Time Format'), const ['12', '24'], settings.setTimeFormat, selectedValue: settings.timeFormat)),"
+          if "_t(languageCode, 'সময় ফরম্যাট', 'Time Format')" not in s and time_marker in s:
+              s = s.replace(time_marker, time_marker + "\n          " + time_tile, 1)
 
-          # Replace Jamaat navigation with inline editable Jamaat controls.
-          old = "_divider(), _tile(context, Icons.access_time_rounded, _t(languageCode, 'জামাতের সময়', 'Jamaat Times'), _t(languageCode, 'নিজের এলাকার জামাতের সময় সেট করুন', 'Set local Jamaat times'), () { Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const JamaatSettingsScreen())); }),"
-          new = """_divider(), _jamaatTile(context, settings, 'Fajr', _t(languageCode, 'ফজর', 'Fajr'), settings.fajrJamaat),
+          # Put all Jamaat controls on the canonical Settings screen.
+          old_jamaat = "_divider(), _tile(context, Icons.access_time_rounded, _t(languageCode, 'জামাতের সময়', 'Jamaat Times'), _t(languageCode, 'নিজের এলাকার জামাতের সময় সেট করুন', 'Set local Jamaat times'), () { Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const JamaatSettingsScreen())); }),"
+          new_jamaat = """_divider(), _jamaatTile(context, settings, 'Fajr', _t(languageCode, 'ফজর', 'Fajr'), settings.fajrJamaat),
           _divider(), _jamaatTile(context, settings, 'Dhuhr', _t(languageCode, 'যোহর / জুমু\'আ', 'Dhuhr / Jumu\'ah'), settings.dhuhrJamaat),
           _divider(), _jamaatTile(context, settings, 'Asr', _t(languageCode, 'আসর', 'Asr'), settings.asrJamaat),
           _divider(), _jamaatTile(context, settings, 'Maghrib', _t(languageCode, 'মাগরিব', 'Maghrib'), settings.maghribJamaat),
           _divider(), _jamaatTile(context, settings, 'Isha', _t(languageCode, 'ইশা', 'Isha'), settings.ishaJamaat),"""
-          if old in s:
-              s = s.replace(old, new, 1)
+          if old_jamaat in s:
+              s = s.replace(old_jamaat, new_jamaat, 1)
 
-          # Add Location + prayer adjustments to Prayer & Adhan.
-          anchor = "_divider(), _tile(context, Icons.calendar_today_outlined, _t(languageCode, 'হিজরি তারিখ সমন্বয়', 'Hijri Date Adjustment'), _hijriAdjustmentLabel(settings, languageCode), () => _showHijriAdjustmentSheet(context, settings)),"
-          additions = """_divider(), _tile(context, Icons.location_on_outlined, _t(languageCode, 'লোকেশন', 'Location'), settings.autoLocation ? _t(languageCode, 'স্বয়ংক্রিয়', 'Automatic') : _t(languageCode, 'ম্যানুয়াল', 'Manual'), () => _showChoiceSheet(context, _t(languageCode, 'লোকেশন', 'Location'), const ['automatic', 'manual'], settings.setLocationMode, selectedValue: settings.locationMode)),
-          _divider(), _tile(context, Icons.tune_rounded, _t(languageCode, 'সালাতের সময় সমন্বয়', 'Prayer Adjustments'), _t(languageCode, 'প্রতিটি ওয়াক্তে ±৬০ মিনিট সমন্বয়', 'Adjust each prayer by ±60 minutes'), () => _showPrayerAdjustmentsSheet(context, settings)),
-          _divider(), """
-          if anchor in s and "_showPrayerAdjustmentsSheet(context, settings)" not in s:
-              s = s.replace(anchor, additions + anchor, 1)
-
-          # Remove now-unused Jamaat screen import.
+          # Remove the separate Jamaat navigation import; Jamaat now lives here.
           s = s.replace("import 'prayer/jamaat_settings_screen.dart';\n", "")
 
-          # Insert Jamaat helper methods before _section.
+          # Add localized inline Jamaat editor helpers.
           helper_marker = "  Widget _section(BuildContext context, String title, IconData icon, List<Widget> children) =>"
-          if helper_marker in s and "Widget _jamaatTile(" not in s:
+          if "Widget _jamaatTile(" not in s and helper_marker in s:
               helpers = r'''  Widget _jamaatTile(BuildContext context, SettingsProvider settings, String prayer, String title, String value) {
     return _tile(context, Icons.access_time_rounded, title, value, () => _showJamaatTimeDialog(context, settings, prayer, title));
   }
@@ -65,64 +59,34 @@ jobs:
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setState) => AlertDialog(
-          title: Text('$title জামাতের সময়'),
+          title: Text('${title} ${_t(settings.languageCode, 'জামাতের সময়', 'Jamaat Time')}'),
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.text,
             decoration: InputDecoration(
-              labelText: 'সময়',
-              hintText: settings.is24Hour ? 'যেমন 17:00' : 'যেমন 5:00 PM',
+              labelText: _t(settings.languageCode, 'সময়', 'Time'),
+              hintText: settings.is24Hour ? '17:00' : '5:00 PM',
               errorText: error,
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('বাতিল')),
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(_t(settings.languageCode, 'বাতিল', 'Cancel'))),
             FilledButton(
               onPressed: () async {
                 final ok = await settings.setJamaatTime(prayer, controller.text);
                 if (ok) {
                   if (dialogContext.mounted) Navigator.pop(dialogContext);
                 } else {
-                  setState(() => error = 'সঠিক সময় দিন, যেমন 5:00 PM বা 17:00');
+                  setState(() => error = _t(settings.languageCode, 'সঠিক সময় দিন', 'Enter a valid time'));
                 }
               },
-              child: const Text('সংরক্ষণ'),
+              child: Text(_t(settings.languageCode, 'সংরক্ষণ', 'Save')),
             ),
           ],
         ),
       ),
     );
     controller.dispose();
-  }
-
-  Future<void> _showPrayerAdjustmentsSheet(BuildContext context, SettingsProvider settings) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(_t(settings.languageCode, 'সালাতের সময় সমন্বয়', 'Prayer Adjustments'), style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
-              const SizedBox(height: 12),
-              for (final prayer in const ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'])
-                ListTile(
-                  title: Text(_t(settings.languageCode, prayer == 'Dhuhr' ? 'যোহর' : prayer, prayer)),
-                  subtitle: Text('${settings.prayerAdjustments[prayer] ?? 0} মিনিট'),
-                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                    IconButton(onPressed: () => settings.setPrayerAdjustment(prayer, (settings.prayerAdjustments[prayer] ?? 0) - 1), icon: const Icon(Icons.remove_circle_outline)),
-                    IconButton(onPressed: () => settings.setPrayerAdjustment(prayer, (settings.prayerAdjustments[prayer] ?? 0) + 1), icon: const Icon(Icons.add_circle_outline)),
-                  ]),
-                ),
-              TextButton(onPressed: () => settings.resetPrayerAdjustments(), child: Text(_t(settings.languageCode, 'সব রিসেট', 'Reset all'))),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
 '''
@@ -134,7 +98,7 @@ jobs:
           legacy = Path('lib/screens/settings/settings_screen.dart')
           legacy.write_text("""import 'package:flutter/material.dart';\n\nimport '../settings_hub_screen_v4.dart';\n\n/// Compatibility entry point. SettingsHubScreenV4 is the single canonical Settings UI.\nclass SettingsScreen extends StatelessWidget {\n  const SettingsScreen({super.key});\n\n  @override\n  Widget build(BuildContext context) => const SettingsHubScreenV4();\n}\n""", encoding='utf-8')
 
-          # Remove this one-time workflow after applying the change.
+          # This workflow is intentionally one-time.
           Path('.github/workflows/unify-settings-final.yml').unlink(missing_ok=True)
           PY
 
@@ -147,5 +111,5 @@ jobs:
             echo "No changes to commit"
             exit 0
           fi
-          git commit -m "Unify all Settings into one canonical screen"
+          git commit -m "Unify Settings into one localized canonical screen"
           git push origin HEAD:main
