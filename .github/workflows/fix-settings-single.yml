@@ -1,0 +1,149 @@
+name: Fix Settings single screen
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Repair canonical Settings
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import subprocess
+
+          p = Path('lib/screens/canonical_settings_screen.dart')
+          s = p.read_text(encoding='utf-8')
+
+          # Keep the old premium/login hero that existed before the Settings merge.
+          old = subprocess.check_output([
+              'git', 'show', 'a9217d7:lib/screens/settings_hub_screen_v4.dart'
+          ], text=True, encoding='utf-8')
+          premium_names = [
+              '_buildPremiumHero', '_premiumChip', '_premiumAccountButton',
+              '_handleProfileTap', '_openAccount', '_showPremiumStatus'
+          ]
+          extracted = {}
+          for name in premium_names:
+              m = re.search(r'(?ms)^  (?:Widget|Future<void>) ' + re.escape(name) + r'\\b.*?(?=^  (?:Widget|Future<void>) |^}$)', old)
+              if not m:
+                  raise SystemExit(f'missing premium helper: {name}')
+              extracted[name] = m.group(0).replace('_t(', 't(')
+
+          # Add the Firebase/auth imports required by the old premium card.
+          imports = "import 'package:firebase_auth/firebase_auth.dart';\nimport 'package:flutter/material.dart';"
+          s = s.replace("import 'package:flutter/material.dart';", imports, 1)
+          s = s.replace("import '../theme/app_theme.dart';", "import '../theme/app_theme.dart';\nimport '../services/auth_service.dart';\nimport 'auth/google_login_screen.dart';", 1)
+
+          # Use the original premium hero instead of the reduced replacement card.
+          s = re.sub(r'(?ms)^  Widget _premiumCard\\(.*?(?=^  Widget )', '', s, count=1)
+          s = s.replace('_premiumCard(context, premium, lang)', '_buildPremiumHero(context, s, premium)', 1)
+          insert_before = "  Widget _section(BuildContext context, String title, IconData icon, List<Widget> children) =>"
+          premium_helpers = '\n'.join(extracted[n] for n in premium_names) + '\n\n'
+          if '_buildPremiumHero(' not in s:
+              s = s.replace(insert_before, premium_helpers + insert_before, 1)
+
+          # Remove the unwanted Prayer Adjustments setting completely.
+          s = re.sub(r"(?ms)\\s*_tile\\(\\n\\s*context,\\n\\s*Icons\\.tune_rounded,\\n\\s*t\\(lang, 'সালাতের সময় সমন্বয়', 'Prayer Adjustments'\\),.*?\\n\\s*\\),", '', s, count=1)
+
+          # Add a working localized Time Format tile if it is missing.
+          time_anchor = "              _switchTile(\n                context,\n                Icons.timer_outlined,"
+          if "t(lang, 'সময় ফরম্যাট', 'Time Format')" not in s and time_anchor in s:
+              # Insert immediately before Show Seconds for predictable placement.
+              tile = """              _tile(\n                context,\n                Icons.access_time_rounded,\n                t(lang, 'সময় ফরম্যাট', 'Time Format'),\n                s.is24Hour\n                    ? t(lang, '২৪ ঘণ্টা', '24-hour')\n                    : t(lang, '১২ ঘণ্টা', '12-hour'),\n                () async {\n                  await _showChoiceSheet(\n                    context,\n                    t(lang, 'সময় ফরম্যাট', 'Time Format'),\n                    const ['12', '24'],\n                    s.setTimeFormat,\n                    selectedValue: s.timeFormat,\n                  );\n                },\n              ),\n              _divider(),\n"""
+              s = s.replace(time_anchor, tile + time_anchor, 1)
+
+          # Replace the separate Jamaat screen navigation with all five editable times.
+          jamaat_block = re.compile(r"(?ms)\\s*_tile\\(\\n\\s*context,\\n\\s*Icons\\.groups_rounded,\\n\\s*t\\(lang, 'জামাতের সময়', 'Jamaat Times'\\).*?\\n\\s*\\),")
+          jamaat_new = """              _jamaatTile(context, s, 'Fajr', t(lang, 'ফজর', 'Fajr'), s.fajrJamaat),\n              _divider(),\n              _jamaatTile(context, s, 'Dhuhr', t(lang, 'যোহর / জুমু\'আ', 'Dhuhr / Jumu\'ah'), s.dhuhrJamaat),\n              _divider(),\n              _jamaatTile(context, s, 'Asr', t(lang, 'আসর', 'Asr'), s.asrJamaat),\n              _divider(),\n              _jamaatTile(context, s, 'Maghrib', t(lang, 'মাগরিব', 'Maghrib'), s.maghribJamaat),\n              _divider(),\n              _jamaatTile(context, s, 'Isha', t(lang, 'ইশা', 'Isha'), s.ishaJamaat),"""
+          if jamaat_block.search(s):
+              s = jamaat_block.sub(jamaat_new, s, count=1)
+          s = s.replace("import 'prayer/jamaat_settings_screen.dart';\n", '', 1)
+
+          # Localized, compact inline Jamaat editor.
+          helper_marker = "  Widget _section(BuildContext context, String title, IconData icon, List<Widget> children) =>"
+          if '_jamaatTile(BuildContext context' not in s:
+              helpers = r'''  Widget _jamaatTile(BuildContext context, SettingsProvider settings, String prayer, String title, String value) {
+    return _tile(
+      context,
+      Icons.groups_outlined,
+      title,
+      value,
+      () => _showJamaatTimeDialog(context, settings, prayer, title),
+    );
+  }
+
+  Future<void> _showJamaatTimeDialog(BuildContext context, SettingsProvider settings, String prayer, String title) async {
+    final controller = TextEditingController(text: settings.getJamaat(prayer));
+    String? error;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text('$title ${t(settings.languageCode, 'জামাতের সময়', 'Jamaat Time')}'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.datetime,
+            decoration: InputDecoration(
+              labelText: t(settings.languageCode, 'সময়', 'Time'),
+              hintText: settings.is24Hour ? '17:00' : '5:00 PM',
+              errorText: error,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(t(settings.languageCode, 'বাতিল', 'Cancel')),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final ok = await settings.setJamaatTime(prayer, controller.text);
+                if (ok) {
+                  if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+                } else {
+                  setDialogState(() => error = t(settings.languageCode, 'সঠিক সময় দিন', 'Enter a valid time'));
+                }
+              },
+              child: Text(t(settings.languageCode, 'সংরক্ষণ', 'Save')),
+            ),
+          ],
+        ),
+      ),
+    );
+    controller.dispose();
+  }
+
+'''
+              s = s.replace(helper_marker, helpers + helper_marker, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          dart format lib/screens/canonical_settings_screen.dart
+          flutter pub get
+          flutter analyze lib/screens/canonical_settings_screen.dart
+          git diff --check
+
+      - name: Commit and clean up
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/canonical_settings_screen.dart
+          git diff --cached --quiet && { echo 'No Settings changes produced'; exit 1; }
+          git commit -m 'Fix single canonical Settings screen'
+          git rm .github/workflows/fix-settings-single.yml
+          git commit -m 'Remove one-time Settings repair workflow'
+          git push origin HEAD:main
