@@ -129,13 +129,22 @@ account = '''              const SizedBox(width: 10),
                                   ),
                                 ),
                               )
-                            : Icon(
-                                user != null
-                                    ? Icons.person_rounded
-                                    : Icons.login_rounded,
-                                color: theme.colorScheme.primary,
-                                size: 22,
-                              ),
+                            : user != null
+                                ? Icon(
+                                    Icons.person_rounded,
+                                    color: theme.colorScheme.primary,
+                                    size: 22,
+                                  )
+                                : const Center(
+                                    child: Text(
+                                      'G',
+                                      style: TextStyle(
+                                        fontSize: 21,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.seaBlue,
+                                      ),
+                                    ),
+                                  ),
                       ),
                     ),
                   );
