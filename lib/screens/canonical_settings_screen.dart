@@ -33,6 +33,8 @@ class CanonicalSettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
+          _premium(context, s, premium),
+          const SizedBox(height: 18),
           _section(
             context,
             t(l, 'ব্যক্তিগতকরণ', 'Personalization'),
@@ -57,7 +59,6 @@ class CanonicalSettingsScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _premium(context, s, premium),
           const SizedBox(height: 20),
           _section(
             context,
