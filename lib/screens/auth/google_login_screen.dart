@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -46,6 +47,24 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
     }
   }
 
+  Future<void> _signOut() async {
+    if (_loading) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await AuthService.instance.signOut();
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } on Exception catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   String _friendlyError(Object error) {
     final String message = error.toString();
 
@@ -64,7 +83,12 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
     final bool canContinueAsGuest = widget.onContinueWithoutAccount != null;
+
+    if (user != null) {
+      return _buildAccountScreen(context, user);
+    }
 
     return Scaffold(
       appBar: AppBar(),
@@ -84,7 +108,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                       color: AppColors.seaBlue.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(26),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.mosque_rounded,
                       size: 50,
                       color: AppColors.seaBlue,
@@ -175,6 +199,117 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                       child: const Text('Continue without account'),
                     ),
                   ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAccountScreen(BuildContext context, User user) {
+    final theme = Theme.of(context);
+    final photoUrl = user.photoURL?.trim();
+
+    return Scaffold(
+      appBar: AppBar(),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(28),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 48,
+                    backgroundColor: AppColors.seaBlue.withValues(alpha: .10),
+                    backgroundImage: photoUrl != null && photoUrl.isNotEmpty
+                        ? NetworkImage(photoUrl)
+                        : null,
+                    child: photoUrl == null || photoUrl.isEmpty
+                        ? const Icon(
+                            Icons.account_circle_rounded,
+                            size: 62,
+                            color: AppColors.seaBlue,
+                          )
+                        : null,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    user.displayName?.trim().isNotEmpty == true
+                        ? user.displayName!
+                        : 'NurVerse User',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (user.email?.isNotEmpty == true) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      user.email!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: context.secondaryTextColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                  const SizedBox(height: 28),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Google Account',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'আপনার NurVerse account সংযুক্ত আছে।',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: context.secondaryTextColor,
+                            ),
+                          ),
+                          const SizedBox(height: 22),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: OutlinedButton.icon(
+                              onPressed: _loading ? null : _signOut,
+                              icon: _loading
+                                  ? const SizedBox(
+                                      width: 19,
+                                      height: 19,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.logout_rounded),
+                              label: Text(
+                                _loading ? 'Logging out...' : 'লগআউট',
+                                style: const TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ),
+                          if (_error != null) ...[
+                            const SizedBox(height: 14),
+                            Text(
+                              _error!,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: theme.colorScheme.error,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
