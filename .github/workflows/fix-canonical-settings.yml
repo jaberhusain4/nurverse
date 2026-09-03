@@ -16,22 +16,67 @@ jobs:
         with:
           flutter-version: '3.44.8'
           channel: stable
-      - name: Repair Settings and time format
+      - name: Repair Settings, time format, premium card and Jamaat source
         run: |
           python3 tools/fix_settings_canonical.py
           python3 tools/fix_time_format.py
           python3 tools/restore_premium_visual.py
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('lib/providers/settings_provider.dart')
+          text = path.read_text(encoding='utf-8')
+
+          old = """  String get fajrJamaat => _fajrJamaat;
+  String get dhuhrJamaat => _dhuhrJamaat;
+  String get asrJamaat => _asrJamaat;
+  String get maghribJamaat => _maghribJamaat;
+  String get ishaJamaat => _ishaJamaat;
+
+  String getJamaat(String prayer) {
+    switch (prayer.trim()) {
+      case 'Fajr': return _fajrJamaat;
+      case 'Dhuhr': return _dhuhrJamaat;
+      case 'Asr': return _asrJamaat;
+      case 'Maghrib': return _maghribJamaat;
+      case 'Isha': return _ishaJamaat;
+      default: return '--:--';
+    }
+  }
+
+  Map<String, String> get jamaatTimes => {
+    'Fajr': _fajrJamaat, 'Dhuhr': _dhuhrJamaat, 'Asr': _asrJamaat,
+    'Maghrib': _maghribJamaat, 'Isha': _ishaJamaat,
+  };
+"""
+          new = """  // JamaatService is the single source of truth. These provider getters
+  // remain as a compatibility API for existing screens/widgets.
+  String get fajrJamaat => JamaatService.get('Fajr');
+  String get dhuhrJamaat => JamaatService.get('Dhuhr');
+  String get asrJamaat => JamaatService.get('Asr');
+  String get maghribJamaat => JamaatService.get('Maghrib');
+  String get ishaJamaat => JamaatService.get('Isha');
+
+  String getJamaat(String prayer) => JamaatService.get(prayer.trim());
+
+  Map<String, String> get jamaatTimes => JamaatService.all;
+"""
+
+          if old not in text:
+              raise SystemExit('Expected Jamaat provider getter block was not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
       - name: Format and verify
         run: |
-          dart format lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
+          dart format lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart lib/providers/settings_provider.dart
           flutter pub get
-          flutter analyze --no-fatal-infos lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
+          flutter analyze --no-fatal-infos lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart lib/providers/settings_provider.dart lib/screens/prayer/jamaat_settings_screen.dart lib/services/jamaat_service.dart
       - name: Commit repaired code
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
+          git add lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart lib/providers/settings_provider.dart
           if ! git diff --cached --quiet; then
-            git commit -m 'fix(settings): restore large premium card presentation'
+            git commit -m 'fix(jamaat): use shared service as single source of truth'
             git push origin HEAD:main
           fi
