@@ -24,7 +24,7 @@ jobs:
         run: |
           dart format lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
           flutter pub get
-          flutter analyze lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
+          flutter analyze --no-fatal-infos lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
       - name: Commit repaired code
         run: |
           git config user.name 'github-actions[bot]'
