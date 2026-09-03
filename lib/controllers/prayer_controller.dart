@@ -16,6 +16,7 @@ class PrayerController extends ChangeNotifier {
   final PrayerEngineService _prayerEngine = const PrayerEngineService();
   final LocationService _locationService = const LocationService();
   Timer? _ticker;
+  bool _is24Hour = false;
   bool _loading = false;
   String? _error;
   Position? _position;
@@ -67,6 +68,7 @@ class PrayerController extends ChangeNotifier {
       _makruhStart,
       _makruhEnd;
 
+  bool get is24Hour => _is24Hour;
   bool get loading => _loading;
   String? get error => _error;
   String get currentLocationName => _currentLocationName;
@@ -140,6 +142,13 @@ class PrayerController extends ChangeNotifier {
       _error = e.toString();
       notifyListeners();
     }
+  }
+
+  void setTimeFormat(bool is24Hour) {
+    if (_is24Hour == is24Hour) return;
+    _is24Hour = is24Hour;
+    _invalidateScheduleCache();
+    _safeRefresh();
   }
 
   void setCalculationConfig(PrayerCalculationConfig config) {
@@ -836,7 +845,8 @@ class PrayerController extends ChangeNotifier {
       ? '--:--'
       : '${_formatTime(start)} – ${_formatTime(end)}';
 
-  String _formatTime(DateTime value) => DateFormat('h:mm a', 'en_US').format(value);
+  String _formatTime(DateTime value) =>
+      DateFormat(_is24Hour ? 'HH:mm' : 'h:mm a', 'en_US').format(value);
 
   String _formatDuration(Duration duration) {
     if (duration.isNegative) return '00:00:00';

@@ -37,12 +37,22 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<SettingsProvider>(create: (_) => SettingsProvider()),
-        ChangeNotifierProvider<TextScaleProvider>(create: (_) => TextScaleProvider()),
-        ChangeNotifierProvider<BoldTextProvider>(create: (_) => BoldTextProvider()),
-        ChangeNotifierProvider<PremiumProvider>(create: (_) => PremiumProvider()..checkPremiumStatus()),
+        ChangeNotifierProvider<SettingsProvider>(
+          create: (_) => SettingsProvider(),
+        ),
+        ChangeNotifierProvider<TextScaleProvider>(
+          create: (_) => TextScaleProvider(),
+        ),
+        ChangeNotifierProvider<BoldTextProvider>(
+          create: (_) => BoldTextProvider(),
+        ),
+        ChangeNotifierProvider<PremiumProvider>(
+          create: (_) => PremiumProvider()..checkPremiumStatus(),
+        ),
         ChangeNotifierProvider<AudioService>(create: (_) => AudioService()),
-        ChangeNotifierProvider<PrayerController>(create: (_) => PrayerController()),
+        ChangeNotifierProvider<PrayerController>(
+          create: (_) => PrayerController(),
+        ),
       ],
       child: const NurVerseApp(),
     ),
@@ -62,7 +72,9 @@ class NurVerseApp extends StatelessWidget {
       title: 'NurVerse',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      darkTheme: settings.isAmoledMode ? AppTheme.amoledTheme : AppTheme.darkTheme,
+      darkTheme: settings.isAmoledMode
+          ? AppTheme.amoledTheme
+          : AppTheme.darkTheme,
       themeMode: settings.themeMode,
       locale: settings.locale,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -76,33 +88,67 @@ class NurVerseApp extends StatelessWidget {
         builder: (context) {
           final mediaQuery = MediaQuery.of(context);
           final platformScale = mediaQuery.textScaler.textScaleFactor;
-          final combinedScale = (platformScale * textScale.scale).clamp(0.70, 2.0).toDouble();
+          final combinedScale = (platformScale * textScale.scale)
+              .clamp(0.70, 2.0)
+              .toDouble();
           final baseTheme = Theme.of(context);
           final textTheme = baseTheme.textTheme;
           final effectiveTextTheme = boldText.isBold
               ? textTheme.copyWith(
-                  bodyLarge: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-                  bodyMedium: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                  bodySmall: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
-                  labelLarge: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
-                  labelMedium: textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
-                  labelSmall: textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                  titleLarge: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  titleMedium: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  titleSmall: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                  headlineLarge: textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
-                  headlineMedium: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                  headlineSmall: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                  displayLarge: textTheme.displayLarge?.copyWith(fontWeight: FontWeight.bold),
-                  displayMedium: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold),
-                  displaySmall: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold),
+                  bodyLarge: textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  bodyMedium: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  bodySmall: textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  labelLarge: textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  labelMedium: textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  labelSmall: textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  titleLarge: textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  titleMedium: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  titleSmall: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  headlineLarge: textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  headlineMedium: textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  headlineSmall: textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  displayLarge: textTheme.displayLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  displayMedium: textTheme.displayMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  displaySmall: textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 )
               : textTheme;
 
           return Theme(
             data: baseTheme.copyWith(textTheme: effectiveTextTheme),
             child: MediaQuery(
-              data: mediaQuery.copyWith(textScaler: TextScaler.linear(combinedScale)),
+              data: mediaQuery.copyWith(
+                textScaler: TextScaler.linear(combinedScale),
+              ),
               child: const AuthGate(),
             ),
           );
@@ -227,7 +273,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: context.cardColor,
-            border: Border(top: BorderSide(color: context.borderColor, width: 0.5)),
+            border: Border(
+              top: BorderSide(color: context.borderColor, width: 0.5),
+            ),
           ),
           child: BottomNavigationBar(
             currentIndex: _selectedIndex,
@@ -240,12 +288,36 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             unselectedFontSize: 11,
             elevation: 0,
             items: [
-              BottomNavigationBarItem(icon: const Icon(Icons.home_outlined), activeIcon: const Icon(Icons.home), label: l10n.home),
-              BottomNavigationBarItem(icon: const Icon(Icons.mosque_outlined), activeIcon: const Icon(Icons.mosque), label: l10n.prayer),
-              BottomNavigationBarItem(icon: const Icon(Icons.menu_book_outlined), activeIcon: const Icon(Icons.menu_book), label: l10n.quran),
-              BottomNavigationBarItem(icon: const Icon(Icons.auto_stories_outlined), activeIcon: const Icon(Icons.auto_stories), label: l10n.hadith),
-              BottomNavigationBarItem(icon: const Icon(Icons.grid_view_outlined), activeIcon: const Icon(Icons.grid_view), label: l10n.tools),
-              BottomNavigationBarItem(icon: const Icon(Icons.more_horiz_outlined), activeIcon: const Icon(Icons.more_horiz), label: l10n.more),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.home_outlined),
+                activeIcon: const Icon(Icons.home),
+                label: l10n.home,
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.mosque_outlined),
+                activeIcon: const Icon(Icons.mosque),
+                label: l10n.prayer,
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.menu_book_outlined),
+                activeIcon: const Icon(Icons.menu_book),
+                label: l10n.quran,
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.auto_stories_outlined),
+                activeIcon: const Icon(Icons.auto_stories),
+                label: l10n.hadith,
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.grid_view_outlined),
+                activeIcon: const Icon(Icons.grid_view),
+                label: l10n.tools,
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.more_horiz_outlined),
+                activeIcon: const Icon(Icons.more_horiz),
+                label: l10n.more,
+              ),
             ],
           ),
         ),
