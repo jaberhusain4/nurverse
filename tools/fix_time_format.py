@@ -18,15 +18,35 @@ p.write_text(s, encoding='utf-8')
 p = Path('lib/main.dart')
 s = p.read_text(encoding='utf-8')
 needle = "    prayerController.updateCalculationSettings(\n      calculationMethod: settings.calculationMethod,\n      madhhab: settings.madhhab,\n    );\n"
-if needle in s and "prayerController.setTimeFormat(settings.is24Hour);" not in s:
-    s = s.replace(needle, needle + "    prayerController.setTimeFormat(settings.is24Hour);\n", 1)
+if "prayerController.setTimeFormat(settings.is24Hour);" not in s:
+    if needle in s:
+        s = s.replace(needle, needle + "    prayerController.setTimeFormat(settings.is24Hour);\n", 1)
+    else:
+        fallback = "    prayerController.updatePrayerAdjustments(settings.prayerAdjustments);\n"
+        if fallback in s:
+            s = s.replace(fallback, "    prayerController.setTimeFormat(settings.is24Hour);\n" + fallback, 1)
 p.write_text(s, encoding='utf-8')
 
 # Prayer screen live clock follows the same setting.
 p = Path('lib/screens/prayer_screen.dart')
 s = p.read_text(encoding='utf-8')
-old = """  void _updateClock() {\n    final now = DateTime.now();\n    final period = now.hour >= 12 ? 'PM' : 'AM';\n    final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;\n    final value = '${hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')} $period';\n    if (!mounted || _currentTime == value) return;\n    setState(() => _currentTime = value);\n  }"""
-new = """  void _updateClock() {\n    final now = DateTime.now();\n    final settings = context.read<SettingsProvider>();\n    final value = settings.is24Hour\n        ? DateFormat('HH:mm:ss', 'en_US').format(now)\n        : DateFormat('hh:mm:ss a', 'en_US').format(now);\n    if (!mounted || _currentTime == value) return;\n    setState(() => _currentTime = value);\n  }"""
+old = """  void _updateClock() {
+    final now = DateTime.now();
+    final period = now.hour >= 12 ? 'PM' : 'AM';
+    final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;
+    final value = '${hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')} $period';
+    if (!mounted || _currentTime == value) return;
+    setState(() => _currentTime = value);
+  }"""
+new = """  void _updateClock() {
+    final now = DateTime.now();
+    final settings = context.read<SettingsProvider>();
+    final value = settings.is24Hour
+        ? DateFormat('HH:mm:ss', 'en_US').format(now)
+        : DateFormat('hh:mm:ss a', 'en_US').format(now);
+    if (!mounted || _currentTime == value) return;
+    setState(() => _currentTime = value);
+  }"""
 if old in s:
     s = s.replace(old, new, 1)
 p.write_text(s, encoding='utf-8')
