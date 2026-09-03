@@ -1,0 +1,65 @@
+name: Fix Home Screen Time Format
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Apply Home Screen time-format fix
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('lib/screens/home_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          old = """  void _updateClock() {\n    final now = DateTime.now();\n    final period = now.hour >= 12 ? 'PM' : 'AM';\n    final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;\n    final value = '${hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')} $period';\n\n    if (_currentTime == value) return;\n    setState(() => _currentTime = value);\n  }\n"""
+          new = """  void _updateClock() {\n    final now = DateTime.now();\n    final settings = context.read<SettingsProvider>();\n    final hour24 = now.hour;\n    final minute = now.minute.toString().padLeft(2, '0');\n    final second = now.second.toString().padLeft(2, '0');\n    final value = settings.is24Hour\n        ? '${hour24.toString().padLeft(2, '0')}:$minute:$second'\n        : '${(hour24 % 12 == 0 ? 12 : hour24 % 12).toString().padLeft(2, '0')}:$minute:$second ${hour24 >= 12 ? 'PM' : 'AM'}';\n\n    if (_currentTime == value) return;\n    setState(() => _currentTime = value);\n  }\n"""
+          if old not in s:
+              raise SystemExit('clock block not found')
+          s = s.replace(old, new, 1)
+          old = """  String _displayTime(String value, bool showSeconds) {\n    final raw = value.trim();\n    if (showSeconds) return raw;\n    final match = RegExp(r'^(\\d{1,2}:\\d{2})').firstMatch(raw);\n    return match?.group(1) ?? raw;\n  }\n\n  List<Map<String, dynamic>> _displayPrayerTimes(\n    List<Map<String, dynamic>> prayers,\n    bool showSeconds,\n  ) {\n"""
+          new = """  String _displayTime(String value, bool showSeconds, bool is24Hour) {\n    final raw = value.trim();\n    final match = RegExp(r'^(\\d{1,2}):(\\d{2})(?::(\\d{2}))?\\s*([AaPp][Mm])?$').firstMatch(raw);\n    if (match == null) return raw;\n\n    var hour = int.parse(match.group(1)!);\n    final minute = match.group(2)!;\n    final second = match.group(3);\n    final period = match.group(4)?.toUpperCase();\n\n    if (period != null) {\n      if (hour == 12) hour = 0;\n      if (period == 'PM') hour += 12;\n    }\n\n    if (is24Hour) {\n      final result = '${hour.toString().padLeft(2, '0')}:$minute';\n      return showSeconds && second != null ? '$result:$second' : result;\n    }\n\n    final displayHour = hour % 12 == 0 ? 12 : hour % 12;\n    final result = '${displayHour.toString().padLeft(2, '0')}:$minute ${hour >= 12 ? 'PM' : 'AM'}';\n    return showSeconds && second != null\n        ? '${displayHour.toString().padLeft(2, '0')}:$minute:$second ${hour >= 12 ? 'PM' : 'AM'}'\n        : result;\n  }\n\n  List<Map<String, dynamic>> _displayPrayerTimes(\n    List<Map<String, dynamic>> prayers,\n    bool showSeconds,\n    bool is24Hour,\n  ) {\n"""
+          if old not in s:
+              raise SystemExit('displayTime block not found')
+          s = s.replace(old, new, 1)
+          s = s.replace('_displayTime(value.toString(), showSeconds)', '_displayTime(value.toString(), showSeconds, is24Hour)', 1)
+          s = s.replace('_displayPrayerTimes(controller.prayers, settings.showSeconds)', '_displayPrayerTimes(controller.prayers, settings.showSeconds, settings.is24Hour)', 1)
+          s = s.replace('_displayTime(_currentTime, settings.showSeconds)', '_displayTime(_currentTime, settings.showSeconds, settings.is24Hour)', 1)
+          s = s.replace('_displayTime(controller.previousPrayerTime, settings.showSeconds)', '_displayTime(controller.previousPrayerTime, settings.showSeconds, settings.is24Hour)', 1)
+          s = s.replace('_displayTime(controller.currentPrayerTime, settings.showSeconds)', '_displayTime(controller.currentPrayerTime, settings.showSeconds, settings.is24Hour)', 1)
+          s = s.replace('_displayTime(controller.nextPrayerTime, settings.showSeconds)', '_displayTime(controller.nextPrayerTime, settings.showSeconds, settings.is24Hour)', 1)
+          s = s.replace('_displayTime(controller.timeRemainingForNextPrayer, settings.showSeconds)', '_displayTime(controller.timeRemainingForNextPrayer, settings.showSeconds, settings.is24Hour)', 1)
+          s = s.replace('_displayTime(currentJamaat, settings.showSeconds)', '_displayTime(currentJamaat, settings.showSeconds, settings.is24Hour)', 1)
+          s = s.replace('_displayTime(sunTimes?.sunriseString ?? controller.sunriseTime, settings.showSeconds)', '_displayTime(sunTimes?.sunriseString ?? controller.sunriseTime, settings.showSeconds, settings.is24Hour)', 1)
+          s = s.replace('_displayTime(sunTimes?.sunsetString ?? controller.sunsetTime, settings.showSeconds)', '_displayTime(sunTimes?.sunsetString ?? controller.sunsetTime, settings.showSeconds, settings.is24Hour)', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Verify changed file
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s = Path('lib/screens/home_screen.dart').read_text(encoding='utf-8')
+          required = [
+            'String _displayTime(String value, bool showSeconds, bool is24Hour)',
+            "settings.is24Hour ?",
+            '_displayPrayerTimes(controller.prayers, settings.showSeconds, settings.is24Hour)',
+          ]
+          missing = [x for x in required if x not in s]
+          if missing:
+              raise SystemExit(f'Missing expected changes: {missing}')
+          print('Home Screen time-format fix verified')
+          PY
+      - name: Commit and push
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/home_screen.dart
+          git diff --cached --quiet || git commit -m 'fix(home): apply 12/24 hour time format'
+          git push origin HEAD:main
