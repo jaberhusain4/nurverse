@@ -58,17 +58,12 @@ if "import '../services/auth_service.dart';" not in s:
 
 account_pattern = re.compile(
     r"              const SizedBox\(width: 10\),\n"
-    r"              Container\(\n"
-    r"                width: 42,\n"
-    r"                height: 42,\n"
-    r"                decoration: BoxDecoration\(\n"
+    r"              Material\(\n"
+    r"                color: Colors\.transparent,\n"
+    r"                child: InkWell\(\n"
     r".*?"
-    r"                child: user == null\n"
-    r".*?"
-    r"              \),\n"
-    r"            \],\n"
-    r"          \),\n"
-    r"          const SizedBox\(height: 18\),",
+    r"                \),\n"
+    r"              \),\n",
     re.DOTALL,
 )
 if '_premiumAccountButton(context)' not in s:
@@ -77,9 +72,7 @@ if '_premiumAccountButton(context)' not in s:
         raise SystemExit('Premium account control block not found')
     replacement_account = """              const SizedBox(width: 10),
               _premiumAccountButton(context),
-            ],
-          ),
-          const SizedBox(height: 18),"""
+"""
     s = account_pattern.sub(replacement_account, s, count=1)
 
 if '_premiumAccountButton(BuildContext context)' not in s:
@@ -189,7 +182,7 @@ if '_premiumAccountButton(BuildContext context)' not in s:
                   Text(
                     user.email!,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: context.secondaryTextColor,
+                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: .70),
                     ),
                     textAlign: TextAlign.center,
                   ),
