@@ -20,6 +20,7 @@ jobs:
         run: |
           python3 tools/fix_settings_canonical.py
           python3 tools/fix_time_format.py
+          python3 tools/restore_premium_visual.py
       - name: Format and verify
         run: |
           dart format lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
@@ -31,6 +32,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
           if ! git diff --cached --quiet; then
-            git commit -m 'fix(settings): restore premium hero and activate time format'
+            git commit -m 'fix(settings): restore large premium card presentation'
             git push origin HEAD:main
           fi
