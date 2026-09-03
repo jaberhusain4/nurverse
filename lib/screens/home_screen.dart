@@ -67,9 +67,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _updateClock() {
     final now = DateTime.now();
-    final period = now.hour >= 12 ? 'PM' : 'AM';
-    final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;
-    final value = '${hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')} $period';
+    final settings = context.read<SettingsProvider>();
+    final hour24 = now.hour;
+    final minute = now.minute.toString().padLeft(2, '0');
+    final second = now.second.toString().padLeft(2, '0');
+    final value = settings.is24Hour
+        ? '${hour24.toString().padLeft(2, '0')}:$minute:$second'
+        : '${(hour24 % 12 == 0 ? 12 : hour24 % 12).toString().padLeft(2, '0')}:$minute:$second ${hour24 >= 12 ? 'PM' : 'AM'}';
 
     if (_currentTime == value) return;
     setState(() => _currentTime = value);
@@ -99,23 +103,43 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
-  String _displayTime(String value, bool showSeconds) {
+  String _displayTime(String value, bool showSeconds, bool is24Hour) {
     final raw = value.trim();
-    if (showSeconds) return raw;
-    final match = RegExp(r'^(\d{1,2}:\d{2})').firstMatch(raw);
-    return match?.group(1) ?? raw;
+    final match = RegExp(r'^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])?$').firstMatch(raw);
+    if (match == null) return raw;
+
+    var hour = int.parse(match.group(1)!);
+    final minute = match.group(2)!;
+    final second = match.group(3);
+    final period = match.group(4)?.toUpperCase();
+
+    if (period != null) {
+      if (hour == 12) hour = 0;
+      if (period == 'PM') hour += 12;
+    }
+
+    if (is24Hour) {
+      final result = '${hour.toString().padLeft(2, '0')}:$minute';
+      return showSeconds && second != null ? '$result:$second' : result;
+    }
+
+    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+    return showSeconds && second != null
+        ? '${displayHour.toString().padLeft(2, '0')}:$minute:$second ${hour >= 12 ? 'PM' : 'AM'}'
+        : '${displayHour.toString().padLeft(2, '0')}:$minute ${hour >= 12 ? 'PM' : 'AM'}';
   }
 
   List<Map<String, dynamic>> _displayPrayerTimes(
     List<Map<String, dynamic>> prayers,
     bool showSeconds,
+    bool is24Hour,
   ) {
     return prayers.map((prayer) {
       final copy = Map<String, dynamic>.from(prayer);
       for (final key in const ['start', 'end', 'jamaat', 'time', 'formattedTime']) {
         final value = copy[key];
         if (value != null) {
-          copy[key] = _displayTime(value.toString(), showSeconds);
+          copy[key] = _displayTime(value.toString(), showSeconds, is24Hour);
         }
       }
       return copy;
@@ -360,28 +384,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     TopHeader(
                       greeting: _greeting(languageCode),
-                      currentTime: _displayTime(_currentTime, settings.showSeconds),
+                      currentTime: _displayTime(_currentTime, settings.showSeconds, settings.is24Hour),
                       onNotificationTap: () => widget.onNavigateTab?.call(5),
                       onProfileTap: () => widget.onNavigateTab?.call(5),
                     ),
                     const SizedBox(height: 14),
                     CurrentPrayerPremiumCard(
                       previousPrayer: controller.previousPrayer,
-                      previousPrayerTime: _displayTime(controller.previousPrayerTime, settings.showSeconds),
+                      previousPrayerTime: _displayTime(controller.previousPrayerTime, settings.showSeconds, settings.is24Hour),
                       currentPrayer: controller.currentPrayer,
-                      currentPrayerTime: _displayTime(controller.currentPrayerTime, settings.showSeconds),
+                      currentPrayerTime: _displayTime(controller.currentPrayerTime, settings.showSeconds, settings.is24Hour),
                       nextPrayer: controller.nextPrayer,
-                      nextPrayerTime: _displayTime(controller.nextPrayerTime, settings.showSeconds),
-                      remainingTime: _displayTime(controller.timeRemainingForNextPrayer, settings.showSeconds),
+                      nextPrayerTime: _displayTime(controller.nextPrayerTime, settings.showSeconds, settings.is24Hour),
+                      remainingTime: _displayTime(controller.timeRemainingForNextPrayer, settings.showSeconds, settings.is24Hour),
                       progress: controller.prayerProgress,
-                      iqamahTime: _displayTime(currentJamaat, settings.showSeconds),
+                      iqamahTime: _displayTime(currentJamaat, settings.showSeconds, settings.is24Hour),
                       status: controller.prayerStatus,
                       languageCode: languageCode,
                       onJamaatTap: _openJamaatSettings,
                     ),
                     const SizedBox(height: 10),
                     PrayerTimelineCard(
-                      prayers: _displayPrayerTimes(controller.prayers, settings.showSeconds),
+                      prayers: _displayPrayerTimes(controller.prayers, settings.showSeconds, settings.is24Hour),
                       languageCode: languageCode,
                     ),
                     const SizedBox(height: 10),
@@ -390,8 +414,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       englishDate: DateService.englishDate(),
                       banglaDate: _banglaDate(),
                       hijriDate: _hijriDate(languageCode),
-                      sunrise: _displayTime(sunTimes?.sunriseString ?? controller.sunriseTime, settings.showSeconds),
-                      sunset: _displayTime(sunTimes?.sunsetString ?? controller.sunsetTime, settings.showSeconds),
+                      sunrise: _displayTime(sunTimes?.sunriseString ?? controller.sunriseTime, settings.showSeconds, settings.is24Hour),
+                      sunset: _displayTime(sunTimes?.sunsetString ?? controller.sunsetTime, settings.showSeconds, settings.is24Hour),
                       languageCode: languageCode,
                       onRefresh: controller.refreshLocation,
                     ),
