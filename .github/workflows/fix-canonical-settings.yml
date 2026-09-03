@@ -19,7 +19,7 @@ jobs:
         run: |
           python3 tools/fix_settings_canonical.py
           python3 tools/fix_time_format.py
-          python3 tools/restore_premium_visual.py
+          python3 tools/restore_premium_account.py
       - name: Format and verify
         run: |
           dart format lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
