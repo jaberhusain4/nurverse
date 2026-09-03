@@ -1,7 +1,7 @@
-import 'settings_hub_screen_v4.dart';
+import 'canonical_settings_screen.dart';
 
-/// Backward-compatible entry point kept for existing navigation references.
-/// The canonical implementation lives in SettingsHubScreenV4.
-class SettingsHubScreenV3 extends SettingsHubScreenV4 {
+/// Backward-compatible entry point.
+/// The canonical implementation lives in CanonicalSettingsScreen.
+class SettingsHubScreenV3 extends CanonicalSettingsScreen {
   const SettingsHubScreenV3({super.key});
 }
