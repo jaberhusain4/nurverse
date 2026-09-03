@@ -16,19 +16,21 @@ jobs:
         with:
           flutter-version: '3.44.8'
           channel: stable
-      - name: Repair canonical Settings
-        run: python3 tools/fix_settings_canonical.py
+      - name: Repair Settings and time format
+        run: |
+          python3 tools/fix_settings_canonical.py
+          python3 tools/fix_time_format.py
       - name: Format and verify
         run: |
-          dart format lib/screens/canonical_settings_screen.dart
+          dart format lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
           flutter pub get
-          flutter analyze lib/screens/canonical_settings_screen.dart
-      - name: Commit repaired Settings
+          flutter analyze lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
+      - name: Commit repaired code
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add lib/screens/canonical_settings_screen.dart
+          git add lib/screens/canonical_settings_screen.dart lib/controllers/prayer_controller.dart lib/main.dart lib/screens/prayer_screen.dart
           if ! git diff --cached --quiet; then
-            git commit -m 'fix(settings): restore unified settings behavior and localization'
+            git commit -m 'fix(settings): restore premium hero and activate time format'
             git push origin HEAD:main
           fi
