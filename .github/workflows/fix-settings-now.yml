@@ -1,0 +1,77 @@
+name: Fix canonical settings
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Patch canonical settings
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('lib/screens/canonical_settings_screen.dart')
+          s=p.read_text(encoding='utf-8')
+          if "import 'prayer/jamaat_settings_screen.dart';" not in s:
+              s=s.replace("import 'home_mode_settings_screen.dart';", "import 'home_mode_settings_screen.dart';\nimport 'prayer/jamaat_settings_screen.dart';")
+          s=re.sub(r"\n\s*_jamaatTile\(context, s, 'Fajr'.*?_jamaatTile\(context, s, 'Isha'.*?\),", "\n            _tile(context, Icons.groups_outlined, t(lang, 'জামাতের সময়', 'Jamaat Times'), t(lang, 'ফজর, যোহর, আসর, মাগরিব ও ইশার জামাতের সময় সেট করুন', 'Set Fajr, Dhuhr, Asr, Maghrib and Isha Jamaat times'), () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const JamaatSettingsScreen()))),", s, flags=re.S)
+          start=s.index("  String _choiceLabel(String value, String lang) {")
+          end=s.index("\n  String _reminderLabel", start)
+          fn="""  String _choiceLabel(String value, String lang) {
+    if (lang == 'en') {
+      const en = <String, String>{
+        'bn': 'Bangla', 'en': 'English', 'ar': 'Arabic', 'automatic': 'Automatic', 'manual': 'Manual',
+        'system': 'System Default', 'light': 'Light Mode', 'dark': 'Dark Mode', 'amoled': 'AMOLED Black',
+        'hijri': 'Hijri only', 'gregorian': 'Gregorian only', 'both': 'Both dates', '12': '12-hour', '24': '24-hour',
+        'Karachi': 'Karachi', 'Muslim World League': 'Muslim World League', 'Egyptian': 'Egyptian', 'Umm Al Qura': 'Umm Al Qura', 'Dubai': 'Dubai', 'Qatar': 'Qatar', 'Kuwait': 'Kuwait', 'Singapore': 'Singapore', 'North America': 'North America', 'Moonsighting Committee': 'Moonsighting Committee',
+        'Hanafi': 'Hanafi', 'Shafi': 'Shafi', 'Maliki': 'Maliki', 'Hanbali': 'Hanbali', 'Bangla': 'Bangla', 'English': 'English', 'Default': 'Default', 'Adhan': 'Adhan', 'Silent': 'Silent', 'Amiri': 'Amiri', 'Scheherazade': 'Scheherazade',
+      };
+      return en[value] ?? value;
+    }
+    if (lang == 'ar') {
+      const ar = <String, String>{
+        'bn': 'البنغالية', 'en': 'الإنجليزية', 'ar': 'العربية', 'automatic': 'تلقائي', 'manual': 'يدوي', 'system': 'إعداد النظام', 'light': 'الوضع الفاتح', 'dark': 'الوضع الداكن', 'amoled': 'أسود AMOLED', 'hijri': 'هجري فقط', 'gregorian': 'ميلادي فقط', 'both': 'كلا التاريخين', '12': '12 ساعة', '24': '24 ساعة', 'Hanafi': 'حنفي', 'Shafi': 'شافعي', 'Maliki': 'مالكي', 'Hanbali': 'حنبلي', 'Bangla': 'البنغالية', 'English': 'الإنجليزية', 'Default': 'افتراضي', 'Silent': 'صامت', 'Amiri': 'أميري', 'Scheherazade': 'شهرزاد',
+      };
+      return ar[value] ?? value;
+    }
+    const bn = <String, String>{
+      'bn': 'বাংলা', 'en': 'ইংরেজি', 'ar': 'আরবি', 'automatic': 'স্বয়ংক্রিয়', 'manual': 'ম্যানুয়াল', 'system': 'সিস্টেম অনুযায়ী', 'light': 'লাইট মোড', 'dark': 'ডার্ক মোড', 'amoled': 'অ্যামোলেড কালো', 'hijri': 'শুধু হিজরি', 'gregorian': 'শুধু গ্রেগরিয়ান', 'both': 'উভয় তারিখ', '12': '১২ ঘণ্টা', '24': '২৪ ঘণ্টা', 'Karachi': 'করাচি', 'Muslim World League': 'মুসলিম ওয়ার্ল্ড লীগ', 'Egyptian': 'মিশরীয়', 'Umm Al Qura': 'উম্মুল কুরা', 'Dubai': 'দুবাই', 'Qatar': 'কাতার', 'Kuwait': 'কুয়েত', 'Singapore': 'সিঙ্গাপুর', 'North America': 'উত্তর আমেরিকা', 'Moonsighting Committee': 'চাঁদ দেখা কমিটি', 'Hanafi': 'হানাফি', 'Shafi': 'শাফেয়ী', 'Maliki': 'মালিকি', 'Hanbali': 'হাম্বলি', 'Bangla': 'বাংলা', 'English': 'ইংরেজি', 'Default': 'ডিফল্ট', 'Adhan': 'আজান', 'Silent': 'নীরব', 'Amiri': 'আমিরি', 'Scheherazade': 'শেহেরাজাদে',
+    };
+    return bn[value] ?? value;
+  }
+"""
+          s=s[:start]+fn+s[end:]
+          s=s.replace("'${s.quranFontSize.round()} / ${s.translationFontSize.round()}'", "t(lang, 'আরবি ${s.quranFontSize.round()} / অনুবাদ ${s.translationFontSize.round()}', 'Arabic ${s.quranFontSize.round()} / Translation ${s.translationFontSize.round()}')")
+          s=s.replace("Localizations.localeOf(sheetContext).languageCode", "sheetContext.read<SettingsProvider>().languageCode")
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Remove prayer adjustments from UI
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('lib/screens/canonical_settings_screen.dart'); s=p.read_text(encoding='utf-8')
+          s=re.sub(r"\n\s*_tile\(context, Icons\.tune_rounded, t\(lang, 'সালাতের সময় সমন্বয়'.*?\),", "", s)
+          s=re.sub(r"\n  String _adjustmentLabel\(.*?\n  }\n", "\n", s, flags=re.S)
+          s=re.sub(r"\n  Future<void> _adjustments\(.*?\n  }\n", "\n", s, flags=re.S)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify and commit
+        run: |
+          dart format lib/screens/canonical_settings_screen.dart
+          if ! grep -q "JamaatSettingsScreen" lib/screens/canonical_settings_screen.dart; then exit 1; fi
+          if grep -q "সালাতের সময় সমন্বয়\|Prayer Adjustments\|_adjustments" lib/screens/canonical_settings_screen.dart; then exit 1; fi
+          if grep -q "_jamaatTile\|_showJamaatDialog" lib/screens/canonical_settings_screen.dart; then exit 1; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/canonical_settings_screen.dart
+          git diff --cached --quiet || git commit -m 'fix(settings): restore jamaat screen and localize controls'
+          git push
