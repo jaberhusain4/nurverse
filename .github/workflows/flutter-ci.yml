@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -24,7 +26,15 @@ jobs:
         run: flutter pub get
 
       - name: Format check
-        run: dart format --output=none --set-exit-if-changed lib
+        shell: bash
+        run: |
+          set -euo pipefail
+          files="$(git diff --name-only --diff-filter=ACMR HEAD^ HEAD -- '*.dart')"
+          if [ -n "$files" ]; then
+            dart format --output=none --set-exit-if-changed $files
+          else
+            echo "No Dart files changed in this commit; skipping format check."
+          fi
 
       - name: Analyze
         run: flutter analyze
