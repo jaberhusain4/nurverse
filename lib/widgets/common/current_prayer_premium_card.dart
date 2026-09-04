@@ -118,13 +118,15 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
     }
     var endTime = end;
     if (!endTime.isAfter(start)) endTime = endTime.add(const Duration(days: 1));
-    final active = !now.isBefore(start) && now.isBefore(endTime);
+    final totalDuration = endTime.difference(start);
+    final awalEnd = start.add(Duration(milliseconds: totalDuration.inMilliseconds ~/ 3));
+    final active = !now.isBefore(start) && now.isBefore(awalEnd);
     final label = _l10n(context).localeText(values: {
       'bn': active ? 'আওয়াল ওয়াক্ত চলছে' : 'আওয়াল ওয়াক্ত শেষ',
       'en': active ? 'Awal Waqt active' : 'Awal Waqt ended',
       'ar': active ? 'وقت الأول مستمر' : 'انتهى وقت الأول',
     });
-    return '$label • ${_clock(start, is24Hour)} → ${_clock(endTime, is24Hour)}';
+    return '$label • ${_clock(start, is24Hour)} → ${_clock(awalEnd, is24Hour)}';
   }
 
   @override
