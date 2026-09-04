@@ -10,6 +10,7 @@ import '../services/date_service.dart';
 import '../services/jamaat_service.dart';
 import '../services/last_read_service.dart';
 import '../services/sun_time_service.dart';
+import '../services/time_format_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/current_prayer_premium_card.dart';
 import '../widgets/home/continue_reading_card.dart';
@@ -103,31 +104,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
-  String _displayTime(String value, bool showSeconds, bool is24Hour) {
-    final raw = value.trim();
-    final match = RegExp(r'^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])?$').firstMatch(raw);
-    if (match == null) return raw;
-
-    var hour = int.parse(match.group(1)!);
-    final minute = match.group(2)!;
-    final second = match.group(3);
-    final period = match.group(4)?.toUpperCase();
-
-    if (period != null) {
-      if (hour == 12) hour = 0;
-      if (period == 'PM') hour += 12;
-    }
-
-    if (is24Hour) {
-      final result = '${hour.toString().padLeft(2, '0')}:$minute';
-      return showSeconds && second != null ? '$result:$second' : result;
-    }
-
-    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-    return showSeconds && second != null
-        ? '${displayHour.toString().padLeft(2, '0')}:$minute:$second ${hour >= 12 ? 'PM' : 'AM'}'
-        : '${displayHour.toString().padLeft(2, '0')}:$minute ${hour >= 12 ? 'PM' : 'AM'}';
-  }
+  String _displayTime(String value, bool showSeconds, bool is24Hour) =>
+      TimeFormatService.formatClock(value, is24Hour: is24Hour, showSeconds: showSeconds);
 
   List<Map<String, dynamic>> _displayPrayerTimes(
     List<Map<String, dynamic>> prayers,
@@ -396,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       currentPrayerTime: _displayTime(controller.currentPrayerTime, settings.showSeconds, settings.is24Hour),
                       nextPrayer: controller.nextPrayer,
                       nextPrayerTime: _displayTime(controller.nextPrayerTime, settings.showSeconds, settings.is24Hour),
-                      remainingTime: _displayTime(controller.timeRemainingForNextPrayer, settings.showSeconds, settings.is24Hour),
+                      remainingTime: controller.timeRemainingForNextPrayer,
                       progress: controller.prayerProgress,
                       iqamahTime: _displayTime(currentJamaat, settings.showSeconds, settings.is24Hour),
                       status: controller.prayerStatus,
