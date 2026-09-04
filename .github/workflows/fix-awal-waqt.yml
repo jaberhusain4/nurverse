@@ -23,30 +23,6 @@ jobs:
           path = Path('lib/widgets/common/current_prayer_premium_card.dart')
           text = path.read_text(encoding='utf-8')
 
-          old = '''  String _awalText(BuildContext context, String actualEndTime, bool is24Hour) {
-    final now = DateTime.now();
-    final start = _parseTime(currentPrayerTime, now);
-    final end = _parseTime(actualEndTime, now);
-    if (start == null || end == null) {
-      return _l10n(context).localeText(values: {
-        'bn': 'আওয়াল ওয়াক্তের তথ্য প্রস্তুত হচ্ছে',
-        'en': 'Awal Waqt information is being prepared',
-        'ar': 'جارٍ تجهيز وقت الأول',
-      });
-    }
-    var endTime = end;
-    if (!endTime.isAfter(start)) endTime = endTime.add(const Duration(days: 1));
-    final active = !now.isBefore(start) && now.isBefore(endTime);
-    final label = _l10n(context).localeText(values: {
-      'bn': active ? 'আওয়াল ওয়াক্ত চলছে' : 'আওয়াল ওয়াক্ত শেষ',
-      'en': active ? 'Awal Waqt active' : 'Awal Waqt ended',
-      'ar': 'وقت الأول مستمر',
-    });
-    return '$label • ${_clock(start, is24Hour)} → ${_clock(endTime, is24Hour)}';
-  }'''
-
-          # The Arabic branch in the live file has a localized ternary, so use a
-          # marker-based replacement instead of relying on the exact old text.
           start_marker = '  String _awalText(BuildContext context, String actualEndTime, bool is24Hour) {'
           build_marker = '\n  @override\n  Widget build(BuildContext context) {'
           start = text.index(start_marker)
@@ -64,8 +40,8 @@ jobs:
       });
     }
 
-    // Awal Waqt is the first one-third of the complete prayer time window,
-    // not the entire window. The remaining two-thirds are not Awal Waqt.
+    // Awal Waqt is exactly the first one-third of the complete prayer-time
+    // window. It must not cover the full prayer window.
     var endTime = end;
     if (!endTime.isAfter(start)) endTime = endTime.add(const Duration(days: 1));
     final totalDuration = endTime.difference(start);
@@ -91,5 +67,6 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lib/widgets/common/current_prayer_premium_card.dart .github/workflows/fix-awal-waqt.yml
+          git diff --cached --quiet && exit 0
           git commit -m 'fix: calculate Awal Waqt as first third of prayer window'
           git push
