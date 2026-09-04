@@ -1,0 +1,79 @@
+name: Activate Time Format
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  activate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply shared 12/24-hour formatting
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          service = Path('lib/services/time_format_service.dart')
+          service.parent.mkdir(parents=True, exist_ok=True)
+          service.write_text('''class TimeFormatService {\n  const TimeFormatService._();\n\n  static String formatClock(\n    String value, {\n    required bool is24Hour,\n    bool showSeconds = false,\n  }) {\n    final raw = value.trim();\n    final match = RegExp(\n      r'^(\\d{1,2}):(\\d{2})(?::(\\d{2}))?\\s*([AaPp][Mm])?$',\n    ).firstMatch(raw);\n    if (match == null) return raw;\n\n    var hour = int.tryParse(match.group(1)!);\n    final minute = int.tryParse(match.group(2)!);\n    final second = match.group(3);\n    final period = match.group(4)?.toUpperCase();\n    if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {\n      return raw;\n    }\n\n    if (period != null) {\n      if (hour < 1 || hour > 12) return raw;\n      hour = period == 'AM' ? (hour == 12 ? 0 : hour) : (hour == 12 ? 12 : hour + 12);\n    }\n\n    final hh24 = hour.toString().padLeft(2, '0');\n    final mm = minute.toString().padLeft(2, '0');\n    if (is24Hour) {\n      final base = '$hh24:$mm';\n      return showSeconds && second != null ? '$base:${second.padLeft(2, '0')}' : base;\n    }\n\n    final hh12 = (hour % 12 == 0 ? 12 : hour % 12).toString().padLeft(2, '0');\n    final base = '$hh12:$mm ${hour >= 12 ? 'PM' : 'AM'}';\n    return showSeconds && second != null\n        ? '$hh12:$mm:${second.padLeft(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}'\n        : base;\n  }\n}\n''', encoding='utf-8')
+
+          files = [Path('lib/screens/home_screen.dart'), Path('lib/screens/prayer_screen.dart')]
+          for path in files:
+              text = path.read_text(encoding='utf-8')
+              if "import '../services/time_format_service.dart';" not in text:
+                  marker = "import '../services/sun_time_service.dart';"
+                  if marker not in text:
+                      raise SystemExit(f'Missing import marker in {path}')
+                  text = text.replace(marker, marker + "\nimport '../services/time_format_service.dart';", 1)
+
+              if path.name == 'home_screen.dart':
+                  pattern = re.compile(r"  String _displayTime\(String value, bool showSeconds, bool is24Hour\) \{.*?\n  \}\n\n  List<Map<String, dynamic>> _displayPrayerTimes", re.S)
+                  replacement = "  String _displayTime(String value, bool showSeconds, bool is24Hour) =>\n      TimeFormatService.formatClock(value, is24Hour: is24Hour, showSeconds: showSeconds);\n\n  List<Map<String, dynamic>> _displayPrayerTimes"
+              else:
+                  pattern = re.compile(r"  String _displayTime\(String value, bool showSeconds\) \{.*?\n  \}\n\n  List<Map<String, dynamic>> _displayPrayerTimes", re.S)
+                  replacement = "  String _displayTime(String value, bool showSeconds) =>\n      TimeFormatService.formatClock(\n        value,\n        is24Hour: context.read<SettingsProvider>().is24Hour,\n        showSeconds: showSeconds,\n      );\n\n  List<Map<String, dynamic>> _displayPrayerTimes"
+
+              updated, count = pattern.subn(replacement, text, count=1)
+              if count != 1:
+                  raise SystemExit(f'Could not replace _displayTime in {path}')
+              path.write_text(updated, encoding='utf-8')
+
+          # Do not treat the countdown duration as a clock time. It must never
+          # acquire an AM/PM suffix when 12-hour mode is selected.
+          home = Path('lib/screens/home_screen.dart')
+          text = home.read_text(encoding='utf-8')
+          text = text.replace(
+              "remainingTime: _displayTime(controller.timeRemainingForNextPrayer, settings.showSeconds, settings.is24Hour),",
+              "remainingTime: controller.timeRemainingForNextPrayer,",
+          )
+          home.write_text(text, encoding='utf-8')
+
+          prayer = Path('lib/screens/prayer_screen.dart')
+          text = prayer.read_text(encoding='utf-8')
+          text = text.replace(
+              "remainingTime: _displayTime(\n                        controller.timeRemainingForNextPrayer,\n                        settings.showSeconds,\n                      ),",
+              "remainingTime: controller.timeRemainingForNextPrayer,",
+          )
+          prayer.write_text(text, encoding='utf-8')
+
+      - name: Commit app changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/services/time_format_service.dart lib/screens/home_screen.dart lib/screens/prayer_screen.dart
+          if git diff --cached --quiet; then
+            echo "No changes needed."
+            exit 0
+          fi
+          git commit -m "fix(time): activate shared 12/24 hour format"
+          git push
