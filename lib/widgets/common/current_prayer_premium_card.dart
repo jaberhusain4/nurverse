@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../controllers/prayer_controller.dart';
 import '../../localization/app_localizations.dart';
 import '../../localization/locale_text_extension.dart';
+import '../../providers/settings_provider.dart';
+import '../../services/time_format_service.dart';
 
 class CurrentPrayerPremiumCard extends StatelessWidget {
   final String previousPrayer, previousPrayerTime, currentPrayer, currentPrayerTime, nextPrayer, nextPrayerTime, remainingTime, iqamahTime, status, languageCode;
@@ -100,9 +102,10 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
     return DateTime(base.year, base.month, base.day, hour, minute);
   }
 
-  String _clock(DateTime time) => '${time.hour % 12 == 0 ? 12 : time.hour % 12}:${time.minute.toString().padLeft(2, '0')} ${time.hour >= 12 ? 'PM' : 'AM'}';
+  String _clock(DateTime time, bool is24Hour) =>
+      TimeFormatService.formatClock('${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}', is24Hour: is24Hour, showSeconds: false);
 
-  String _awalText(BuildContext context, String actualEndTime) {
+  String _awalText(BuildContext context, String actualEndTime, bool is24Hour) {
     final now = DateTime.now();
     final start = _parseTime(currentPrayerTime, now);
     final end = _parseTime(actualEndTime, now);
@@ -121,12 +124,13 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
       'en': active ? 'Awal Waqt active' : 'Awal Waqt ended',
       'ar': active ? 'وقت الأول مستمر' : 'انتهى وقت الأول',
     });
-    return '$label • ${_clock(start)} → ${_clock(endTime)}';
+    return '$label • ${_clock(start, is24Hour)} → ${_clock(endTime, is24Hour)}';
   }
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<PrayerController>();
+    final settings = context.watch<SettingsProvider>();
     final actualEndTime = controller.currentPrayerEnd;
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
@@ -185,7 +189,7 @@ class CurrentPrayerPremiumCard extends StatelessWidget {
           const SizedBox(height: 6),
           Row(children: [Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(20), child: LinearProgressIndicator(value: safeProgress, minHeight: 7, backgroundColor: primary.withValues(alpha: .09), valueColor: AlwaysStoppedAnimation<Color>(primary)))), const SizedBox(width: 8), Text('$percentage%', style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.w800))]),
           const SizedBox(height: 9),
-          Row(children: [Icon(Icons.bolt_rounded, size: 19, color: primary), const SizedBox(width: 6), Expanded(child: Text(_awalText(context, actualEndTime), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w700)))]),
+          Row(children: [Icon(Icons.bolt_rounded, size: 19, color: primary), const SizedBox(width: 6), Expanded(child: Text(_awalText(context, actualEndTime, settings.is24Hour), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13, fontWeight: FontWeight.w700)))]),
           if (localizedStatus.isNotEmpty) ...[const SizedBox(height: 5), Row(children: [Icon(Icons.info_outline_rounded, size: 17, color: secondary), const SizedBox(width: 6), Expanded(child: Text(localizedStatus, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: secondary, fontSize: 12.5, fontWeight: FontWeight.w600)))])],
           const SizedBox(height: 8),
           Material(
@@ -227,5 +231,5 @@ class _TimeLabel extends StatelessWidget {
   final Color color;
   const _TimeLabel({required this.label, required this.time, required this.color});
   @override
-  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [Flexible(child: Text('$label  ', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: 12.5, fontWeight: FontWeight.w600))), Flexible(child: Text(time.isEmpty ? '--:--' : time, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w800)))]);
+  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [Flexible(child: Text('$label  ', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: 12.5, fontWeight: FontWeight.w600))), Flexible(child: Text(time.isEmpty ? '--:--' : time, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w800))) ]);
 }
