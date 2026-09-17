@@ -12,9 +12,89 @@ import '../services/prayer_engine_service.dart';
 
 enum PrayerField { fajr, sunrise, dhuhr, asr, maghrib, isha }
 
+@immutable
+class PrayerLiveState {
+  final String currentPrayer;
+  final String previousPrayer;
+  final String previousPrayerTime;
+  final String nextPrayerName;
+  final String nextPrayer;
+  final String nextPrayerTime;
+  final String currentPrayerStart;
+  final String currentPrayerEnd;
+  final String currentIqamahTime;
+  final String timeRemainingForNextPrayer;
+  final double prayerProgress;
+  final String prayerStatus;
+
+  const PrayerLiveState({
+    required this.currentPrayer,
+    required this.previousPrayer,
+    required this.previousPrayerTime,
+    required this.nextPrayerName,
+    required this.nextPrayer,
+    required this.nextPrayerTime,
+    required this.currentPrayerStart,
+    required this.currentPrayerEnd,
+    required this.currentIqamahTime,
+    required this.timeRemainingForNextPrayer,
+    required this.prayerProgress,
+    required this.prayerStatus,
+  });
+
+  static const initial = PrayerLiveState(
+    currentPrayer: 'ওয়াক্ত নেই',
+    previousPrayer: '',
+    previousPrayerTime: '',
+    nextPrayerName: 'ফজর',
+    nextPrayer: 'ফজর',
+    nextPrayerTime: '--:--',
+    currentPrayerStart: '--:--',
+    currentPrayerEnd: '--:--',
+    currentIqamahTime: '--:--',
+    timeRemainingForNextPrayer: '00:00:00',
+    prayerProgress: 0,
+    prayerStatus: 'সালাতের সময় গণনা করা হচ্ছে...',
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      other is PrayerLiveState &&
+      currentPrayer == other.currentPrayer &&
+      previousPrayer == other.previousPrayer &&
+      previousPrayerTime == other.previousPrayerTime &&
+      nextPrayerName == other.nextPrayerName &&
+      nextPrayer == other.nextPrayer &&
+      nextPrayerTime == other.nextPrayerTime &&
+      currentPrayerStart == other.currentPrayerStart &&
+      currentPrayerEnd == other.currentPrayerEnd &&
+      currentIqamahTime == other.currentIqamahTime &&
+      timeRemainingForNextPrayer == other.timeRemainingForNextPrayer &&
+      prayerProgress == other.prayerProgress &&
+      prayerStatus == other.prayerStatus;
+
+  @override
+  int get hashCode => Object.hash(
+    currentPrayer,
+    previousPrayer,
+    previousPrayerTime,
+    nextPrayerName,
+    nextPrayer,
+    nextPrayerTime,
+    currentPrayerStart,
+    currentPrayerEnd,
+    currentIqamahTime,
+    timeRemainingForNextPrayer,
+    prayerProgress,
+    prayerStatus,
+  );
+}
+
 class PrayerController extends ChangeNotifier {
   final PrayerEngineService _prayerEngine = const PrayerEngineService();
   final LocationService _locationService = const LocationService();
+  final ValueNotifier<PrayerLiveState> _liveState =
+      ValueNotifier<PrayerLiveState>(PrayerLiveState.initial);
   Timer? _ticker;
   bool _is24Hour = false;
   bool _loading = false;
@@ -31,10 +111,12 @@ class PrayerController extends ChangeNotifier {
   final Map<String, Map<String, DateTime>> _scheduleCache = {};
   String? _scheduleCacheSignature;
   String? _activeScheduleDateKey;
+  String? _lastStaticStateSignature;
 
   PrayerCalculationConfig get calculationConfig => _calculationConfig;
   CalculationMethod get calculationMethod => _calculationConfig.method;
   Madhab get madhhab => _calculationConfig.madhab;
+  ValueListenable<PrayerLiveState> get liveState => _liveState;
   String _currentLocationName = 'লোকেশন লোড হচ্ছে...';
   String _currentPrayer = 'ওয়াক্ত নেই';
   String _previousPrayer = '';
@@ -119,6 +201,7 @@ class PrayerController extends ChangeNotifier {
   PrayerController({PrayerCalculationConfig? calculationConfig}) {
     _calculationConfig = calculationConfig ?? PrayerCalculationConfig.defaults;
     _updateWithoutLocation();
+    _publishLiveState();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _safeTick());
     JamaatService.initialize().then((_) {
       if (_position != null) _safeRefresh();
@@ -128,7 +211,8 @@ class PrayerController extends ChangeNotifier {
 
   void _safeTick() {
     try {
-      updatePrayerTimes();
+      updatePrayerTimes(notify: false);
+      _notifyStaticListenersIfChanged();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -282,6 +366,7 @@ class PrayerController extends ChangeNotifier {
   void updatePrayerTimes({bool notify = true}) {
     if (_position == null) {
       _updateWithoutLocation();
+      _publishLiveState();
       if (notify) notifyListeners();
       return;
     }
@@ -331,8 +416,66 @@ class PrayerController extends ChangeNotifier {
       now: now,
     );
     _updateDailyTimeInformation(times: times, now: now);
+    _publishLiveState();
 
     if (notify) notifyListeners();
+  }
+
+  void _publishLiveState() {
+    final nextState = PrayerLiveState(
+      currentPrayer: _currentPrayer,
+      previousPrayer: _previousPrayer,
+      previousPrayerTime: _previousPrayerTime,
+      nextPrayerName: _nextPrayerName,
+      nextPrayer: _nextPrayer,
+      nextPrayerTime: _nextPrayerTime,
+      currentPrayerStart: _currentPrayerStart,
+      currentPrayerEnd: _currentPrayerEnd,
+      currentIqamahTime: _currentIqamahTime,
+      timeRemainingForNextPrayer: _timeRemainingForNextPrayer,
+      prayerProgress: _prayerProgress,
+      prayerStatus: _prayerStatus,
+    );
+    if (_liveState.value != nextState) {
+      _liveState.value = nextState;
+    }
+  }
+
+  void _notifyStaticListenersIfChanged() {
+    final signature = _staticStateSignature();
+    if (signature == _lastStaticStateSignature) return;
+    _lastStaticStateSignature = signature;
+    notifyListeners();
+  }
+
+  String _staticStateSignature() {
+    final prayerFlags = _prayers
+        .map(
+          (prayer) =>
+              '${prayer['name']}:${prayer['start']}:${prayer['end']}:${prayer['jamaat']}:${prayer['isCurrent']}',
+        )
+        .join('|');
+    return [
+      _currentLocationName,
+      _currentPrayer,
+      _previousPrayer,
+      _previousPrayerTime,
+      _previousPrayerText,
+      _nextPrayerName,
+      _nextPrayer,
+      _nextPrayerTime,
+      _currentPrayerStart,
+      _currentPrayerEnd,
+      _currentIqamahTime,
+      _sunriseTime,
+      _sunsetTime,
+      _solarNoonTime,
+      _makruhTimeText,
+      _prohibitedTimeText,
+      _prayerStatus,
+      _activeScheduleDateKey,
+      prayerFlags,
+    ].join('\u0000');
   }
 
   void _invalidateScheduleCache() {
@@ -878,6 +1021,7 @@ class PrayerController extends ChangeNotifier {
   @override
   void dispose() {
     _ticker?.cancel();
+    _liveState.dispose();
     super.dispose();
   }
 }
