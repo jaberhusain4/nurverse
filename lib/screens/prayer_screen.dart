@@ -29,7 +29,7 @@ class PrayerScreen extends StatefulWidget {
 
 class _PrayerScreenState extends State<PrayerScreen> {
   Timer? _clockTimer;
-  String _currentTime = '';
+  final ValueNotifier<String> _currentTime = ValueNotifier<String>('');
   double? _sunLatitude;
   double? _sunLongitude;
   DateTime? _sunDate;
@@ -138,8 +138,8 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final value = settings.is24Hour
         ? DateFormat('HH:mm:ss', 'en_US').format(now)
         : DateFormat('hh:mm:ss a', 'en_US').format(now);
-    if (!mounted || _currentTime == value) return;
-    setState(() => _currentTime = value);
+    if (_currentTime.value == value) return;
+    _currentTime.value = value;
   }
 
   String _hijriDate(String languageCode) {
@@ -354,28 +354,6 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final sunTimes = _sunTimes(controller);
     JamaatService.configureDefaultsFromPrayerList(controller.prayers);
 
-    final jamaatKey = _currentJamaatKey(controller.currentPrayer);
-    final currentJamaat = jamaatKey.isEmpty
-        ? '--:--'
-        : JamaatService.get(jamaatKey);
-    final currentPrayer = _prayerName(
-      l10n,
-      controller.currentPrayer,
-      languageCode,
-    );
-    final previousPrayer = _prayerName(
-      l10n,
-      controller.previousPrayer,
-      languageCode,
-    );
-    final nextPrayer = _prayerName(
-      l10n,
-      controller.nextPrayer.isEmpty
-          ? controller.nextPrayerName
-          : controller.nextPrayer,
-      languageCode,
-    );
-
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -392,45 +370,74 @@ class _PrayerScreenState extends State<PrayerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TopHeader(
-                      greeting: _greeting(languageCode),
-                      currentTime: _displayTime(
-                        _currentTime,
-                        settings.showSeconds,
+                    ValueListenableBuilder<String>(
+                      valueListenable: _currentTime,
+                      builder: (context, currentTime, _) => TopHeader(
+                        greeting: _greeting(languageCode),
+                        currentTime: _displayTime(
+                          currentTime,
+                          settings.showSeconds,
+                        ),
+                        onNotificationTap: () {},
+                        onProfileTap: () {},
                       ),
-                      onNotificationTap: () {},
-                      onProfileTap: () {},
                     ),
                     const SizedBox(height: 14),
-                    CurrentPrayerPremiumCard(
-                      previousPrayer: previousPrayer,
-                      previousPrayerTime: _displayTime(
-                        controller.previousPrayerTime,
-                        settings.showSeconds,
-                      ),
-                      currentPrayer: currentPrayer,
-                      currentPrayerTime: _displayTime(
-                        controller.currentPrayerTime,
-                        settings.showSeconds,
-                      ),
-                      nextPrayer: nextPrayer,
-                      nextPrayerTime: _displayTime(
-                        controller.nextPrayerTime,
-                        settings.showSeconds,
-                      ),
-                      remainingTime: controller.timeRemainingForNextPrayer,
-                      progress: controller.prayerProgress,
-                      iqamahTime: _displayTime(
-                        currentJamaat,
-                        settings.showSeconds,
-                      ),
-                      status: _status(
-                        l10n,
-                        controller.prayerStatus,
-                        languageCode,
-                      ),
-                      languageCode: languageCode,
-                      onJamaatTap: _openJamaatSettings,
+                    ValueListenableBuilder<PrayerLiveState>(
+                      valueListenable: controller.liveState,
+                      builder: (context, live, _) {
+                        final jamaatKey = _currentJamaatKey(live.currentPrayer);
+                        final currentJamaat = jamaatKey.isEmpty
+                            ? '--:--'
+                            : JamaatService.get(jamaatKey);
+                        final currentPrayer = _prayerName(
+                          l10n,
+                          live.currentPrayer,
+                          languageCode,
+                        );
+                        final previousPrayer = _prayerName(
+                          l10n,
+                          live.previousPrayer,
+                          languageCode,
+                        );
+                        final nextPrayer = _prayerName(
+                          l10n,
+                          live.nextPrayer.isEmpty
+                              ? live.nextPrayerName
+                              : live.nextPrayer,
+                          languageCode,
+                        );
+                        return CurrentPrayerPremiumCard(
+                          previousPrayer: previousPrayer,
+                          previousPrayerTime: _displayTime(
+                            live.previousPrayerTime,
+                            settings.showSeconds,
+                          ),
+                          currentPrayer: currentPrayer,
+                          currentPrayerTime: _displayTime(
+                            live.currentPrayerStart,
+                            settings.showSeconds,
+                          ),
+                          nextPrayer: nextPrayer,
+                          nextPrayerTime: _displayTime(
+                            live.nextPrayerTime,
+                            settings.showSeconds,
+                          ),
+                          remainingTime: live.timeRemainingForNextPrayer,
+                          progress: live.prayerProgress,
+                          iqamahTime: _displayTime(
+                            currentJamaat,
+                            settings.showSeconds,
+                          ),
+                          status: _status(
+                            l10n,
+                            live.prayerStatus,
+                            languageCode,
+                          ),
+                          languageCode: languageCode,
+                          onJamaatTap: _openJamaatSettings,
+                        );
+                      },
                     ),
                     const SizedBox(height: 10),
                     PrayerTimelineCard(
@@ -1015,6 +1022,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
   @override
   void dispose() {
     _clockTimer?.cancel();
+    _currentTime.dispose();
     super.dispose();
   }
 }

@@ -41,7 +41,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   Timer? _clockTimer;
-  String _currentTime = '';
+  final ValueNotifier<String> _currentTime = ValueNotifier<String>('');
   Map<String, dynamic>? _lastRead;
   bool _lastReadLoading = true;
 
@@ -76,8 +76,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ? '${hour24.toString().padLeft(2, '0')}:$minute:$second'
         : '${(hour24 % 12 == 0 ? 12 : hour24 % 12).toString().padLeft(2, '0')}:$minute:$second ${hour24 >= 12 ? 'PM' : 'AM'}';
 
-    if (_currentTime == value) return;
-    setState(() => _currentTime = value);
+    if (_currentTime.value == value) return;
+    _currentTime.value = value;
   }
 
   Future<void> _loadLastRead() async {
@@ -342,10 +342,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final languageCode = settings.languageCode;
     final sunTimes = _sunTimes(controller);
 
-    JamaatService.configureDefaultsFromPrayerList(controller.prayers);
-    final jamaatKey = _currentJamaatKey(controller.currentPrayer);
-    final currentJamaat = jamaatKey.isEmpty ? '--:--' : JamaatService.get(jamaatKey);
-
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -360,26 +356,36 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TopHeader(
-                      greeting: _greeting(languageCode),
-                      currentTime: _displayTime(_currentTime, settings.showSeconds, settings.is24Hour),
-                      onNotificationTap: () => widget.onNavigateTab?.call(5),
-                      onProfileTap: () => widget.onNavigateTab?.call(5),
+                    ValueListenableBuilder<String>(
+                      valueListenable: _currentTime,
+                      builder: (context, currentTime, _) => TopHeader(
+                        greeting: _greeting(languageCode),
+                        currentTime: _displayTime(currentTime, settings.showSeconds, settings.is24Hour),
+                        onNotificationTap: () => widget.onNavigateTab?.call(5),
+                        onProfileTap: () => widget.onNavigateTab?.call(5),
+                      ),
                     ),
                     const SizedBox(height: 14),
-                    CurrentPrayerPremiumCard(
-                      previousPrayer: controller.previousPrayer,
-                      previousPrayerTime: _displayTime(controller.previousPrayerTime, settings.showSeconds, settings.is24Hour),
-                      currentPrayer: controller.currentPrayer,
-                      currentPrayerTime: _displayTime(controller.currentPrayerTime, settings.showSeconds, settings.is24Hour),
-                      nextPrayer: controller.nextPrayer,
-                      nextPrayerTime: _displayTime(controller.nextPrayerTime, settings.showSeconds, settings.is24Hour),
-                      remainingTime: controller.timeRemainingForNextPrayer,
-                      progress: controller.prayerProgress,
-                      iqamahTime: _displayTime(currentJamaat, settings.showSeconds, settings.is24Hour),
-                      status: controller.prayerStatus,
-                      languageCode: languageCode,
-                      onJamaatTap: _openJamaatSettings,
+                    ValueListenableBuilder<PrayerLiveState>(
+                      valueListenable: controller.liveState,
+                      builder: (context, live, _) {
+                        final jamaatKey = _currentJamaatKey(live.currentPrayer);
+                        final currentJamaat = jamaatKey.isEmpty ? '--:--' : JamaatService.get(jamaatKey);
+                        return CurrentPrayerPremiumCard(
+                          previousPrayer: live.previousPrayer,
+                          previousPrayerTime: _displayTime(live.previousPrayerTime, settings.showSeconds, settings.is24Hour),
+                          currentPrayer: live.currentPrayer,
+                          currentPrayerTime: _displayTime(live.currentPrayerStart, settings.showSeconds, settings.is24Hour),
+                          nextPrayer: live.nextPrayer,
+                          nextPrayerTime: _displayTime(live.nextPrayerTime, settings.showSeconds, settings.is24Hour),
+                          remainingTime: live.timeRemainingForNextPrayer,
+                          progress: live.prayerProgress,
+                          iqamahTime: _displayTime(currentJamaat, settings.showSeconds, settings.is24Hour),
+                          status: live.prayerStatus,
+                          languageCode: languageCode,
+                          onJamaatTap: _openJamaatSettings,
+                        );
+                      },
                     ),
                     const SizedBox(height: 10),
                     PrayerTimelineCard(
@@ -440,6 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _clockTimer?.cancel();
+    _currentTime.dispose();
     super.dispose();
   }
 }
