@@ -1,0 +1,23 @@
+name: NurVerse release smoke
+
+on:
+  push:
+    branches: [verify/release-smoke-26]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter test
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nurverse-release-apk-smoke
+          path: build/app/outputs/flutter-apk/app-release.apk
