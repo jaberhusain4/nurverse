@@ -144,9 +144,8 @@ class AwalWaqtService {
         } else {
           final fajr = starts['Fajr'];
           if (fajr != null) {
-            nextStart = fajr.isAfter(start)
-                ? fajr
-                : fajr.add(const Duration(days: 1));
+            nextStart =
+                fajr.isAfter(start) ? fajr : fajr.add(const Duration(days: 1));
           }
         }
       }
