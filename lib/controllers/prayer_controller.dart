@@ -97,6 +97,8 @@ class PrayerController extends ChangeNotifier {
   final ValueNotifier<PrayerLiveState> _liveState =
       ValueNotifier<PrayerLiveState>(PrayerLiveState.initial);
   Timer? _ticker;
+  static const Duration _locationRefreshInterval = Duration(minutes: 30);
+  DateTime? _lastLocationRefreshAt;
   bool _is24Hour = false;
   bool _loading = false;
   String? _error;
@@ -214,10 +216,23 @@ class PrayerController extends ChangeNotifier {
     try {
       updatePrayerTimes(notify: false);
       _notifyStaticListenersIfChanged();
+      _maybeRefreshLocation();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
     }
+  }
+
+  void _maybeRefreshLocation() {
+    if (_position == null) return;
+    final now = DateTime.now();
+    final last = _lastLocationRefreshAt;
+    if (last != null && now.difference(last) < _locationRefreshInterval) {
+      return;
+    }
+
+    _lastLocationRefreshAt = now;
+    determinePositionAndAddress(forceFresh: true);
   }
 
   void _safeRefresh() {
@@ -277,6 +292,7 @@ class PrayerController extends ChangeNotifier {
           ? await _locationService.getFreshCurrentPosition()
           : await _locationService.getCurrentPosition();
       _position = position;
+      _lastLocationRefreshAt = DateTime.now();
       _invalidateScheduleCache();
       try {
         final List<Placemark> placemarks = await placemarkFromCoordinates(

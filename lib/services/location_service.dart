@@ -5,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LocationService {
   const LocationService();
 
-  static const Duration _startupCacheMaxAge = Duration(minutes: 30);
+  static const Duration _startupCacheMaxAge = Duration(minutes: 10);
+  static const double _maxAcceptedAccuracyMeters = 10000;
   static const String _latitudeKey = 'nurverse_cached_latitude';
   static const String _longitudeKey = 'nurverse_cached_longitude';
   static const String _timestampKey = 'nurverse_cached_location_timestamp';
@@ -30,8 +31,10 @@ class LocationService {
 
     final enabled = await isLocationEnabled();
     if (!enabled) {
-      if (cached != null) return cached;
-      throw Exception('Location service is disabled.');
+      if (cached != null && _isUsablePosition(cached)) return cached;
+      throw Exception(
+        'Location service is disabled and the cached location is stale or inaccurate.',
+      );
     }
 
     final permission = await requestPermission();
@@ -48,7 +51,7 @@ class LocationService {
 
     final lastKnown = await getLastKnownPosition();
 
-    if (_isRecentEnough(lastKnown)) {
+    if (_isUsablePosition(lastKnown)) {
       await _savePosition(lastKnown!);
       return lastKnown;
     }
@@ -88,6 +91,16 @@ class LocationService {
 
     await _savePosition(position);
     return position;
+  }
+
+  bool _isUsablePosition(Position? position) {
+    if (position == null) return false;
+    if (!_isRecentEnough(position)) return false;
+
+    final accuracy = position.accuracy;
+    if (!accuracy.isFinite || accuracy < 0) return false;
+    if (accuracy == 0) return true;
+    return accuracy <= _maxAcceptedAccuracyMeters;
   }
 
   bool _isRecentEnough(Position? position) {
