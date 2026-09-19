@@ -3,6 +3,8 @@ name: Extract Dart formatting
 on:
   push:
     branches: [fix/dartfmt-prayer-live-updates]
+  pull_request:
+    branches: [main]
 
 jobs:
   format:
