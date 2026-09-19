@@ -227,8 +227,7 @@ class PrayerController extends ChangeNotifier {
     if (_position == null) return;
     final now = DateTime.now();
     final last = _lastLocationRefreshAt;
-    if (last != null &&
-        now.difference(last) < _locationRefreshInterval) {
+    if (last != null && now.difference(last) < _locationRefreshInterval) {
       return;
     }
 
