@@ -91,9 +91,11 @@ class AwalWaqtService {
       final start = prayerTimes[prayer];
       if (start == null) continue;
 
-      final nextStart = i < obligatoryPrayerKeys.length - 1
-          ? prayerTimes[obligatoryPrayerKeys[i + 1]]
-          : nextFajr;
+      final nextStart = prayer == 'Fajr'
+          ? prayerTimes['Sunrise']
+          : i < obligatoryPrayerKeys.length - 1
+              ? prayerTimes[obligatoryPrayerKeys[i + 1]]
+              : nextFajr;
 
       if (nextStart == null || !nextStart.isAfter(start)) continue;
 
@@ -128,15 +130,24 @@ class AwalWaqtService {
       final start = starts[key];
       if (start == null) continue;
 
-      DateTime? nextStart;
-      if (i < obligatoryPrayerKeys.length - 1) {
-        nextStart = starts[obligatoryPrayerKeys[i + 1]];
-      } else {
-        final fajr = starts['Fajr'];
-        if (fajr != null) {
-          nextStart = fajr.isAfter(start)
-              ? fajr
-              : fajr.add(const Duration(days: 1));
+      DateTime? nextStart = _parseDisplayTime(
+        prayer['end']?.toString() ?? '',
+        now,
+      );
+      if (nextStart != null && !nextStart.isAfter(start)) {
+        nextStart = nextStart.add(const Duration(days: 1));
+      }
+
+      if (nextStart == null) {
+        if (i < obligatoryPrayerKeys.length - 1) {
+          nextStart = starts[obligatoryPrayerKeys[i + 1]];
+        } else {
+          final fajr = starts['Fajr'];
+          if (fajr != null) {
+            nextStart = fajr.isAfter(start)
+                ? fajr
+                : fajr.add(const Duration(days: 1));
+          }
         }
       }
 
@@ -185,21 +196,70 @@ class AwalWaqtService {
 
   DateTime? _parseDisplayTime(String value, DateTime base) {
     final match = RegExp(
-      r'^(\d{1,2}):(\d{2})\s*(AM|PM)$',
+      r'^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?
+  String formatTime(DateTime time) {
+    final hour12 = time.hour % 12 == 0 ? 12 : time.hour % 12;
+    final period = time.hour >= 12 ? 'PM' : 'AM';
+    return '${hour12.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} $period';
+  }
+
+  AwalWaqtWindow? activeWindow(
+    List<AwalWaqtWindow> windows,
+    DateTime moment,
+  ) {
+    for (final window in windows) {
+      if (window.contains(moment)) return window;
+    }
+    return null;
+  }
+
+  AwalWaqtWindow? windowForPrayer(
+    List<AwalWaqtWindow> windows,
+    String prayerKey,
+  ) {
+    for (final window in windows) {
+      if (window.prayerKey == prayerKey) return window;
+    }
+    return null;
+  }
+
+  String prayerKey(Prayer prayer) {
+    switch (prayer) {
+      case Prayer.fajr:
+        return 'Fajr';
+      case Prayer.dhuhr:
+        return 'Dhuhr';
+      case Prayer.asr:
+        return 'Asr';
+      case Prayer.maghrib:
+        return 'Maghrib';
+      case Prayer.isha:
+        return 'Isha';
+      default:
+        return '';
+    }
+  }
+}
+,
       caseSensitive: false,
     ).firstMatch(value.trim());
     if (match == null) return null;
 
     var hour = int.tryParse(match.group(1)!) ?? -1;
     final minute = int.tryParse(match.group(2)!) ?? -1;
-    final period = match.group(3)!.toUpperCase();
+    final period = match.group(3)?.toUpperCase();
 
-    if (hour < 1 || hour > 12 || minute < 0 || minute > 59) return null;
+    if (minute < 0 || minute > 59) return null;
 
-    if (period == 'AM') {
-      if (hour == 12) hour = 0;
-    } else if (hour != 12) {
-      hour += 12;
+    if (period == null) {
+      if (hour < 0 || hour > 23) return null;
+    } else {
+      if (hour < 1 || hour > 12) return null;
+      if (period == 'AM' && hour == 12) {
+        hour = 0;
+      } else if (period == 'PM' && hour != 12) {
+        hour += 12;
+      }
     }
 
     return DateTime(base.year, base.month, base.day, hour, minute);
