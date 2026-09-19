@@ -18,7 +18,8 @@ void main() {
     final hadiths = await service.getHadiths(
       'bukhari',
       chapters.first.id,
-      bookNumber: chapters.first.bookNumber == 0 ? null : chapters.first.bookNumber,
+      bookNumber:
+          chapters.first.bookNumber == 0 ? null : chapters.first.bookNumber,
       languageCode: 'bn',
     );
 

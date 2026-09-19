@@ -179,7 +179,8 @@ class HadithService {
       ...arabicMap.keys,
       ...banglaMap.keys,
       ...englishMap.keys,
-    }.toList()..sort(_compareHadithKeys);
+    }.toList()
+      ..sort(_compareHadithKeys);
 
     final result = <HadithItem>[];
     for (final key in keys) {
@@ -550,9 +551,7 @@ class HadithService {
                 value['first'],
           );
           final last = _intValue(
-            value['hadithnumber_last'] ??
-                value['hadith_last'] ??
-                value['last'],
+            value['hadithnumber_last'] ?? value['hadith_last'] ?? value['last'],
           );
           if (index != null && first != null && last != null) {
             sectionRanges[index] = _SectionRange(
