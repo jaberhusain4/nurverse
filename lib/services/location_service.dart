@@ -30,6 +30,11 @@ class LocationService {
 
     final enabled = await isLocationEnabled();
     if (!enabled) {
+      final lastKnown = await getLastKnownPosition();
+      if (_isRecentEnough(lastKnown)) {
+        await _savePosition(lastKnown!);
+        return lastKnown;
+      }
       if (cached != null) return cached;
       throw Exception('Location service is disabled.');
     }
