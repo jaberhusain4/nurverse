@@ -91,9 +91,11 @@ class AwalWaqtService {
       final start = prayerTimes[prayer];
       if (start == null) continue;
 
-      final nextStart = i < obligatoryPrayerKeys.length - 1
-          ? prayerTimes[obligatoryPrayerKeys[i + 1]]
-          : nextFajr;
+      final DateTime? nextStart = prayer == 'Fajr'
+          ? prayerTimes['Sunrise']
+          : i < obligatoryPrayerKeys.length - 1
+              ? prayerTimes[obligatoryPrayerKeys[i + 1]]
+              : nextFajr;
 
       if (nextStart == null || !nextStart.isAfter(start)) continue;
 
@@ -128,16 +130,23 @@ class AwalWaqtService {
       final start = starts[key];
       if (start == null) continue;
 
+      final prayer = prayers.where((item) {
+        final rawKey = item['name']?.toString();
+        final normalizedKey = rawKey == 'Jumuah' ? 'Dhuhr' : rawKey;
+        return normalizedKey == key;
+      }).cast<Map<String, dynamic>?>().firstOrNull;
+
       DateTime? nextStart;
-      if (i < obligatoryPrayerKeys.length - 1) {
-        nextStart = starts[obligatoryPrayerKeys[i + 1]];
-      } else {
-        final fajr = starts['Fajr'];
-        if (fajr != null) {
-          nextStart = fajr.isAfter(start)
-              ? fajr
-              : fajr.add(const Duration(days: 1));
+      final endText = prayer?['end']?.toString();
+      if (endText != null) {
+        nextStart = _parseDisplayTime(endText, start);
+        if (nextStart != null && !nextStart.isAfter(start)) {
+          nextStart = nextStart.add(const Duration(days: 1));
         }
+      }
+
+      if (nextStart == null && i < obligatoryPrayerKeys.length - 1) {
+        nextStart = starts[obligatoryPrayerKeys[i + 1]];
       }
 
       if (nextStart == null || !nextStart.isAfter(start)) continue;
