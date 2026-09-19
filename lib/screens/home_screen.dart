@@ -105,23 +105,35 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _displayTime(String value, bool showSeconds, bool is24Hour) =>
-      TimeFormatService.formatClock(value, is24Hour: is24Hour, showSeconds: showSeconds);
+      TimeFormatService.formatClock(
+        value,
+        is24Hour: is24Hour,
+        showSeconds: showSeconds,
+      );
 
   List<Map<String, dynamic>> _displayPrayerTimes(
     List<Map<String, dynamic>> prayers,
     bool showSeconds,
     bool is24Hour,
   ) {
-    return prayers.map((prayer) {
-      final copy = Map<String, dynamic>.from(prayer);
-      for (final key in const ['start', 'end', 'jamaat', 'time', 'formattedTime']) {
-        final value = copy[key];
-        if (value != null) {
-          copy[key] = _displayTime(value.toString(), showSeconds, is24Hour);
-        }
-      }
-      return copy;
-    }).toList(growable: false);
+    return prayers
+        .map((prayer) {
+          final copy = Map<String, dynamic>.from(prayer);
+          for (final key in const [
+            'start',
+            'end',
+            'jamaat',
+            'time',
+            'formattedTime',
+          ]) {
+            final value = copy[key];
+            if (value != null) {
+              copy[key] = _displayTime(value.toString(), showSeconds, is24Hour);
+            }
+          }
+          return copy;
+        })
+        .toList(growable: false);
   }
 
   String _greeting(String languageCode) {
@@ -150,34 +162,62 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final h = HijriCalendar.now();
       const bnMonths = <String>[
-        'মুহররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি',
-        'জুমাদিউল আউয়াল', 'জুমাদিউস সানি', 'রজব', 'শাবান',
-        'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ',
+        'মুহররম',
+        'সফর',
+        'রবিউল আউয়াল',
+        'রবিউস সানি',
+        'জুমাদিউল আউয়াল',
+        'জুমাদিউস সানি',
+        'রজব',
+        'শাবান',
+        'রমজান',
+        'শাওয়াল',
+        'জিলকদ',
+        'জিলহজ',
       ];
       const enMonths = <String>[
-        'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
-        'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Sha’ban',
-        'Ramadan', 'Shawwal', 'Dhul-Qadah', 'Dhul-Hijjah',
+        'Muharram',
+        'Safar',
+        'Rabi al-Awwal',
+        'Rabi al-Thani',
+        'Jumada al-Awwal',
+        'Jumada al-Thani',
+        'Rajab',
+        'Sha’ban',
+        'Ramadan',
+        'Shawwal',
+        'Dhul-Qadah',
+        'Dhul-Hijjah',
       ];
       const arMonths = <String>[
-        'محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر',
-        'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان',
-        'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة',
+        'محرم',
+        'صفر',
+        'ربيع الأول',
+        'ربيع الآخر',
+        'جمادى الأولى',
+        'جمادى الآخرة',
+        'رجب',
+        'شعبان',
+        'رمضان',
+        'شوال',
+        'ذو القعدة',
+        'ذو الحجة',
       ];
       const digits = <String>['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
 
-      String bnDigits(int value) => value
-          .toString()
-          .split('')
-          .map((d) => digits[int.parse(d)])
-          .join();
+      String bnDigits(int value) =>
+          value.toString().split('').map((d) => digits[int.parse(d)]).join();
 
       final index = (h.hMonth - 1).clamp(0, 11);
-      if (languageCode == 'en') return '${h.hDay} ${enMonths[index]} ${h.hYear} AH';
-      if (languageCode == 'ar') return '${h.hDay} ${arMonths[index]} ${h.hYear} هـ';
+      if (languageCode == 'en')
+        return '${h.hDay} ${enMonths[index]} ${h.hYear} AH';
+      if (languageCode == 'ar')
+        return '${h.hDay} ${arMonths[index]} ${h.hYear} هـ';
       return '${bnDigits(h.hDay)} ${bnMonths[index]} ${bnDigits(h.hYear)} হিজরি';
     } catch (_) {
-      return languageCode == 'en' ? 'Hijri date unavailable' : 'হিজরি তারিখ পাওয়া যায়নি';
+      return languageCode == 'en'
+          ? 'Hijri date unavailable'
+          : 'হিজরি তারিখ পাওয়া যায়নি';
     }
   }
 
@@ -185,14 +225,32 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final year = now.year;
     final starts = <DateTime>[
-      DateTime(year, 4, 14), DateTime(year, 5, 15), DateTime(year, 6, 15),
-      DateTime(year, 7, 16), DateTime(year, 8, 16), DateTime(year, 9, 16),
-      DateTime(year, 10, 16), DateTime(year, 11, 15), DateTime(year, 12, 15),
-      DateTime(year + 1, 1, 15), DateTime(year + 1, 2, 13), DateTime(year + 1, 3, 15),
+      DateTime(year, 4, 14),
+      DateTime(year, 5, 15),
+      DateTime(year, 6, 15),
+      DateTime(year, 7, 16),
+      DateTime(year, 8, 16),
+      DateTime(year, 9, 16),
+      DateTime(year, 10, 16),
+      DateTime(year, 11, 15),
+      DateTime(year, 12, 15),
+      DateTime(year + 1, 1, 15),
+      DateTime(year + 1, 2, 13),
+      DateTime(year + 1, 3, 15),
     ];
     const months = <String>[
-      'বৈশাখ', 'জ্যৈষ্ঠ', 'আষাঢ়', 'শ্রাবণ', 'ভাদ্র', 'আশ্বিন',
-      'কার্তিক', 'অগ্রহায়ণ', 'পৌষ', 'মাঘ', 'ফাল্গুন', 'চৈত্র',
+      'বৈশাখ',
+      'জ্যৈষ্ঠ',
+      'আষাঢ়',
+      'শ্রাবণ',
+      'ভাদ্র',
+      'আশ্বিন',
+      'কার্তিক',
+      'অগ্রহায়ণ',
+      'পৌষ',
+      'মাঘ',
+      'ফাল্গুন',
+      'চৈত্র',
     ];
 
     var index = -1;
@@ -202,7 +260,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (index < 0) index = 11;
     final start = starts[index];
-    final banglaYear = now.month > 4 || (now.month == 4 && now.day >= 14) ? year - 593 : year - 594;
+    final banglaYear = now.month > 4 || (now.month == 4 && now.day >= 14)
+        ? year - 593
+        : year - 594;
     return '${now.difference(start).inDays + 1} ${months[index]} $banglaYear';
   }
 
@@ -211,14 +271,18 @@ class _HomeScreenState extends State<HomeScreen> {
     if (position == null) return null;
 
     final now = DateTime.now();
-    final sameDay = _sunDate != null &&
+    final sameDay =
+        _sunDate != null &&
         _sunDate!.year == now.year &&
         _sunDate!.month == now.month &&
         _sunDate!.day == now.day;
-    final sameLocation = _sunLatitude == position.latitude && _sunLongitude == position.longitude;
+    final sameLocation =
+        _sunLatitude == position.latitude &&
+        _sunLongitude == position.longitude;
     final calculationMethod = controller.calculationMethod.toString();
     final madhab = controller.madhhab.toString();
-    final sameCalculation = _sunCalculationMethod == calculationMethod && _sunMadhab == madhab;
+    final sameCalculation =
+        _sunCalculationMethod == calculationMethod && _sunMadhab == madhab;
 
     if (_sunTimeInfo == null || !sameDay || !sameLocation || !sameCalculation) {
       _sunLatitude = position.latitude;
@@ -259,7 +323,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_lastReadLoading) {
       return Container(
         height: 126,
-        decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(
+          color: context.cardColor,
+          borderRadius: BorderRadius.circular(22),
+        ),
         child: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -267,7 +334,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_lastRead == null) {
       return ContinueReadingCard(
         languageCode: languageCode,
-        surahName: _label(languageCode, 'অনুধাবন কুরআন শুরু করুন', 'Start Onudhabon Quran', 'ابدأ قرآن الفهم'),
+        surahName: _label(
+          languageCode,
+          'অনুধাবন কুরআন শুরু করুন',
+          'Start Onudhabon Quran',
+          'ابدأ قرآن الفهم',
+        ),
         paraNo: 1,
         pageNo: 1,
         progress: 0,
@@ -276,11 +348,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final surahName = _lastRead!['surahName']?.toString() ?? 'কুরআন';
-    final paraNo = _lastRead!['paraNo'] is int ? _lastRead!['paraNo'] as int : int.tryParse(_lastRead!['paraNo']?.toString() ?? '') ?? 1;
-    final pageNo = _lastRead!['pageNo'] is int ? _lastRead!['pageNo'] as int : int.tryParse(_lastRead!['pageNo']?.toString() ?? '') ?? 1;
+    final paraNo = _lastRead!['paraNo'] is int
+        ? _lastRead!['paraNo'] as int
+        : int.tryParse(_lastRead!['paraNo']?.toString() ?? '') ?? 1;
+    final pageNo = _lastRead!['pageNo'] is int
+        ? _lastRead!['pageNo'] as int
+        : int.tryParse(_lastRead!['pageNo']?.toString() ?? '') ?? 1;
     final progress = _lastRead!['progress'] is num
         ? (_lastRead!['progress'] as num).toDouble().clamp(0.0, 1.0)
-        : (double.tryParse(_lastRead!['progress']?.toString() ?? '') ?? 0).clamp(0.0, 1.0);
+        : (double.tryParse(_lastRead!['progress']?.toString() ?? '') ?? 0)
+              .clamp(0.0, 1.0);
 
     return ContinueReadingCard(
       languageCode: languageCode,
@@ -300,7 +377,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    final text = theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
+    final text =
+        theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
 
     return Material(
       color: Colors.transparent,
@@ -318,7 +396,16 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(icon, color: primary, size: 22),
               const SizedBox(height: 5),
-              Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 10.5, fontWeight: FontWeight.w700)),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: text,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ],
           ),
         ),
@@ -327,7 +414,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openJamaatSettings() async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const JamaatSettingsScreen()));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const JamaatSettingsScreen()),
+    );
     if (mounted) setState(() {});
   }
 
@@ -351,7 +440,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: RefreshIndicator(
               onRefresh: _refreshHome,
               child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,7 +451,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       valueListenable: _currentTime,
                       builder: (context, currentTime, _) => TopHeader(
                         greeting: _greeting(languageCode),
-                        currentTime: _displayTime(currentTime, settings.showSeconds, settings.is24Hour),
+                        currentTime: _displayTime(
+                          currentTime,
+                          settings.showSeconds,
+                          settings.is24Hour,
+                        ),
                         onNotificationTap: () => widget.onNavigateTab?.call(5),
                         onProfileTap: () => widget.onNavigateTab?.call(5),
                       ),
@@ -370,17 +465,35 @@ class _HomeScreenState extends State<HomeScreen> {
                       valueListenable: controller.liveState,
                       builder: (context, live, _) {
                         final jamaatKey = _currentJamaatKey(live.currentPrayer);
-                        final currentJamaat = jamaatKey.isEmpty ? '--:--' : JamaatService.get(jamaatKey);
+                        final currentJamaat = jamaatKey.isEmpty
+                            ? '--:--'
+                            : JamaatService.get(jamaatKey);
                         return CurrentPrayerPremiumCard(
                           previousPrayer: live.previousPrayer,
-                          previousPrayerTime: _displayTime(live.previousPrayerTime, settings.showSeconds, settings.is24Hour),
+                          previousPrayerTime: _displayTime(
+                            live.previousPrayerTime,
+                            settings.showSeconds,
+                            settings.is24Hour,
+                          ),
                           currentPrayer: live.currentPrayer,
-                          currentPrayerTime: _displayTime(live.currentPrayerStart, settings.showSeconds, settings.is24Hour),
+                          currentPrayerTime: _displayTime(
+                            live.currentPrayerStart,
+                            settings.showSeconds,
+                            settings.is24Hour,
+                          ),
                           nextPrayer: live.nextPrayer,
-                          nextPrayerTime: _displayTime(live.nextPrayerTime, settings.showSeconds, settings.is24Hour),
+                          nextPrayerTime: _displayTime(
+                            live.nextPrayerTime,
+                            settings.showSeconds,
+                            settings.is24Hour,
+                          ),
                           remainingTime: live.timeRemainingForNextPrayer,
                           progress: live.prayerProgress,
-                          iqamahTime: _displayTime(currentJamaat, settings.showSeconds, settings.is24Hour),
+                          iqamahTime: _displayTime(
+                            currentJamaat,
+                            settings.showSeconds,
+                            settings.is24Hour,
+                          ),
                           status: live.prayerStatus,
                           languageCode: languageCode,
                           onJamaatTap: _openJamaatSettings,
@@ -389,7 +502,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 10),
                     PrayerTimelineCard(
-                      prayers: _displayPrayerTimes(controller.prayers, settings.showSeconds, settings.is24Hour),
+                      prayers: _displayPrayerTimes(
+                        controller.prayers,
+                        settings.showSeconds,
+                        settings.is24Hour,
+                      ),
                       languageCode: languageCode,
                     ),
                     const SizedBox(height: 10),
@@ -398,8 +515,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       englishDate: DateService.englishDate(),
                       banglaDate: _banglaDate(),
                       hijriDate: _hijriDate(languageCode),
-                      sunrise: _displayTime(sunTimes?.sunriseString ?? controller.sunriseTime, settings.showSeconds, settings.is24Hour),
-                      sunset: _displayTime(sunTimes?.sunsetString ?? controller.sunsetTime, settings.showSeconds, settings.is24Hour),
+                      sunrise: _displayTime(
+                        sunTimes?.sunriseString ?? controller.sunriseTime,
+                        settings.showSeconds,
+                        settings.is24Hour,
+                      ),
+                      sunset: _displayTime(
+                        sunTimes?.sunsetString ?? controller.sunsetTime,
+                        settings.showSeconds,
+                        settings.is24Hour,
+                      ),
                       languageCode: languageCode,
                       onRefresh: controller.refreshLocation,
                     ),
@@ -409,8 +534,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     _continueReading(context, languageCode),
                     const SizedBox(height: 16),
                     Text(
-                      _label(languageCode, 'কুইক অ্যাকশনস', 'Quick Actions', 'إجراءات سريعة'),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                      _label(
+                        languageCode,
+                        'কুইক অ্যাকশনস',
+                        'Quick Actions',
+                        'إجراءات سريعة',
+                      ),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 9),
                     GridView.count(
@@ -421,14 +553,90 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisSpacing: 8,
                       childAspectRatio: 1.02,
                       children: [
-                        _quickAction(context, title: _label(languageCode, 'ক্যালেন্ডার', 'Calendar', 'التقويم'), icon: Icons.calendar_month_rounded, onTap: () => _openScreen(const CalendarScreen())),
-                        _quickAction(context, title: _label(languageCode, 'দোয়া', 'Dua', 'الدعاء'), icon: Icons.menu_book_rounded, onTap: () => _openScreen(const DuaScreen())),
-                        _quickAction(context, title: _label(languageCode, 'কিবলা', 'Qibla', 'القبلة'), icon: Icons.explore_rounded, onTap: () => _openScreen(const QiblaScreen())),
-                        _quickAction(context, title: _label(languageCode, 'তাসবীহ', 'Tasbih', 'التسبيح'), icon: Icons.radio_button_checked_rounded, onTap: () => _openScreen(const TasbihScreen())),
-                        _quickAction(context, title: _label(languageCode, '৯৯ নাম', '99 Names', 'أسماء الله'), icon: Icons.nightlight_round, onTap: () => _openScreen(const AsmaUlHusnaScreen())),
-                        _quickAction(context, title: _label(languageCode, 'অডিও কুরআন', 'Audio Quran', 'القرآن الصوتي'), icon: Icons.headphones_rounded, onTap: () => _openScreen(const AudioQuranScreen())),
-                        _quickAction(context, title: _label(languageCode, 'রুকিয়াহ', 'Ruqyah', 'الرقية'), icon: Icons.shield_outlined, onTap: () => _openScreen(const RuqyahScreen())),
-                        _quickAction(context, title: _label(languageCode, 'যাকাত', 'Zakat', 'الزكاة'), icon: Icons.monetization_on_outlined, onTap: () => _openScreen(const ZakatCalculatorScreen())),
+                        _quickAction(
+                          context,
+                          title: _label(
+                            languageCode,
+                            'ক্যালেন্ডার',
+                            'Calendar',
+                            'التقويم',
+                          ),
+                          icon: Icons.calendar_month_rounded,
+                          onTap: () => _openScreen(const CalendarScreen()),
+                        ),
+                        _quickAction(
+                          context,
+                          title: _label(languageCode, 'দোয়া', 'Dua', 'الدعاء'),
+                          icon: Icons.menu_book_rounded,
+                          onTap: () => _openScreen(const DuaScreen()),
+                        ),
+                        _quickAction(
+                          context,
+                          title: _label(
+                            languageCode,
+                            'কিবলা',
+                            'Qibla',
+                            'القبلة',
+                          ),
+                          icon: Icons.explore_rounded,
+                          onTap: () => _openScreen(const QiblaScreen()),
+                        ),
+                        _quickAction(
+                          context,
+                          title: _label(
+                            languageCode,
+                            'তাসবীহ',
+                            'Tasbih',
+                            'التسبيح',
+                          ),
+                          icon: Icons.radio_button_checked_rounded,
+                          onTap: () => _openScreen(const TasbihScreen()),
+                        ),
+                        _quickAction(
+                          context,
+                          title: _label(
+                            languageCode,
+                            '৯৯ নাম',
+                            '99 Names',
+                            'أسماء الله',
+                          ),
+                          icon: Icons.nightlight_round,
+                          onTap: () => _openScreen(const AsmaUlHusnaScreen()),
+                        ),
+                        _quickAction(
+                          context,
+                          title: _label(
+                            languageCode,
+                            'অডিও কুরআন',
+                            'Audio Quran',
+                            'القرآن الصوتي',
+                          ),
+                          icon: Icons.headphones_rounded,
+                          onTap: () => _openScreen(const AudioQuranScreen()),
+                        ),
+                        _quickAction(
+                          context,
+                          title: _label(
+                            languageCode,
+                            'রুকিয়াহ',
+                            'Ruqyah',
+                            'الرقية',
+                          ),
+                          icon: Icons.shield_outlined,
+                          onTap: () => _openScreen(const RuqyahScreen()),
+                        ),
+                        _quickAction(
+                          context,
+                          title: _label(
+                            languageCode,
+                            'যাকাত',
+                            'Zakat',
+                            'الزكاة',
+                          ),
+                          icon: Icons.monetization_on_outlined,
+                          onTap: () =>
+                              _openScreen(const ZakatCalculatorScreen()),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),

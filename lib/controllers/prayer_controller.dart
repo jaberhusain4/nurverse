@@ -385,17 +385,18 @@ class PrayerController extends ChangeNotifier {
       _sunriseTime = _formatTime(times['Sunrise']!);
       _sunsetTime = _formatTime(times['Maghrib']!);
       _solarNoonTime = _formatTime(times['Dhuhr']!);
-      _calculateSpecialWindows(
-        times: times,
-        tomorrowTimes: tomorrowTimes,
-        now: now,
-      );
       _buildPrayerList(
         times: times,
         tomorrowFajr: tomorrowTimes['Fajr']!,
         now: now,
       );
     }
+
+    _calculateSpecialWindows(
+      times: times,
+      tomorrowTimes: tomorrowTimes,
+      now: now,
+    );
 
     _updatePrayerState(
       times: times,
@@ -737,6 +738,7 @@ class PrayerController extends ChangeNotifier {
     required DateTime now,
   }) {
     final DateTime fajr = times['Fajr']!;
+    final DateTime sunrise = times['Sunrise']!;
     final DateTime dhuhr = times['Dhuhr']!;
     final DateTime asr = times['Asr']!;
     final DateTime maghrib = times['Maghrib']!;
@@ -756,15 +758,29 @@ class PrayerController extends ChangeNotifier {
       _prayerStatus = 'পরবর্তী সালাত ফজর';
       return;
     }
+    if (now.isBefore(sunrise)) {
+      _setPrayerRange('ফজর', fajr, sunrise, 'Fajr');
+      _previousPrayer = 'ইশা';
+      _previousPrayerTime = _formatTime(yesterdayIsha);
+      _previousPrayerText = 'ইশা শেষ হয়েছে';
+      _nextPrayerName = 'ফজর';
+      _nextPrayer = 'ফজর';
+      _nextPrayerTime = _formatTime(fajr);
+      _prayerStatus = 'ফজরের ওয়াক্ত চলছে';
+      return;
+    }
     if (now.isBefore(dhuhr)) {
-      _setPrayerRange('ফজর', fajr, dhuhr, 'Fajr');
+      _currentPrayer = 'ওয়াক্ত নেই';
+      _currentPrayerStart = '--:--';
+      _currentPrayerEnd = _formatTime(dhuhr);
+      _currentIqamahTime = '--:--';
       _previousPrayer = 'ফজর';
       _previousPrayerTime = _formatTime(fajr);
-      _previousPrayerText = 'ফজর সম্পন্ন হয়েছে';
+      _previousPrayerText = 'ফজরের ওয়াক্ত শেষ হয়েছে';
       _nextPrayerName = 'যোহর';
       _nextPrayer = 'যোহর';
       _nextPrayerTime = _formatTime(dhuhr);
-      _prayerStatus = 'ফজরের পরের সময়';
+      _prayerStatus = 'পরবর্তী সালাত যোহর';
       return;
     }
     if (now.isBefore(asr)) {
