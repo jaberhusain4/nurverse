@@ -5,12 +5,10 @@ void main() {
   final date = DateTime(2026, 9, 19);
   final params = CalculationMethod.karachi.getParameters()..madhab = Madhab.hanafi;
   final times = PrayerTimes(coordinates, DateComponents.from(date), params);
-  print('localNow=' + DateTime.now().toString());
-  print('tz=' + DateTime.now().timeZoneName + ' offset=' + DateTime.now().timeZoneOffset.toString());
-  print('fajr=' + times.fajr.toIso8601String());
-  print('sunrise=' + times.sunrise.toIso8601String());
-  print('dhuhr=' + times.dhuhr.toIso8601String());
-  print('asr=' + times.asr.toIso8601String());
-  print('maghrib=' + times.maghrib.toIso8601String());
-  print('isha=' + times.isha.toIso8601String());
+  print('fajr=' + times.fajr.toString());
+  print('sunrise=' + times.sunrise.toString());
+  print('dhuhr=' + times.dhuhr.toString());
+  print('asr=' + times.asr.toString());
+  print('maghrib=' + times.maghrib.toString());
+  print('isha=' + times.isha.toString());
 }
