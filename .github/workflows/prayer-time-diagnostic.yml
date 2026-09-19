@@ -1,7 +1,8 @@
 name: Prayer time diagnostic
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [diag/prayer-time-reference]
 
 jobs:
   run:
