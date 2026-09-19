@@ -755,8 +755,22 @@ class PrayerController extends ChangeNotifier {
       _prayerStatus = 'পরবর্তী সালাত ফজর';
       return;
     }
+    if (now.isBefore(times['Sunrise']!)) {
+      _setPrayerRange('ফজর', fajr, times['Sunrise']!, 'Fajr');
+      _previousPrayer = 'ফজর';
+      _previousPrayerTime = _formatTime(fajr);
+      _previousPrayerText = 'ফজর সম্পন্ন হয়েছে';
+      _nextPrayerName = 'যোহর';
+      _nextPrayer = 'যোহর';
+      _nextPrayerTime = _formatTime(dhuhr);
+      _prayerStatus = 'ফজরের পরের সময়';
+      return;
+    }
     if (now.isBefore(dhuhr)) {
-      _setPrayerRange('ফজর', fajr, dhuhr, 'Fajr');
+      _currentPrayer = 'ওয়াক্ত নেই';
+      _currentPrayerStart = '--:--';
+      _currentPrayerEnd = '--:--';
+      _currentIqamahTime = '--:--';
       _previousPrayer = 'ফজর';
       _previousPrayerTime = _formatTime(fajr);
       _previousPrayerText = 'ফজর সম্পন্ন হয়েছে';
