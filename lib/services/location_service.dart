@@ -30,8 +30,10 @@ class LocationService {
 
     final enabled = await isLocationEnabled();
     if (!enabled) {
-      if (cached != null) return cached;
-      throw Exception('Location service is disabled.');
+      if (cached != null && _isRecentEnough(cached)) return cached;
+      throw Exception(
+        'Location service is disabled and the cached location is stale.',
+      );
     }
 
     final permission = await requestPermission();
