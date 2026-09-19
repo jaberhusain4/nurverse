@@ -15,6 +15,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Sync latest branch
+        run: |
+          git fetch origin fix/format-prayer-live-updates
+          git reset --hard origin/fix/format-prayer-live-updates
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.44.8
