@@ -64,4 +64,54 @@ void main() {
     expect(fajr.start, DateTime(2026, 9, 19, 4, 31));
     expect(fajr.end, DateTime(2026, 9, 19, 4, 56, 20));
   });
+
+  test('prayer-list builder supports 24-hour display values', () {
+    final prayers = <Map<String, dynamic>>[
+      {
+        'name': 'Fajr',
+        'start': '04:31',
+        'end': '05:47',
+      },
+      {
+        'name': 'Dhuhr',
+        'start': '11:53',
+        'end': '16:16',
+      },
+      {
+        'name': 'Asr',
+        'start': '16:16',
+        'end': '17:59',
+      },
+      {
+        'name': 'Maghrib',
+        'start': '17:59',
+        'end': '19:14',
+      },
+      {
+        'name': 'Isha',
+        'start': '19:14',
+        'end': '04:31',
+      },
+    ];
+
+    final windows = service.buildWindowsFromPrayerList(
+      prayers,
+      now: DateTime(2026, 9, 19, 10),
+    );
+
+    expect(windows.length, 5);
+    expect(
+      windows.firstWhere((w) => w.prayerKey == 'Fajr').end,
+      DateTime(2026, 9, 19, 4, 56, 20),
+    );
+    expect(
+      windows.firstWhere((w) => w.prayerKey == 'Dhuhr').end,
+      DateTime(2026, 9, 19, 13, 20),
+    );
+    expect(
+      windows.firstWhere((w) => w.prayerKey == 'Isha').end,
+      DateTime(2026, 9, 20, 1, 20, 40),
+    );
+  });
+
 }
