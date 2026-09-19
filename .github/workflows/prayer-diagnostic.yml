@@ -14,23 +14,4 @@ jobs:
           flutter-version: '3.44.8'
           channel: stable
       - run: flutter pub get
-      - name: Write diagnostic
-        shell: bash
-        run: |
-          echo "import 'package:adhan/adhan.dart';" >> tool/prayer_diagnostic.dart
-          echo "" >> tool/prayer_diagnostic.dart
-          echo "void main() {" >> tool/prayer_diagnostic.dart
-          echo "  const coordinates = Coordinates(23.8486, 90.2500);" >> tool/prayer_diagnostic.dart
-          echo "  final date = DateTime(2026, 9, 19);" >> tool/prayer_diagnostic.dart
-          echo "  final params = CalculationMethod.karachi.getParameters()..madhab = Madhab.hanafi;" >> tool/prayer_diagnostic.dart
-          echo "  final times = PrayerTimes(coordinates, DateComponents.from(date), params);" >> tool/prayer_diagnostic.dart
-          echo "  print('localNow=' + DateTime.now().toString());" >> tool/prayer_diagnostic.dart
-          echo "  print('tz=' + DateTime.now().timeZoneName + ' offset=' + DateTime.now().timeZoneOffset.toString());" >> tool/prayer_diagnostic.dart
-          echo "  print('fajr=' + times.fajr.toIso8601String());" >> tool/prayer_diagnostic.dart
-          echo "  print('sunrise=' + times.sunrise.toIso8601String());" >> tool/prayer_diagnostic.dart
-          echo "  print('dhuhr=' + times.dhuhr.toIso8601String());" >> tool/prayer_diagnostic.dart
-          echo "  print('asr=' + times.asr.toIso8601String());" >> tool/prayer_diagnostic.dart
-          echo "  print('maghrib=' + times.maghrib.toIso8601String());" >> tool/prayer_diagnostic.dart
-          echo "  print('isha=' + times.isha.toIso8601String());" >> tool/prayer_diagnostic.dart
-          echo "}" >> tool/prayer_diagnostic.dart
       - run: dart run tool/prayer_diagnostic.dart
