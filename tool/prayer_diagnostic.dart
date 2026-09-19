@@ -1,7 +1,7 @@
 import 'package:adhan/adhan.dart';
 
 void main() {
-  const coordinates = Coordinates(23.8486, 90.2500);
+  final coordinates = Coordinates(23.8486, 90.2500);
   final date = DateTime(2026, 9, 19);
   final params = CalculationMethod.karachi.getParameters()..madhab = Madhab.hanafi;
   final times = PrayerTimes(coordinates, DateComponents.from(date), params);
