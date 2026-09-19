@@ -45,8 +45,7 @@ void main(List<String> args) {
 
       // Translation arguments are localization data, not hardcoded UI.
       final isLocalizationSource = _localizationCall.hasMatch(line);
-      final uiContext =
-          _textLiteral.hasMatch(line) ||
+      final uiContext = _textLiteral.hasMatch(line) ||
           line.contains('Text(') ||
           line.contains('label:') ||
           line.contains('title:') ||
@@ -130,8 +129,7 @@ void _checkChangedLines() {
       if (path.isEmpty) continue;
 
       final isLocalizationSource = _localizationCall.hasMatch(line);
-      final uiContext =
-          _textLiteral.hasMatch(line) ||
+      final uiContext = _textLiteral.hasMatch(line) ||
           line.contains('Text(') ||
           line.contains('label:') ||
           line.contains('title:') ||
