@@ -1,7 +1,7 @@
 import 'package:adhan/adhan.dart';
 
 void main() {
-  const coordinates = Coordinates(23.8486, 90.25);
+  final coordinates = Coordinates(23.8486, 90.25);
   final params = CalculationMethod.karachi.getParameters()
     ..madhab = Madhab.hanafi;
 
