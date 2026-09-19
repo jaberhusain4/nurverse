@@ -116,24 +116,22 @@ class _HomeScreenState extends State<HomeScreen> {
     bool showSeconds,
     bool is24Hour,
   ) {
-    return prayers
-        .map((prayer) {
-          final copy = Map<String, dynamic>.from(prayer);
-          for (final key in const [
-            'start',
-            'end',
-            'jamaat',
-            'time',
-            'formattedTime',
-          ]) {
-            final value = copy[key];
-            if (value != null) {
-              copy[key] = _displayTime(value.toString(), showSeconds, is24Hour);
-            }
-          }
-          return copy;
-        })
-        .toList(growable: false);
+    return prayers.map((prayer) {
+      final copy = Map<String, dynamic>.from(prayer);
+      for (final key in const [
+        'start',
+        'end',
+        'jamaat',
+        'time',
+        'formattedTime',
+      ]) {
+        final value = copy[key];
+        if (value != null) {
+          copy[key] = _displayTime(value.toString(), showSeconds, is24Hour);
+        }
+      }
+      return copy;
+    }).toList(growable: false);
   }
 
   String _greeting(String languageCode) {
@@ -271,13 +269,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (position == null) return null;
 
     final now = DateTime.now();
-    final sameDay =
-        _sunDate != null &&
+    final sameDay = _sunDate != null &&
         _sunDate!.year == now.year &&
         _sunDate!.month == now.month &&
         _sunDate!.day == now.day;
-    final sameLocation =
-        _sunLatitude == position.latitude &&
+    final sameLocation = _sunLatitude == position.latitude &&
         _sunLongitude == position.longitude;
     final calculationMethod = controller.calculationMethod.toString();
     final madhab = controller.madhhab.toString();
@@ -357,7 +353,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final progress = _lastRead!['progress'] is num
         ? (_lastRead!['progress'] as num).toDouble().clamp(0.0, 1.0)
         : (double.tryParse(_lastRead!['progress']?.toString() ?? '') ?? 0)
-              .clamp(0.0, 1.0);
+            .clamp(0.0, 1.0);
 
     return ContinueReadingCard(
       languageCode: languageCode,
@@ -541,8 +537,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         'إجراءات سريعة',
                       ),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                            fontWeight: FontWeight.w800,
+                          ),
                     ),
                     const SizedBox(height: 9),
                     GridView.count(
