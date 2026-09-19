@@ -196,51 +196,7 @@ class AwalWaqtService {
 
   DateTime? _parseDisplayTime(String value, DateTime base) {
     final match = RegExp(
-      r'^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?
-  String formatTime(DateTime time) {
-    final hour12 = time.hour % 12 == 0 ? 12 : time.hour % 12;
-    final period = time.hour >= 12 ? 'PM' : 'AM';
-    return '${hour12.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} $period';
-  }
-
-  AwalWaqtWindow? activeWindow(
-    List<AwalWaqtWindow> windows,
-    DateTime moment,
-  ) {
-    for (final window in windows) {
-      if (window.contains(moment)) return window;
-    }
-    return null;
-  }
-
-  AwalWaqtWindow? windowForPrayer(
-    List<AwalWaqtWindow> windows,
-    String prayerKey,
-  ) {
-    for (final window in windows) {
-      if (window.prayerKey == prayerKey) return window;
-    }
-    return null;
-  }
-
-  String prayerKey(Prayer prayer) {
-    switch (prayer) {
-      case Prayer.fajr:
-        return 'Fajr';
-      case Prayer.dhuhr:
-        return 'Dhuhr';
-      case Prayer.asr:
-        return 'Asr';
-      case Prayer.maghrib:
-        return 'Maghrib';
-      case Prayer.isha:
-        return 'Isha';
-      default:
-        return '';
-    }
-  }
-}
-,
+      r'^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$',
       caseSensitive: false,
     ).firstMatch(value.trim());
     if (match == null) return null;
