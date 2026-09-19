@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Diff check
+        run: git diff --check
+
       - name: Format check
         shell: bash
         run: |
@@ -50,3 +53,6 @@ jobs:
 
       - name: Build APK
         run: flutter build apk --debug
+
+      - name: Build release APK
+        run: flutter build apk --release
