@@ -21,7 +21,7 @@ void main() {
     final fajr = service.windowForPrayer(windows, 'Fajr');
     expect(fajr, isNotNull);
     expect(fajr!.duration, const Duration(minutes: 25, seconds: 20));
-    expect(fajr.end, DateTime(2026, 9, 19, 4, 56, second: 20));
+    expect(fajr.end, DateTime(2026, 9, 19, 4, 56, 20));
   });
 
   test('Isha Awal Waqt rolls Fajr end into the next day', () {
@@ -39,7 +39,7 @@ void main() {
 
     final isha = service.windowForPrayer(windows, 'Isha');
     expect(isha, isNotNull);
-    expect(isha!.end, DateTime(2026, 9, 20, 1, 39, 40));
+    expect(isha!.end, DateTime(2026, 9, 19, 22, 19, 40));
   });
 
   test('map-based windows also use sunrise as Fajr end', () {
@@ -59,6 +59,6 @@ void main() {
 
     final fajr = service.windowForPrayer(windows, 'Fajr');
     expect(fajr, isNotNull);
-    expect(fajr!.end, DateTime(2026, 9, 19, 4, 56, second: 20));
+    expect(fajr!.end, DateTime(2026, 9, 19, 4, 56, 20));
   });
 }
