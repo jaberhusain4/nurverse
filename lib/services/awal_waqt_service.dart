@@ -91,9 +91,11 @@ class AwalWaqtService {
       final start = prayerTimes[prayer];
       if (start == null) continue;
 
-      final nextStart = i < obligatoryPrayerKeys.length - 1
-          ? prayerTimes[obligatoryPrayerKeys[i + 1]]
-          : nextFajr;
+      final nextStart = prayer == 'Fajr'
+          ? prayerTimes['Sunrise']
+          : i < obligatoryPrayerKeys.length - 1
+              ? prayerTimes[obligatoryPrayerKeys[i + 1]]
+              : nextFajr;
 
       if (nextStart == null || !nextStart.isAfter(start)) continue;
 
@@ -129,7 +131,13 @@ class AwalWaqtService {
       if (start == null) continue;
 
       DateTime? nextStart;
-      if (i < obligatoryPrayerKeys.length - 1) {
+      final parsedEnd = _parseDisplayTime(
+        prayer['end']?.toString() ?? '',
+        now,
+      );
+      if (key == 'Fajr' && parsedEnd != null && parsedEnd.isAfter(start)) {
+        nextStart = parsedEnd;
+      } else if (i < obligatoryPrayerKeys.length - 1) {
         nextStart = starts[obligatoryPrayerKeys[i + 1]];
       } else {
         final fajr = starts['Fajr'];
