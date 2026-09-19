@@ -123,8 +123,8 @@ class _PrayerScreenState extends State<PrayerScreen> {
       return hour < 12
           ? 'Good Morning'
           : hour < 18
-          ? 'Good Afternoon'
-          : 'Good Evening';
+              ? 'Good Afternoon'
+              : 'Good Evening';
     if (languageCode == 'ar') return hour < 12 ? 'صباح الخير' : 'مساء الخير';
     if (hour < 12) return 'শুভ সকাল';
     if (hour < 15) return 'শুভ দুপুর';
@@ -247,12 +247,10 @@ class _PrayerScreenState extends State<PrayerScreen> {
     final position = controller.position;
     if (position == null) return null;
     final now = DateTime.now();
-    final sameDay =
-        _sunDate?.year == now.year &&
+    final sameDay = _sunDate?.year == now.year &&
         _sunDate?.month == now.month &&
         _sunDate?.day == now.day;
-    final sameLocation =
-        _sunLatitude == position.latitude &&
+    final sameLocation = _sunLatitude == position.latitude &&
         _sunLongitude == position.longitude;
     if (_sunTimeInfo == null || !sameDay || !sameLocation) {
       _sunLatitude = position.latitude;
@@ -279,24 +277,22 @@ class _PrayerScreenState extends State<PrayerScreen> {
     List<Map<String, dynamic>> prayers,
     bool showSeconds,
   ) {
-    return prayers
-        .map((prayer) {
-          final copy = Map<String, dynamic>.from(prayer);
-          for (final key in const [
-            'start',
-            'end',
-            'jamaat',
-            'time',
-            'formattedTime',
-          ]) {
-            final value = copy[key];
-            if (value != null) {
-              copy[key] = _displayTime(value.toString(), showSeconds);
-            }
-          }
-          return copy;
-        })
-        .toList(growable: false);
+    return prayers.map((prayer) {
+      final copy = Map<String, dynamic>.from(prayer);
+      for (final key in const [
+        'start',
+        'end',
+        'jamaat',
+        'time',
+        'formattedTime',
+      ]) {
+        final value = copy[key];
+        if (value != null) {
+          copy[key] = _displayTime(value.toString(), showSeconds);
+        }
+      }
+      return copy;
+    }).toList(growable: false);
   }
 
   String _currentJamaatKey(String prayer) {
@@ -606,7 +602,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
         theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary =
         theme.textTheme.bodySmall?.color?.withValues(alpha: .68) ??
-        theme.colorScheme.onSurface.withValues(alpha: .68);
+            theme.colorScheme.onSurface.withValues(alpha: .68);
     final items = controller.prayers
         .where((p) => p['category'] == 'obligatory')
         .toList(growable: false);
@@ -905,7 +901,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
         theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary =
         theme.textTheme.bodySmall?.color?.withValues(alpha: .68) ??
-        theme.colorScheme.onSurface.withValues(alpha: .68);
+            theme.colorScheme.onSurface.withValues(alpha: .68);
     final showSeconds = context.read<SettingsProvider>().showSeconds;
     final nafl = controller.prayers
         .where((p) => p['category'] == 'nafl')
@@ -1046,8 +1042,8 @@ class _DailyPrayerTrackerCardState extends State<_DailyPrayerTrackerCard> {
   String _label(String bn, String en, String ar) => widget.languageCode == 'en'
       ? en
       : widget.languageCode == 'ar'
-      ? ar
-      : bn;
+          ? ar
+          : bn;
   String _name(String key) {
     const bn = ['ফজর', 'যোহর', 'আসর', 'মাগরিব', 'ইশা'];
     const en = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
@@ -1060,8 +1056,8 @@ class _DailyPrayerTrackerCardState extends State<_DailyPrayerTrackerCard> {
     final locale = widget.languageCode == 'bn'
         ? 'bn_BD'
         : widget.languageCode == 'ar'
-        ? 'ar'
-        : 'en_US';
+            ? 'ar'
+            : 'en_US';
     return DateFormat('d MMM yyyy', locale).format(date);
   }
 
@@ -1114,7 +1110,7 @@ class _DailyPrayerTrackerCardState extends State<_DailyPrayerTrackerCard> {
         theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
     final secondary =
         theme.textTheme.bodySmall?.color?.withValues(alpha: .72) ??
-        theme.colorScheme.onSurface.withValues(alpha: .72);
+            theme.colorScheme.onSurface.withValues(alpha: .72);
     final now = DateTime.now();
     final todayCount = _today.values.where((v) => v).length;
     final yesterdayCount = _yesterday.values.where((v) => v).length;
