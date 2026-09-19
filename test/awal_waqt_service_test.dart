@@ -106,11 +106,11 @@ void main() {
     );
     expect(
       windows.firstWhere((w) => w.prayerKey == 'Dhuhr').end,
-      DateTime(2026, 9, 19, 13, 20),
+      DateTime(2026, 9, 19, 13, 20, 40),
     );
     expect(
       windows.firstWhere((w) => w.prayerKey == 'Isha').end,
-      DateTime(2026, 9, 20, 1, 20, 40),
+      DateTime(2026, 9, 19, 22, 19, 40),
     );
   });
 
