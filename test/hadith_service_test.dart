@@ -10,7 +10,7 @@ void main() {
     final service = HadithService(assetBundle: _FixtureAssetBundle());
 
     final chapters = await service.getChapters(
-      'bukhari',
+      'fixture',
       languageCode: 'bn',
     );
     expect(chapters, isNotEmpty);
@@ -19,7 +19,7 @@ void main() {
     expect(chapter.nameBn, 'Sample Chapter');
 
     final hadiths = await service.getHadiths(
-      'bukhari',
+      'fixture',
       1,
       bookNumber: 1,
       languageCode: 'bn',
