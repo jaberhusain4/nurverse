@@ -9,6 +9,7 @@ void main() {
     coordinates,
     DateComponents(2026, 9, 19),
     params,
+    utcOffset: const Duration(hours: 6),
   );
 
   print('Savar 2026-09-19');
