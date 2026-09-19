@@ -1,0 +1,36 @@
+name: Extract Dart formatting
+
+on:
+  push:
+    branches: [fix/dartfmt-prayer-live-updates]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+
+      - name: Format changed files
+        run: |
+          dart format lib/controllers/prayer_controller.dart lib/screens/home_screen.dart lib/screens/prayer_screen.dart
+
+      - name: Package formatted files
+        run: |
+          mkdir -p formatted
+          cp lib/controllers/prayer_controller.dart formatted/
+          cp lib/screens/home_screen.dart formatted/
+          cp lib/screens/prayer_screen.dart formatted/
+
+      - name: Upload formatted files
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-prayer-files
+          path: formatted/
