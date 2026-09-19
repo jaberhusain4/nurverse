@@ -1,0 +1,34 @@
+name: Format new Dart changes
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: true
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format lib/services/hadith_service.dart test/hadith_service_test.dart test/awal_waqt_service_test.dart
+      - run: |
+          if git diff --quiet -- lib/services/hadith_service.dart test/hadith_service_test.dart test/awal_waqt_service_test.dart; then
+            echo "Already formatted with Dart 3.44.8."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/services/hadith_service.dart test/hadith_service_test.dart test/awal_waqt_service_test.dart
+          git commit -m "style: format hadith test changes with project Dart"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
