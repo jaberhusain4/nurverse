@@ -7,7 +7,6 @@ void main() {
 
   group('Awal Waqt', () {
     test('uses Fajr to Sunrise for Fajr early window', () {
-      final day = DateTime(2026, 9, 19);
       final windows = service.buildWindows(
         prayerTimes: {
           'Fajr': DateTime(2026, 9, 19, 4, 31),
@@ -22,8 +21,8 @@ void main() {
 
       final fajr = windows.firstWhere((window) => window.prayerKey == 'Fajr');
       expect(fajr.start, DateTime(2026, 9, 19, 4, 31));
-      expect(fajr.end, DateTime(2026, 9, 19, 5, 2));
-      expect(fajr.duration, const Duration(minutes: 31));
+      expect(fajr.end, DateTime(2026, 9, 19, 4, 56, 20));
+      expect(fajr.duration, const Duration(minutes: 25, seconds: 20));
     });
 
     test('parses overnight Isha end as next-day Fajr', () {
@@ -40,11 +39,8 @@ void main() {
       final isha = windows.firstWhere((window) => window.prayerKey == 'Isha');
 
       expect(isha.start, DateTime(2026, 9, 19, 19, 14));
-      expect(isha.end, DateTime(2026, 9, 20, 1, 0));
-      expect(
-        isha.duration,
-        const Duration(hours: 5, minutes: 46),
-      );
+      expect(isha.end, DateTime(2026, 9, 20, 4, 31));
+      expect(isha.duration, const Duration(hours: 9, minutes: 17));
     });
 
     test('active Fajr Awal Waqt ends one third into Fajr valid period', () {
