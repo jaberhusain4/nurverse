@@ -25,7 +25,7 @@ void main() {
       expect(fajr.duration, const Duration(minutes: 25, seconds: 20));
     });
 
-    test('parses overnight Isha end as next-day Fajr', () {
+    test('uses overnight Isha-to-Fajr interval for Awal Waqt', () {
       final prayers = [
         {'name': 'Fajr', 'start': '04:31 AM', 'end': '05:47 AM'},
         {'name': 'Dhuhr', 'start': '11:53 AM', 'end': '04:16 PM'},
@@ -39,8 +39,8 @@ void main() {
       final isha = windows.firstWhere((window) => window.prayerKey == 'Isha');
 
       expect(isha.start, DateTime(2026, 9, 19, 19, 14));
-      expect(isha.end, DateTime(2026, 9, 20, 4, 31));
-      expect(isha.duration, const Duration(hours: 9, minutes: 17));
+      expect(isha.end, DateTime(2026, 9, 19, 22, 19, 40));
+      expect(isha.duration, const Duration(hours: 3, minutes: 5, seconds: 40));
     });
 
     test('active Fajr Awal Waqt ends one third into Fajr valid period', () {

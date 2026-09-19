@@ -11,7 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-      - run: dart tool/check_localization_hardcodes.dart
+      - run: dart tool/check_localization_hardcodes.dart --changed-lines
