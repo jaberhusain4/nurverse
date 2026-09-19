@@ -91,9 +91,11 @@ class AwalWaqtService {
       final start = prayerTimes[prayer];
       if (start == null) continue;
 
-      final nextStart = i < obligatoryPrayerKeys.length - 1
-          ? prayerTimes[obligatoryPrayerKeys[i + 1]]
-          : nextFajr;
+      final nextStart = prayer == 'Fajr'
+          ? prayerTimes['Sunrise']
+          : i < obligatoryPrayerKeys.length - 1
+              ? prayerTimes[obligatoryPrayerKeys[i + 1]]
+              : nextFajr;
 
       if (nextStart == null || !nextStart.isAfter(start)) continue;
 
@@ -133,10 +135,10 @@ class AwalWaqtService {
     final windows = <AwalWaqtWindow>[];
     for (final key in obligatoryPrayerKeys) {
       final interval = intervals[key];
-      if (interval == null || !interval.end.isAfter(interval.start)) {
+      if (interval == null || !interval.$2.isAfter(interval.$1)) {
         continue;
       }
-      windows.add(_makeGuidanceWindow(key, interval.start, interval.end));
+      windows.add(_makeGuidanceWindow(key, interval.$1, interval.$2));
     }
 
     return windows;
