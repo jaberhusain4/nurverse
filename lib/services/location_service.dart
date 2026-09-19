@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LocationService {
   const LocationService();
 
-  static const Duration _startupCacheMaxAge = Duration(minutes: 30);
+  static const Duration _startupCacheMaxAge = Duration(minutes: 5);
   static const String _latitudeKey = 'nurverse_cached_latitude';
   static const String _longitudeKey = 'nurverse_cached_longitude';
   static const String _timestampKey = 'nurverse_cached_location_timestamp';
@@ -30,6 +30,11 @@ class LocationService {
 
     final enabled = await isLocationEnabled();
     if (!enabled) {
+      final lastKnown = await getLastKnownPosition();
+      if (_isRecentEnough(lastKnown)) {
+        await _savePosition(lastKnown!);
+        return lastKnown;
+      }
       if (cached != null) return cached;
       throw Exception('Location service is disabled.');
     }
@@ -62,23 +67,34 @@ class LocationService {
   }
 
   Future<Position> getFreshCurrentPosition() async {
+    final cached = await getPersistedPosition();
     final enabled = await isLocationEnabled();
 
     if (!enabled) {
+      if (cached != null) return cached;
       throw Exception('Location service is disabled.');
     }
 
     final permission = await requestPermission();
 
     if (permission == LocationPermission.denied) {
+      if (cached != null) return cached;
       throw Exception('Location permission denied.');
     }
 
     if (permission == LocationPermission.deniedForever) {
+      if (cached != null) return cached;
       throw Exception('Location permission permanently denied.');
     }
 
-    return _getFreshPosition();
+    try {
+      return await _getFreshPosition().timeout(
+        const Duration(seconds: 10),
+      );
+    } catch (_) {
+      if (cached != null) return cached;
+      rethrow;
+    }
   }
 
   Future<Position> _getFreshPosition() async {

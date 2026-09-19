@@ -91,9 +91,11 @@ class AwalWaqtService {
       final start = prayerTimes[prayer];
       if (start == null) continue;
 
-      final nextStart = i < obligatoryPrayerKeys.length - 1
-          ? prayerTimes[obligatoryPrayerKeys[i + 1]]
-          : nextFajr;
+      final nextStart = prayer == 'Fajr'
+          ? prayerTimes['Sunrise']
+          : i < obligatoryPrayerKeys.length - 1
+              ? prayerTimes[obligatoryPrayerKeys[i + 1]]
+              : nextFajr;
 
       if (nextStart == null || !nextStart.isAfter(start)) continue;
 
@@ -107,41 +109,36 @@ class AwalWaqtService {
     List<Map<String, dynamic>> prayers, {
     required DateTime now,
   }) {
-    final starts = <String, DateTime>{};
+    final intervals = <String, (DateTime start, DateTime end)>{};
 
     for (final prayer in prayers) {
       final key = prayer['name']?.toString();
       final startText = prayer['start']?.toString();
-      if (key == null || startText == null) continue;
+      final endText = prayer['end']?.toString();
+      if (key == null || startText == null || endText == null) continue;
 
       final normalizedKey = key == 'Jumuah' ? 'Dhuhr' : key;
       if (!obligatoryPrayerKeys.contains(normalizedKey)) continue;
 
       final start = _parseDisplayTime(startText, now);
-      if (start != null) starts[normalizedKey] = start;
+      var end = _parseDisplayTime(endText, now);
+      if (start == null || end == null) continue;
+
+      // Isha ends at the next day's Fajr.
+      if (!end.isAfter(start)) {
+        end = end.add(const Duration(days: 1));
+      }
+
+      intervals[normalizedKey] = (start, end);
     }
 
     final windows = <AwalWaqtWindow>[];
-
-    for (var i = 0; i < obligatoryPrayerKeys.length; i++) {
-      final key = obligatoryPrayerKeys[i];
-      final start = starts[key];
-      if (start == null) continue;
-
-      DateTime? nextStart;
-      if (i < obligatoryPrayerKeys.length - 1) {
-        nextStart = starts[obligatoryPrayerKeys[i + 1]];
-      } else {
-        final fajr = starts['Fajr'];
-        if (fajr != null) {
-          nextStart = fajr.isAfter(start)
-              ? fajr
-              : fajr.add(const Duration(days: 1));
-        }
+    for (final key in obligatoryPrayerKeys) {
+      final interval = intervals[key];
+      if (interval == null || !interval.$2.isAfter(interval.$1)) {
+        continue;
       }
-
-      if (nextStart == null || !nextStart.isAfter(start)) continue;
-      windows.add(_makeGuidanceWindow(key, start, nextStart));
+      windows.add(_makeGuidanceWindow(key, interval.$1, interval.$2));
     }
 
     return windows;

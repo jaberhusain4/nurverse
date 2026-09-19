@@ -207,7 +207,7 @@ class PrayerController extends ChangeNotifier {
     JamaatService.initialize().then((_) {
       if (_position != null) _safeRefresh();
     });
-    determinePositionAndAddress();
+    determinePositionAndAddress(forceFresh: true);
   }
 
   void _safeTick() {
