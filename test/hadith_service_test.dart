@@ -15,14 +15,15 @@ void main() {
     );
     expect(chapters, isNotEmpty);
 
+    final chapter = chapters.firstWhere((item) => item.id == 1);
+    expect(chapter.nameBn, 'Sample Chapter');
+
     final hadiths = await service.getHadiths(
       'bukhari',
-      chapters.first.id,
-      bookNumber:
-          chapters.first.bookNumber == 0 ? null : chapters.first.bookNumber,
+      1,
+      bookNumber: 1,
       languageCode: 'bn',
     );
-
     expect(hadiths, isNotEmpty);
 
     final hadith = hadiths.first;
