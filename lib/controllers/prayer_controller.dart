@@ -1,6 +1,7 @@
 // lib/controllers/prayer_controller.dart
 import 'dart:async';
 import 'package:adhan/adhan.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
