@@ -130,11 +130,15 @@ class AwalWaqtService {
       final start = starts[key];
       if (start == null) continue;
 
-      final prayer = prayers.where((item) {
+      Map<String, dynamic>? prayer;
+      for (final item in prayers) {
         final rawKey = item['name']?.toString();
         final normalizedKey = rawKey == 'Jumuah' ? 'Dhuhr' : rawKey;
-        return normalizedKey == key;
-      }).cast<Map<String, dynamic>?>().firstOrNull;
+        if (normalizedKey == key) {
+          prayer = item;
+          break;
+        }
+      }
 
       DateTime? nextStart;
       final endText = prayer?['end']?.toString();
