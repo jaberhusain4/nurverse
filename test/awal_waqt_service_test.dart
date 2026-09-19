@@ -44,7 +44,6 @@ void main() {
     });
 
     test('active Fajr Awal Waqt ends one third into Fajr valid period', () {
-      final day = DateTime(2026, 9, 19);
       final windows = service.buildWindows(
         prayerTimes: {
           'Fajr': DateTime(2026, 9, 19, 4, 31),
@@ -63,7 +62,7 @@ void main() {
 
       expect(status?.window.prayerKey, 'Fajr');
       expect(status?.isActive, isTrue);
-      expect(status?.window.end, DateTime(2026, 9, 19, 5, 2));
+      expect(status?.window.end, DateTime(2026, 9, 19, 4, 56, 20));
     });
   });
 }
