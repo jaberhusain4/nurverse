@@ -45,7 +45,8 @@ void main(List<String> args) {
 
       // Translation arguments are localization data, not hardcoded UI.
       final isLocalizationSource = _localizationCall.hasMatch(line);
-      final uiContext = _textLiteral.hasMatch(line) ||
+      final uiContext =
+          _textLiteral.hasMatch(line) ||
           line.contains('Text(') ||
           line.contains('label:') ||
           line.contains('title:') ||
@@ -55,7 +56,8 @@ void main(List<String> args) {
         findings.add('$path:${i + 1}: direct Bangla UI literal');
       }
       if (!isLocalizationSource &&
-          (_ternaryLanguage.hasMatch(line) || _directEnglishBranch.hasMatch(line))) {
+          (_ternaryLanguage.hasMatch(line) ||
+              _directEnglishBranch.hasMatch(line))) {
         findings.add('$path:${i + 1}: language-specific UI branching');
       }
     }
@@ -76,7 +78,6 @@ void main(List<String> args) {
   exitCode = 1;
 }
 
-
 void _checkChangedLines() {
   final baseRef = Platform.environment['GITHUB_BASE_REF'];
   if (baseRef == null || baseRef.isEmpty) {
@@ -86,20 +87,19 @@ void _checkChangedLines() {
     return;
   }
 
-  final result = Process.runSync(
-    'git',
-    <String>[
-      'diff',
-      '--unified=0',
-      'origin/$baseRef...HEAD',
-      '--',
-      'lib/screens',
-      'lib/widgets',
-    ],
-  );
+  final result = Process.runSync('git', <String>[
+    'diff',
+    '--unified=0',
+    'origin/$baseRef...HEAD',
+    '--',
+    'lib/screens',
+    'lib/widgets',
+  ]);
 
   if (result.exitCode != 0) {
-    stderr.writeln('Unable to inspect pull-request diff for localization guard.');
+    stderr.writeln(
+      'Unable to inspect pull-request diff for localization guard.',
+    );
     stderr.writeln(result.stderr);
     exitCode = 2;
     return;
@@ -130,7 +130,8 @@ void _checkChangedLines() {
       if (path.isEmpty) continue;
 
       final isLocalizationSource = _localizationCall.hasMatch(line);
-      final uiContext = _textLiteral.hasMatch(line) ||
+      final uiContext =
+          _textLiteral.hasMatch(line) ||
           line.contains('Text(') ||
           line.contains('label:') ||
           line.contains('title:') ||
