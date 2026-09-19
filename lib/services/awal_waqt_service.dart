@@ -196,7 +196,31 @@ class AwalWaqtService {
 
   DateTime? _parseDisplayTime(String value, DateTime base) {
     final match = RegExp(
-      r'^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?
+      r'^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$',
+      caseSensitive: false,
+    ).firstMatch(value.trim());
+    if (match == null) return null;
+
+    var hour = int.tryParse(match.group(1)!) ?? -1;
+    final minute = int.tryParse(match.group(2)!) ?? -1;
+    final period = match.group(3)?.toUpperCase();
+
+    if (minute < 0 || minute > 59) return null;
+
+    if (period == null) {
+      if (hour < 0 || hour > 23) return null;
+    } else {
+      if (hour < 1 || hour > 12) return null;
+      if (period == 'AM' && hour == 12) {
+        hour = 0;
+      } else if (period == 'PM' && hour != 12) {
+        hour += 12;
+      }
+    }
+
+    return DateTime(base.year, base.month, base.day, hour, minute);
+  }
+
   String formatTime(DateTime time) {
     final hour12 = time.hour % 12 == 0 ? 12 : time.hour % 12;
     final period = time.hour >= 12 ? 'PM' : 'AM';
