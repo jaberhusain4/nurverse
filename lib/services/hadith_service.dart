@@ -2,7 +2,7 @@
 
 import 'dart:convert';
 
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart';
 
 import 'generated_hadith_chapter_metadata.dart';
 
@@ -81,10 +81,14 @@ const List<HadithBook> kHadithBooks = [
 ];
 
 class HadithService {
-  HadithService._();
+  HadithService({AssetBundle? assetBundle})
+      : _assetBundle = assetBundle ?? rootBundle;
+
+  HadithService._() : _assetBundle = rootBundle;
 
   static final HadithService instance = HadithService._();
 
+  final AssetBundle _assetBundle;
   final Map<String, _LoadedEdition> _editionCache = {};
   final Map<String, List<HadithChapter>> _chapterCache = {};
   final Map<String, List<HadithItem>> _hadithCache = {};
@@ -175,7 +179,8 @@ class HadithService {
       ...arabicMap.keys,
       ...banglaMap.keys,
       ...englishMap.keys,
-    }.toList()..sort(_compareHadithKeys);
+    }.toList()
+      ..sort(_compareHadithKeys);
 
     final result = <HadithItem>[];
     for (final key in keys) {
@@ -230,7 +235,7 @@ class HadithService {
 
     final path = 'assets/hadith/$language-$bookKey.json';
     try {
-      final raw = await rootBundle.loadString(path);
+      final raw = await _assetBundle.loadString(path);
       final decoded = jsonDecode(raw);
       final edition = _extractEdition(decoded);
       _editionCache[cacheKey] = edition;
@@ -546,9 +551,7 @@ class HadithService {
                 value['first'],
           );
           final last = _intValue(
-            value['hadithnumber_last'] ??
-                value['hadith_last'] ??
-                value['last'],
+            value['hadithnumber_last'] ?? value['hadith_last'] ?? value['last'],
           );
           if (index != null && first != null && last != null) {
             sectionRanges[index] = _SectionRange(
