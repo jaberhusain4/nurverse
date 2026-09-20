@@ -6,31 +6,27 @@ class LocationService {
   const LocationService();
 
   static const Duration _startupCacheMaxAge = Duration(minutes: 10);
-  static const double _maxAcceptedAccuracyMeters = 10000;
+  static const Duration _freshLocationTimeout = Duration(seconds: 15);
+  static const double _maxAcceptedAccuracyMeters = 2000;
   static const String _latitudeKey = 'nurverse_cached_latitude';
   static const String _longitudeKey = 'nurverse_cached_longitude';
   static const String _timestampKey = 'nurverse_cached_location_timestamp';
   static const String _addressKey = 'nurverse_cached_location_address';
 
-  Future<bool> isLocationEnabled() async {
-    return Geolocator.isLocationServiceEnabled();
-  }
+  Future<bool> isLocationEnabled() async => Geolocator.isLocationServiceEnabled();
 
   Future<LocationPermission> requestPermission() async {
     var permission = await Geolocator.checkPermission();
-
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
-
     return permission;
   }
 
   Future<Position> getCurrentPosition() async {
     final cached = await getPersistedPosition();
 
-    final enabled = await isLocationEnabled();
-    if (!enabled) {
+    if (!await isLocationEnabled()) {
       if (cached != null && _isUsablePosition(cached)) return cached;
       throw Exception(
         'Location service is disabled and the cached location is stale or inaccurate.',
@@ -38,45 +34,42 @@ class LocationService {
     }
 
     final permission = await requestPermission();
-
     if (permission == LocationPermission.denied) {
-      if (cached != null) return cached;
+      if (cached != null && _isUsablePosition(cached)) return cached;
       throw Exception('Location permission denied.');
     }
-
     if (permission == LocationPermission.deniedForever) {
-      if (cached != null) return cached;
+      if (cached != null && _isUsablePosition(cached)) return cached;
       throw Exception('Location permission permanently denied.');
     }
 
-    final lastKnown = await getLastKnownPosition();
+    try {
+      final fresh = await _getFreshPosition();
+      if (_isUsablePosition(fresh)) return fresh;
+    } catch (_) {
+      // Fall through to the safest recent local fallback.
+    }
 
+    final lastKnown = await getLastKnownPosition();
     if (_isUsablePosition(lastKnown)) {
       await _savePosition(lastKnown!);
       return lastKnown;
     }
 
-    try {
-      return await _getFreshPosition();
-    } catch (_) {
-      if (cached != null) return cached;
-      rethrow;
-    }
+    if (cached != null && _isUsablePosition(cached)) return cached;
+
+    throw Exception('Unable to obtain a recent accurate location.');
   }
 
   Future<Position> getFreshCurrentPosition() async {
-    final enabled = await isLocationEnabled();
-
-    if (!enabled) {
+    if (!await isLocationEnabled()) {
       throw Exception('Location service is disabled.');
     }
 
     final permission = await requestPermission();
-
     if (permission == LocationPermission.denied) {
       throw Exception('Location permission denied.');
     }
-
     if (permission == LocationPermission.deniedForever) {
       throw Exception('Location permission permanently denied.');
     }
@@ -86,26 +79,30 @@ class LocationService {
 
   Future<Position> _getFreshPosition() async {
     final position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-    );
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+      ),
+    ).timeout(_freshLocationTimeout);
+
+    if (!_isUsablePosition(position)) {
+      throw Exception(
+        'Fresh location is too old or inaccurate for prayer-time calculation.',
+      );
+    }
 
     await _savePosition(position);
     return position;
   }
 
   bool _isUsablePosition(Position? position) {
-    if (position == null) return false;
-    if (!_isRecentEnough(position)) return false;
-
+    if (position == null || !_isRecentEnough(position)) return false;
     final accuracy = position.accuracy;
     if (!accuracy.isFinite || accuracy < 0) return false;
-    if (accuracy == 0) return true;
-    return accuracy <= _maxAcceptedAccuracyMeters;
+    return accuracy == 0 || accuracy <= _maxAcceptedAccuracyMeters;
   }
 
   bool _isRecentEnough(Position? position) {
     if (position == null) return false;
-
     final age = DateTime.now().difference(position.timestamp);
     return !age.isNegative && age <= _startupCacheMaxAge;
   }
@@ -119,9 +116,7 @@ class LocationService {
         _timestampKey,
         position.timestamp.millisecondsSinceEpoch,
       );
-    } catch (_) {
-      // Local caching must never break prayer calculations.
-    }
+    } catch (_) {}
   }
 
   Future<Position?> getPersistedPosition() async {
@@ -129,18 +124,16 @@ class LocationService {
       final prefs = await SharedPreferences.getInstance();
       final latitude = prefs.getDouble(_latitudeKey);
       final longitude = prefs.getDouble(_longitudeKey);
-
-      if (latitude == null || longitude == null) return null;
-
       final timestampMs = prefs.getInt(_timestampKey);
-      final timestamp = timestampMs == null
-          ? DateTime.now()
-          : DateTime.fromMillisecondsSinceEpoch(timestampMs);
+
+      if (latitude == null || longitude == null || timestampMs == null) {
+        return null;
+      }
 
       return Position(
         latitude: latitude,
         longitude: longitude,
-        timestamp: timestamp,
+        timestamp: DateTime.fromMillisecondsSinceEpoch(timestampMs),
         accuracy: 0,
         altitude: 0,
         altitudeAccuracy: 0,
@@ -168,14 +161,10 @@ class LocationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_addressKey, address);
-    } catch (_) {
-      // Address caching must never break prayer calculations.
-    }
+    } catch (_) {}
   }
 
-  Future<Position> getCurrentLocation() {
-    return getCurrentPosition();
-  }
+  Future<Position> getCurrentLocation() => getCurrentPosition();
 
   Future<Position?> getLastKnownPosition() async {
     try {
@@ -186,14 +175,14 @@ class LocationService {
   }
 
   Future<Position> getBestAvailablePosition() async {
-    final persisted = await getPersistedPosition();
-    if (persisted != null) return persisted;
-
     final lastKnown = await getLastKnownPosition();
-    if (lastKnown != null) {
-      await _savePosition(lastKnown);
+    if (_isUsablePosition(lastKnown)) {
+      await _savePosition(lastKnown!);
       return lastKnown;
     }
+
+    final persisted = await getPersistedPosition();
+    if (_isUsablePosition(persisted)) return persisted;
 
     return getCurrentPosition();
   }
@@ -205,28 +194,23 @@ class LocationService {
         position.longitude,
       );
 
-      if (places.isEmpty) {
-        return getPersistedAddress();
-      }
+      if (places.isEmpty) return getPersistedAddress();
 
       final place = places.first;
       final subLocality = place.subLocality?.trim() ?? '';
       final locality = place.locality?.trim() ?? '';
       final district = place.subAdministrativeArea?.trim() ?? '';
       final country = place.country?.trim() ?? '';
-
       final parts = <String>[];
 
       void addIfUnique(String value) {
         if (value.isEmpty) return;
         if (_looksLikePlusCode(value) || _looksLikeCoordinates(value)) return;
-
         if (parts.any(
           (existing) => existing.toLowerCase() == value.toLowerCase(),
         )) {
           return;
         }
-
         parts.add(value);
       }
 
@@ -235,9 +219,7 @@ class LocationService {
       addIfUnique(district);
       addIfUnique(country);
 
-      if (parts.isEmpty) {
-        return getPersistedAddress();
-      }
+      if (parts.isEmpty) return getPersistedAddress();
 
       final address = parts.join(', ');
       await _saveAddress(address);
@@ -261,28 +243,21 @@ class LocationService {
 
   Future<String> getSafeAddress(Position position) async {
     final address = await getAddress(position);
-
-    if (address != null && address.trim().isNotEmpty) {
-      return address;
-    }
-
-    return _formatCoordinates(position);
+    return address != null && address.trim().isNotEmpty
+        ? address
+        : _formatCoordinates(position);
   }
 
   Future<(Position, String)> getLocationWithAddress() async {
     final position = await getCurrentPosition();
-    final address = await getSafeAddress(position);
-    return (position, address);
+    return (position, await getSafeAddress(position));
   }
 
   Future<(Position, String?)> getLocationWithOptionalAddress() async {
     final position = await getCurrentPosition();
-    final address = await getAddress(position);
-    return (position, address);
+    return (position, await getAddress(position));
   }
 
-  String _formatCoordinates(Position position) {
-    return '${position.latitude.toStringAsFixed(3)}, '
-        '${position.longitude.toStringAsFixed(3)}';
-  }
+  String _formatCoordinates(Position position) =>
+      '${position.latitude.toStringAsFixed(3)}, ${position.longitude.toStringAsFixed(3)}';
 }
