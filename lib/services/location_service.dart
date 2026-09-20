@@ -13,7 +13,8 @@ class LocationService {
   static const String _timestampKey = 'nurverse_cached_location_timestamp';
   static const String _addressKey = 'nurverse_cached_location_address';
 
-  Future<bool> isLocationEnabled() async => Geolocator.isLocationServiceEnabled();
+  Future<bool> isLocationEnabled() async =>
+      Geolocator.isLocationServiceEnabled();
 
   Future<LocationPermission> requestPermission() async {
     var permission = await Geolocator.checkPermission();

@@ -885,8 +885,7 @@ class PrayerController extends ChangeNotifier {
     // before that prayer's valid interval ends.
     if (!now.isBefore(times['Fajr']!) && now.isBefore(times['Sunrise']!)) {
       target = times['Sunrise']!;
-    } else if (!now.isBefore(times['Dhuhr']!) &&
-        now.isBefore(times['Asr']!)) {
+    } else if (!now.isBefore(times['Dhuhr']!) && now.isBefore(times['Asr']!)) {
       target = times['Asr']!;
     } else if (!now.isBefore(times['Asr']!) &&
         now.isBefore(times['Maghrib']!)) {
