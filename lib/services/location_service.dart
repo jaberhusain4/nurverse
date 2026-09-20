@@ -183,7 +183,7 @@ class LocationService {
     }
 
     final persisted = await getPersistedPosition();
-    if (_isUsablePosition(persisted)) return persisted;
+    if (_isUsablePosition(persisted)) return persisted!;
 
     return getCurrentPosition();
   }
