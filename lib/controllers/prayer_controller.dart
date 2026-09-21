@@ -880,19 +880,26 @@ class PrayerController extends ChangeNotifier {
     required DateTime now,
   }) {
     late final DateTime target;
-    if (now.isBefore(times['Fajr']!)) {
-      target = times['Fajr']!;
-    } else if (now.isBefore(times['Dhuhr']!)) {
-      target = times['Dhuhr']!;
-    } else if (now.isBefore(times['Asr']!)) {
+
+    // While a fard prayer is active, "Time left" means the remaining time
+    // before that prayer's valid interval ends.
+    if (!now.isBefore(times['Fajr']!) && now.isBefore(times['Sunrise']!)) {
+      target = times['Sunrise']!;
+    } else if (!now.isBefore(times['Dhuhr']!) && now.isBefore(times['Asr']!)) {
       target = times['Asr']!;
-    } else if (now.isBefore(times['Maghrib']!)) {
+    } else if (!now.isBefore(times['Asr']!) &&
+        now.isBefore(times['Maghrib']!)) {
       target = times['Maghrib']!;
-    } else if (now.isBefore(times['Isha']!)) {
+    } else if (!now.isBefore(times['Maghrib']!) &&
+        now.isBefore(times['Isha']!)) {
       target = times['Isha']!;
-    } else {
+    } else if (!now.isBefore(times['Isha']!)) {
       target = now.isBefore(_tahajjudStart!) ? _tahajjudStart! : tomorrowFajr;
+    } else {
+      // Between prayer intervals, count down to the next fard prayer.
+      target = times['Fajr']!;
     }
+
     _timeRemainingForNextPrayer = _formatDuration(target.difference(now));
   }
 
