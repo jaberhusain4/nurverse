@@ -16,9 +16,8 @@ import '../data/dua_data.dart';
 /// Handles Dua audio using Cloudflare R2 as the remote distribution source
 /// and the device filesystem as the offline cache.
 ///
-/// All published/recorded Dua audio is normalized before local playback so
-/// quiet recordings are substantially easier to hear without uncontrolled
-/// clipping.
+/// Published and recorded Dua audio is normalized before local playback so
+/// quiet recordings are easier to hear without uncontrolled clipping.
 class DuaAudioService {
   DuaAudioService._();
 
@@ -78,17 +77,14 @@ class DuaAudioService {
     return directory.path;
   }
 
-  /// Runs loudness normalization on a local M4A file.
-  ///
-  /// The target is voice-friendly and capped below digital full scale. This
-  /// raises quiet recordings while avoiding the harsh clipping produced by a
-  /// blind fixed-gain multiplier.
+  /// Runs voice-friendly loudness normalization on a local M4A file.
   static Future<String?> _normalizeAudio(String inputPath) async {
     final input = File(inputPath);
     if (!await input.exists() || await input.length() == 0) return null;
 
     final directory = await _dir('dua_audio_processed');
-    final outputPath = '$directory/${sha256.convert(inputPath.codeUnits)}.m4a';
+    final outputPath =
+        '$directory/${sha256.convert(inputPath.codeUnits)}.m4a';
     final output = File(outputPath);
     if (output.existsSync()) await output.delete();
 
@@ -118,12 +114,11 @@ class DuaAudioService {
         return outputPath;
       }
     } catch (_) {
-      // Playback can safely fall back to the original file.
+      // Fall back to the original file if normalization is unavailable.
     }
     return null;
   }
 
-  /// Downloads the published R2 audio and normalizes it into the local cache.
   static Future<bool> download(DuaItem item) async {
     await initialize();
     final existing = cachedPath(item);
@@ -198,7 +193,6 @@ class DuaAudioService {
       return;
     }
 
-    // Legacy creator recording fallback retained for maintenance only.
     final recorded = recordedPath(item);
     if (recorded != null && File(recorded).existsSync()) {
       final normalized = await _normalizeAudio(recorded);
@@ -278,14 +272,22 @@ class DuaAudioService {
       if (path == null || path.isEmpty) continue;
       final file = File(path);
       if (!file.existsSync()) continue;
-      files.add(XFile(path, name: '${keyFor(item)}.m4a', mimeType: 'audio/mp4'));
+      files.add(
+        XFile(
+          path,
+          name: '${keyFor(item)}.m4a',
+          mimeType: 'audio/mp4',
+        ),
+      );
     }
     if (files.isEmpty) return 0;
-    await SharePlus.instance.share(ShareParams(
-      files: files,
-      title: 'NurVerse Dua Recordings',
-      text: 'NurVerse recorded Dua audio files',
-    ));
+    await SharePlus.instance.share(
+      ShareParams(
+        files: files,
+        title: 'NurVerse Dua Recordings',
+        text: 'NurVerse recorded Dua audio files',
+      ),
+    );
     return files.length;
   }
 
