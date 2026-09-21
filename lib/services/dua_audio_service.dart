@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:crypto/crypto.dart';
+import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_audio/return_code.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -13,6 +15,10 @@ import '../data/dua_data.dart';
 
 /// Handles Dua audio using Cloudflare R2 as the remote distribution source
 /// and the device filesystem as the offline cache.
+///
+/// All published/recorded Dua audio is normalized before local playback so
+/// quiet recordings are substantially easier to hear without uncontrolled
+/// clipping.
 class DuaAudioService {
   DuaAudioService._();
 
@@ -25,7 +31,6 @@ class DuaAudioService {
   static const String _audioBaseUrl =
       'https://pub-3a011607dfb94b04a37360a09e98b263.r2.dev';
 
-  /// Key of the Dua whose audio is currently playing/paused.
   static String? get currentKey => _currentKey;
 
   static Future<void> initialize() async {
@@ -73,9 +78,52 @@ class DuaAudioService {
     return directory.path;
   }
 
-  /// Downloads the published R2 audio only when it is not already cached.
-  /// The temporary file prevents an interrupted download from becoming a
-  /// seemingly valid offline audio file.
+  /// Runs loudness normalization on a local M4A file.
+  ///
+  /// The target is voice-friendly and capped below digital full scale. This
+  /// raises quiet recordings while avoiding the harsh clipping produced by a
+  /// blind fixed-gain multiplier.
+  static Future<String?> _normalizeAudio(String inputPath) async {
+    final input = File(inputPath);
+    if (!await input.exists() || await input.length() == 0) return null;
+
+    final directory = await _dir('dua_audio_processed');
+    final outputPath = '$directory/${sha256.convert(inputPath.codeUnits)}.m4a';
+    final output = File(outputPath);
+    if (output.existsSync()) await output.delete();
+
+    final command = [
+      '-y',
+      '-i',
+      '"$inputPath"',
+      '-af',
+      'loudnorm=I=-16:TP=-1.5:LRA=11',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '128k',
+      '-ac',
+      '1',
+      '-ar',
+      '44100',
+      '"$outputPath"',
+    ].join(' ');
+
+    try {
+      final session = await FFmpegKit.execute(command);
+      final returnCode = await session.getReturnCode();
+      if (ReturnCode.isSuccess(returnCode) &&
+          output.existsSync() &&
+          await output.length() > 0) {
+        return outputPath;
+      }
+    } catch (_) {
+      // Playback can safely fall back to the original file.
+    }
+    return null;
+  }
+
+  /// Downloads the published R2 audio and normalizes it into the local cache.
   static Future<bool> download(DuaItem item) async {
     await initialize();
     final existing = cachedPath(item);
@@ -88,21 +136,29 @@ class DuaAudioService {
       }
 
       final directory = await _dir('dua_audio_cache');
+      final rawPath = '$directory/${keyFor(item)}.raw.m4a';
       final path = '$directory/${keyFor(item)}.m4a';
-      final tempPath = '$path.part';
-      final tempFile = File(tempPath);
+      final rawFile = File(rawPath);
+      await rawFile.writeAsBytes(response.bodyBytes, flush: true);
 
-      await tempFile.writeAsBytes(response.bodyBytes, flush: true);
-      if (!tempFile.existsSync() || await tempFile.length() == 0) {
-        if (tempFile.existsSync()) await tempFile.delete();
+      if (!rawFile.existsSync() || await rawFile.length() == 0) {
+        if (rawFile.existsSync()) await rawFile.delete();
         return false;
       }
 
+      final normalized = await _normalizeAudio(rawPath);
       final finalFile = File(path);
       if (finalFile.existsSync()) await finalFile.delete();
-      await tempFile.rename(path);
+
+      if (normalized != null) {
+        await File(normalized).copy(path);
+      } else {
+        await rawFile.copy(path);
+      }
+
+      if (rawFile.existsSync()) await rawFile.delete();
       await _prefs!.setString('dua_cached_${keyFor(item)}', path);
-      return true;
+      return finalFile.existsSync() && await finalFile.length() > 0;
     } catch (_) {
       return false;
     }
@@ -136,8 +192,6 @@ class DuaAudioService {
       return;
     }
 
-    // Always prefer the local cache. This makes subsequent playback fully
-    // independent of internet availability.
     final cached = cachedPath(item);
     if (cached != null && File(cached).existsSync()) {
       await _play(item, cached);
@@ -147,11 +201,11 @@ class DuaAudioService {
     // Legacy creator recording fallback retained for maintenance only.
     final recorded = recordedPath(item);
     if (recorded != null && File(recorded).existsSync()) {
-      await _play(item, recorded);
+      final normalized = await _normalizeAudio(recorded);
+      await _play(item, normalized ?? recorded);
       return;
     }
 
-    // First playback downloads from R2 and immediately plays the local copy.
     await downloadAndPlay(item);
   }
 
@@ -190,8 +244,15 @@ class DuaAudioService {
     _recordingKey = null;
     if (path == null || path.isEmpty) return null;
     await initialize();
-    await _prefs!.setString('dua_recording_$key', path);
-    return path;
+
+    final normalized = await _normalizeAudio(path);
+    final finalPath = normalized ?? path;
+    if (finalPath != path) {
+      final original = File(path);
+      if (original.existsSync()) await original.delete();
+    }
+    await _prefs!.setString('dua_recording_$key', finalPath);
+    return finalPath;
   }
 
   static Future<void> deleteRecording(DuaItem item) async {
