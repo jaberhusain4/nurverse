@@ -1,10 +1,12 @@
 // lib/controllers/prayer_controller.dart
 import 'dart:async';
+
 import 'package:adhan/adhan.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+
 import '../services/jamaat_service.dart';
 import '../services/location_service.dart';
 import '../services/prayer_calculation_config.dart';
@@ -429,7 +431,11 @@ class PrayerController extends ChangeNotifier {
       tomorrowFajr: tomorrowTimes['Fajr']!,
       now: now,
     );
-    _updateDailyTimeInformation(times: times, now: now);
+    _updateDailyTimeInformation(
+      times: times,
+      tomorrowTimes: tomorrowTimes,
+      now: now,
+    );
     _publishLiveState();
 
     if (notify) notifyListeners();
@@ -942,65 +948,117 @@ class PrayerController extends ChangeNotifier {
 
   void _updateDailyTimeInformation({
     required Map<String, DateTime> times,
+    required Map<String, DateTime> tomorrowTimes,
     required DateTime now,
   }) {
     final DateTime sunrise = times['Sunrise']!;
     final DateTime dhuhr = times['Dhuhr']!;
+    final DateTime maghrib = times['Maghrib']!;
+    final DateTime tomorrowSunrise = tomorrowTimes['Sunrise']!;
+    final DateTime tomorrowDhuhr = tomorrowTimes['Dhuhr']!;
+    final DateTime tomorrowMaghrib = tomorrowTimes['Maghrib']!;
     final DateTime zawalStart = dhuhr.subtract(const Duration(minutes: 10));
-    final List<DateTime> prohibited =
-        _prohibitedStart != null && _prohibitedEnd != null
-            ? [_prohibitedStart!, _prohibitedEnd!]
-            : [];
+    final DateTime tomorrowZawalStart = tomorrowDhuhr.subtract(
+      const Duration(minutes: 10),
+    );
+
+    String prohibitedKind(DateTime start) {
+      if (start == sunrise || start == tomorrowSunrise) {
+        return 'sunrise';
+      }
+      if (start == zawalStart || start == tomorrowZawalStart) {
+        return 'zawal';
+      }
+      return 'sunset';
+    }
+
+    String makruhKind(DateTime start) {
+      final DateTime sunriseMakruhStart = sunrise.subtract(
+        const Duration(minutes: 15),
+      );
+      final DateTime tomorrowSunriseMakruhStart = tomorrowSunrise.subtract(
+        const Duration(minutes: 15),
+      );
+      if (start == sunriseMakruhStart || start == tomorrowSunriseMakruhStart) {
+        return 'sunrise';
+      }
+      if (start == zawalStart || start == tomorrowZawalStart) {
+        return 'zawal';
+      }
+      return 'sunset';
+    }
+
+    final List<DateTime> prohibited = [];
+    if (_prohibitedStart != null && _prohibitedEnd != null) {
+      prohibited.addAll([_prohibitedStart!, _prohibitedEnd!]);
+    }
     if (prohibited.isEmpty) {
       _prohibitedTimeText = 'আজ আর কোনো নিষিদ্ধ সময় নেই';
-    } else if (!now.isBefore(prohibited[0]) && now.isBefore(prohibited[1])) {
-      if (prohibited[0].hour == sunrise.hour &&
-          prohibited[0].day == sunrise.day) {
-        _prohibitedTimeText = 'সূর্যোদয়ের সময় — নামাজ আদায় থেকে বিরত থাকুন';
-      } else if (prohibited[0].hour == zawalStart.hour &&
-          prohibited[0].day == zawalStart.day) {
-        _prohibitedTimeText = 'জাওয়ালের সময় — নামাজ আদায় থেকে বিরত থাকুন';
-      } else {
-        _prohibitedTimeText = 'সূর্যাস্তের সময় — নামাজ আদায় থেকে বিরত থাকুন';
-      }
     } else {
-      if (prohibited[0].hour == sunrise.hour &&
-          prohibited[0].day == sunrise.day) {
-        _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: সূর্যোদয়';
-      } else if (prohibited[0].hour == zawalStart.hour &&
-          prohibited[0].day == zawalStart.day) {
-        _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: জাওয়াল';
+      final bool isActive =
+          !now.isBefore(prohibited[0]) && now.isBefore(prohibited[1]);
+      final String kind = prohibitedKind(prohibited[0]);
+      if (isActive) {
+        switch (kind) {
+          case 'sunrise':
+            _prohibitedTimeText = 'সূর্যোদয়ের সময় — নামাজ আদায় থেকে বিরত থাকুন';
+            break;
+          case 'zawal':
+            _prohibitedTimeText = 'জাওয়ালের সময় — নামাজ আদায় থেকে বিরত থাকুন';
+            break;
+          default:
+            _prohibitedTimeText =
+                'সূর্যাস্তের সময় — নামাজ আদায় থেকে বিরত থাকুন';
+            break;
+        }
       } else {
-        _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: সূর্যাস্ত';
+        switch (kind) {
+          case 'sunrise':
+            _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: সূর্যোদয়';
+            break;
+          case 'zawal':
+            _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: জাওয়াল';
+            break;
+          default:
+            _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: সূর্যাস্ত';
+            break;
+        }
       }
     }
 
-    final List<DateTime> makruh = _makruhStart != null && _makruhEnd != null
-        ? [_makruhStart!, _makruhEnd!]
-        : [];
+    final List<DateTime> makruh = [];
+    if (_makruhStart != null && _makruhEnd != null) {
+      makruh.addAll([_makruhStart!, _makruhEnd!]);
+    }
     if (makruh.isEmpty) {
       _makruhTimeText = 'আজ আর কোনো বিশেষ মাকরূহ সময় নেই';
-    } else if (!now.isBefore(makruh[0]) && now.isBefore(makruh[1])) {
-      if (makruh[0].day == sunrise.day &&
-          makruh[0].hour ==
-              sunrise.subtract(const Duration(minutes: 15)).hour) {
-        _makruhTimeText = 'সূর্যোদয়ের আশেপাশের মাকরূহ সময়';
-      } else if (makruh[0].day == zawalStart.day &&
-          makruh[0].hour == zawalStart.hour) {
-        _makruhTimeText = 'জাওয়ালের আশেপাশের মাকরূহ সময়';
-      } else {
-        _makruhTimeText = 'সূর্যাস্তের আশেপাশের মাকরূহ সময়';
-      }
     } else {
-      if (makruh[0].day == sunrise.day &&
-          makruh[0].hour ==
-              sunrise.subtract(const Duration(minutes: 15)).hour) {
-        _makruhTimeText = 'পরবর্তী মাকরূহ সময়: সূর্যোদয়';
-      } else if (makruh[0].day == zawalStart.day &&
-          makruh[0].hour == zawalStart.hour) {
-        _makruhTimeText = 'পরবর্তী মাকরূহ সময়: জাওয়াল';
+      final bool isActive = !now.isBefore(makruh[0]) && now.isBefore(makruh[1]);
+      final String kind = makruhKind(makruh[0]);
+      if (isActive) {
+        switch (kind) {
+          case 'sunrise':
+            _makruhTimeText = 'সূর্যোদয়ের আশেপাশের মাকরূহ সময়';
+            break;
+          case 'zawal':
+            _makruhTimeText = 'জাওয়ালের আশেপাশের মাকরূহ সময়';
+            break;
+          default:
+            _makruhTimeText = 'সূর্যাস্তের আশেপাশের মাকরূহ সময়';
+            break;
+        }
       } else {
-        _makruhTimeText = 'পরবর্তী মাকরূহ সময়: সূর্যাস্ত';
+        switch (kind) {
+          case 'sunrise':
+            _makruhTimeText = 'পরবর্তী মাকরূহ সময়: সূর্যোদয়';
+            break;
+          case 'zawal':
+            _makruhTimeText = 'পরবর্তী মাকরূহ সময়: জাওয়াল';
+            break;
+          default:
+            _makruhTimeText = 'পরবর্তী মাকরূহ সময়: সূর্যাস্ত';
+            break;
+        }
       }
     }
   }
