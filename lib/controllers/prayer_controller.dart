@@ -77,19 +77,19 @@ class PrayerLiveState {
 
   @override
   int get hashCode => Object.hash(
-    currentPrayer,
-    previousPrayer,
-    previousPrayerTime,
-    nextPrayerName,
-    nextPrayer,
-    nextPrayerTime,
-    currentPrayerStart,
-    currentPrayerEnd,
-    currentIqamahTime,
-    timeRemainingForNextPrayer,
-    prayerProgress,
-    prayerStatus,
-  );
+        currentPrayer,
+        previousPrayer,
+        previousPrayerTime,
+        nextPrayerName,
+        nextPrayer,
+        nextPrayerTime,
+        currentPrayerStart,
+        currentPrayerEnd,
+        currentIqamahTime,
+        timeRemainingForNextPrayer,
+        prayerProgress,
+        prayerStatus,
+      );
 }
 
 class PrayerController extends ChangeNotifier {
@@ -254,8 +254,7 @@ class PrayerController extends ChangeNotifier {
 
   void setCalculationConfig(PrayerCalculationConfig config) {
     if (_calculationConfig.method == config.method &&
-        _calculationConfig.madhab == config.madhab)
-      return;
+        _calculationConfig.madhab == config.madhab) return;
     _calculationConfig = config;
     _invalidateScheduleCache();
     _safeRefresh();
@@ -305,15 +304,15 @@ class PrayerController extends ChangeNotifier {
           final Placemark place = placemarks.first;
           final String subLocality =
               place.subLocality?.trim().isNotEmpty == true
-              ? place.subLocality!.trim()
-              : '';
+                  ? place.subLocality!.trim()
+                  : '';
           final String locality = place.locality?.trim().isNotEmpty == true
               ? place.locality!.trim()
               : '';
           String district =
               place.subAdministrativeArea?.trim().isNotEmpty == true
-              ? place.subAdministrativeArea!.trim()
-              : (place.administrativeArea?.trim() ?? '');
+                  ? place.subAdministrativeArea!.trim()
+                  : (place.administrativeArea?.trim() ?? '');
           final String country = place.country?.trim().isNotEmpty == true
               ? place.country!.trim()
               : '';
@@ -331,9 +330,8 @@ class PrayerController extends ChangeNotifier {
           if (country.isNotEmpty && country.toLowerCase() == 'bangladesh') {
             parts.add('Bangladesh');
           }
-          _currentLocationName = parts.isNotEmpty
-              ? parts.join(', ')
-              : 'লোকেশন পাওয়া যায়নি';
+          _currentLocationName =
+              parts.isNotEmpty ? parts.join(', ') : 'লোকেশন পাওয়া যায়নি';
         } else {
           _currentLocationName = _coordinateFallback(position);
         }
@@ -583,8 +581,8 @@ class PrayerController extends ChangeNotifier {
   DateTime _safeTime(DateTime? value, DateTime fallback) => value ?? fallback;
 
   DateTime _applyPrayerAdjustment(String prayerName, DateTime time) => time.add(
-    Duration(minutes: _prayerAdjustments[prayerName]?.clamp(-60, 60) ?? 0),
-  );
+        Duration(minutes: _prayerAdjustments[prayerName]?.clamp(-60, 60) ?? 0),
+      );
 
   void _calculateSpecialWindows({
     required Map<String, DateTime> times,
