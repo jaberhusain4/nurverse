@@ -40,7 +40,12 @@ jobs:
           if [ -n "$files" ]; then
             printf 'Checking Dart formatting for:\n%s\n' "$files"
             while IFS= read -r file; do
-              [ -z "$file" ] || dart format --output=none --set-exit-if-changed "$file"
+              [ -z "$file" ] && continue
+              if ! dart format --output=none --set-exit-if-changed "$file"; then
+                echo "Formatter output for $file:"
+                dart format --output=show "$file"
+                exit 1
+              fi
             done <<< "$files"
           else
             echo "No Dart files changed in this commit; skipping format check."
