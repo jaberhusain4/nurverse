@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'package:adhan/adhan.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
@@ -896,8 +895,8 @@ class PrayerController extends ChangeNotifier {
     } else if (!now.isBefore(times['Isha']!)) {
       target = now.isBefore(_tahajjudStart!) ? _tahajjudStart! : tomorrowFajr;
     } else {
-      // Between prayer intervals, count down to the next fard prayer.
-      target = times['Fajr']!;
+      // Between sunrise and Dhuhr, count down to Dhuhr.
+      target = times['Dhuhr']!;
     }
 
     _timeRemainingForNextPrayer = _formatDuration(target.difference(now));
