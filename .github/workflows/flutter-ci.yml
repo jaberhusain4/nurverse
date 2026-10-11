@@ -38,7 +38,10 @@ jobs:
           set -euo pipefail
           files="$(git diff --name-only --diff-filter=ACMR HEAD^ HEAD -- '*.dart')"
           if [ -n "$files" ]; then
-            dart format --output=none --set-exit-if-changed $files
+            printf 'Checking Dart formatting for:\n%s\n' "$files"
+            while IFS= read -r file; do
+              [ -z "$file" ] || dart format --output=none --set-exit-if-changed "$file"
+            done <<< "$files"
           else
             echo "No Dart files changed in this commit; skipping format check."
           fi
