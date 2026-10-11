@@ -975,10 +975,10 @@ class PrayerController extends ChangeNotifier {
       return 'sunset';
     }
 
-    final List<DateTime> prohibited =
-        _prohibitedStart != null && _prohibitedEnd != null
-            ? [_prohibitedStart!, _prohibitedEnd!]
-            : [];
+    final List<DateTime> prohibited = [];
+    if (_prohibitedStart != null && _prohibitedEnd != null) {
+      prohibited.addAll([_prohibitedStart!, _prohibitedEnd!]);
+    }
     if (prohibited.isEmpty) {
       _prohibitedTimeText = 'আজ আর কোনো নিষিদ্ধ সময় নেই';
     } else {
@@ -1015,10 +1015,10 @@ class PrayerController extends ChangeNotifier {
       }
     }
 
-    final List<DateTime> makruh =
-        _makruhStart != null && _makruhEnd != null
-            ? [_makruhStart!, _makruhEnd!]
-            : [];
+    final List<DateTime> makruh = [];
+    if (_makruhStart != null && _makruhEnd != null) {
+      makruh.addAll([_makruhStart!, _makruhEnd!]);
+    }
     if (makruh.isEmpty) {
       _makruhTimeText = 'আজ আর কোনো বিশেষ মাকরূহ সময় নেই';
     } else {
