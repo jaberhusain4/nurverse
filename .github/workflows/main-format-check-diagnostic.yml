@@ -1,0 +1,19 @@
+name: Temporary Main Dart Format Check
+on:
+  push:
+    branches: [test/prayer-history-regressions]
+jobs:
+  format-diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Check main.dart format
+        run: dart format --output=none --set-exit-if-changed lib/main.dart
+      - name: Print main.dart format
+        if: always()
+        run: dart format --output=show lib/main.dart
