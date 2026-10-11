@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'package:adhan/adhan.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
@@ -881,9 +880,11 @@ class PrayerController extends ChangeNotifier {
   }) {
     late final DateTime target;
 
-    // While a fard prayer is active, "Time left" means the remaining time
-    // before that prayer's valid interval ends.
-    if (!now.isBefore(times['Fajr']!) && now.isBefore(times['Sunrise']!)) {
+    // Before Fajr, count down to Fajr. During a fard prayer, count down
+    // to the end of that prayer's valid interval.
+    if (now.isBefore(times['Fajr']!)) {
+      target = times['Fajr']!;
+    } else if (now.isBefore(times['Sunrise']!)) {
       target = times['Sunrise']!;
     } else if (!now.isBefore(times['Dhuhr']!) && now.isBefore(times['Asr']!)) {
       target = times['Asr']!;
@@ -896,8 +897,8 @@ class PrayerController extends ChangeNotifier {
     } else if (!now.isBefore(times['Isha']!)) {
       target = now.isBefore(_tahajjudStart!) ? _tahajjudStart! : tomorrowFajr;
     } else {
-      // Between prayer intervals, count down to the next fard prayer.
-      target = times['Fajr']!;
+      // Between sunrise and Dhuhr, count down to Dhuhr.
+      target = times['Dhuhr']!;
     }
 
     _timeRemainingForNextPrayer = _formatDuration(target.difference(now));
