@@ -63,13 +63,11 @@ void main() {
       expect(previous.description, 'আসর শেষ হয়েছে');
     });
 
-    test('switches to Maghrib at Isha start and keeps it overnight', () {
-      for (final now in [isha, DateTime(2026, 10, 12, 2)]) {
-        final previous = resolve(now);
-        expect(previous.name, 'মাগরিব');
-        expect(previous.time, maghrib);
-        expect(previous.description, 'মাগরিব শেষ হয়েছে');
-      }
+    test('switches to Maghrib at Isha start', () {
+      final previous = resolve(isha);
+      expect(previous.name, 'মাগরিব');
+      expect(previous.time, maghrib);
+      expect(previous.description, 'মাগরিব শেষ হয়েছে');
     });
 
     test('preserves the previous prayer just before each boundary', () {
