@@ -9,6 +9,7 @@ on:
 jobs:
   analyze-and-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,7 +38,15 @@ jobs:
           set -euo pipefail
           files="$(git diff --name-only --diff-filter=ACMR HEAD^ HEAD -- '*.dart')"
           if [ -n "$files" ]; then
-            dart format --output=none --set-exit-if-changed $files
+            printf 'Checking Dart formatting for:\n%s\n' "$files"
+            while IFS= read -r file; do
+              [ -z "$file" ] && continue
+              if ! dart format --output=none --set-exit-if-changed "$file"; then
+                echo "Formatter output for $file:"
+                dart format --output=show "$file"
+                exit 1
+              fi
+            done <<< "$files"
           else
             echo "No Dart files changed in this commit; skipping format check."
           fi
@@ -48,7 +57,24 @@ jobs:
       - name: Test
         run: flutter test
 
-      - name: Build debug APK
-        run: flutter build apk --debug
-      - name: Build release APK
-        run: flutter build apk --release
+      - name: Build universal debug APK
+        run: flutter build apk --debug --target-platform android-arm,android-arm64,android-x64
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: nurverse-debug-universal-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Build universal release APK
+        run: flutter build apk --release --target-platform android-arm,android-arm64,android-x64
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: nurverse-release-universal-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14

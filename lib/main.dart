@@ -27,12 +27,39 @@ import 'screens/settings_hub_screen_v4.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await AuthService.instance.initializeGoogleSignIn();
+
+  // Core prayer, Quran, Hadith, and tools screens should still open if an
+  // optional online service is unavailable on a device.
+  var firebaseReady = false;
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    firebaseReady = true;
+  } catch (error, stackTrace) {
+    debugPrint('NurVerse: Firebase initialization failed: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
+
+  if (firebaseReady) {
+    try {
+      await AuthService.instance.initializeGoogleSignIn();
+    } catch (error, stackTrace) {
+      debugPrint('NurVerse: Google Sign-In initialization failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
   await initializeDateFormatting('en');
   await initializeDateFormatting('bn');
   await initializeDateFormatting('ar');
-  await NotificationService().init();
+
+  try {
+    await NotificationService().init();
+  } catch (error, stackTrace) {
+    debugPrint('NurVerse: Notification initialization failed: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
 
   runApp(
     MultiProvider(
@@ -72,9 +99,8 @@ class NurVerseApp extends StatelessWidget {
       title: 'NurVerse',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      darkTheme: settings.isAmoledMode
-          ? AppTheme.amoledTheme
-          : AppTheme.darkTheme,
+      darkTheme:
+          settings.isAmoledMode ? AppTheme.amoledTheme : AppTheme.darkTheme,
       themeMode: settings.themeMode,
       locale: settings.locale,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -88,9 +114,8 @@ class NurVerseApp extends StatelessWidget {
         builder: (context) {
           final mediaQuery = MediaQuery.of(context);
           final platformScale = mediaQuery.textScaler.textScaleFactor;
-          final combinedScale = (platformScale * textScale.scale)
-              .clamp(0.70, 2.0)
-              .toDouble();
+          final combinedScale =
+              (platformScale * textScale.scale).clamp(0.70, 2.0).toDouble();
           final baseTheme = Theme.of(context);
           final textTheme = baseTheme.textTheme;
           final effectiveTextTheme = boldText.isBold
