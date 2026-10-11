@@ -961,17 +961,29 @@ class PrayerController extends ChangeNotifier {
     );
 
     String prohibitedKind(DateTime start) {
-      if (start == sunrise || start == tomorrowSunrise) return 'sunrise';
-      if (start == zawalStart || start == tomorrowZawalStart) return 'zawal';
+      if (start == sunrise || start == tomorrowSunrise) {
+        return 'sunrise';
+      }
+      if (start == zawalStart || start == tomorrowZawalStart) {
+        return 'zawal';
+      }
       return 'sunset';
     }
 
     String makruhKind(DateTime start) {
-      if (start == sunrise.subtract(const Duration(minutes: 15)) ||
-          start == tomorrowSunrise.subtract(const Duration(minutes: 15))) {
+      final DateTime sunriseMakruhStart = sunrise.subtract(
+        const Duration(minutes: 15),
+      );
+      final DateTime tomorrowSunriseMakruhStart = tomorrowSunrise.subtract(
+        const Duration(minutes: 15),
+      );
+      if (start == sunriseMakruhStart ||
+          start == tomorrowSunriseMakruhStart) {
         return 'sunrise';
       }
-      if (start == zawalStart || start == tomorrowZawalStart) return 'zawal';
+      if (start == zawalStart || start == tomorrowZawalStart) {
+        return 'zawal';
+      }
       return 'sunset';
     }
 
