@@ -11,6 +11,7 @@ import '../services/jamaat_service.dart';
 import '../services/location_service.dart';
 import '../services/prayer_calculation_config.dart';
 import '../services/prayer_engine_service.dart';
+import '../services/prayer_history_service.dart';
 
 enum PrayerField { fajr, sunrise, dhuhr, asr, maghrib, isha }
 
@@ -761,15 +762,25 @@ class PrayerController extends ChangeNotifier {
     final DateTime asr = times['Asr']!;
     final DateTime maghrib = times['Maghrib']!;
     final DateTime isha = times['Isha']!;
+    final previous = PrayerHistoryService.resolvePreviousPrayer(
+      now: now,
+      fajr: fajr,
+      sunrise: times['Sunrise']!,
+      dhuhr: dhuhr,
+      asr: asr,
+      maghrib: maghrib,
+      isha: isha,
+      yesterdayIsha: yesterdayIsha,
+    );
+    _previousPrayer = previous.name;
+    _previousPrayerTime = _formatTime(previous.time);
+    _previousPrayerText = previous.description;
     _clearCurrentPrayer();
     if (now.isBefore(fajr)) {
       _currentPrayer = 'ওয়াক্ত নেই';
       _currentPrayerStart = '--:--';
       _currentPrayerEnd = _formatTime(fajr);
       _currentIqamahTime = '--:--';
-      _previousPrayer = 'ইশা';
-      _previousPrayerTime = _formatTime(yesterdayIsha);
-      _previousPrayerText = 'ইশা শেষ হয়েছে';
       _nextPrayerName = 'ফজর';
       _nextPrayer = 'ফজর';
       _nextPrayerTime = _formatTime(fajr);
@@ -778,9 +789,6 @@ class PrayerController extends ChangeNotifier {
     }
     if (now.isBefore(times['Sunrise']!)) {
       _setPrayerRange('ফজর', fajr, times['Sunrise']!, 'Fajr');
-      _previousPrayer = 'ইশা';
-      _previousPrayerTime = _formatTime(yesterdayIsha);
-      _previousPrayerText = 'ইশা শেষ হয়েছে';
       _nextPrayerName = 'যোহর';
       _nextPrayer = 'যোহর';
       _nextPrayerTime = _formatTime(dhuhr);
@@ -792,9 +800,6 @@ class PrayerController extends ChangeNotifier {
       _currentPrayerStart = '--:--';
       _currentPrayerEnd = '--:--';
       _currentIqamahTime = '--:--';
-      _previousPrayer = 'ফজর';
-      _previousPrayerTime = _formatTime(fajr);
-      _previousPrayerText = 'ফজর সম্পন্ন হয়েছে';
       _nextPrayerName = 'যোহর';
       _nextPrayer = 'যোহর';
       _nextPrayerTime = _formatTime(dhuhr);
@@ -803,9 +808,6 @@ class PrayerController extends ChangeNotifier {
     }
     if (now.isBefore(asr)) {
       _setPrayerRange('যোহর', dhuhr, asr, 'Dhuhr');
-      _previousPrayer = 'ফজর';
-      _previousPrayerTime = _formatTime(fajr);
-      _previousPrayerText = 'ফজর শেষ হয়েছে';
       _nextPrayerName = 'আসর';
       _nextPrayer = 'আসর';
       _nextPrayerTime = _formatTime(asr);
@@ -814,9 +816,6 @@ class PrayerController extends ChangeNotifier {
     }
     if (now.isBefore(maghrib)) {
       _setPrayerRange('আসর', asr, maghrib, 'Asr');
-      _previousPrayer = 'যোহর';
-      _previousPrayerTime = _formatTime(dhuhr);
-      _previousPrayerText = 'যোহর শেষ হয়েছে';
       _nextPrayerName = 'মাগরিব';
       _nextPrayer = 'মাগরিব';
       _nextPrayerTime = _formatTime(maghrib);
@@ -825,9 +824,6 @@ class PrayerController extends ChangeNotifier {
     }
     if (now.isBefore(isha)) {
       _setPrayerRange('মাগরিব', maghrib, isha, 'Maghrib');
-      _previousPrayer = 'আসর';
-      _previousPrayerTime = _formatTime(asr);
-      _previousPrayerText = 'আসর শেষ হয়েছে';
       _nextPrayerName = 'ইশা';
       _nextPrayer = 'ইশা';
       _nextPrayerTime = _formatTime(isha);
@@ -838,9 +834,6 @@ class PrayerController extends ChangeNotifier {
     _currentPrayerStart = _formatTime(isha);
     _currentPrayerEnd = _formatTime(tomorrowFajr);
     _currentIqamahTime = JamaatService.get('Isha');
-    _previousPrayer = 'মাগরিব';
-    _previousPrayerTime = _formatTime(maghrib);
-    _previousPrayerText = 'মাগরিব শেষ হয়েছে';
     if (now.isBefore(_tahajjudStart!)) {
       _nextPrayerName = 'তাহাজ্জুদ';
       _nextPrayer = 'তাহাজ্জুদ';
