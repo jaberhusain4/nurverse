@@ -772,13 +772,13 @@ class PrayerController extends ChangeNotifier {
     }
     if (now.isBefore(times['Sunrise']!)) {
       _setPrayerRange('ফজর', fajr, times['Sunrise']!, 'Fajr');
-      _previousPrayer = 'ফজর';
-      _previousPrayerTime = _formatTime(fajr);
-      _previousPrayerText = 'ফজর সম্পন্ন হয়েছে';
+      _previousPrayer = 'ইশা';
+      _previousPrayerTime = _formatTime(yesterdayIsha);
+      _previousPrayerText = 'ইশা শেষ হয়েছে';
       _nextPrayerName = 'যোহর';
       _nextPrayer = 'যোহর';
       _nextPrayerTime = _formatTime(dhuhr);
-      _prayerStatus = 'ফজরের পরের সময়';
+      _prayerStatus = 'ফজরের ওয়াক্ত চলছে';
       return;
     }
     if (now.isBefore(dhuhr)) {
@@ -797,9 +797,9 @@ class PrayerController extends ChangeNotifier {
     }
     if (now.isBefore(asr)) {
       _setPrayerRange('যোহর', dhuhr, asr, 'Dhuhr');
-      _previousPrayer = 'যোহর';
-      _previousPrayerTime = _formatTime(dhuhr);
-      _previousPrayerText = 'যোহর সম্পন্ন হয়েছে';
+      _previousPrayer = 'ফজর';
+      _previousPrayerTime = _formatTime(fajr);
+      _previousPrayerText = 'ফজর শেষ হয়েছে';
       _nextPrayerName = 'আসর';
       _nextPrayer = 'আসর';
       _nextPrayerTime = _formatTime(asr);
@@ -808,9 +808,9 @@ class PrayerController extends ChangeNotifier {
     }
     if (now.isBefore(maghrib)) {
       _setPrayerRange('আসর', asr, maghrib, 'Asr');
-      _previousPrayer = 'আসর';
-      _previousPrayerTime = _formatTime(asr);
-      _previousPrayerText = 'আসর সম্পন্ন হয়েছে';
+      _previousPrayer = 'যোহর';
+      _previousPrayerTime = _formatTime(dhuhr);
+      _previousPrayerText = 'যোহর শেষ হয়েছে';
       _nextPrayerName = 'মাগরিব';
       _nextPrayer = 'মাগরিব';
       _nextPrayerTime = _formatTime(maghrib);
@@ -819,9 +819,9 @@ class PrayerController extends ChangeNotifier {
     }
     if (now.isBefore(isha)) {
       _setPrayerRange('মাগরিব', maghrib, isha, 'Maghrib');
-      _previousPrayer = 'মাগরিব';
-      _previousPrayerTime = _formatTime(maghrib);
-      _previousPrayerText = 'মাগরিব সম্পন্ন হয়েছে';
+      _previousPrayer = 'আসর';
+      _previousPrayerTime = _formatTime(asr);
+      _previousPrayerText = 'আসর শেষ হয়েছে';
       _nextPrayerName = 'ইশা';
       _nextPrayer = 'ইশা';
       _nextPrayerTime = _formatTime(isha);
