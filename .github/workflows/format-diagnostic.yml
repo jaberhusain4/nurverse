@@ -1,0 +1,19 @@
+name: Temporary Dart Format Diagnostic
+on:
+  push:
+    branches:
+      - fix/future-prohibited-makruh-labels
+permissions:
+  contents: read
+jobs:
+  show-format-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Print formatter diff
+        run: |
+          dart format lib/controllers/prayer_controller.dart
+          git diff -- lib/controllers/prayer_controller.dart
