@@ -1082,8 +1082,8 @@ class PrayerController extends ChangeNotifier {
 
   String _windowText(DateTime? start, DateTime? end) =>
       start == null || end == null
-      ? '--:--'
-      : '${_formatTime(start)} – ${_formatTime(end)}';
+        ? '--:--'
+        : '${_formatTime(start)} – ${_formatTime(end)}';
 
   String _formatTime(DateTime value) =>
       DateFormat(_is24Hour ? 'HH:mm' : 'h:mm a', 'en_US').format(value);
