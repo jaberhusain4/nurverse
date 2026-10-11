@@ -32,7 +32,9 @@ Future<void> main() async {
   // optional online service is unavailable on a device.
   var firebaseReady = false;
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     firebaseReady = true;
   } catch (error, stackTrace) {
     debugPrint('NurVerse: Firebase initialization failed: $error');
