@@ -1,6 +1,8 @@
 name: Temporary Dart Format Diagnostic
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - fix/future-prohibited-makruh-labels
 jobs:
   show-format-diff:
     runs-on: ubuntu-latest
