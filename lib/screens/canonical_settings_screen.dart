@@ -542,7 +542,7 @@ class CanonicalSettingsScreen extends StatelessWidget {
                                             backgroundColor: AppColors.seaBlue
                                                 .withValues(alpha: .10),
                                             backgroundImage: hasPhoto
-                                                ? NetworkImage(photoUrl!)
+                                                ? NetworkImage(photoUrl)
                                                 : null,
                                             child: hasPhoto
                                                 ? null
@@ -622,7 +622,7 @@ class CanonicalSettingsScreen extends StatelessWidget {
                                     ? ClipRRect(
                                         borderRadius: BorderRadius.circular(13),
                                         child: Image.network(
-                                          photoUrl!,
+                                          photoUrl,
                                           width: 42,
                                           height: 42,
                                           fit: BoxFit.cover,
