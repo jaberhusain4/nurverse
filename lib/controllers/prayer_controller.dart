@@ -990,21 +990,27 @@ class PrayerController extends ChangeNotifier {
           case 'sunrise':
             _prohibitedTimeText =
                 'সূর্যোদয়ের সময় — নামাজ আদায় থেকে বিরত থাকুন';
+            break;
           case 'zawal':
             _prohibitedTimeText =
                 'জাওয়ালের সময় — নামাজ আদায় থেকে বিরত থাকুন';
+            break;
           default:
             _prohibitedTimeText =
                 'সূর্যাস্তের সময় — নামাজ আদায় থেকে বিরত থাকুন';
+            break;
         }
       } else {
         switch (kind) {
           case 'sunrise':
             _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: সূর্যোদয়';
+            break;
           case 'zawal':
             _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: জাওয়াল';
+            break;
           default:
             _prohibitedTimeText = 'পরবর্তী নিষিদ্ধ সময়: সূর্যাস্ত';
+            break;
         }
       }
     }
@@ -1021,19 +1027,25 @@ class PrayerController extends ChangeNotifier {
         switch (kind) {
           case 'sunrise':
             _makruhTimeText = 'সূর্যোদয়ের আশেপাশের মাকরূহ সময়';
+            break;
           case 'zawal':
             _makruhTimeText = 'জাওয়ালের আশেপাশের মাকরূহ সময়';
+            break;
           default:
             _makruhTimeText = 'সূর্যাস্তের আশেপাশের মাকরূহ সময়';
+            break;
         }
       } else {
         switch (kind) {
           case 'sunrise':
             _makruhTimeText = 'পরবর্তী মাকরূহ সময়: সূর্যোদয়';
+            break;
           case 'zawal':
             _makruhTimeText = 'পরবর্তী মাকরূহ সময়: জাওয়াল';
+            break;
           default:
             _makruhTimeText = 'পরবর্তী মাকরূহ সময়: সূর্যাস্ত';
+            break;
         }
       }
     }
