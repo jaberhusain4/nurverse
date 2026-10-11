@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+
 import '../services/jamaat_service.dart';
 import '../services/location_service.dart';
 import '../services/prayer_calculation_config.dart';
@@ -1081,7 +1082,7 @@ class PrayerController extends ChangeNotifier {
 
   String _windowText(DateTime? start, DateTime? end) =>
       start == null || end == null
-        ? '--:--'
+      ? '--:--'
       : '${_formatTime(start)} – ${_formatTime(end)}';
 
   String _formatTime(DateTime value) =>
