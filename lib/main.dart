@@ -27,12 +27,39 @@ import 'screens/settings_hub_screen_v4.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await AuthService.instance.initializeGoogleSignIn();
+
+  // Core prayer, Quran, Hadith, and tools screens should still open if an
+  // optional online service is unavailable on a device.
+  var firebaseReady = false;
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    firebaseReady = true;
+  } catch (error, stackTrace) {
+    debugPrint('NurVerse: Firebase initialization failed: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
+
+  if (firebaseReady) {
+    try {
+      await AuthService.instance.initializeGoogleSignIn();
+    } catch (error, stackTrace) {
+      debugPrint('NurVerse: Google Sign-In initialization failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
   await initializeDateFormatting('en');
   await initializeDateFormatting('bn');
   await initializeDateFormatting('ar');
-  await NotificationService().init();
+
+  try {
+    await NotificationService().init();
+  } catch (error, stackTrace) {
+    debugPrint('NurVerse: Notification initialization failed: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
 
   runApp(
     MultiProvider(
