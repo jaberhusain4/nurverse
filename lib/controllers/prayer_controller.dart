@@ -1,5 +1,6 @@
 // lib/controllers/prayer_controller.dart
 import 'dart:async';
+
 import 'package:adhan/adhan.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
@@ -75,19 +76,19 @@ class PrayerLiveState {
 
   @override
   int get hashCode => Object.hash(
-        currentPrayer,
-        previousPrayer,
-        previousPrayerTime,
-        nextPrayerName,
-        nextPrayer,
-        nextPrayerTime,
-        currentPrayerStart,
-        currentPrayerEnd,
-        currentIqamahTime,
-        timeRemainingForNextPrayer,
-        prayerProgress,
-        prayerStatus,
-      );
+    currentPrayer,
+    previousPrayer,
+    previousPrayerTime,
+    nextPrayerName,
+    nextPrayer,
+    nextPrayerTime,
+    currentPrayerStart,
+    currentPrayerEnd,
+    currentIqamahTime,
+    timeRemainingForNextPrayer,
+    prayerProgress,
+    prayerStatus,
+  );
 }
 
 class PrayerController extends ChangeNotifier {
@@ -252,7 +253,8 @@ class PrayerController extends ChangeNotifier {
 
   void setCalculationConfig(PrayerCalculationConfig config) {
     if (_calculationConfig.method == config.method &&
-        _calculationConfig.madhab == config.madhab) return;
+        _calculationConfig.madhab == config.madhab)
+      return;
     _calculationConfig = config;
     _invalidateScheduleCache();
     _safeRefresh();
@@ -302,15 +304,15 @@ class PrayerController extends ChangeNotifier {
           final Placemark place = placemarks.first;
           final String subLocality =
               place.subLocality?.trim().isNotEmpty == true
-                  ? place.subLocality!.trim()
-                  : '';
+              ? place.subLocality!.trim()
+              : '';
           final String locality = place.locality?.trim().isNotEmpty == true
               ? place.locality!.trim()
               : '';
           String district =
               place.subAdministrativeArea?.trim().isNotEmpty == true
-                  ? place.subAdministrativeArea!.trim()
-                  : (place.administrativeArea?.trim() ?? '');
+              ? place.subAdministrativeArea!.trim()
+              : (place.administrativeArea?.trim() ?? '');
           final String country = place.country?.trim().isNotEmpty == true
               ? place.country!.trim()
               : '';
@@ -328,8 +330,9 @@ class PrayerController extends ChangeNotifier {
           if (country.isNotEmpty && country.toLowerCase() == 'bangladesh') {
             parts.add('Bangladesh');
           }
-          _currentLocationName =
-              parts.isNotEmpty ? parts.join(', ') : 'লোকেশন পাওয়া যায়নি';
+          _currentLocationName = parts.isNotEmpty
+              ? parts.join(', ')
+              : 'লোকেশন পাওয়া যায়নি';
         } else {
           _currentLocationName = _coordinateFallback(position);
         }
@@ -579,8 +582,8 @@ class PrayerController extends ChangeNotifier {
   DateTime _safeTime(DateTime? value, DateTime fallback) => value ?? fallback;
 
   DateTime _applyPrayerAdjustment(String prayerName, DateTime time) => time.add(
-        Duration(minutes: _prayerAdjustments[prayerName]?.clamp(-60, 60) ?? 0),
-      );
+    Duration(minutes: _prayerAdjustments[prayerName]?.clamp(-60, 60) ?? 0),
+  );
 
   void _calculateSpecialWindows({
     required Map<String, DateTime> times,
@@ -977,8 +980,7 @@ class PrayerController extends ChangeNotifier {
       final DateTime tomorrowSunriseMakruhStart = tomorrowSunrise.subtract(
         const Duration(minutes: 15),
       );
-      if (start == sunriseMakruhStart ||
-          start == tomorrowSunriseMakruhStart) {
+      if (start == sunriseMakruhStart || start == tomorrowSunriseMakruhStart) {
         return 'sunrise';
       }
       if (start == zawalStart || start == tomorrowZawalStart) {
@@ -1000,12 +1002,10 @@ class PrayerController extends ChangeNotifier {
       if (isActive) {
         switch (kind) {
           case 'sunrise':
-            _prohibitedTimeText =
-                'সূর্যোদয়ের সময় — নামাজ আদায় থেকে বিরত থাকুন';
+            _prohibitedTimeText = 'সূর্যোদয়ের সময় — নামাজ আদায় থেকে বিরত থাকুন';
             break;
           case 'zawal':
-            _prohibitedTimeText =
-                'জাওয়ালের সময় — নামাজ আদায় থেকে বিরত থাকুন';
+            _prohibitedTimeText = 'জাওয়ালের সময় — নামাজ আদায় থেকে বিরত থাকুন';
             break;
           default:
             _prohibitedTimeText =
@@ -1034,8 +1034,7 @@ class PrayerController extends ChangeNotifier {
     if (makruh.isEmpty) {
       _makruhTimeText = 'আজ আর কোনো বিশেষ মাকরূহ সময় নেই';
     } else {
-      final bool isActive =
-          !now.isBefore(makruh[0]) && now.isBefore(makruh[1]);
+      final bool isActive = !now.isBefore(makruh[0]) && now.isBefore(makruh[1]);
       final String kind = makruhKind(makruh[0]);
       if (isActive) {
         switch (kind) {
@@ -1082,8 +1081,8 @@ class PrayerController extends ChangeNotifier {
 
   String _windowText(DateTime? start, DateTime? end) =>
       start == null || end == null
-          ? '--:--'
-          : '${_formatTime(start)} – ${_formatTime(end)}';
+        ? '--:--'
+      : '${_formatTime(start)} – ${_formatTime(end)}';
 
   String _formatTime(DateTime value) =>
       DateFormat(_is24Hour ? 'HH:mm' : 'h:mm a', 'en_US').format(value);
