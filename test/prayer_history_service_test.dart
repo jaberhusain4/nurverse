@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nurverse/services/prayer_history_service.dart';
 
 void main() {
-  final day = DateTime(2026, 10, 11);
   final fajr = DateTime(2026, 10, 11, 4, 30);
   final sunrise = DateTime(2026, 10, 11, 5, 45);
   final dhuhr = DateTime(2026, 10, 11, 11, 50);
@@ -73,16 +72,27 @@ void main() {
       }
     });
 
-    test('preserves previous prayer during the minute before each boundary', () {
-      expect(resolve(sunrise.subtract(const Duration(seconds: 1))).name, 'ইশা');
-      expect(resolve(dhuhr.subtract(const Duration(seconds: 1))).name, 'ফজর');
-      expect(resolve(asr.subtract(const Duration(seconds: 1))).name, 'ফজর');
-      expect(resolve(maghrib.subtract(const Duration(seconds: 1))).name, 'যোহর');
-      expect(resolve(isha.subtract(const Duration(seconds: 1))).name, 'আসর');
+    test('preserves the previous prayer just before each boundary', () {
+      expect(
+        resolve(sunrise.subtract(const Duration(seconds: 1))).name,
+        'ইশা',
+      );
+      expect(
+        resolve(dhuhr.subtract(const Duration(seconds: 1))).name,
+        'ফজর',
+      );
+      expect(
+        resolve(asr.subtract(const Duration(seconds: 1))).name,
+        'ফজর',
+      );
+      expect(
+        resolve(maghrib.subtract(const Duration(seconds: 1))).name,
+        'যোহর',
+      );
+      expect(
+        resolve(isha.subtract(const Duration(seconds: 1))).name,
+        'আসর',
+      );
     });
-  });
-
-  test('test date is stable and explicit', () {
-    expect(day, DateTime(2026, 10, 11));
   });
 }
