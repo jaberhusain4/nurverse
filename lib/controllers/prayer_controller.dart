@@ -1015,9 +1015,10 @@ class PrayerController extends ChangeNotifier {
       }
     }
 
-    final List<DateTime> makruh = _makruhStart != null && _makruhEnd != null
-        ? [_makruhStart!, _makruhEnd!]
-        : [];
+    final List<DateTime> makruh =
+        _makruhStart != null && _makruhEnd != null
+            ? [_makruhStart!, _makruhEnd!]
+            : [];
     if (makruh.isEmpty) {
       _makruhTimeText = 'আজ আর কোনো বিশেষ মাকরূহ সময় নেই';
     } else {
