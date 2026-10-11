@@ -99,9 +99,8 @@ class NurVerseApp extends StatelessWidget {
       title: 'NurVerse',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      darkTheme: settings.isAmoledMode
-          ? AppTheme.amoledTheme
-          : AppTheme.darkTheme,
+      darkTheme:
+          settings.isAmoledMode ? AppTheme.amoledTheme : AppTheme.darkTheme,
       themeMode: settings.themeMode,
       locale: settings.locale,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -115,9 +114,8 @@ class NurVerseApp extends StatelessWidget {
         builder: (context) {
           final mediaQuery = MediaQuery.of(context);
           final platformScale = mediaQuery.textScaler.textScaleFactor;
-          final combinedScale = (platformScale * textScale.scale)
-              .clamp(0.70, 2.0)
-              .toDouble();
+          final combinedScale =
+              (platformScale * textScale.scale).clamp(0.70, 2.0).toDouble();
           final baseTheme = Theme.of(context);
           final textTheme = baseTheme.textTheme;
           final effectiveTextTheme = boldText.isBold
