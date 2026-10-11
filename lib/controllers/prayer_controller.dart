@@ -1021,7 +1021,8 @@ class PrayerController extends ChangeNotifier {
     if (makruh.isEmpty) {
       _makruhTimeText = 'আজ আর কোনো বিশেষ মাকরূহ সময় নেই';
     } else {
-      final bool isActive = !now.isBefore(makruh[0]) && now.isBefore(makruh[1]);
+      final bool isActive =
+          !now.isBefore(makruh[0]) && now.isBefore(makruh[1]);
       final String kind = makruhKind(makruh[0]);
       if (isActive) {
         switch (kind) {
