@@ -35,7 +35,7 @@ class _AsmaUlHusnaAudioScreenState extends State<AsmaUlHusnaAudioScreen> {
         'name': item.transliteration,
         'meaning': item.meaning,
       })
-      .toList(growable: false);;
+      .toList(growable: false);
 
   @override
   void initState() {
