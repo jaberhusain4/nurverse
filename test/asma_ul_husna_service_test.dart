@@ -9,12 +9,19 @@ void main() {
       final names = service.getAll();
 
       expect(names, hasLength(99));
-      expect(names.map((name) => name.id).toList(),
-          List<int>.generate(99, (index) => index + 1));
-      expect(names.every((name) =>
-          name.arabic.isNotEmpty &&
-          name.transliteration.isNotEmpty &&
-          name.meaning.isNotEmpty), isTrue);
+      expect(
+        names.map((name) => name.id).toList(),
+        List<int>.generate(99, (index) => index + 1),
+      );
+      expect(
+        names.every(
+          (name) =>
+              name.arabic.isNotEmpty &&
+              name.transliteration.isNotEmpty &&
+              name.meaning.isNotEmpty,
+        ),
+        isTrue,
+      );
     });
 
     test('looks up names by their stable 1-based ID', () {
