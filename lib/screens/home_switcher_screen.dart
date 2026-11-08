@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/home_mode_service.dart';
 import 'home_screen.dart';
-import 'simple_home_screen_nova.dart';
+import 'simple_home_screen_muslim_day_v2.dart';
 
 class HomeSwitcherScreen extends StatefulWidget {
   const HomeSwitcherScreen({super.key, this.onNavigateTab});
@@ -34,13 +34,12 @@ class _HomeSwitcherScreenState extends State<HomeSwitcherScreen> {
         }
 
         if (_service.isSimple) {
-          return SimpleHomeScreenNova(
+          return SimpleHomeScreenMuslimDayV2(
             onNavigateTab: widget.onNavigateTab,
           );
         }
 
-        // Informative Home is intentionally locked. Do not modify this path
-        // while redesigning Simple Home.
+        // Informative Home is intentionally kept unchanged.
         return HomeScreen(onNavigateTab: widget.onNavigateTab);
       },
     );
