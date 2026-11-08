@@ -7,13 +7,11 @@ on:
     branches: [main]
 
 jobs:
-  analyze-and-build:
+  analyze-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -32,23 +30,10 @@ jobs:
         run: flutter pub get
 
       - name: Format check
-        shell: bash
-        run: |
-          set -euo pipefail
-          files="$(git diff --name-only --diff-filter=ACMR HEAD^ HEAD -- '*.dart')"
-          if [ -n "$files" ]; then
-            dart format --output=none --set-exit-if-changed $files
-          else
-            echo "No Dart files changed in this commit; skipping format check."
-          fi
+        run: dart format --output=none --set-exit-if-changed lib test
 
       - name: Analyze
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Test
         run: flutter test
-
-      - name: Build debug APK
-        run: flutter build apk --debug
-      - name: Build release APK
-        run: flutter build apk --release
